@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { productAPI } from '../services/api'
 import BulkUploadModal from '../components/BulkUploadModal'
 import ProductModal from '../components/ProductModal'
+import BulkActionMenu from '../components/Products/BulkActionMenu'
 
 function Products() {
   const [products, setProducts] = useState([])
@@ -13,6 +14,8 @@ function Products() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [showBulkUploadModal, setShowBulkUploadModal] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState(null)
+  const [selectedProducts, setSelectedProducts] = useState([])
+  const [showBulkMenu, setShowBulkMenu] = useState(false)
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -57,6 +60,30 @@ function Products() {
     setShowEditModal(true)
   }
 
+  const handleProductSelect = (productId) => {
+    setSelectedProducts(prev => {
+      if (prev.includes(productId)) {
+        return prev.filter(id => id !== productId)
+      } else {
+        return [...prev, productId]
+      }
+    })
+  }
+
+  const handleSelectAll = () => {
+    if (selectedProducts.length === filteredProducts.length) {
+      setSelectedProducts([])
+    } else {
+      setSelectedProducts(filteredProducts.map(p => p._id))
+    }
+  }
+
+  const handleBulkActionComplete = (action) => {
+    fetchProducts()
+    setSelectedProducts([])
+    setShowBulkMenu(false)
+  }
+
   const filteredProducts = products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = filterCategory === 'all' || product.category === filterCategory
@@ -97,9 +124,9 @@ function Products() {
         </div>
       </div>
 
-      {/* Filters */}
+      {/* Filters and Bulk Actions */}
       <div className="bg-white rounded-xl shadow-sm p-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
             <input
@@ -124,6 +151,26 @@ function Products() {
               ))}
             </select>
           </div>
+          <div>
+            {selectedProducts.length > 0 && (
+              <div className="relative">
+                <button
+                  onClick={() => setShowBulkMenu(!showBulkMenu)}
+                  className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium mt-7"
+                >
+                  Bulk Actions ({selectedProducts.length})
+                </button>
+                {showBulkMenu && (
+                  <div className="absolute right-0 mt-2 z-50">
+                    <BulkActionMenu
+                      selectedProducts={selectedProducts}
+                      onActionComplete={handleBulkActionComplete}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -147,73 +194,108 @@ function Products() {
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => (
-            <div key={product._id} className="bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition">
-              {/* Product Image */}
-              <div className="h-48 bg-gray-200 relative">
-                {product.images && product.images.length > 0 ? (
-                  <img
-                    src={product.images[0].url}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
+        <>
+          {/* Bulk Selection Header */}
+          <div className="bg-white rounded-xl shadow-sm p-4 mb-4">
+            <label className="inline-flex items-center">
+              <input
+                type="checkbox"
+                checked={selectedProducts.length === filteredProducts.length}
+                onChange={handleSelectAll}
+                className="rounded border-gray-300 text-afri-green focus:ring-afri-green h-4 w-4"
+              />
+              <span className="ml-2 text-sm text-gray-700">
+                {selectedProducts.length === 0
+                  ? 'Select all products'
+                  : `Selected ${selectedProducts.length} products`}
+              </span>
+            </label>
+          </div>
+
+          {/* Products Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filteredProducts.map((product) => (
+              <div
+                key={product._id}
+                className={`bg-white rounded-xl shadow-sm overflow-hidden hover:shadow-lg transition ${
+                  selectedProducts.includes(product._id) ? 'ring-2 ring-afri-green' : ''
+                }`}
+              >
+                {/* Selection Checkbox */}
+                <div className="absolute top-2 left-2 z-10">
+                  <input
+                    type="checkbox"
+                    checked={selectedProducts.includes(product._id)}
+                    onChange={() => handleProductSelect(product._id)}
+                    className="rounded border-gray-300 text-afri-green focus:ring-afri-green h-4 w-4"
                   />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <span className="text-5xl">📦</span>
-                  </div>
-                )}
-                {!product.isActive && (
-                  <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-                    <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      Inactive
+                </div>
+
+                {/* Product Image */}
+                <div className="h-48 bg-gray-200 relative">
+                  {product.images && product.images.length > 0 ? (
+                    <img
+                      src={product.images[0].url}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-gray-400">
+                      <span className="text-5xl">📦</span>
+                    </div>
+                  )}
+                  {!product.isActive && (
+                    <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+                      <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
+                        Inactive
+                      </span>
+                    </div>
+                  )}
+                  {product.stock === 0 && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      Out of Stock
+                    </div>
+                  )}
+                  {product.stock > 0 && product.stock <= (product.lowStockThreshold || 10) && (
+                    <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
+                      Low Stock
+                    </div>
+                  )}
+                </div>
+
+                {/* Product Info */}
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h3>
+                  <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
+
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xl font-bold text-afri-green">
+                      £{product.price.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-gray-500">
+                      Stock: {product.stock} {product.unit}
                     </span>
                   </div>
-                )}
-                {product.stock === 0 && (
-                  <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                    Out of Stock
+
+                  <div className="flex items-center space-x-2">
+                    <button
+                      onClick={() => handleEdit(product)}
+                      className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(product._id)}
+                      className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium"
+                    >
+                      Delete
+                    </button>
                   </div>
-                )}
-                {product.stock > 0 && product.stock <= (product.lowStockThreshold || 10) && (
-                  <div className="absolute top-2 right-2 bg-yellow-500 text-white px-2 py-1 rounded-full text-xs font-medium">
-                    Low Stock
-                  </div>
-                )}
-              </div>
-
-              {/* Product Info */}
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-900 mb-1 truncate">{product.name}</h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{product.description}</p>
-
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-xl font-bold text-afri-green">
-                    £{product.price.toLocaleString()}
-                  </span>
-                  <span className="text-sm text-gray-500">
-                    Stock: {product.stock} {product.unit}
-                  </span>
-                </div>
-
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="flex-1 px-3 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition text-sm font-medium"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product._id)}
-                    className="flex-1 px-3 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition text-sm font-medium"
-                  >
-                    Delete
-                  </button>
                 </div>
               </div>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        </>
       )}
 
       {/* Add/Edit Modal */}

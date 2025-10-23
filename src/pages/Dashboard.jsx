@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { vendorAPI } from '../services/api'
+import { analyticsAPI } from '../services/analyticsAPI'
+import AdvancedAnalytics from '../components/Analytics/AdvancedAnalytics'
 import {
   AreaChart,
   Area,
@@ -14,7 +16,9 @@ import {
 } from 'recharts'
 
 function Dashboard() {
+  const [activeTab, setActiveTab] = useState('overview')
   const [stats, setStats] = useState(null)
+  const [analyticsData, setAnalyticsData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [timeRange, setTimeRange] = useState('7d')
@@ -38,6 +42,22 @@ function Dashboard() {
         if (chartResponse.data.success) {
           setChartData(chartResponse.data.data)
         }
+
+        // Fetch analytics data if on analytics tab
+        if (activeTab === 'analytics') {
+          const startDate = new Date()
+          startDate.setDate(startDate.getDate() - 30)
+          const endDate = new Date()
+          
+          const analyticsResponse = await analyticsAPI.getDetailedAnalytics(
+            startDate.toISOString().split('T')[0],
+            endDate.toISOString().split('T')[0]
+          )
+          
+          if (analyticsResponse.success) {
+            setAnalyticsData(analyticsResponse.data)
+          }
+        }
       } catch (err) {
         setError(err.response?.data?.message || 'Failed to load dashboard')
       } finally {
@@ -46,7 +66,7 @@ function Dashboard() {
     }
 
     fetchData()
-  }, [timeRange])
+  }, [timeRange, activeTab])
 
   // Removed unused function as it's now handled in the useEffect
 
@@ -137,13 +157,43 @@ function Dashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-        <p className="text-gray-600 mt-1">Welcome back! Here's your store overview.</p>
+      {/* Header with Tabs */}
+      <div className="border-b border-gray-200">
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Welcome back! Here's your store overview.</p>
+          </div>
+          <div className="flex space-x-4">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 font-medium rounded-lg transition-colors ${
+                activeTab === 'overview'
+                  ? 'bg-afri-green text-white'
+                  : 'text-gray-600 hover:text-afri-green hover:bg-gray-50'
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('analytics')}
+              className={`px-4 py-2 font-medium rounded-lg transition-colors ${
+                activeTab === 'analytics'
+                  ? 'bg-afri-green text-white'
+                  : 'text-gray-600 hover:text-afri-green hover:bg-gray-50'
+              }`}
+            >
+              Advanced Analytics
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Content based on active tab */}
+      {activeTab === 'overview' ? (
+        // Original dashboard content
+        <div className="space-y-6">
+          {/* Stats Grid */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {statCards.map((stat) => (
           <Link
@@ -525,7 +575,12 @@ function Dashboard() {
             <span className="text-sm font-medium text-center">Settings</span>
           </Link>
         </div>
-      </div>
+          </div>
+        </div>
+      ) : (
+        // Advanced Analytics content
+        <AdvancedAnalytics stats={stats} analyticsData={analyticsData} />
+      )}
     </div>
   )
 }

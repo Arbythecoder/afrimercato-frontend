@@ -1,6 +1,7 @@
 import axios from 'axios'
 
-const API_BASE_URL = 'http://localhost:5000/api'
+// Use environment variable in production, localhost in development
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
 
 // Create axios instance
 const api = axios.create({
@@ -61,7 +62,12 @@ export const productAPI = {
     headers: {
       'Content-Type': 'multipart/form-data'
     }
-  })
+  }),
+  // New bulk operation endpoints
+  bulkDelete: (productIds) => api.post('/vendor/products/bulk-delete', { productIds }),
+  bulkUpdateStatus: (productIds, isActive) => api.post('/vendor/products/bulk-status', { productIds, isActive }),
+  bulkUpdatePrices: (productIds, priceChange) => api.post('/vendor/products/bulk-price', { productIds, ...priceChange }),
+  bulkUpdateStock: (productIds, stockChange) => api.post('/vendor/products/bulk-stock', { productIds, ...stockChange })
 }
 
 // Order APIs
