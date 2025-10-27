@@ -72,24 +72,24 @@ export default function Home() {
   // Hero with vibrant market and produce photos
   const heroSlides = [
     {
-      title: 'Fresh African Groceries Delivered',
-      subtitle: 'Support local vendors, enjoy authentic flavors',
+      title: 'African Groceries Delivered to Your Door',
+      subtitle: 'Fresh vegetables, fruits, meat, dairy & authentic African foods',
       image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200', // Beautiful market produce
-      cta: 'Shop Now',
+      cta: 'Shop Groceries',
       link: '#products'
     },
     {
-      title: 'Shop From Dublin\'s Best',
-      subtitle: 'Quality produce from trusted vendors',
+      title: 'Your Online African Food Market',
+      subtitle: 'Shop fresh produce, meat & dairy from local African vendors',
       image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200', // Colorful market stalls
-      cta: 'Browse Products',
+      cta: 'Browse Food',
       link: '#products'
     },
     {
-      title: 'Join Our Community',
-      subtitle: 'Over 1000 happy customers served',
+      title: 'Quality African Groceries in Dublin',
+      subtitle: 'Supporting local African food vendors since 2024',
       image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200', // Fresh vegetables display
-      cta: 'Get Started',
+      cta: 'Start Shopping',
       link: '#products'
     }
   ]
@@ -221,10 +221,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-3 sm:px-6">
           <div className="text-center mb-8">
             <h2 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
-              Fresh Products Daily
+              Fresh Groceries & African Foods
             </h2>
             <p className="text-sm sm:text-lg text-gray-600">
-              Browse from {productCount}+ fresh products
+              Shop {productCount}+ fresh vegetables, fruits, meat, dairy & more
             </p>
           </div>
 
@@ -287,15 +287,15 @@ export default function Home() {
               How It Works
             </h2>
             <p className="text-sm sm:text-lg text-gray-600">
-              Get groceries in 3 simple steps
+              Get fresh African groceries delivered in 3 simple steps
             </p>
           </div>
 
           <div className="grid sm:grid-cols-3 gap-6">
             {[
-              { num: 1, title: 'Browse', desc: 'Search from 500+ products', color: 'from-green-500 to-green-600' },
-              { num: 2, title: 'Order', desc: 'Secure checkout with card', color: 'from-yellow-400 to-yellow-500' },
-              { num: 3, title: 'Delivered', desc: 'Track in real-time', color: 'from-green-600 to-green-700' }
+              { num: 1, title: 'Browse Groceries', desc: 'Fresh vegetables, fruits, meat & dairy', color: 'from-green-500 to-green-600' },
+              { num: 2, title: 'Place Order', desc: 'Secure checkout with card payment', color: 'from-yellow-400 to-yellow-500' },
+              { num: 3, title: 'Fast Delivery', desc: 'Same-day delivery to your door', color: 'from-green-600 to-green-700' }
             ].map((step) => (
               <motion.div key={step.num} className="text-center" whileHover={{ y: -5 }}>
                 <div className={`w-20 h-20 bg-gradient-to-br ${step.color} rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg`}>
@@ -329,8 +329,8 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                 </svg>
               </div>
-              <h3 className="text-xl font-bold mb-2">For Vendors</h3>
-              <p className="text-sm text-white/90 mb-4">Sell products online</p>
+              <h3 className="text-xl font-bold mb-2">For Food Vendors</h3>
+              <p className="text-sm text-white/90 mb-4">Sell fresh groceries & African foods online</p>
               <Link to="/login" className="block w-full bg-white text-green-700 text-center px-4 py-2.5 rounded-xl font-bold">
                 Start Selling →
               </Link>
@@ -344,7 +344,7 @@ export default function Home() {
                 </svg>
               </div>
               <h3 className="text-xl font-bold text-gray-900 mb-2">For Customers</h3>
-              <p className="text-sm text-gray-900 mb-4">Shop fresh groceries</p>
+              <p className="text-sm text-gray-900 mb-4">Order fresh groceries & African foods</p>
               <a href="#products" className="block w-full bg-gray-900 text-white text-center px-4 py-2.5 rounded-xl font-bold">
                 Start Shopping →
               </a>
@@ -407,7 +407,7 @@ export default function Home() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
             <div>
               <h4 className="text-white font-bold mb-3 text-sm">Afrimercato</h4>
-              <p className="text-xs">Your African marketplace in Dublin</p>
+              <p className="text-xs">Your African grocery delivery marketplace in Dublin</p>
             </div>
             <div>
               <h4 className="text-white font-bold mb-3 text-sm">Customers</h4>
