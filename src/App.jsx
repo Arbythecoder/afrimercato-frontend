@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 // Pages
+import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -31,6 +32,7 @@ function AppContent() {
     <Router>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<Home />} />
         <Route
           path="/login"
           element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
@@ -42,18 +44,59 @@ function AppContent() {
 
         {/* Protected Routes */}
         <Route
-          path="/*"
+          path="/dashboard"
           element={
             isAuthenticated ? (
               <VendorLayout>
-                <Routes>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/orders" element={<Orders />} />
-                  <Route path="/subscription" element={<Subscription />} />
-                  <Route path="/settings" element={<Settings />} />
-                  <Route path="/" element={<Navigate to="/dashboard" />} />
-                </Routes>
+                <Dashboard />
+              </VendorLayout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/products"
+          element={
+            isAuthenticated ? (
+              <VendorLayout>
+                <Products />
+              </VendorLayout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            isAuthenticated ? (
+              <VendorLayout>
+                <Orders />
+              </VendorLayout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/subscription"
+          element={
+            isAuthenticated ? (
+              <VendorLayout>
+                <Subscription />
+              </VendorLayout>
+            ) : (
+              <Navigate to="/login" />
+            )
+          }
+        />
+        <Route
+          path="/settings"
+          element={
+            isAuthenticated ? (
+              <VendorLayout>
+                <Settings />
               </VendorLayout>
             ) : (
               <Navigate to="/login" />
