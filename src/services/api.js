@@ -62,15 +62,14 @@ const apiCall = async (endpoint, options = {}) => {
     // ✅ IMPROVED: Better error handling
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      
+
       // Handle specific status codes
       if (response.status === 401) {
-        // Unauthorized - clear token and redirect
+        // Unauthorized - clear token but DON'T redirect (let component handle it)
         localStorage.removeItem('afrimercato_token');
-        window.location.href = '/login';
         throw new Error('Session expired. Please log in again.');
       }
-      
+
       throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
     }
 
