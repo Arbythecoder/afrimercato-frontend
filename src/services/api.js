@@ -50,7 +50,7 @@ const apiCall = async (endpoint, options = {}) => {
     };
 
     // Add auth token if available
-    const token = localStorage.getItem('authToken');
+    const token = localStorage.getItem('afrimercato_token');
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -66,7 +66,7 @@ const apiCall = async (endpoint, options = {}) => {
       // Handle specific status codes
       if (response.status === 401) {
         // Unauthorized - clear token and redirect
-        localStorage.removeItem('authToken');
+        localStorage.removeItem('afrimercato_token');
         window.location.href = '/login';
         throw new Error('Session expired. Please log in again.');
       }
@@ -94,7 +94,7 @@ export const loginUser = async (credentials) => {
   
   // ✅ ADDED: Save token after successful login
   if (response.success && response.data?.token) {
-    localStorage.setItem('authToken', response.data.token);
+    localStorage.setItem('afrimercato_token', response.data.token);
   }
   
   return response;
@@ -108,7 +108,7 @@ export const registerUser = async (userData) => {
   
   // ✅ ADDED: Save token after successful registration
   if (response.success && response.data?.token) {
-    localStorage.setItem('authToken', response.data.token);
+    localStorage.setItem('afrimercato_token', response.data.token);
   }
   
   return response;
@@ -121,7 +121,7 @@ export const logoutUser = async () => {
     });
   } finally {
     // Always clear token, even if API call fails
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('afrimercato_token');
     window.location.href = '/login';
   }
 };
@@ -392,8 +392,8 @@ export const uploadImage = async (file, type = 'general') => {
   formData.append('image', file);
   formData.append('type', type);
 
-  const token = localStorage.getItem('authToken');
-  
+  const token = localStorage.getItem('afrimercato_token');
+
   return apiCall('/upload/image', {
     method: 'POST',
     headers: {
@@ -413,7 +413,7 @@ export const uploadProductImages = async (files) => {
     formData.append('images', file);
   });
 
-  const token = localStorage.getItem('authToken');
+  const token = localStorage.getItem('afrimercato_token');
 
   return apiCall('/vendor/upload/images', {
     method: 'POST',
@@ -431,9 +431,9 @@ export const uploadProductImages = async (files) => {
 // ✅ IMPROVED: Error handling utility
 export const handleApiError = (error) => {
   console.error('Handling API Error:', error);
-  
+
   if (error.message.includes('401') || error.message.includes('Session expired')) {
-    localStorage.removeItem('authToken');
+    localStorage.removeItem('afrimercato_token');
     window.location.href = '/login';
     return 'Please log in to continue';
   }
@@ -506,20 +506,71 @@ export const showErrorMessage = (message, duration = 5000) => {
 
 // ✅ NEW: Check if user is authenticated
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('authToken');
+  return !!localStorage.getItem('afrimercato_token');
 };
 
 // ✅ NEW: Get current user token
 export const getAuthToken = () => {
-  return localStorage.getItem('authToken');
+  return localStorage.getItem('afrimercato_token');
 };
 
 // ✅ NEW: Set auth token
 export const setAuthToken = (token) => {
-  localStorage.setItem('authToken', token);
+  localStorage.setItem('afrimercato_token', token);
 };
 
 // ✅ NEW: Clear auth token
 export const clearAuthToken = () => {
-  localStorage.removeItem('authToken');
+  localStorage.removeItem('afrimercato_token');
+};
+
+// =================================================================
+// GROUPED EXPORTS FOR BACKWARDS COMPATIBILITY
+// =================================================================
+// Some components expect grouped API objects instead of individual exports
+
+// Authentication API
+export const authAPI = {
+  login: loginUser,
+  register: registerUser,
+  logout: logoutUser,
+  getProfile: getUserProfile,
+  refreshToken: refreshToken
+};
+
+// Vendor API
+export const vendorAPI = {
+  getProfile: getVendorProfile,
+  updateProfile: updateVendorProfile,
+  getProducts: getVendorProducts,
+  createProduct: createProduct,
+  updateProduct: updateProduct,
+  deleteProduct: deleteProduct,
+  getOrders: getVendorOrders,
+  updateOrderStatus: updateOrderStatus,
+  getDashboardStats: getVendorDashboardStats,
+  getChartData: getVendorChartData
+};
+
+// Product API (customer-facing)
+export const productAPI = {
+  getFeatured: getFeaturedProducts,
+  getAll: getAllProducts,
+  getById: getProductById
+};
+
+// Subscription API
+export const subscriptionAPI = {
+  getPlans: getSubscriptionPlans,
+  subscribe: createSubscription,
+  getMySubscription: getUserSubscription,
+  cancel: cancelSubscription
+};
+
+// Order API (customer-facing)
+export const orderAPI = {
+  create: createOrder,
+  getUserOrders: getUserOrders,
+  getById: getOrderById,
+  cancel: cancelOrder
 };
