@@ -146,6 +146,13 @@ export const updateVendorProfile = async (profileData) => {
   });
 };
 
+export const createVendorProfile = async (profileData) => {
+  return apiCall('/vendor/profile', {
+    method: 'POST',
+    body: JSON.stringify(profileData)
+  });
+};
+
 export const getVendorProducts = async (filters = {}) => {
   const queryString = new URLSearchParams(filters).toString();
   return apiCall(`/vendor/products?${queryString}`);
@@ -542,6 +549,7 @@ export const authAPI = {
 export const vendorAPI = {
   getProfile: getVendorProfile,
   updateProfile: updateVendorProfile,
+  createProfile: createVendorProfile,
   getProducts: getVendorProducts,
   createProduct: createProduct,
   updateProduct: updateProduct,

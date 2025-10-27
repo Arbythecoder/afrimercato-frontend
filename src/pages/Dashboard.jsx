@@ -30,17 +30,18 @@ function Dashboard() {
     const fetchData = async () => {
       try {
         setLoading(true)
+        setError('')
         const [statsResponse, chartResponse] = await Promise.all([
           vendorAPI.getDashboardStats(),
           vendorAPI.getChartData(timeRange)
         ])
-        
-        if (statsResponse.data.success) {
-          setStats(statsResponse.data.data)
+
+        if (statsResponse.success) {
+          setStats(statsResponse.data)
         }
-        
-        if (chartResponse.data.success) {
-          setChartData(chartResponse.data.data)
+
+        if (chartResponse.success) {
+          setChartData(chartResponse.data)
         }
 
         // Fetch analytics data if on analytics tab
@@ -48,18 +49,29 @@ function Dashboard() {
           const startDate = new Date()
           startDate.setDate(startDate.getDate() - 30)
           const endDate = new Date()
-          
+
           const analyticsResponse = await analyticsAPI.getDetailedAnalytics(
             startDate.toISOString().split('T')[0],
             endDate.toISOString().split('T')[0]
           )
-          
+
           if (analyticsResponse.success) {
             setAnalyticsData(analyticsResponse.data)
           }
         }
       } catch (err) {
-        setError(err.response?.data?.message || 'Failed to load dashboard')
+        console.error('Dashboard error:', err)
+        const errorMsg = err.message || 'Failed to load dashboard'
+
+        // Check if it's an auth error
+        if (errorMsg.includes('401') || errorMsg.includes('Session expired') || errorMsg.includes('Unauthorized')) {
+          setError('Your session has expired. Please log in again.')
+          setTimeout(() => {
+            window.location.href = '/login'
+          }, 2000)
+        } else {
+          setError(errorMsg)
+        }
       } finally {
         setLoading(false)
       }

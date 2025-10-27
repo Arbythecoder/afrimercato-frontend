@@ -69,26 +69,26 @@ export default function Home() {
     { id: 18, name: 'Avocados', price: '€4.49/kg', image: 'https://images.unsplash.com/photo-1523049673857-eb18f1d7b578?w=400', category: 'Fruits', store: 'Dublin Organic' }
   ]
 
-  // Hero with people shopping photos
+  // Hero with vibrant market and produce photos
   const heroSlides = [
     {
       title: 'Fresh African Groceries Delivered',
       subtitle: 'Support local vendors, enjoy authentic flavors',
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200',
+      image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=1200', // Beautiful market produce
       cta: 'Shop Now',
       link: '#products'
     },
     {
       title: 'Shop From Dublin\'s Best',
       subtitle: 'Quality produce from trusted vendors',
-      image: 'https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?w=1200',
+      image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200', // Colorful market stalls
       cta: 'Browse Products',
       link: '#products'
     },
     {
       title: 'Join Our Community',
       subtitle: 'Over 1000 happy customers served',
-      image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1200',
+      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200', // Fresh vegetables display
       cta: 'Get Started',
       link: '#products'
     }
@@ -251,14 +251,16 @@ export default function Home() {
                   <h3 className="text-sm sm:text-base font-bold text-gray-900 mb-1 truncate">
                     {product.name}
                   </h3>
-                  <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2">
                     <span className="text-sm sm:text-base font-bold text-green-600">
                       {product.price}
                     </span>
-                    <button className="bg-green-600 hover:bg-green-700 text-white p-1.5 rounded-lg">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <button className="w-full bg-green-600 hover:bg-green-700 text-white px-2 py-1.5 rounded-lg text-xs font-semibold flex items-center justify-center gap-1 transition-all">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                       </svg>
+                      <span className="hidden sm:inline">Add to Cart</span>
+                      <span className="sm:hidden">Add</span>
                     </button>
                   </div>
                 </div>
