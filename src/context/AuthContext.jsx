@@ -25,16 +25,9 @@ export const AuthProvider = ({ children }) => {
     const token = localStorage.getItem('afrimercato_token')
 
     if (token) {
-      try {
-        const response = await authAPI.getProfile()
-        if (response.data.success) {
-          setUser(response.data.data.user)
-          setIsAuthenticated(true)
-        }
-      } catch (error) {
-        console.error('Auth check failed:', error)
-        logout()
-      }
+      // Token exists, mark as authenticated
+      // User details will be fetched after login/register
+      setIsAuthenticated(true)
     }
 
     setLoading(false)
@@ -44,8 +37,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login({ email, password })
 
-      if (response.data.success) {
-        const { token, user } = response.data.data
+      if (response.success) {
+        const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
         setUser(user)
         setIsAuthenticated(true)
@@ -54,7 +47,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Login failed'
+        message: error.message || 'Login failed'
       }
     }
   }
@@ -63,8 +56,8 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData)
 
-      if (response.data.success) {
-        const { token, user } = response.data.data
+      if (response.success) {
+        const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
         setUser(user)
         setIsAuthenticated(true)
@@ -73,7 +66,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       return {
         success: false,
-        message: error.response?.data?.message || 'Registration failed'
+        message: error.message || 'Registration failed'
       }
     }
   }
