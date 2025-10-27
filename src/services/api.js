@@ -6,24 +6,32 @@
 // =================================================================
 // STEP 1: UPDATE API_BASE_URL
 // =================================================================
-// API Base URL - automatically detects environment
+// API Base URL - uses environment variable or auto-detects
 const API_BASE_URL = (() => {
-  // Check if running on localhost
+  // First priority: Use environment variable if set (for Netlify/Vercel)
+  if (import.meta.env.VITE_API_URL) {
+    console.log('🔗 Using VITE_API_URL from environment:', import.meta.env.VITE_API_URL);
+    return import.meta.env.VITE_API_URL;
+  }
+
+  // Second priority: Auto-detect based on hostname
   const isLocalhost = window.location.hostname === 'localhost' ||
                       window.location.hostname === '127.0.0.1' ||
                       window.location.hostname.includes('192.168');
 
   if (isLocalhost) {
-    // Development - use local backend
+    console.log('🔗 Running on localhost, using local backend');
     return 'http://localhost:5000/api';
   }
 
-  // ✅ UPDATED: Production - use Railway backend
+  // Fallback: Production Railway backend
+  console.log('🔗 Using production Railway backend');
   return 'https://afrimercato-backend-production-0329.up.railway.app/api';
 })();
 
 // Log current API URL (helpful for debugging)
-console.log('🔗 API Base URL:', API_BASE_URL);
+console.log('🔗 Final API Base URL:', API_BASE_URL);
+console.log('🌍 Current hostname:', window.location.hostname);
 
 // =================================================================
 // STEP 2: UPDATE apiCall function with better error handling
