@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "builds": [
+    { "src": "vite.config.js", "use": "@vercel/static-build", "config": { "distDir": "dist" } }
+  ],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "framework": "vite",
@@ -21,7 +24,7 @@
     }
   ],
   "env": {
-    "VITE_API_URL": "https://afrimercato-backend.onrender.com/api"
+    "VITE_API_URL": "https://afrimercato-backend-production.up.railway.app/api"
   },
   "git": {
     "deploymentEnabled": {
