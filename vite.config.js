@@ -1,18 +1,19 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
-// https://vitejs.dev/config/
 export default defineConfig({
-  base: '/afrimercato-frontend/',
+  base: '/afrimercato-frontend/', //match your repo name
   plugins: [react()],
   css: {
     preprocessorOptions: {
-      css: {
-        charset: false
-      }
+      css: { charset: false }
     }
   },
   optimizeDeps: {
     include: ['react-date-range']
+  },
+  build: {
+    outDir: 'dist',
+    sourcemap: false
   }
 })
