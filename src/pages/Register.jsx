@@ -10,7 +10,7 @@ function Register() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'vendor',
+    role: 'customer',
   })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -45,7 +45,22 @@ function Register() {
     const result = await register(formData)
 
     if (result.success) {
-      navigate('/dashboard')
+      // Route based on user role
+      switch (formData.role) {
+        case 'vendor':
+          navigate('/dashboard')
+          break
+        case 'rider':
+          navigate('/rider/dashboard')
+          break
+        case 'picker':
+          navigate('/picker/dashboard')
+          break
+        case 'customer':
+        default:
+          navigate('/')
+          break
+      }
     } else {
       setError(result.message)
     }
@@ -59,13 +74,23 @@ function Register() {
         {/* Logo/Brand */}
         <div className="text-center mb-8">
           <h1 className="text-5xl font-bold text-white mb-2">Afrimercato</h1>
-          <p className="text-afri-yellow text-lg">Start Selling Today</p>
+          <p className="text-afri-yellow text-lg">
+            {formData.role === 'vendor' && 'Start Selling Today'}
+            {formData.role === 'customer' && 'Join Our Community'}
+            {formData.role === 'rider' && 'Become a Delivery Partner'}
+            {formData.role === 'picker' && 'Join Our Fulfillment Team'}
+          </p>
         </div>
 
         {/* Register Card */}
         <div className="bg-white rounded-2xl shadow-2xl p-8">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
-          <p className="text-gray-600 mb-6">Join thousands of vendors on Afrimercato</p>
+          <p className="text-gray-600 mb-6">
+            {formData.role === 'vendor' && 'Join thousands of vendors on Afrimercato'}
+            {formData.role === 'customer' && 'Start shopping for fresh African groceries'}
+            {formData.role === 'rider' && 'Deliver groceries and earn on your schedule'}
+            {formData.role === 'picker' && 'Help fulfill orders from local stores'}
+          </p>
 
           {error && (
             <div className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded">
@@ -74,6 +99,26 @@ function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Role Selection */}
+            <div>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                I want to register as
+              </label>
+              <select
+                id="role"
+                name="role"
+                required
+                value={formData.role}
+                onChange={handleChange}
+                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition bg-white"
+              >
+                <option value="customer">Customer - Shop for groceries</option>
+                <option value="vendor">Vendor - Sell products</option>
+                <option value="rider">Rider - Deliver orders</option>
+                <option value="picker">Picker - Fulfill orders</option>
+              </select>
+            </div>
+
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
                 Full Name
@@ -234,7 +279,7 @@ function Register() {
 
         {/* Footer */}
         <p className="mt-8 text-center text-sm text-white">
-          © 2025 Afrimercato. African marketplace for vendors.
+          © 2025 Afrimercato. Fresh African Groceries Delivered.
         </p>
       </div>
     </div>

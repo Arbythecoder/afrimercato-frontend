@@ -42,7 +42,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('afrimercato_token', token)
         setUser(user)
         setIsAuthenticated(true)
-        return { success: true }
+        return { success: true, user }
       }
     } catch (error) {
       return {

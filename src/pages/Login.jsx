@@ -30,7 +30,24 @@ function Login() {
     const result = await login(formData.email, formData.password)
 
     if (result.success) {
-      navigate('/dashboard')
+      // Route based on user role
+      const userRole = result.user?.role || result.user?.primaryRole || 'customer'
+
+      switch (userRole) {
+        case 'vendor':
+          navigate('/dashboard')
+          break
+        case 'rider':
+          navigate('/rider/dashboard')
+          break
+        case 'picker':
+          navigate('/picker/dashboard')
+          break
+        case 'customer':
+        default:
+          navigate('/')
+          break
+      }
     } else {
       setError(result.message || 'Login failed. Please try again.')
     }
@@ -75,13 +92,13 @@ function Login() {
           >
             Afrimercato
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-afri-yellow text-lg"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.2 }}
           >
-            Vendor Portal
+            Fresh African Groceries
           </motion.p>
         </motion.div>
 
@@ -100,13 +117,13 @@ function Login() {
           >
             Welcome Back
           </motion.h2>
-          <motion.p 
+          <motion.p
             className="text-gray-600 mb-6"
             initial={{ x: -20, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.5 }}
           >
-            Sign in to your vendor account
+            Sign in to your account
           </motion.p>
 
           {error && (
@@ -254,7 +271,7 @@ function Login() {
                 to="/register"
                 className="text-afri-green hover:text-afri-green-dark font-semibold text-base inline-flex items-center"
               >
-                Create vendor account
+                Create an account
                 <motion.span
                   animate={{ x: [0, 5, 0] }}
                   transition={{ repeat: Infinity, duration: 1.5 }}
@@ -268,13 +285,13 @@ function Login() {
         </motion.div>
 
         {/* Footer */}
-        <motion.p 
+        <motion.p
           className="mt-8 text-center text-sm text-white"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 1.1 }}
         >
-          © 2025 Afrimercato. African marketplace for vendors.
+          © 2025 Afrimercato. Fresh African Groceries Delivered.
         </motion.p>
       </motion.div>
 
