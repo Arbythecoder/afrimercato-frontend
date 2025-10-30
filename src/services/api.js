@@ -201,6 +201,26 @@ export const getVendorChartData = async (timeRange = '7d') => {
   return apiCall(`/vendor/dashboard/chart-data?timeRange=${timeRange}`);
 };
 
+// Report generation
+export const getSalesReport = async (filters = {}) => {
+  const queryString = new URLSearchParams(filters).toString();
+  return apiCall(`/vendor/reports/sales?${queryString}`);
+};
+
+export const getInventoryReport = async () => {
+  return apiCall('/vendor/reports/inventory');
+};
+
+export const getOrdersReport = async (filters = {}) => {
+  const queryString = new URLSearchParams(filters).toString();
+  return apiCall(`/vendor/reports/orders?${queryString}`);
+};
+
+export const getRevenueReport = async (filters = {}) => {
+  const queryString = new URLSearchParams(filters).toString();
+  return apiCall(`/vendor/reports/revenue?${queryString}`);
+};
+
 // =================================================================
 // SUBSCRIPTION ENDPOINTS
 // =================================================================
@@ -561,7 +581,11 @@ export const vendorAPI = {
   getOrder: getVendorOrder,
   updateOrderStatus: updateOrderStatus,
   getDashboardStats: getVendorDashboardStats,
-  getChartData: getVendorChartData
+  getChartData: getVendorChartData,
+  getSalesReport: getSalesReport,
+  getInventoryReport: getInventoryReport,
+  getOrdersReport: getOrdersReport,
+  getRevenueReport: getRevenueReport
 };
 
 // Product API (customer-facing)

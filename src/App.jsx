@@ -8,6 +8,7 @@ import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
 import Orders from './pages/vendor/Orders'
+import Reports from './pages/vendor/Reports'
 import Settings from './pages/Settings'
 import Subscription from './pages/Subscription'
 
@@ -74,6 +75,18 @@ function AppContent() {
           isAuthenticated ? (
             <VendorLayout>
               <Orders />
+            </VendorLayout>
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          isAuthenticated ? (
+            <VendorLayout>
+              <Reports />
             </VendorLayout>
           ) : (
             <Navigate to="/login" />

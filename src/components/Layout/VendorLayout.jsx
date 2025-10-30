@@ -12,6 +12,7 @@ function VendorLayout({ children }) {
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Products', path: '/products', icon: '📦' },
     { name: 'Orders', path: '/orders', icon: '🛒' },
+    { name: 'Reports', path: '/reports', icon: '📈' },
     { name: 'Subscription', path: '/subscription', icon: '💳' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },
   ]
