@@ -7,7 +7,7 @@ import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
 import Products from './pages/Products'
-import Orders from './pages/Orders'
+import Orders from './pages/vendor/Orders'
 import Settings from './pages/Settings'
 import Subscription from './pages/Subscription'
 

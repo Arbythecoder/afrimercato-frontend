@@ -182,10 +182,14 @@ export const getVendorOrders = async (filters = {}) => {
   return apiCall(`/vendor/orders?${queryString}`);
 };
 
-export const updateOrderStatus = async (orderId, status, note = '') => {
+export const getVendorOrder = async (orderId) => {
+  return apiCall(`/vendor/orders/${orderId}`);
+};
+
+export const updateOrderStatus = async (orderId, statusData) => {
   return apiCall(`/vendor/orders/${orderId}/status`, {
     method: 'PUT',
-    body: JSON.stringify({ status, note })
+    body: JSON.stringify(statusData)
   });
 };
 
@@ -554,6 +558,7 @@ export const vendorAPI = {
   updateProduct: updateProduct,
   deleteProduct: deleteProduct,
   getOrders: getVendorOrders,
+  getOrder: getVendorOrder,
   updateOrderStatus: updateOrderStatus,
   getDashboardStats: getVendorDashboardStats,
   getChartData: getVendorChartData
