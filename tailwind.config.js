@@ -8,17 +8,34 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Afrimercato brand colors - Organic Green & Yellow
+        // Afrimercato brand colors - Fresh Grocery Theme
         'afri-green': {
-          DEFAULT: '#4A7C2C',
-          dark: '#2D5016',
-          light: '#6B9F3E',
+          DEFAULT: '#00B207',      // Primary green - buttons, CTAs
+          dark: '#2C742F',         // Dark green - hover states
+          light: '#84D187',        // Light green - accents
+          pale: '#EDF2EE',         // Pale sage - backgrounds
         },
         'afri-yellow': {
-          DEFAULT: '#F4B400',
-          light: '#FFCD29',
-          dark: '#D49A00',
+          DEFAULT: '#FFD480',      // Golden yellow - accents
+          light: '#FFF4E0',        // Light yellow - backgrounds
+          dark: '#FF8A00',         // Orange - badges, alerts
         },
+        'afri-gray': {
+          50: '#F4F6F6',           // Product cards background
+          100: '#E8ECEB',
+          200: '#D1D9D7',
+          300: '#B0BDB9',
+          400: '#8A9A94',
+          500: '#6B7C76',
+          600: '#546660',
+          700: '#3F4E49',
+          800: '#2B3632',
+          900: '#1A1A1A',          // Dark text
+        },
+      },
+      backgroundColor: {
+        'primary': '#EDF2EE',      // Main background
+        'card': '#FFFFFF',         // Card background
       },
     },
   },
