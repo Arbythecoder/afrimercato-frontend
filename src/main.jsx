@@ -1,8 +1,16 @@
+
+// =================================================================
+// ✅ CHANGED: BrowserRouter → HashRouter for GitHub Pages
+// WHY: GitHub Pages doesn't support BrowserRouter's clean URLs
+// GitHub Pages can't handle client-side routing without a server
+// HashRouter uses # in URLs which GitHub Pages can serve properly
+// =================================================================
+
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
-import { BrowserRouter } from 'react-router-dom'
+import { HashRouter } from 'react-router-dom'  
 
 // Enhanced error boundary wrapper
 class ErrorBoundary extends React.Component {
@@ -75,10 +83,11 @@ class ErrorBoundary extends React.Component {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <HashRouter>  {/* ✅ CHANGED FROM BrowserRouter */}
       <ErrorBoundary>
         <App />
       </ErrorBoundary>
-    </BrowserRouter>
+    </HashRouter>
   </React.StrictMode>
 )
+// =================================================================

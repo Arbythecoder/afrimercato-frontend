@@ -6,13 +6,13 @@ export default defineConfig({
   plugins: [react()],
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
     rollupOptions: {
       output: {
         manualChunks: {
           vendor: ['react', 'react-dom', 'react-router-dom'],
-          charts: ['recharts', 'chart.js', 'react-chartjs-2'],
-          framer: ['framer-motion'],
+          charts: ['recharts'],
+          ui: ['framer-motion'],
           date: ['date-fns', 'react-date-range']
         }
       }
@@ -20,6 +20,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 1000
   },
   server: {
-    port: 3000
+    port: 5173,
+    open: true
   }
 })
