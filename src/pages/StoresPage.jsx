@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { MapPinIcon, StarIcon, ClockIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid'
-import { api } from '../services/api'
+import { searchVendorsByLocation } from '../services/api'
 
 export default function StoresPage() {
   const [searchParams] = useSearchParams()
@@ -21,10 +21,10 @@ export default function StoresPage() {
     try {
       setLoading(true)
       // Try to fetch from API first
-      const response = await api.get(`/location/search-vendors?location=${encodeURIComponent(location)}&radius=50`)
+      const response = await searchVendorsByLocation(location, 50)
 
-      if (response.vendors && response.vendors.length > 0) {
-        setStores(response.vendors)
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
       } else {
         // If no vendors found, show sample stores
         setStores(getSampleStores(location))
