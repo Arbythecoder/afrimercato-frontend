@@ -2,7 +2,6 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 
 // Pages
-import Home from './pages/Home'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
@@ -11,6 +10,12 @@ import Orders from './pages/vendor/Orders'
 import Reports from './pages/vendor/Reports'
 import Settings from './pages/Settings'
 import Subscription from './pages/Subscription'
+import Home from './pages/Home'
+import PartnerWithUs from './pages/PartnerWithUs'
+import StoresPage from './pages/StoresPage'
+
+// Customer Pages
+import VendorStorefront from './pages/customer/VendorStorefront'
 
 // Layout
 import VendorLayout from './components/Layout/VendorLayout'
@@ -33,8 +38,11 @@ function AppContent() {
 
   return (
     <Routes>
-      {/* Public Routes */}
+      {/* Public Routes - Customer Marketplace */}
       <Route path="/" element={<Home />} />
+      <Route path="/partner" element={<PartnerWithUs />} />
+      <Route path="/stores" element={<StoresPage />} />
+      <Route path="/store/:vendorId" element={<VendorStorefront />} />
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}

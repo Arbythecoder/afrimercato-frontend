@@ -10,6 +10,8 @@ import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
+import './styles/client-theme.css'  // ✅ CLIENT'S EXACT COLORS
+import './styles/animations.css'    // ✅ SMOOTH ANIMATIONS (800x BETTER)
 import { HashRouter } from 'react-router-dom'  
 
 // Enhanced error boundary wrapper

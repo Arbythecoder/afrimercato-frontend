@@ -1,21 +1,22 @@
 import { useState, useEffect } from 'react'
 import { vendorAPI } from '../../services/api'
+import OrderDetailsModal from '../../components/OrderFulfillment/OrderDetailsModal'
 
 // Order status badge colors
 const statusColors = {
-  pending: 'bg-afri-yellow text-afri-gray-900',
-  confirmed: 'bg-blue-500 text-white',
-  assigned_picker: 'bg-purple-500 text-white',
-  picking: 'bg-purple-600 text-white',
-  picked: 'bg-purple-700 text-white',
-  packing: 'bg-indigo-500 text-white',
-  ready_for_pickup: 'bg-afri-green-light text-white',
-  preparing: 'bg-orange-500 text-white',
-  ready: 'bg-afri-green text-white',
-  'out-for-delivery': 'bg-blue-600 text-white',
-  delivered: 'bg-afri-green-dark text-white',
-  completed: 'bg-gray-700 text-white',
-  cancelled: 'bg-red-500 text-white',
+  pending: 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900',
+  confirmed: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
+  assigned_picker: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white',
+  picking: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white',
+  picked: 'bg-gradient-to-r from-purple-700 to-purple-800 text-white',
+  packing: 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white',
+  ready_for_pickup: 'bg-gradient-to-r from-teal-500 to-teal-600 text-white',
+  preparing: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white',
+  ready: 'bg-gradient-to-r from-green-600 to-green-700 text-white',
+  'out-for-delivery': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white',
+  delivered: 'bg-gradient-to-r from-green-700 to-green-800 text-white',
+  completed: 'bg-gradient-to-r from-gray-700 to-gray-800 text-white',
+  cancelled: 'bg-gradient-to-r from-red-500 to-red-600 text-white',
 }
 
 // Status display names
@@ -98,41 +99,17 @@ function Orders() {
         // Refresh orders list
         fetchOrders()
         if (selectedOrder && selectedOrder._id === orderId) {
-          setSelectedOrder(response.data.order)
+          // Refetch the specific order to get updated data
+          const updatedOrderResponse = await vendorAPI.getOrder(orderId)
+          if (updatedOrderResponse.success) {
+            setSelectedOrder(updatedOrderResponse.data.order)
+          }
         }
       }
     } catch (error) {
       console.error('Error updating order status:', error)
       alert(error.response?.data?.message || 'Failed to update order status')
     }
-  }
-
-  // Get available status transitions for an order
-  const getAvailableActions = (order) => {
-    const transitions = {
-      pending: [
-        { status: 'confirmed', label: 'Confirm Order', color: 'afri-green' },
-        { status: 'cancelled', label: 'Cancel', color: 'red-500' },
-      ],
-      confirmed: [
-        { status: 'preparing', label: 'Start Preparing', color: 'orange-500' },
-        { status: 'cancelled', label: 'Cancel', color: 'red-500' },
-      ],
-      preparing: [
-        { status: 'ready', label: 'Mark Ready', color: 'afri-green' },
-      ],
-      ready: [
-        { status: 'out-for-delivery', label: 'Out for Delivery', color: 'blue-600' },
-      ],
-      'out-for-delivery': [
-        { status: 'delivered', label: 'Mark Delivered', color: 'afri-green-dark' },
-      ],
-      delivered: [
-        { status: 'completed', label: 'Complete Order', color: 'gray-700' },
-      ],
-    }
-
-    return transitions[order.status] || []
   }
 
   return (
@@ -291,177 +268,16 @@ function Orders() {
 
       {/* Order Detail Modal */}
       {showOrderModal && selectedOrder && (
-        <OrderDetailModal
+        <OrderDetailsModal
           order={selectedOrder}
           onClose={() => {
             setShowOrderModal(false)
             setSelectedOrder(null)
           }}
           onStatusUpdate={updateOrderStatus}
-          availableActions={getAvailableActions(selectedOrder)}
+          onRefresh={fetchOrders}
         />
       )}
-    </div>
-  )
-}
-
-// Order Detail Modal Component
-function OrderDetailModal({ order, onClose, onStatusUpdate, availableActions }) {
-  return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-afri-green text-white p-6 rounded-t-lg">
-          <div className="flex justify-between items-start">
-            <div>
-              <h2 className="text-2xl font-bold">{order.orderNumber}</h2>
-              <p className="text-afri-green-pale mt-1">
-                Placed on {new Date(order.createdAt).toLocaleString()}
-              </p>
-            </div>
-            <button
-              onClick={onClose}
-              className="text-white hover:text-afri-gray-200 transition"
-            >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
-        </div>
-
-        <div className="p-6">
-          {/* Status and Actions */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h3 className="text-sm font-medium text-afri-gray-500 mb-1">Current Status</h3>
-              <span className={`px-4 py-2 inline-flex text-sm font-semibold rounded-lg ${statusColors[order.status]}`}>
-                {statusNames[order.status]}
-              </span>
-            </div>
-            {availableActions.length > 0 && (
-              <div className="flex gap-2">
-                {availableActions.map((action) => (
-                  <button
-                    key={action.status}
-                    onClick={() => {
-                      if (confirm(`Are you sure you want to ${action.label.toLowerCase()}?`)) {
-                        onStatusUpdate(order._id, action.status)
-                      }
-                    }}
-                    className={`px-4 py-2 bg-${action.color} text-white rounded-lg font-medium hover:opacity-90 transition`}
-                  >
-                    {action.label}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Customer Info */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-afri-gray-900 mb-3">Customer Information</h3>
-            <div className="bg-afri-gray-50 rounded-lg p-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm text-afri-gray-500">Name</p>
-                  <p className="font-medium text-afri-gray-900">{order.deliveryAddress.fullName}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-afri-gray-500">Phone</p>
-                  <p className="font-medium text-afri-gray-900">{order.deliveryAddress.phone}</p>
-                </div>
-                <div className="col-span-2">
-                  <p className="text-sm text-afri-gray-500">Delivery Address</p>
-                  <p className="font-medium text-afri-gray-900">
-                    {order.deliveryAddress.street}, {order.deliveryAddress.city}, {order.deliveryAddress.state}
-                  </p>
-                  {order.deliveryAddress.instructions && (
-                    <p className="text-sm text-afri-gray-600 mt-1">
-                      Note: {order.deliveryAddress.instructions}
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Order Items */}
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-afri-gray-900 mb-3">Order Items</h3>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-afri-gray-50">
-                  <tr>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase">Product</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase">Price</th>
-                    <th className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase">Quantity</th>
-                    <th className="px-4 py-3 text-right text-xs font-medium text-afri-gray-700 uppercase">Subtotal</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {order.items.map((item, index) => (
-                    <tr key={index}>
-                      <td className="px-4 py-3 text-sm text-afri-gray-900">{item.name}</td>
-                      <td className="px-4 py-3 text-sm text-afri-gray-900">£{item.price.toFixed(2)}</td>
-                      <td className="px-4 py-3 text-sm text-afri-gray-900">{item.quantity} {item.unit}</td>
-                      <td className="px-4 py-3 text-sm text-afri-gray-900 text-right font-medium">
-                        £{item.subtotal.toFixed(2)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Pricing Summary */}
-          <div className="bg-afri-gray-50 rounded-lg p-4">
-            <div className="space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-afri-gray-600">Subtotal</span>
-                <span className="text-afri-gray-900">£{order.pricing.subtotal.toFixed(2)}</span>
-              </div>
-              {order.pricing.deliveryFee > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-afri-gray-600">Delivery Fee</span>
-                  <span className="text-afri-gray-900">£{order.pricing.deliveryFee.toFixed(2)}</span>
-                </div>
-              )}
-              {order.pricing.tax > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-afri-gray-600">Tax</span>
-                  <span className="text-afri-gray-900">£{order.pricing.tax.toFixed(2)}</span>
-                </div>
-              )}
-              {order.pricing.discount > 0 && (
-                <div className="flex justify-between text-sm text-afri-green">
-                  <span>Discount</span>
-                  <span>-£{order.pricing.discount.toFixed(2)}</span>
-                </div>
-              )}
-              <div className="border-t border-gray-300 pt-2 flex justify-between">
-                <span className="font-semibold text-afri-gray-900">Total</span>
-                <span className="font-bold text-lg text-afri-green">£{order.pricing.total.toFixed(2)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Payment Info */}
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <div>
-              <span className="text-afri-gray-500">Payment Method: </span>
-              <span className="font-medium text-afri-gray-900 capitalize">{order.payment.method}</span>
-            </div>
-            <div>
-              <span className="text-afri-gray-500">Payment Status: </span>
-              <span className={`font-medium ${order.payment.status === 'paid' ? 'text-afri-green' : 'text-afri-yellow-dark'}`}>
-                {order.payment.status.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   )
 }
