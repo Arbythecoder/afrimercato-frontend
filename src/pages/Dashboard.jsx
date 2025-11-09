@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { vendorAPI } from '../services/api'
 import { analyticsAPI } from '../services/analyticsAPI'
 import AdvancedAnalytics from '../components/Analytics/AdvancedAnalytics'
+import VendorOnboarding from '../components/VendorOnboarding'
 import {
   AreaChart,
   Area,
@@ -23,6 +24,7 @@ function Dashboard() {
   const [error, setError] = useState('')
   const [timeRange, setTimeRange] = useState('7d')
   const [chartData, setChartData] = useState([])
+  const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   // Initial state for charts
 
@@ -63,6 +65,13 @@ function Dashboard() {
         console.error('Dashboard error:', err)
         const errorMsg = err.message || 'Failed to load dashboard'
 
+        // Check if vendor profile is missing
+        if (errorMsg.includes('Vendor profile not found') || errorMsg.includes('VENDOR_NOT_FOUND')) {
+          setNeedsOnboarding(true)
+          setLoading(false)
+          return
+        }
+
         // Check if it's an auth error
         if (errorMsg.includes('401') || errorMsg.includes('Session expired') || errorMsg.includes('Unauthorized')) {
           setError('Your session has expired. Please log in again.')
@@ -80,6 +89,11 @@ function Dashboard() {
     fetchData()
   }, [timeRange, activeTab])
 
+  const handleOnboardingComplete = () => {
+    setNeedsOnboarding(false)
+    window.location.reload()
+  }
+
   // Removed unused function as it's now handled in the useEffect
 
   if (loading) {
@@ -88,6 +102,10 @@ function Dashboard() {
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-afri-green"></div>
       </div>
     )
+  }
+
+  if (needsOnboarding) {
+    return <VendorOnboarding onComplete={handleOnboardingComplete} />
   }
 
   if (error) {

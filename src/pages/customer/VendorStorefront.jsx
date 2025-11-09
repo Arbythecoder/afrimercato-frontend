@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getVendorById, getVendorProductsByVendorId } from '../../services/api'
+import { getProductImage, getStoreBanner } from '../../utils/defaultImages'
 
 function VendorStorefront() {
   const { vendorId } = useParams()
@@ -176,8 +177,8 @@ function VendorStorefront() {
             {/* Right: Image */}
             <div className="hidden md:block">
               <img
-                src={vendor.storeImage || "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600&h=400&fit=crop"}
-                alt="Fresh Produce"
+                src={getStoreBanner(vendor)}
+                alt={vendor.storeName || vendor.businessName}
                 className="rounded-2xl shadow-xl w-full h-64 object-cover"
               />
             </div>
@@ -310,7 +311,7 @@ function VendorStorefront() {
                     {cart.map((item) => (
                       <div key={item._id} className="flex gap-4 border-b pb-4">
                         <img
-                          src={item.images?.[0]?.url || 'https://via.placeholder.com/80'}
+                          src={getProductImage(item)}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg"
                         />
@@ -398,7 +399,7 @@ function ProductCard({ product, onAddToCart }) {
       {/* Product Image */}
       <div className="relative h-40 bg-gray-100 overflow-hidden">
         <img
-          src={product.images?.[0]?.url || 'https://via.placeholder.com/200'}
+          src={getProductImage(product)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
         />

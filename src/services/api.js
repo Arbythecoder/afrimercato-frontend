@@ -11,17 +11,69 @@ const API_BASE_URL = (() => {
                       window.location.hostname.includes('192.168');
 
   if (isLocalhost) {
-    return 'http://localhost:5000/api';
+    return 'https://afrimercato-backend-production-0329.up.railway.app/api';
   }
 
-  // Production: Your Railway backend
+  // Production:  Railway backend
   return 'https://afrimercato-backend-production-0329.up.railway.app/api';
 })();
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
-// Generic API call function
-const apiCall = async (endpoint, options = {}) => {
+// Token refresh in progress flag to prevent multiple simultaneous refresh attempts
+let isRefreshing = false;
+let failedQueue = [];
+
+const processQueue = (error, token = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+// Attempt to refresh the access token
+const refreshAccessToken = async () => {
+  const refreshToken = localStorage.getItem('afrimercato_refresh_token');
+
+  if (!refreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ refreshToken })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const data = await response.json();
+
+    if (data.success && data.data?.token) {
+      localStorage.setItem('afrimercato_token', data.data.token);
+      return data.data.token;
+    }
+
+    throw new Error('Invalid refresh response');
+  } catch (error) {
+    // Refresh failed - clear all tokens and redirect to login
+    localStorage.removeItem('afrimercato_token');
+    localStorage.removeItem('afrimercato_refresh_token');
+    throw error;
+  }
+};
+
+// Generic API call function with automatic token refresh
+const apiCall = async (endpoint, options = {}, isRetry = false) => {
   try {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
@@ -39,12 +91,54 @@ const apiCall = async (endpoint, options = {}) => {
     }
 
     const response = await fetch(url, config);
-    
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
 
+      // Handle 401 - Token expired or invalid
+      if (response.status === 401 && !isRetry) {
+        // Check if this is a token expiration issue
+        if (errorData.errorCode === 'TOKEN_EXPIRED' || errorData.errorCode === 'INVALID_TOKEN') {
+
+          // Prevent multiple simultaneous refresh attempts
+          if (isRefreshing) {
+            // Queue this request to be retried after token refresh
+            return new Promise((resolve, reject) => {
+              failedQueue.push({ resolve, reject });
+            })
+            .then(token => {
+              return apiCall(endpoint, options, true);
+            })
+            .catch(err => {
+              throw err;
+            });
+          }
+
+          isRefreshing = true;
+
+          try {
+            // Attempt to refresh the token
+            const newToken = await refreshAccessToken();
+            processQueue(null, newToken);
+
+            // Retry the original request with new token
+            isRefreshing = false;
+            return apiCall(endpoint, options, true);
+          } catch (refreshError) {
+            processQueue(refreshError, null);
+            isRefreshing = false;
+
+            // Refresh failed - redirect to login
+            window.location.href = '/login';
+            throw new Error('Session expired. Please log in again.');
+          }
+        }
+      }
+
+      // For other 401 errors or if retry failed
       if (response.status === 401) {
         localStorage.removeItem('afrimercato_token');
+        localStorage.removeItem('afrimercato_refresh_token');
         throw new Error('Session expired. Please log in again.');
       }
 
@@ -65,11 +159,16 @@ export const loginUser = async (credentials) => {
     method: 'POST',
     body: JSON.stringify(credentials)
   });
-  
+
   if (response.success && response.data?.token) {
     localStorage.setItem('afrimercato_token', response.data.token);
+
+    // Store refresh token if provided
+    if (response.data.refreshToken) {
+      localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
+    }
   }
-  
+
   return response;
 };
 
@@ -78,11 +177,16 @@ export const registerUser = async (userData) => {
     method: 'POST',
     body: JSON.stringify(userData)
   });
-  
+
   if (response.success && response.data?.token) {
     localStorage.setItem('afrimercato_token', response.data.token);
+
+    // Store refresh token if provided
+    if (response.data.refreshToken) {
+      localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
+    }
   }
-  
+
   return response;
 };
 
@@ -92,7 +196,9 @@ export const logoutUser = async () => {
       method: 'POST'
     });
   } finally {
+    // Clear both tokens
     localStorage.removeItem('afrimercato_token');
+    localStorage.removeItem('afrimercato_refresh_token');
     window.location.href = '/login';
   }
 };
@@ -400,7 +506,7 @@ export const uploadImage = async (file, type = 'general') => {
 
 export const uploadProductImages = async (files) => {
   const formData = new FormData();
-  
+
   files.forEach((file) => {
     formData.append('images', file);
   });
@@ -413,6 +519,35 @@ export const uploadProductImages = async (files) => {
       ...(token && { Authorization: `Bearer ${token}` })
     },
     body: formData
+  });
+};
+
+// Bulk Operations
+export const bulkDeleteProducts = async (data) => {
+  return apiCall('/vendor/products/bulk-delete', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const bulkUpdateStatus = async (data) => {
+  return apiCall('/vendor/products/bulk-status', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const bulkUpdatePrices = async (data) => {
+  return apiCall('/vendor/products/bulk-price', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const bulkUpdateStock = async (data) => {
+  return apiCall('/vendor/products/bulk-stock', {
+    method: 'POST',
+    body: JSON.stringify(data)
   });
 };
 
@@ -501,6 +636,7 @@ export const setAuthToken = (token) => {
 
 export const clearAuthToken = () => {
   localStorage.removeItem('afrimercato_token');
+  localStorage.removeItem('afrimercato_refresh_token');
 };
 
 // GROUPED EXPORTS FOR CONVENIENCE
@@ -531,7 +667,12 @@ export const vendorAPI = {
   getSalesReport,
   getInventoryReport,
   getOrdersReport,
-  getRevenueReport
+  getRevenueReport,
+  uploadProductImages,
+  bulkDeleteProducts,
+  bulkUpdateStatus,
+  bulkUpdatePrices,
+  bulkUpdateStock
 };
 
 export const productAPI = {

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
+import { HERO_IMAGES } from '../utils/defaultImages'
 
 function Register() {
   const navigate = useNavigate()
@@ -68,22 +70,182 @@ function Register() {
     setLoading(false)
   }
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.1,
+        staggerChildren: 0.1
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 100
+      }
+    }
+  }
+
+  const getRoleContent = () => {
+    switch(formData.role) {
+      case 'vendor':
+        return {
+          title: 'Start Selling Today',
+          subtitle: 'Join thousands of vendors on Afrimercato',
+          benefit1: '📊 Real-time sales analytics',
+          benefit2: '🚀 Instant order notifications',
+          benefit3: '💰 Low commission rates',
+          image: HERO_IMAGES.store1
+        }
+      case 'rider':
+        return {
+          title: 'Become a Delivery Partner',
+          subtitle: 'Deliver groceries and earn on your schedule',
+          benefit1: '⏰ Flexible working hours',
+          benefit2: '💵 Competitive earnings',
+          benefit3: '📱 Easy-to-use rider app',
+          image: HERO_IMAGES.hero2
+        }
+      case 'picker':
+        return {
+          title: 'Join Our Fulfillment Team',
+          subtitle: 'Help fulfill orders from local stores',
+          benefit1: '🏪 Work with top vendors',
+          benefit2: '📦 Simple picking process',
+          benefit3: '💪 Great team environment',
+          image: HERO_IMAGES.store2
+        }
+      default: // customer
+        return {
+          title: 'Join Our Community',
+          subtitle: 'Start shopping for fresh African groceries',
+          benefit1: '🥬 Fresh produce daily',
+          benefit2: '🚚 Fast delivery',
+          benefit3: '🎁 Exclusive deals',
+          image: HERO_IMAGES.hero1
+        }
+    }
+  }
+
+  const roleContent = getRoleContent()
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-afri-green to-afri-green-dark py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full">
-        {/* Logo/Brand */}
-        <div className="text-center mb-8">
-          <h1 className="text-5xl font-bold text-white mb-2">Afrimercato</h1>
-          <p className="text-afri-yellow text-lg">
-            {formData.role === 'vendor' && 'Start Selling Today'}
-            {formData.role === 'customer' && 'Join Our Community'}
-            {formData.role === 'rider' && 'Become a Delivery Partner'}
-            {formData.role === 'picker' && 'Join Our Fulfillment Team'}
-          </p>
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Left Side - Hero Content */}
+      <motion.div
+        initial={{ x: -50, opacity: 0 }}
+        animate={{ x: 0, opacity: 1 }}
+        transition={{ duration: 0.6 }}
+        className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-afri-green via-afri-green-dark to-green-900 p-12 flex-col justify-between relative overflow-hidden"
+      >
+        {/* Background Pattern */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
+            backgroundSize: '40px 40px'
+          }}></div>
         </div>
 
-        {/* Register Card */}
-        <div className="bg-white rounded-2xl shadow-2xl p-8">
+        {/* Content */}
+        <div className="relative z-10">
+          <motion.div
+            initial={{ y: -20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.6 }}
+          >
+            <h1 className="text-6xl font-bold text-white mb-2">Afrimercato</h1>
+            <p className="text-afri-yellow text-xl font-semibold">{roleContent.title}</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ y: 20, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="mt-12 space-y-6"
+          >
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                <svg className="w-6 h-6 text-afri-yellow" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-white text-lg font-medium">{roleContent.benefit1}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                <svg className="w-6 h-6 text-afri-yellow" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-white text-lg font-medium">{roleContent.benefit2}</p>
+              </div>
+            </div>
+
+            <div className="flex items-start space-x-4">
+              <div className="bg-white/20 rounded-lg p-3 backdrop-blur-sm">
+                <svg className="w-6 h-6 text-afri-yellow" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-white text-lg font-medium">{roleContent.benefit3}</p>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Hero Image */}
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.6 }}
+          className="relative z-10"
+        >
+          <img
+            src={roleContent.image}
+            alt={roleContent.title}
+            className="rounded-2xl shadow-2xl w-full h-64 object-cover border-4 border-white/20"
+          />
+        </motion.div>
+
+        {/* Footer */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 }}
+          className="relative z-10 text-white/70 text-sm"
+        >
+          © 2025 Afrimercato. Fresh African Groceries Delivered.
+        </motion.p>
+      </motion.div>
+
+      {/* Right Side - Registration Form */}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full max-w-md"
+        >
+          {/* Mobile Logo */}
+          <motion.div variants={itemVariants} className="lg:hidden text-center mb-8">
+            <h1 className="text-4xl font-bold text-afri-green mb-2">Afrimercato</h1>
+            <p className="text-gray-600">{roleContent.title}</p>
+          </motion.div>
+
+          {/* Register Card */}
+          <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
           <p className="text-gray-600 mb-6">
             {formData.role === 'vendor' && 'Join thousands of vendors on Afrimercato'}
@@ -275,12 +437,13 @@ function Register() {
               </Link>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Footer */}
-        <p className="mt-8 text-center text-sm text-white">
-          © 2025 Afrimercato. Fresh African Groceries Delivered.
-        </p>
+          {/* Footer */}
+          <p className="mt-8 text-center text-sm text-gray-600 lg:hidden">
+            © 2025 Afrimercato. Fresh African Groceries Delivered.
+          </p>
+        </motion.div>
       </div>
     </div>
   )

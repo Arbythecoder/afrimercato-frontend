@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { HERO_IMAGES } from '../../utils/defaultImages'
 
 function LandingPage() {
   const navigate = useNavigate()
@@ -99,13 +100,13 @@ function LandingPage() {
             </div>
           </div>
 
-          {/* Right Side: Image Placeholder */}
+          {/* Right Side: Hero Image */}
           <div className="hidden md:block">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-transparent rounded-3xl"></div>
               <img
-                src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=600&h=700&fit=crop"
-                alt="Happy customer with fresh produce"
+                src={HERO_IMAGES.main}
+                alt="AfriHub - Fresh African Groceries"
                 className="rounded-3xl shadow-2xl w-full h-[500px] object-cover"
               />
             </div>
