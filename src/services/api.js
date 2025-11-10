@@ -683,6 +683,50 @@ export const vendorAPI = {
   bulkUpdateStock
 };
 
+// =================================================================
+// CUSTOMER ENDPOINTS
+// =================================================================
+
+export const getCustomerDashboardStats = async () => {
+  return apiCall('/customer/dashboard/stats');
+};
+
+export const getCustomerRecentOrders = async (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return apiCall(`/customer/orders/recent?${queryString}`);
+};
+
+export const getRecommendedProducts = async (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return apiCall(`/customer/products/recommended?${queryString}`);
+};
+
+export const getWishlist = async () => {
+  return apiCall('/customer/wishlist');
+};
+
+export const addToWishlist = async (productId) => {
+  return apiCall('/customer/wishlist', {
+    method: 'POST',
+    body: JSON.stringify({ productId })
+  });
+};
+
+export const removeFromWishlist = async (productId) => {
+  return apiCall(`/customer/wishlist/${productId}`, {
+    method: 'DELETE'
+  });
+};
+
+export const customerAPI = {
+  getDashboardStats: getCustomerDashboardStats,
+  getRecentOrders: getCustomerRecentOrders,
+  getRecommendedProducts,
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist
+};
+
 export const productAPI = {
   getFeatured: getFeaturedProducts,
   getAll: getAllProducts,
@@ -722,6 +766,7 @@ export const vendorsAPI = {
 export default {
   authAPI,
   vendorAPI,
+  customerAPI,
   productAPI,
   orderAPI,
   userAPI,

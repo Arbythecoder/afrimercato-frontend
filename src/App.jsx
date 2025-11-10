@@ -16,6 +16,7 @@ import StoresPage from './pages/StoresPage'
 
 // Customer Pages
 import VendorStorefront from './pages/customer/VendorStorefront'
+import CustomerDashboard from './pages/customer/CustomerDashboard'
 
 // Layout
 import VendorLayout from './components/Layout/VendorLayout'
@@ -43,6 +44,19 @@ function AppContent() {
       <Route path="/partner" element={<PartnerWithUs />} />
       <Route path="/stores" element={<StoresPage />} />
       <Route path="/store/:vendorId" element={<VendorStorefront />} />
+
+      {/* Customer Dashboard */}
+      <Route
+        path="/my-dashboard"
+        element={
+          isAuthenticated ? (
+            <CustomerDashboard />
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+
       <Route
         path="/login"
         element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
