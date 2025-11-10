@@ -3,6 +3,7 @@ import PackingChecklist from './PackingChecklist'
 import PickerAssignment from './PickerAssignment'
 import OrderStatusControls from './OrderStatusControls'
 import OrderStatusTimeline from './OrderStatusTimeline'
+import RiderRating from './RiderRating'
 
 // Order status badge colors using client theme
 const statusColors = {
@@ -128,6 +129,7 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
               { id: 'timeline', label: 'Timeline', icon: '📍' },
               { id: 'packing', label: 'Packing', icon: '📦', show: ['packing', 'picking', 'assigned_picker'].includes(order.status) },
               { id: 'picker', label: 'Picker', icon: '👤', show: ['pending', 'confirmed'].includes(order.status) },
+              { id: 'rating', label: 'Rate Rider', icon: '⭐', show: ['delivered', 'completed'].includes(order.status) },
             ].map((tab) => {
               if (tab.show === false || (tab.show && !tab.show)) return null
 
@@ -319,6 +321,13 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
             <PickerAssignment
               order={order}
               onPickerAssigned={handlePickerAssigned}
+            />
+          )}
+
+          {activeTab === 'rating' && (
+            <RiderRating
+              order={order}
+              onRatingSubmitted={onRefresh}
             />
           )}
         </div>

@@ -1,7 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 function OrderStatusTimeline({ order }) {
   const [showAllHistory, setShowAllHistory] = useState(false)
+  const [animatedProgress, setAnimatedProgress] = useState(0)
 
   // Timeline stages in order
   const timelineStages = [
@@ -144,15 +145,70 @@ function OrderStatusTimeline({ order }) {
 
   const displayedHistory = showAllHistory ? statusHistory : statusHistory.slice(0, 3)
 
+  // Animate progress bar on mount and when current stage changes
+  useEffect(() => {
+    const targetProgress = ((currentStageIndex + 1) / timelineStages.length) * 100
+    let currentProgress = 0
+    const increment = targetProgress / 50
+
+    const timer = setInterval(() => {
+      currentProgress += increment
+      if (currentProgress >= targetProgress) {
+        setAnimatedProgress(targetProgress)
+        clearInterval(timer)
+      } else {
+        setAnimatedProgress(currentProgress)
+      }
+    }, 20)
+
+    return () => clearInterval(timer)
+  }, [currentStageIndex, timelineStages.length])
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#FFB300] to-[#FFA726] rounded-xl p-6 text-white shadow-lg">
+      <div className="bg-gradient-to-br from-[#FFB300] to-[#FFA726] rounded-xl p-6 text-white shadow-lg animate-slideDown">
         <h3 className="text-2xl font-bold mb-2">Order Timeline</h3>
         <p className="text-gray-900">
           Track the progress of order {order.orderNumber}
         </p>
       </div>
+
+      {/* Animated Progress Bar */}
+      {!isCancelled && (
+        <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200 animate-fadeIn">
+          <div className="flex items-center justify-between mb-3">
+            <h4 className="text-lg font-semibold text-gray-900">Overall Progress</h4>
+            <span className="text-2xl font-bold bg-gradient-to-r from-[#00897B] to-[#00695C] bg-clip-text text-transparent">
+              {Math.round(animatedProgress)}%
+            </span>
+          </div>
+          <div className="relative w-full h-6 bg-gray-200 rounded-full overflow-hidden shadow-inner">
+            <div
+              className="absolute top-0 left-0 h-full bg-gradient-to-r from-[#00897B] via-[#00695C] to-[#00897B] rounded-full transition-all duration-1000 ease-out shadow-lg animate-shimmer"
+              style={{ width: `${animatedProgress}%` }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white to-transparent opacity-30 animate-pulse" />
+            </div>
+            {/* Progress markers */}
+            {timelineStages.map((_, index) => {
+              const position = ((index + 1) / timelineStages.length) * 100
+              return (
+                <div
+                  key={index}
+                  className="absolute top-1/2 transform -translate-y-1/2 w-2 h-2 bg-white rounded-full shadow-md"
+                  style={{ left: `${position}%`, marginLeft: '-4px' }}
+                />
+              )
+            })}
+          </div>
+          <div className="flex justify-between mt-2 text-xs text-gray-500">
+            <span>Started</span>
+            <span className="font-semibold text-[#FFB300]">{timelineStages[currentStageIndex]?.label || 'Unknown'}</span>
+            <span>Completed</span>
+          </div>
+        </div>
+      )}
 
       {/* Visual Timeline */}
       <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-200">
@@ -168,11 +224,20 @@ function OrderStatusTimeline({ order }) {
               const isLast = index === timelineStages.length - 1
 
               return (
-                <div key={stage.status} className="relative flex items-start gap-4 pb-8">
+                <div
+                  key={stage.status}
+                  className="relative flex items-start gap-4 pb-8 animate-slideIn"
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
                   {/* Vertical line */}
                   {!isLast && (
                     <div className="absolute left-5 top-12 w-0.5 h-full">
-                      <div className={`w-full h-full ${colors.line}`} />
+                      <div
+                        className={`w-full transition-all duration-500 ${colors.line}`}
+                        style={{
+                          height: stageStatus === 'completed' ? '100%' : stageStatus === 'current' ? '50%' : '0%'
+                        }}
+                      />
                     </div>
                   )}
 
@@ -181,19 +246,24 @@ function OrderStatusTimeline({ order }) {
                     <div
                       className={`
                         w-10 h-10 rounded-full flex items-center justify-center
-                        border-4 border-white shadow-lg
+                        border-4 border-white shadow-lg transform transition-all duration-500
                         ${colors.bg}
-                        ${stageStatus === 'current' ? 'animate-pulse' : ''}
+                        ${stageStatus === 'current' ? 'animate-pulseGlow scale-110 ring-4 ring-[#FFB300] ring-opacity-50' : ''}
+                        ${stageStatus === 'completed' ? 'animate-bounceIn' : ''}
+                        ${stageStatus === 'upcoming' ? 'scale-90 opacity-50' : ''}
                       `}
                     >
                       <span className="text-white text-xl">{stage.icon}</span>
                     </div>
                     {stageStatus === 'completed' && (
-                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#00897B] rounded-full flex items-center justify-center">
+                      <div className="absolute -top-1 -right-1 w-5 h-5 bg-[#00897B] rounded-full flex items-center justify-center animate-checkmark">
                         <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                         </svg>
                       </div>
+                    )}
+                    {stageStatus === 'current' && (
+                      <div className="absolute inset-0 rounded-full bg-[#FFB300] animate-ping opacity-20" />
                     )}
                   </div>
 
@@ -349,6 +419,116 @@ function OrderStatusTimeline({ order }) {
           <p className="text-sm text-gray-600 mt-1">Status changes</p>
         </div>
       </div>
+
+      {/* Custom Animations */}
+      <style jsx>{`
+        @keyframes slideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(-20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+
+        @keyframes pulseGlow {
+          0%, 100% {
+            box-shadow: 0 0 20px rgba(255, 179, 0, 0.5);
+          }
+          50% {
+            box-shadow: 0 0 40px rgba(255, 179, 0, 0.8);
+          }
+        }
+
+        @keyframes bounceIn {
+          0% {
+            transform: scale(0.5);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.1);
+          }
+          100% {
+            transform: scale(1);
+            opacity: 1;
+          }
+        }
+
+        @keyframes checkmark {
+          0% {
+            transform: scale(0) rotate(-45deg);
+            opacity: 0;
+          }
+          50% {
+            transform: scale(1.2) rotate(0deg);
+          }
+          100% {
+            transform: scale(1) rotate(0deg);
+            opacity: 1;
+          }
+        }
+
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
+        }
+
+        .animate-slideDown {
+          animation: slideDown 0.5s ease-out;
+        }
+
+        .animate-fadeIn {
+          animation: fadeIn 0.6s ease-out;
+        }
+
+        .animate-slideIn {
+          animation: slideIn 0.5s ease-out forwards;
+          opacity: 0;
+        }
+
+        .animate-pulseGlow {
+          animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .animate-bounceIn {
+          animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .animate-checkmark {
+          animation: checkmark 0.4s ease-out;
+        }
+
+        .animate-shimmer {
+          background-size: 200% 100%;
+          animation: shimmer 3s linear infinite;
+        }
+      `}</style>
     </div>
   )
 }

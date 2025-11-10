@@ -269,6 +269,13 @@ export const updateOrderStatus = async (orderId, statusData) => {
   });
 };
 
+export const rateRider = async (orderId, ratingData) => {
+  return apiCall(`/vendor/orders/${orderId}/rate-rider`, {
+    method: 'POST',
+    body: JSON.stringify(ratingData)
+  });
+};
+
 export const getVendorDashboardStats = async () => {
   return apiCall('/vendor/dashboard/stats');
 };
@@ -662,6 +669,7 @@ export const vendorAPI = {
   getOrders: getVendorOrders,
   getOrder: getVendorOrder,
   updateOrderStatus,
+  rateRider,
   getDashboardStats: getVendorDashboardStats,
   getChartData: getVendorChartData,
   getSalesReport,
