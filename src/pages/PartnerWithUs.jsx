@@ -82,7 +82,7 @@ export default function PartnerWithUs() {
   const faqs = [
     {
       q: 'How much does it cost to join?',
-      a: 'Joining AfriHub is free! We charge a small commission (12-15%) on each sale to cover platform costs, payment processing, and support.'
+      a: 'Joining AfriMercato is free! We charge a small commission (12-15%) on each sale to cover platform costs, payment processing, and support.'
     },
     {
       q: 'How long does verification take?',
@@ -132,7 +132,7 @@ export default function PartnerWithUs() {
             animate={{ opacity: 1, y: 0 }}
             className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6"
           >
-            Grow Your Food Business with AfriHub
+            Grow Your Food Business with AfriMercato
           </motion.h1>
           <motion.p
             initial={{ opacity: 0, y: 20 }}
@@ -189,7 +189,7 @@ export default function PartnerWithUs() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="text-center mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
-              Why Sell on AfriHub?
+              Why Sell on AfriMercato?
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
               Everything you need to run a successful online grocery business
@@ -306,7 +306,7 @@ export default function PartnerWithUs() {
             Ready to Start Selling?
           </h2>
           <p className="text-xl text-white/95 mb-8">
-            Join thousands of vendors growing their business on AfriHub
+            Join thousands of vendors growing their business on AfriMercato
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
@@ -330,7 +330,7 @@ export default function PartnerWithUs() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
             <div>
-              <h4 className="text-white font-bold mb-4">AfriHub</h4>
+              <h4 className="text-white font-bold mb-4">AfriMercato</h4>
               <p className="text-sm">African groceries delivered to your door across the UK.</p>
             </div>
             <div>
@@ -356,7 +356,7 @@ export default function PartnerWithUs() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; 2025 AfriHub. All rights reserved.</p>
+            <p>&copy; 2025 AfriMercato. All rights reserved.</p>
           </div>
         </div>
       </footer>

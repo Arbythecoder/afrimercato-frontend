@@ -67,7 +67,7 @@ function StoreMarketplace() {
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-2">
               <span className="text-4xl">🛒</span>
-              <h1 className="text-3xl font-bold">AfriHub</h1>
+              <h1 className="text-3xl font-bold">AfriMercato</h1>
             </div>
             <button
               onClick={() => navigate('/register')}
@@ -206,7 +206,7 @@ function StoreMarketplace() {
       {/* Footer */}
       <footer className="bg-[#1A1A1A] text-white py-8 mt-12">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-400">&copy; 2025 AfriHub. All rights reserved.</p>
+          <p className="text-gray-400">&copy; 2025 AfriMercato. All rights reserved.</p>
         </div>
       </footer>
     </div>

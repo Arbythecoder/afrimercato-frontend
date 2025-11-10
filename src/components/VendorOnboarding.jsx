@@ -200,6 +200,8 @@ const VendorOnboarding = ({ onComplete }) => {
         brandColors: formData.brandColors
       }
 
+      console.log('Sending profile data:', JSON.stringify(profileData, null, 2))
+
       const response = await createVendorProfile(profileData)
 
       if (response.success) {
@@ -219,7 +221,15 @@ const VendorOnboarding = ({ onComplete }) => {
       }
     } catch (err) {
       console.error('Onboarding error:', err)
-      setError(err.message || 'Failed to create vendor profile')
+
+      // Display detailed validation errors if available
+      if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
+        const errorMessages = err.response.data.errors.map(e => `• ${e.field}: ${e.message}`).join('\n')
+        setError(`Validation errors:\n${errorMessages}`)
+        console.error('Validation errors:', err.response.data.errors)
+      } else {
+        setError(err.response?.data?.message || err.message || 'Failed to create vendor profile')
+      }
     } finally {
       setLoading(false)
     }

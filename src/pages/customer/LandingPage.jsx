@@ -34,7 +34,7 @@ function LandingPage() {
           {/* Logo */}
           <div className="flex items-center gap-2">
             <span className="text-4xl">🛒</span>
-            <h1 className="text-3xl font-bold text-white">AfriHub</h1>
+            <h1 className="text-3xl font-bold text-white">AfriMercato</h1>
           </div>
 
           {/* Navigation */}
@@ -106,7 +106,7 @@ function LandingPage() {
               <div className="absolute inset-0 bg-gradient-to-br from-[#00897B]/20 to-transparent rounded-3xl"></div>
               <img
                 src={HERO_IMAGES.main}
-                alt="AfriHub - Fresh African Groceries"
+                alt="AfriMercato - Fresh African Groceries"
                 className="rounded-3xl shadow-2xl w-full h-[500px] object-cover"
               />
             </div>
@@ -228,7 +228,7 @@ function LandingPage() {
       {/* Footer */}
       <footer className="bg-[#1A1A1A] text-white py-8 mt-12">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-400">&copy; 2025 AfriHub. All rights reserved.</p>
+          <p className="text-gray-400">&copy; 2025 AfriMercato. All rights reserved.</p>
         </div>
       </footer>
     </div>

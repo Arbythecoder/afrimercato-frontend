@@ -126,7 +126,7 @@ function VendorStorefront() {
               </button>
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🛒</span>
-                <span className="text-xl font-bold text-gray-900">AfriHub</span>
+                <span className="text-xl font-bold text-gray-900">AfriMercato</span>
               </div>
             </div>
 
@@ -377,7 +377,7 @@ function VendorStorefront() {
       {/* Footer */}
       <footer className="bg-[#1A1A1A] text-white py-8">
         <div className="container mx-auto px-6 text-center">
-          <p className="text-gray-400">&copy; 2025 AfriHub. All rights reserved.</p>
+          <p className="text-gray-400">&copy; 2025 AfriMercato. All rights reserved.</p>
         </div>
       </footer>
     </div>

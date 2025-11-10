@@ -357,7 +357,7 @@ export default function Home() {
             Are You a Food Vendor?
           </h2>
           <p className="text-lg text-gray-800 mb-8">
-            Join 4,320+ vendors already selling on AfriHub. Reach thousands of customers and grow your business online.
+            Join 4,320+ vendors already selling on AfriMercato. Reach thousands of customers and grow your business online.
           </p>
           <Link
             to="/partner"
@@ -373,7 +373,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8">
             <div>
-              <h4 className="text-white font-bold mb-4">AfriHub</h4>
+              <h4 className="text-white font-bold mb-4">AfriMercato</h4>
               <p className="text-sm">African groceries delivered to your door across the UK.</p>
             </div>
             <div>
@@ -402,7 +402,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; 2025 AfriHub. All rights reserved.</p>
+            <p>&copy; 2025 AfriMercato. All rights reserved.</p>
           </div>
         </div>
       </footer>
