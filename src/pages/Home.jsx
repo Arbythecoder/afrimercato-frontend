@@ -91,7 +91,7 @@ export default function Home() {
                 <span className="text-white font-bold text-lg">🛒</span>
               </div>
               <span className="text-xl font-bold text-gray-900">
-                Afri<span className="text-green-600">Hub</span>
+                Afri<span className="text-green-600">Mercato</span>
               </span>
             </Link>
 
