@@ -11,11 +11,11 @@ const API_BASE_URL = (() => {
                       window.location.hostname.includes('192.168');
 
   if (isLocalhost) {
-    return 'https://afrimercato-backend-production-0329.up.railway.app/api';
+    return 'http://localhost:5000';
   }
 
   // Production:  Railway backend
-  return 'https://afrimercato-backend-production-0329.up.railway.app/api';
+  return 'https://afrimercato-backend-production-0329.up.railway.app';
 })();
 
 console.log('🔗 API Base URL:', API_BASE_URL);
@@ -44,7 +44,7 @@ const refreshAccessToken = async () => {
   }
 
   try {
-    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
+   const response = await fetch(`${API_BASE_URL}/api/auth/refresh-token`, {  // ✅ Added /api
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -73,9 +73,11 @@ const refreshAccessToken = async () => {
 };
 
 // Generic API call function with automatic token refresh
+// Generic API call function with automatic token refresh
 const apiCall = async (endpoint, options = {}, isRetry = false) => {
   try {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const url = `${API_BASE_URL}/api${endpoint}`;  // ✅ ADDED /api HERE
+    
     const config = {
       headers: {
         'Content-Type': 'application/json',
@@ -89,6 +91,8 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    console.log('🌐 Fetching:', url);  // ✅ Debug log
 
     const response = await fetch(url, config);
 
