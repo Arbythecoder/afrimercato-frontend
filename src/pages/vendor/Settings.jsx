@@ -33,13 +33,13 @@ function Settings() {
       postalCode: '',
     },
     businessHours: {
-      monday: { open: '09:00', close: '18:00', closed: false },
-      tuesday: { open: '09:00', close: '18:00', closed: false },
-      wednesday: { open: '09:00', close: '18:00', closed: false },
-      thursday: { open: '09:00', close: '18:00', closed: false },
-      friday: { open: '09:00', close: '18:00', closed: false },
-      saturday: { open: '09:00', close: '18:00', closed: false },
-      sunday: { open: '09:00', close: '18:00', closed: true },
+      monday: { open: '09:00', close: '18:00', isOpen: true },
+      tuesday: { open: '09:00', close: '18:00', isOpen: true },
+      wednesday: { open: '09:00', close: '18:00', isOpen: true },
+      thursday: { open: '09:00', close: '18:00', isOpen: true },
+      friday: { open: '09:00', close: '18:00', isOpen: true },
+      saturday: { open: '09:00', close: '18:00', isOpen: true },
+      sunday: { open: '09:00', close: '18:00', isOpen: false },
     },
   })
 
@@ -444,14 +444,14 @@ function Settings() {
                   <label className="flex items-center cursor-pointer">
                     <input
                       type="checkbox"
-                      checked={!vendorProfile.businessHours?.[day]?.closed}
-                      onChange={(e) => handleBusinessHoursChange(day, 'closed', !e.target.checked)}
+                      checked={vendorProfile.businessHours?.[day]?.isOpen}
+                      onChange={(e) => handleBusinessHoursChange(day, 'isOpen', e.target.checked)}
                       className="h-5 w-5 text-afri-green focus:ring-afri-green border-gray-300 rounded cursor-pointer"
                     />
                     <span className="ml-2 text-sm text-afri-gray-700">Open</span>
                   </label>
 
-                  {!vendorProfile.businessHours?.[day]?.closed ? (
+                  {vendorProfile.businessHours?.[day]?.isOpen ? (
                     <>
                       <input
                         type="time"

@@ -376,11 +376,11 @@ export const geocodeLocation = async (query) => {
 
 // VENDORS (Customer)
 export const getVendorById = async (id) => {
-  return apiCall(`/vendors/${id}`);
+  return apiCall(`/location/vendor/${id}`);
 };
 
 export const getVendorProductsByVendorId = async (vendorId) => {
-  return apiCall(`/vendors/${vendorId}/products`);
+  return apiCall(`/products/vendor/${vendorId}`);
 };
 
 // PRODUCTS (Customer)
@@ -519,7 +519,7 @@ export const uploadProductImages = async (files) => {
   const formData = new FormData();
 
   files.forEach((file) => {
-    formData.append('images', file);
+    formData.append('productImages', file);
   });
 
   const token = localStorage.getItem('afrimercato_token');
@@ -692,32 +692,32 @@ export const vendorAPI = {
 // =================================================================
 
 export const getCustomerDashboardStats = async () => {
-  return apiCall('/customer/dashboard/stats');
+  return apiCall('/customers/dashboard/stats');
 };
 
 export const getCustomerRecentOrders = async (params = {}) => {
   const queryString = new URLSearchParams(params).toString();
-  return apiCall(`/customer/orders/recent?${queryString}`);
+  return apiCall(`/customers/orders/recent?${queryString}`);
 };
 
 export const getRecommendedProducts = async (params = {}) => {
   const queryString = new URLSearchParams(params).toString();
-  return apiCall(`/customer/products/recommended?${queryString}`);
+  return apiCall(`/customers/products/recommended?${queryString}`);
 };
 
 export const getWishlist = async () => {
-  return apiCall('/customer/wishlist');
+  return apiCall('/customers/wishlist');
 };
 
 export const addToWishlist = async (productId) => {
-  return apiCall('/customer/wishlist', {
+  return apiCall('/customers/wishlist', {
     method: 'POST',
     body: JSON.stringify({ productId })
   });
 };
 
 export const removeFromWishlist = async (productId) => {
-  return apiCall(`/customer/wishlist/${productId}`, {
+  return apiCall(`/customers/wishlist/${productId}`, {
     method: 'DELETE'
   });
 };
@@ -767,6 +767,52 @@ export const vendorsAPI = {
   getProducts: getVendorProductsByVendorId
 };
 
+// =================================================================
+// NOTIFICATION ENDPOINTS
+// =================================================================
+
+export const getNotifications = async (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return apiCall(`/notifications?${queryString}`);
+};
+
+export const getUnreadNotificationCount = async () => {
+  return apiCall('/notifications/unread-count');
+};
+
+export const markNotificationAsRead = async (id) => {
+  return apiCall(`/notifications/${id}/read`, {
+    method: 'PUT'
+  });
+};
+
+export const markAllNotificationsAsRead = async () => {
+  return apiCall('/notifications/mark-all-read', {
+    method: 'PUT'
+  });
+};
+
+export const deleteNotification = async (id) => {
+  return apiCall(`/notifications/${id}`, {
+    method: 'DELETE'
+  });
+};
+
+export const deleteAllReadNotifications = async () => {
+  return apiCall('/notifications', {
+    method: 'DELETE'
+  });
+};
+
+export const notificationAPI = {
+  getNotifications,
+  getUnreadCount: getUnreadNotificationCount,
+  markAsRead: markNotificationAsRead,
+  markAllAsRead: markAllNotificationsAsRead,
+  deleteNotification,
+  deleteAllRead: deleteAllReadNotifications
+};
+
 export default {
   authAPI,
   vendorAPI,
@@ -776,5 +822,6 @@ export default {
   userAPI,
   subscriptionAPI,
   locationAPI,
-  vendorsAPI
+  vendorsAPI,
+  notificationAPI
 };

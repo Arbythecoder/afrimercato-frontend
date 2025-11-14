@@ -1,38 +1,41 @@
-// Default images using local photos from C:\Users\Arbythecoder\Pictures\afrimercato
-// All images are now served locally for faster loading
+// Beautiful, license-free images from Unsplash
+// All images are professionally curated and optimized
 
 const DEFAULT_IMAGES = {
-  vegetables: '/images/afrihub3.png',
-  fruits: '/images/afrihub4.png',
-  'meat-fish': '/images/afrihub5.png',
-  dairy: '/images/afrihub6.png',
-  grains: '/images/afrihub7.png',
-  beverages: '/images/afrihub8.png',
-  spices: '/images/afrihub9.png',
-  'fresh-produce': '/images/afrihub2.png',
-  bakery: '/images/afrime2.png',
-  snacks: '/images/afrime3.png',
-  default: '/images/afrihub1.png'
+  vegetables: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=800&q=80',
+  fruits: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80',
+  'meat-fish': 'https://images.unsplash.com/photo-1546964053-d018e345e490?w=800&q=80',
+  dairy: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=800&q=80',
+  grains: 'https://images.unsplash.com/photo-1596797882870-8c33deeac224?w=800&q=80',
+  beverages: 'https://images.unsplash.com/photo-1598614187854-26a60e982dc4?w=800&q=80',
+  spices: 'https://images.unsplash.com/photo-1596040033229-a0b3b46fe6b6?w=800&q=80',
+  'fresh-produce': 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80',
+  bakery: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?w=800&q=80',
+  snacks: 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=800&q=80',
+  groceries: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80',
+  household: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80',
+  'beauty-health': 'https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=800&q=80',
+  default: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
 }
 
-// Store/vendor logo defaults
+// Store/vendor logo defaults - Beautiful African market scenes
 const STORE_LOGOS = {
-  default: '/images/piafrimerca.png',
-  market: '/images/afrimenewme.png',
-  grocery: '/images/afrimenewme2.png'
+  default: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80',
+  market: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80',
+  grocery: 'https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?w=800&q=80'
 }
 
-// Hero section images
+// Hero section images - Stunning marketplace and food photography
 export const HERO_IMAGES = {
-  main: '/images/afrih.jpg',
-  banner1: '/images/one.jpg',
-  banner2: '/images/two.jpg',
-  banner3: '/images/three.jpg',
-  hero1: '/images/afrimenewme3.png',
-  hero2: '/images/afrimenewme4.png',
-  store1: '/images/afrime4.png',
-  store2: '/images/afrime5.png',
-  store3: '/images/afrime6.png'
+  main: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1600&q=80',
+  banner1: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1600&q=80',
+  banner2: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1600&q=80',
+  banner3: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1600&q=80',
+  hero1: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=1600&q=80',
+  hero2: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=1600&q=80',
+  store1: 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=1600&q=80',
+  store2: 'https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?w=1600&q=80',
+  store3: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=1600&q=80'
 }
 
 /**
