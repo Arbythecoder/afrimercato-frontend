@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
+import { getProductImage } from '../../utils/defaultImages'
 
 function CustomerDashboard() {
   const navigate = useNavigate()
@@ -273,8 +274,9 @@ function CustomerDashboard() {
                     className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => navigate(`/products/${product._id}`)}
                   >
+                    {/* Product image with smart fallback to category-specific defaults */}
                     <img
-                      src={product.images?.[0]?.url || product.image || '/images/placeholder.png'}
+                      src={getProductImage(product)}
                       alt={product.name}
                       className="w-16 h-16 rounded-lg object-cover"
                     />

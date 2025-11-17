@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { vendorAPI, userAPI } from '../../services/api'
+import Toast from '../../components/Notification/Toast'
+import { useToast } from '../../hooks/useToast'
 
 const categories = [
   'fresh-produce',
@@ -14,10 +16,27 @@ const categories = [
 
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
+const countries = [
+  { code: 'GB', name: 'United Kingdom', region: 'Europe' },
+  { code: 'US', name: 'United States', region: 'North America' },
+  { code: 'CA', name: 'Canada', region: 'North America' },
+  { code: 'DE', name: 'Germany', region: 'Europe' },
+  { code: 'FR', name: 'France', region: 'Europe' },
+  { code: 'ES', name: 'Spain', region: 'Europe' },
+  { code: 'IT', name: 'Italy', region: 'Europe' },
+  { code: 'NL', name: 'Netherlands', region: 'Europe' },
+  { code: 'BE', name: 'Belgium', region: 'Europe' },
+  { code: 'IE', name: 'Ireland', region: 'Europe' },
+]
+
 function Settings() {
+  const { toasts, success, error, warning, removeToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [postcodeLoading, setPostcodeLoading] = useState(false)
+  const [addressSuggestions, setAddressSuggestions] = useState([])
+  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
 
   const [vendorProfile, setVendorProfile] = useState({
     storeName: '',
@@ -113,15 +132,52 @@ function Settings() {
     setPasswordData((prev) => ({ ...prev, [field]: value }))
   }
 
+  const lookupPostcode = async () => {
+    const postcode = vendorProfile.address?.postalCode?.trim()
+
+    if (!postcode) {
+      warning('Please enter a postcode first')
+      return
+    }
+
+    try {
+      setPostcodeLoading(true)
+      // Using free UK postcode lookup API
+      const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
+      const data = await response.json()
+
+      if (data.status === 200 && data.result) {
+        const result = data.result
+        // Auto-fill city and county
+        setVendorProfile((prev) => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            city: result.admin_district || result.postcode_area || '',
+            state: result.admin_county || result.region || '',
+          },
+        }))
+        success('Address details filled! Please enter your street address.')
+      } else {
+        warning('Postcode not found. Please check and try again.')
+      }
+    } catch (err) {
+      console.error('Postcode lookup error:', err)
+      error('Failed to lookup postcode. You can still enter address manually.')
+    } finally {
+      setPostcodeLoading(false)
+    }
+  }
+
   const saveVendorProfile = async () => {
     try {
       setSaving(true)
       const response = await vendorAPI.updateProfile(vendorProfile)
       if (response.success) {
-        alert('Vendor profile updated successfully!')
+        success('Vendor profile updated successfully!')
       }
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to update vendor profile')
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to update vendor profile')
     } finally {
       setSaving(false)
     }
@@ -132,10 +188,10 @@ function Settings() {
       setSaving(true)
       const response = await userAPI.updateProfile(userProfile)
       if (response.success) {
-        alert('Account updated successfully!')
+        success('Account updated successfully!')
       }
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to update account')
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to update account')
     } finally {
       setSaving(false)
     }
@@ -143,12 +199,12 @@ function Settings() {
 
   const savePassword = async () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert('Passwords do not match!')
+      warning('Passwords do not match!')
       return
     }
 
     if (passwordData.newPassword.length < 6) {
-      alert('Password must be at least 6 characters!')
+      warning('Password must be at least 6 characters!')
       return
     }
 
@@ -159,11 +215,11 @@ function Settings() {
         newPassword: passwordData.newPassword,
       })
       if (response.success) {
-        alert('Password changed successfully!')
+        success('Password changed successfully!')
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
       }
-    } catch (error) {
-      alert(error.response?.data?.message || 'Failed to change password')
+    } catch (err) {
+      error(err.response?.data?.message || 'Failed to change password')
     } finally {
       setSaving(false)
     }
@@ -188,6 +244,17 @@ function Settings() {
 
   return (
     <div className="space-y-6">
+      {/* Toast Notifications */}
+      {toasts.map((toast) => (
+        <Toast
+          key={toast.id}
+          message={toast.message}
+          type={toast.type}
+          duration={toast.duration}
+          onClose={() => removeToast(toast.id)}
+        />
+      ))}
+
       {/* Header */}
       <div>
         <h1 className="text-4xl font-bold bg-gradient-to-r from-afri-green to-afri-green-dark bg-clip-text text-transparent">
@@ -305,34 +372,74 @@ function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">State/County</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  {vendorProfile.address?.country === 'United Kingdom' ? 'County' : 'State/County'}
+                </label>
                 <input
                   type="text"
                   value={vendorProfile.address?.state || ''}
                   onChange={(e) => handleVendorChange('address.state', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., Greater London' : 'State or County'}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Postal Code</label>
-                <input
-                  type="text"
-                  value={vendorProfile.address?.postalCode || ''}
-                  onChange={(e) => handleVendorChange('address.postalCode', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
-                />
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode' : 'Postal/Zip Code'}
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={vendorProfile.address?.postalCode || ''}
+                    onChange={(e) => handleVendorChange('address.postalCode', e.target.value.toUpperCase())}
+                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                    placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
+                  />
+                  {vendorProfile.address?.country === 'United Kingdom' && (
+                    <button
+                      type="button"
+                      onClick={lookupPostcode}
+                      disabled={postcodeLoading || !vendorProfile.address?.postalCode}
+                      className="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center whitespace-nowrap"
+                    >
+                      {postcodeLoading ? (
+                        <>
+                          <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Looking up...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                          </svg>
+                          Find Address
+                        </>
+                      )}
+                    </button>
+                  )}
+                </div>
+                {vendorProfile.address?.country === 'United Kingdom' && (
+                  <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
+                )}
               </div>
 
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Country</label>
-                <input
-                  type="text"
+                <select
                   value={vendorProfile.address?.country || 'United Kingdom'}
                   onChange={(e) => handleVendorChange('address.country', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all bg-gray-50"
-                  readOnly
-                />
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                >
+                  {countries.map((country) => (
+                    <option key={country.code} value={country.name}>
+                      {country.name}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

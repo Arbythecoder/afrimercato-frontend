@@ -662,6 +662,18 @@ export const authAPI = {
   clearAuthToken
 };
 
+// Delivery Settings
+export const getDeliverySettings = async () => {
+  return apiCall('/vendor/delivery-settings');
+};
+
+export const updateDeliverySettings = async (data) => {
+  return apiCall('/vendor/delivery-settings', {
+    method: 'PUT',
+    body: JSON.stringify(data)
+  });
+};
+
 export const vendorAPI = {
   getProfile: getVendorProfile,
   updateProfile: updateVendorProfile,
@@ -684,7 +696,9 @@ export const vendorAPI = {
   bulkDeleteProducts,
   bulkUpdateStatus,
   bulkUpdatePrices,
-  bulkUpdateStock
+  bulkUpdateStock,
+  getDeliverySettings,
+  updateDeliverySettings
 };
 
 // =================================================================

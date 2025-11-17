@@ -362,7 +362,11 @@ function VendorStorefront() {
 
                   {/* Checkout Button */}
                   <button
-                    onClick={() => navigate('/checkout')}
+                    onClick={() => {
+                      // Save cart to localStorage before navigating
+                      localStorage.setItem('cart', JSON.stringify(cart))
+                      navigate('/checkout')
+                    }}
                     className="w-full bg-gradient-to-r from-[#FFB300] to-[#FFA726] text-white py-4 rounded-lg font-bold text-lg hover:shadow-lg transition"
                   >
                     Proceed to Checkout

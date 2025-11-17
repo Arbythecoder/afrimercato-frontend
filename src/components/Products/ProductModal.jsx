@@ -113,12 +113,7 @@ function ProductModal({ product, onClose, onSave }) {
 
       // Upload images if new ones are selected
       if (images.length > 0) {
-        const formDataImages = new FormData()
-        images.forEach((image) => {
-          formDataImages.append('productImages', image)
-        })
-
-        const uploadResponse = await vendorAPI.uploadProductImages(formDataImages)
+        const uploadResponse = await vendorAPI.uploadProductImages(images)
         if (uploadResponse.success) {
           imageUrls = uploadResponse.data.images
         }

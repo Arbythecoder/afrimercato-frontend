@@ -11,12 +11,16 @@ import Reports from './pages/vendor/Reports'
 import Settings from './pages/vendor/Settings'
 import Subscription from './pages/vendor/Subscription'
 import Home from './pages/Home'
+import BetterLandingPage from './pages/customer/BetterLandingPage' // New revolutionary landing page
 import PartnerWithUs from './pages/PartnerWithUs'
 import StoresPage from './pages/StoresPage'
 
 // Customer Pages
 import VendorStorefront from './pages/customer/VendorStorefront'
 import CustomerDashboard from './pages/customer/CustomerDashboard'
+import Checkout from './pages/customer/Checkout'
+import OrderConfirmation from './pages/customer/OrderConfirmation'
+import OrderTracking from './pages/customer/OrderTracking'
 
 // Layout
 import VendorLayout from './components/Layout/VendorLayout'
@@ -40,7 +44,9 @@ function AppContent() {
   return (
     <Routes>
       {/* Public Routes - Customer Marketplace */}
-      <Route path="/" element={<Home />} />
+      {/* REVOLUTIONARY Mobile-First Landing Page with 4 game-changing features */}
+      <Route path="/" element={<BetterLandingPage />} />
+      <Route path="/old-home" element={<Home />} /> {/* Keep old version for reference */}
       <Route path="/partner" element={<PartnerWithUs />} />
       <Route path="/stores" element={<StoresPage />} />
       <Route path="/store/:vendorId" element={<VendorStorefront />} />
@@ -56,6 +62,11 @@ function AppContent() {
           )
         }
       />
+
+      {/* Checkout & Order Routes */}
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+      <Route path="/track-order/:orderId" element={<OrderTracking />} />
 
       <Route
         path="/login"
