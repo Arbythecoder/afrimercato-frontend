@@ -15,26 +15,26 @@ function OrderConfirmation() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const fetchOrder = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
+          }
+        })
+        const data = await response.json()
+        if (data.success) {
+          setOrder(data.data)
+        }
+      } catch (error) {
+        console.error('Error fetching order:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchOrder()
   }, [orderId])
-
-  const fetchOrder = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
-        }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setOrder(data.data)
-      }
-    } catch (error) {
-      console.error('Error fetching order:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   if (loading) {
     return (

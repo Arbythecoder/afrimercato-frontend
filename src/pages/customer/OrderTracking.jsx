@@ -15,31 +15,31 @@ function OrderTracking() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const fetchOrderAndDelivery = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
+          }
+        })
+        const data = await response.json()
+        if (data.success) {
+          setOrder(data.data)
+          // TODO: Fetch delivery data when available
+          // setDelivery(data.data.delivery)
+        }
+      } catch (error) {
+        console.error('Error fetching order:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
     fetchOrderAndDelivery()
     // Poll for updates every 10 seconds
     const interval = setInterval(fetchOrderAndDelivery, 10000)
     return () => clearInterval(interval)
   }, [orderId])
-
-  const fetchOrderAndDelivery = async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
-        }
-      })
-      const data = await response.json()
-      if (data.success) {
-        setOrder(data.data)
-        // TODO: Fetch delivery data when available
-        // setDelivery(data.data.delivery)
-      }
-    } catch (error) {
-      console.error('Error fetching order:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const getStatusStep = (status) => {
     const steps = {
