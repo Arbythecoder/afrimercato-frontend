@@ -416,9 +416,12 @@ function Checkout() {
                 {cart.map((item) => (
                   <div key={item._id} className="flex gap-3">
                     <img
-                      src={item.images?.[0]?.url || 'https://via.placeholder.com/60'}
+                      src={item.images?.[0]?.url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'}
                       alt={item.name}
                       className="w-16 h-16 object-cover rounded"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                      }}
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-sm text-gray-900">{item.name}</p>

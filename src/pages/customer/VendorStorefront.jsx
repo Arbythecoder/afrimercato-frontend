@@ -314,6 +314,9 @@ function VendorStorefront() {
                           src={getProductImage(item)}
                           alt={item.name}
                           className="w-20 h-20 object-cover rounded-lg"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                          }}
                         />
                         <div className="flex-1">
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
@@ -406,6 +409,9 @@ function ProductCard({ product, onAddToCart }) {
           src={getProductImage(product)}
           alt={product.name}
           className="w-full h-full object-cover group-hover:scale-110 transition duration-300"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80'
+          }}
         />
         {product.discount > 0 && (
           <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
