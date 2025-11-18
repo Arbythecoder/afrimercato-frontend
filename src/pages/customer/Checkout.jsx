@@ -2,9 +2,16 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 
+// Get API Base URL
+const API_BASE_URL = (() => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  return isLocalhost ? 'http://localhost:5000' : 'https://afrimercato-backend-production-0329.up.railway.app'
+})()
+
 function Checkout() {
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated } = useAuth()
 
   const [cart, setCart] = useState([])
   const [step, setStep] = useState(1) // 1: Address, 2: Payment, 3: Confirm
@@ -78,7 +85,7 @@ function Checkout() {
       }
 
       // Call checkout API
-      const response = await fetch('http://localhost:5000/api/checkout/payment/initialize', {
+      const response = await fetch(`${API_BASE_URL}/api/checkout/payment/initialize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

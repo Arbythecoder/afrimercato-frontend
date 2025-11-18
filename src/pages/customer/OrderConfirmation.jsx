@@ -1,6 +1,13 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 
+// Get API Base URL
+const API_BASE_URL = (() => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
+  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  return isLocalhost ? 'http://localhost:5000' : 'https://afrimercato-backend-production-0329.up.railway.app'
+})()
+
 function OrderConfirmation() {
   const { orderId } = useParams()
   const navigate = useNavigate()
@@ -13,7 +20,7 @@ function OrderConfirmation() {
 
   const fetchOrder = async () => {
     try {
-      const response = await fetch(`http://localhost:5000/api/orders/${orderId}`, {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
         }
