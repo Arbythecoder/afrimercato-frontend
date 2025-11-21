@@ -73,19 +73,23 @@ const refreshAccessToken = async () => {
 };
 
 // Generic API call function with automatic token refresh
-// Generic API call function with automatic token refresh
 const apiCall = async (endpoint, options = {}, isRetry = false) => {
   try {
     const url = `${API_BASE_URL}/api${endpoint}`;  // ✅ ADDED /api HERE
-    
+
     const config = {
       headers: {
-        'Content-Type': 'application/json',
         ...options.headers
       },
       credentials: 'include',
       ...options
     };
+
+    // Only add Content-Type: application/json if body is NOT FormData
+    // FormData needs multipart/form-data which browser sets automatically
+    if (!(options.body instanceof FormData)) {
+      config.headers['Content-Type'] = 'application/json';
+    }
 
     const token = localStorage.getItem('afrimercato_token');
     if (token) {

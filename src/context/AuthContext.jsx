@@ -23,11 +23,20 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     const token = localStorage.getItem('afrimercato_token')
+    const userData = localStorage.getItem('afrimercato_user')
 
     if (token) {
       // Token exists, mark as authenticated
-      // User details will be fetched after login/register
       setIsAuthenticated(true)
+
+      // Load user data from localStorage if available
+      if (userData) {
+        try {
+          setUser(JSON.parse(userData))
+        } catch (e) {
+          console.error('Error parsing user data:', e)
+        }
+      }
     }
 
     setLoading(false)
@@ -40,6 +49,7 @@ export const AuthProvider = ({ children }) => {
       if (response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
+        localStorage.setItem('afrimercato_user', JSON.stringify(user))
         setUser(user)
         setIsAuthenticated(true)
         return { success: true, user }
@@ -59,9 +69,10 @@ export const AuthProvider = ({ children }) => {
       if (response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
+        localStorage.setItem('afrimercato_user', JSON.stringify(user))
         setUser(user)
         setIsAuthenticated(true)
-        return { success: true }
+        return { success: true, user }
       }
     } catch (error) {
       return {
@@ -73,6 +84,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('afrimercato_token')
+    localStorage.removeItem('afrimercato_user')
     setUser(null)
     setIsAuthenticated(false)
   }

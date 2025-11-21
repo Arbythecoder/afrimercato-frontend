@@ -25,8 +25,26 @@ import OrderTracking from './pages/customer/OrderTracking'
 // Layout
 import VendorLayout from './components/Layout/VendorLayout'
 
+// Helper component to redirect based on user role
+function RoleBasedRedirect() {
+  const { user } = useAuth()
+  const role = user?.role || user?.primaryRole || 'customer'
+
+  switch (role) {
+    case 'vendor':
+      return <Navigate to="/dashboard" replace />
+    case 'rider':
+      return <Navigate to="/rider/dashboard" replace />
+    case 'picker':
+      return <Navigate to="/picker/dashboard" replace />
+    case 'customer':
+    default:
+      return <Navigate to="/" replace />
+  }
+}
+
 function AppContent() {
-  const { isAuthenticated, loading } = useAuth()
+  const { isAuthenticated, user, loading } = useAuth()
 
   if (loading) {
     return (
@@ -70,21 +88,25 @@ function AppContent() {
 
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Login />}
+        element={isAuthenticated ? <RoleBasedRedirect /> : <Login />}
       />
       <Route
         path="/register"
-        element={isAuthenticated ? <Navigate to="/dashboard" /> : <Register />}
+        element={isAuthenticated ? <RoleBasedRedirect /> : <Register />}
       />
 
-      {/* Protected Routes */}
+      {/* Protected Routes - Vendor Only */}
       <Route
         path="/dashboard"
         element={
           isAuthenticated ? (
-            <VendorLayout>
-              <Dashboard />
-            </VendorLayout>
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Dashboard />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -94,9 +116,13 @@ function AppContent() {
         path="/products"
         element={
           isAuthenticated ? (
-            <VendorLayout>
-              <Products />
-            </VendorLayout>
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Products />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -106,9 +132,13 @@ function AppContent() {
         path="/orders"
         element={
           isAuthenticated ? (
-            <VendorLayout>
-              <Orders />
-            </VendorLayout>
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Orders />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -118,9 +148,13 @@ function AppContent() {
         path="/reports"
         element={
           isAuthenticated ? (
-            <VendorLayout>
-              <Reports />
-            </VendorLayout>
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Reports />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -130,9 +164,13 @@ function AppContent() {
         path="/subscription"
         element={
           isAuthenticated ? (
-            <VendorLayout>
-              <Subscription />
-            </VendorLayout>
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Subscription />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -142,9 +180,13 @@ function AppContent() {
         path="/settings"
         element={
           isAuthenticated ? (
-            <VendorLayout>
-              <Settings />
-            </VendorLayout>
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Settings />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )

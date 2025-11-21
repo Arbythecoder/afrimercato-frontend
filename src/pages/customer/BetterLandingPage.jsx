@@ -5,7 +5,7 @@
  */
 
 import { Link, useNavigate } from 'react-router-dom'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   MapPinIcon,
@@ -17,12 +17,18 @@ import {
   ShieldCheckIcon,
   BellAlertIcon
 } from '@heroicons/react/24/solid'
+import HeroSlider from '../../components/HeroSlider'
 
 export default function BetterLandingPage() {
   const navigate = useNavigate()
   const [location, setLocation] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [currentTestimonial, setCurrentTestimonial] = useState(0)
+  const searchSectionRef = useRef(null)
+
+  const scrollToSearch = () => {
+    searchSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   // REVOLUTIONARY FEATURES - Based on UK Market Research
   // Addressing: Late deliveries, out of stock, poor substitutions, damaged items
@@ -199,42 +205,39 @@ export default function BetterLandingPage() {
         </div>
       </nav>
 
-      {/* HERO SECTION - Mobile-First, Bold, Clear */}
-      <section className="relative bg-gradient-to-br from-green-600 via-green-700 to-yellow-500 overflow-hidden">
-        {/* Background Pattern - Subtle on mobile */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute inset-0" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-          }} />
-        </div>
+      {/* STUNNING HERO SLIDER */}
+      <HeroSlider onSearch={scrollToSearch} />
 
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-16 lg:py-24 relative">
-          {/* Mobile-First Hero Text */}
+      {/* LOCATION SEARCH SECTION */}
+      <section ref={searchSectionRef} className="relative bg-gradient-to-br from-green-50 to-yellow-50 py-12 sm:py-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="text-center max-w-3xl mx-auto">
-            <motion.h1
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 leading-tight"
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 sm:mb-4"
             >
-              African Groceries<br />
-              <span className="text-yellow-300">Delivered Fresh</span>
-            </motion.h1>
+              Find African Stores Near You
+            </motion.h2>
 
             <motion.p
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-base sm:text-lg lg:text-xl text-white/95 mb-6 sm:mb-8 px-4"
+              className="text-base sm:text-lg text-gray-600 mb-6 sm:mb-8 px-4"
             >
               🎯 Real-time stock • 📍 Live GPS tracking • ✨ Quality guaranteed<br className="hidden sm:block" />
-              <span className="font-semibold text-yellow-200">Finally, grocery delivery done right in the UK</span>
+              <span className="font-semibold text-green-700">Finally, grocery delivery done right in the UK</span>
             </motion.p>
 
             {/* Location Search - Mobile Optimized */}
             <motion.form
               onSubmit={handleLocationSearch}
               initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
               transition={{ delay: 0.2 }}
               className="bg-white rounded-2xl shadow-2xl p-3 flex flex-col sm:flex-row gap-3 max-w-2xl mx-auto"
             >
@@ -260,12 +263,13 @@ export default function BetterLandingPage() {
             {/* Trust Badge - Mobile Friendly */}
             <motion.div
               initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
               transition={{ delay: 0.3 }}
-              className="mt-6 text-white/90 flex flex-col sm:flex-row items-center justify-center gap-2 text-sm sm:text-base"
+              className="mt-6 text-gray-700 flex flex-col sm:flex-row items-center justify-center gap-2 text-sm sm:text-base"
             >
               <span className="text-2xl">👥</span>
-              <span className="font-semibold">Join <span className="text-yellow-300">4,320+ vendors</span> and <span className="text-yellow-300">12,000+ happy customers</span></span>
+              <span className="font-semibold">Join <span className="text-green-600">4,320+ vendors</span> and <span className="text-green-600">12,000+ happy customers</span></span>
             </motion.div>
           </div>
         </div>
