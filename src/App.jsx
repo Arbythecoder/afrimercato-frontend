@@ -11,12 +11,15 @@ import Reports from './pages/vendor/Reports'
 import Settings from './pages/vendor/Settings'
 import Subscription from './pages/vendor/Subscription'
 import Home from './pages/Home'
-import BetterLandingPage from './pages/customer/BetterLandingPage' // New revolutionary landing page
+import ClientLandingPage from './pages/customer/ClientLandingPage' // Client-exact design matching Just Eats
 import PartnerWithUs from './pages/PartnerWithUs'
-import StoresPage from './pages/StoresPage'
+import ClientStoresPage from './pages/ClientStoresPage' // Client-exact stores page
+import AboutUs from './pages/AboutUs'
+import Delivery from './pages/Delivery'
+import ContactUs from './pages/ContactUs'
 
 // Customer Pages
-import VendorStorefront from './pages/customer/VendorStorefront'
+import ClientVendorStorefront from './pages/customer/ClientVendorStorefront' // Client-exact vendor storefront
 import CustomerDashboard from './pages/customer/CustomerDashboard'
 import Checkout from './pages/customer/Checkout'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
@@ -62,12 +65,15 @@ function AppContent() {
   return (
     <Routes>
       {/* Public Routes - Customer Marketplace */}
-      {/* REVOLUTIONARY Mobile-First Landing Page with 4 game-changing features */}
-      <Route path="/" element={<BetterLandingPage />} />
+      {/* CLIENT-EXACT Landing Page - Just Eats / Uber Eats style with location-first approach */}
+      <Route path="/" element={<ClientLandingPage />} />
       <Route path="/old-home" element={<Home />} /> {/* Keep old version for reference */}
       <Route path="/partner" element={<PartnerWithUs />} />
-      <Route path="/stores" element={<StoresPage />} />
-      <Route path="/store/:vendorId" element={<VendorStorefront />} />
+      <Route path="/stores" element={<ClientStoresPage />} />
+      <Route path="/store/:vendorId" element={<ClientVendorStorefront />} />
+      <Route path="/about" element={<AboutUs />} />
+      <Route path="/delivery" element={<Delivery />} />
+      <Route path="/contact" element={<ContactUs />} />
 
       {/* Customer Dashboard */}
       <Route

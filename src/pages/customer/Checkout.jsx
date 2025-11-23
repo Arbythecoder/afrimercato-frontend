@@ -125,7 +125,7 @@ function Checkout() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-2xl">🛒</span>
-              <span className="text-xl font-bold text-gray-900">AfriMercato Checkout</span>
+              <span className="text-xl font-bold text-gray-900">Afrimercato Checkout</span>
             </div>
             <button
               onClick={() => navigate(-1)}

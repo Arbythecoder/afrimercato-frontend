@@ -88,7 +88,7 @@ function OrderTracking() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-2xl">🛒</span>
-              <span className="text-xl font-bold text-gray-900">AfriMercato</span>
+              <span className="text-xl font-bold text-gray-900">Afrimercato</span>
             </div>
             <Link to="/my-dashboard" className="text-gray-600 hover:text-gray-900">
               My Orders

@@ -525,7 +525,7 @@ export default function BetterLandingPage() {
             Are You a Vendor?
           </h2>
           <p className="text-base sm:text-lg text-gray-800 mb-6 sm:mb-8 px-4">
-            Join 4,320+ vendors selling on AfriMercato. Reach thousands of customers across the UK.
+            Join 4,320+ vendors selling on Afrimercato. Reach thousands of customers across the UK.
           </p>
           <Link
             to="/partner"
@@ -541,7 +541,7 @@ export default function BetterLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 sm:gap-8">
             <div className="col-span-2 sm:col-span-1">
-              <h4 className="text-white font-bold mb-4 text-lg">AfriMercato</h4>
+              <h4 className="text-white font-bold mb-4 text-lg">Afrimercato</h4>
               <p className="text-sm">Fresh African groceries delivered across the UK with real-time tracking.</p>
             </div>
             <div>
@@ -569,7 +569,7 @@ export default function BetterLandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; 2025 AfriMercato. All rights reserved. Built for 75% mobile users 📱</p>
+            <p>&copy; 2025 Afrimercato. All rights reserved. Built for 75% mobile users 📱</p>
           </div>
         </div>
       </footer>
