@@ -21,6 +21,7 @@ import ContactUs from './pages/ContactUs'
 // Customer Pages
 import ClientVendorStorefront from './pages/customer/ClientVendorStorefront' // Client-exact vendor storefront
 import CustomerDashboard from './pages/customer/CustomerDashboard'
+import ProductBrowsing from './pages/customer/ProductBrowsing'
 import Checkout from './pages/customer/Checkout'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import OrderTracking from './pages/customer/OrderTracking'
@@ -74,6 +75,7 @@ function AppContent() {
       <Route path="/about" element={<AboutUs />} />
       <Route path="/delivery" element={<Delivery />} />
       <Route path="/contact" element={<ContactUs />} />
+      <Route path="/products" element={<ProductBrowsing />} />
 
       {/* Customer Dashboard */}
       <Route
