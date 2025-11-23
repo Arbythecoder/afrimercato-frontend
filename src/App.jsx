@@ -29,6 +29,12 @@ import Wishlist from './pages/customer/Wishlist'
 import Checkout from './pages/customer/Checkout'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import OrderTracking from './pages/customer/OrderTracking'
+import ProductReviews from './pages/customer/ProductReviews'
+import NotificationsCenter from './pages/customer/NotificationsCenter'
+import VendorDiscovery from './pages/customer/VendorDiscovery'
+import RecipeRecommendations from './pages/customer/RecipeRecommendations'
+import ProductDetail from './pages/customer/ProductDetail'
+import OrderDetail from './pages/customer/OrderDetail'
 
 // Layout
 import VendorLayout from './components/Layout/VendorLayout'
@@ -84,6 +90,12 @@ function AppContent() {
       <Route path="/orders" element={<OrderHistory />} />
       <Route path="/profile" element={<CustomerProfile />} />
       <Route path="/wishlist" element={<Wishlist />} />
+      <Route path="/product/:productId/reviews" element={<ProductReviews />} />
+      <Route path="/notifications" element={<NotificationsCenter />} />
+      <Route path="/discover" element={<VendorDiscovery />} />
+      <Route path="/recipes" element={<RecipeRecommendations />} />
+      <Route path="/product/:productId" element={<ProductDetail />} />
+      <Route path="/order/:orderId" element={<OrderDetail />} />
 
       {/* Customer Dashboard */}
       <Route
