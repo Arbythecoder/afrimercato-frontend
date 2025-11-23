@@ -36,6 +36,18 @@ import RecipeRecommendations from './pages/customer/RecipeRecommendations'
 import ProductDetail from './pages/customer/ProductDetail'
 import OrderDetail from './pages/customer/OrderDetail'
 
+// Rider Pages
+import RiderDashboard from './pages/rider/RiderDashboard'
+import RiderDeliveries from './pages/rider/RiderDeliveries'
+import RiderDeliveryDetail from './pages/rider/RiderDeliveryDetail'
+import RiderEarnings from './pages/rider/RiderEarnings'
+import RiderProfile from './pages/rider/RiderProfile'
+
+// Picker Pages
+import PickerDashboard from './pages/picker/PickerDashboard'
+import PickerOrderFulfillment from './pages/picker/PickerOrderFulfillment'
+import PickerPerformance from './pages/picker/PickerPerformance'
+
 // Layout
 import VendorLayout from './components/Layout/VendorLayout'
 
@@ -113,6 +125,18 @@ function AppContent() {
       <Route path="/checkout" element={<Checkout />} />
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
+
+      {/* Rider Routes */}
+      <Route path="/rider/dashboard" element={isAuthenticated ? <RiderDashboard /> : <Navigate to="/login" />} />
+      <Route path="/rider/deliveries" element={isAuthenticated ? <RiderDeliveries /> : <Navigate to="/login" />} />
+      <Route path="/rider/delivery/:deliveryId" element={isAuthenticated ? <RiderDeliveryDetail /> : <Navigate to="/login" />} />
+      <Route path="/rider/earnings" element={isAuthenticated ? <RiderEarnings /> : <Navigate to="/login" />} />
+      <Route path="/rider/profile" element={isAuthenticated ? <RiderProfile /> : <Navigate to="/login" />} />
+
+      {/* Picker Routes */}
+      <Route path="/picker/dashboard" element={isAuthenticated ? <PickerDashboard /> : <Navigate to="/login" />} />
+      <Route path="/picker/order/:orderId" element={isAuthenticated ? <PickerOrderFulfillment /> : <Navigate to="/login" />} />
+      <Route path="/picker/performance" element={isAuthenticated ? <PickerPerformance /> : <Navigate to="/login" />} />
 
       <Route
         path="/login"
