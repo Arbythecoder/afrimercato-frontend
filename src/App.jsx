@@ -23,6 +23,9 @@ import ClientVendorStorefront from './pages/customer/ClientVendorStorefront' // 
 import CustomerDashboard from './pages/customer/CustomerDashboard'
 import ProductBrowsing from './pages/customer/ProductBrowsing'
 import ShoppingCart from './pages/customer/ShoppingCart'
+import OrderHistory from './pages/customer/OrderHistory'
+import CustomerProfile from './pages/customer/CustomerProfile'
+import Wishlist from './pages/customer/Wishlist'
 import Checkout from './pages/customer/Checkout'
 import OrderConfirmation from './pages/customer/OrderConfirmation'
 import OrderTracking from './pages/customer/OrderTracking'
@@ -78,6 +81,9 @@ function AppContent() {
       <Route path="/contact" element={<ContactUs />} />
       <Route path="/products" element={<ProductBrowsing />} />
       <Route path="/cart" element={<ShoppingCart />} />
+      <Route path="/orders" element={<OrderHistory />} />
+      <Route path="/profile" element={<CustomerProfile />} />
+      <Route path="/wishlist" element={<Wishlist />} />
 
       {/* Customer Dashboard */}
       <Route
