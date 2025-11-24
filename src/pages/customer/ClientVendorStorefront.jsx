@@ -69,33 +69,52 @@ export default function ClientVendorStorefront() {
     try {
       setLoading(true)
 
-      // Try to fetch real vendor
+      // Try to fetch real vendor from API
       const vendorResponse = await getVendorById(vendorId)
-      if (vendorResponse.data || vendorResponse.storeName) {
-        setVendor(vendorResponse.data || vendorResponse)
+
+      if (vendorResponse.success && vendorResponse.data) {
+        setVendor(vendorResponse.data)
+      } else if (vendorResponse.storeName) {
+        setVendor(vendorResponse)
       } else {
-        // Use sample vendor
-        setVendor({
-          storeName: 'Josh Supermarket',
-          businessName: 'Josh Supermarket',
-          phone: '+44 - 2071 - 234567',
-          deliveryTime: '20 mins'
-        })
+        // Check if we have store data passed via navigation state
+        const storedVendor = sessionStorage.getItem(`vendor_${vendorId}`)
+        if (storedVendor) {
+          setVendor(JSON.parse(storedVendor))
+        } else {
+          // Show error state - don't hardcode to a specific store
+          setVendor({
+            storeName: 'Store Not Found',
+            businessName: 'Store Not Found',
+            phone: 'N/A',
+            deliveryTime: '30 mins',
+            notFound: true
+          })
+        }
       }
 
       // Try to fetch real products
       const productsResponse = await getVendorProductsByVendorId(vendorId)
       if (productsResponse.data?.products?.length > 0) {
         setProducts(productsResponse.data.products)
+      } else if (productsResponse.products?.length > 0) {
+        setProducts(productsResponse.products)
       }
     } catch (error) {
-      console.log('Using sample data:', error.message)
-      setVendor({
-        storeName: 'Josh Supermarket',
-        businessName: 'Josh Supermarket',
-        phone: '+44 - 2071 - 234567',
-        deliveryTime: '20 mins'
-      })
+      console.log('Fetching vendor data:', error.message)
+      // Check if we have store data in session storage
+      const storedVendor = sessionStorage.getItem(`vendor_${vendorId}`)
+      if (storedVendor) {
+        setVendor(JSON.parse(storedVendor))
+      } else {
+        setVendor({
+          storeName: 'Store Unavailable',
+          businessName: 'Store Unavailable',
+          phone: 'Contact support',
+          deliveryTime: '30 mins',
+          notFound: true
+        })
+      }
     } finally {
       setLoading(false)
     }
@@ -228,7 +247,7 @@ export default function ClientVendorStorefront() {
                 animate={{ opacity: 1, y: 0 }}
                 className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2"
               >
-                {vendor?.storeName || vendor?.businessName || 'Josh Supermarket'}
+                {vendor?.storeName || vendor?.businessName || 'African Store'}
               </motion.h1>
               <motion.p
                 initial={{ opacity: 0, y: 20 }}

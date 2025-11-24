@@ -43,9 +43,11 @@ export default function ClientStoresPage() {
   }
 
   const getSampleStores = (searchLocation) => {
+    // Sample stores with unique string IDs for demo purposes
+    // These will be replaced by real vendor data from the API
     const allStores = [
       {
-        id: 1,
+        _id: "sample-joshs-african-supermarket",
         name: "Josh's African Supermarket",
         image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600",
         hours: "07:00am - 10:00pm",
@@ -62,7 +64,7 @@ export default function ClientStoresPage() {
         description: "Authentic Nigerian, Ghanaian & Caribbean groceries. Fresh yams, plantain, palm oil & more."
       },
       {
-        id: 2,
+        _id: "sample-mama-africa-foods",
         name: "Mama Africa Foods",
         image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
         hours: "08:00am - 09:00pm",
@@ -79,7 +81,7 @@ export default function ClientStoresPage() {
         description: "Traditional African spices, seasonings, and fresh produce from trusted suppliers."
       },
       {
-        id: 3,
+        _id: "sample-lagos-provisions",
         name: "Lagos Provisions",
         image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600",
         hours: "06:00am - 11:00pm",
@@ -96,7 +98,7 @@ export default function ClientStoresPage() {
         description: "Fresh Nigerian ingredients, frozen fish, stockfish, and authentic seasonings."
       },
       {
-        id: 4,
+        _id: "sample-accra-spice-house",
         name: "Accra Spice House",
         image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600",
         hours: "09:00am - 08:00pm",
@@ -113,7 +115,7 @@ export default function ClientStoresPage() {
         description: "Ghanaian specialty foods, kenkey, banku flour, shito, and palm soup base."
       },
       {
-        id: 5,
+        _id: "sample-ethiopian-delights",
         name: "Ethiopian Delights",
         image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600",
         hours: "10:00am - 09:00pm",
@@ -130,7 +132,7 @@ export default function ClientStoresPage() {
         description: "Authentic Ethiopian & Eritrean foods. Injera, berbere spice, teff flour."
       },
       {
-        id: 6,
+        _id: "sample-caribbean-african-mart",
         name: "Caribbean & African Mart",
         image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600",
         hours: "07:00am - 10:00pm",
@@ -147,7 +149,7 @@ export default function ClientStoresPage() {
         description: "Best of Caribbean & African cuisine. Jerk seasoning, ackee, callaloo & more."
       },
       {
-        id: 7,
+        _id: "sample-naija-fresh-market",
         name: "Naija Fresh Market",
         image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600",
         hours: "06:00am - 10:00pm",
@@ -164,7 +166,7 @@ export default function ClientStoresPage() {
         description: "Fresh egusi, ogbono, crayfish, dried fish, and Nigerian cooking essentials."
       },
       {
-        id: 8,
+        _id: "sample-taste-of-kenya",
         name: "Taste of Kenya",
         image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600",
         hours: "08:00am - 09:00pm",
@@ -385,12 +387,26 @@ export default function ClientStoresPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {stores.map((store, index) => (
                 <motion.div
-                  key={store.id || index}
+                  key={store._id || store.id || index}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -8 }}
-                  onClick={() => navigate(`/store/${store.id || store._id}`)}
+                  onClick={() => {
+                    // Store vendor data in sessionStorage for the storefront to use
+                    const vendorId = store._id || store.id
+                    sessionStorage.setItem(`vendor_${vendorId}`, JSON.stringify({
+                      storeName: store.name || store.storeName || store.businessName,
+                      businessName: store.businessName || store.name || store.storeName,
+                      phone: store.phone || '+44 20 7123 4567',
+                      deliveryTime: store.deliveryTime || '30 mins',
+                      location: store.location,
+                      rating: store.rating,
+                      image: store.image || store.logo,
+                      description: store.description
+                    }))
+                    navigate(`/store/${vendorId}`)
+                  }}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all border border-gray-100"
                 >
                   {/* Store Image */}
