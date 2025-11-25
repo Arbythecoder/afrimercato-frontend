@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
-    base: '/afrimercato-frontend/',
+    base: '/', // Changed from '/afrimercato-frontend/' for Netlify/Railway deployment
     plugins: [react()],
     
     // Make env variables available in the app
