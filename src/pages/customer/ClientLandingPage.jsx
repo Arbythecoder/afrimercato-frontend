@@ -8,8 +8,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
 
-// Hero images
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=800&q=80'
+// Hero images - Beautiful fresh groceries and produce
+const HERO_IMAGE = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=90' // Fresh colorful vegetables and groceries
 
 export default function ClientLandingPage() {
   const navigate = useNavigate()
@@ -56,7 +56,7 @@ export default function ClientLandingPage() {
     {
       id: 1,
       name: "Yours Supermarket",
-      image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600",
+      image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600&q=80", // Fresh produce aisle
       hours: "06:00am - 09:00pm",
       location: "Leicester United Kingdom",
       distance: "0.1km",
@@ -70,7 +70,7 @@ export default function ClientLandingPage() {
     {
       id: 2,
       name: "TESCO Supermarket",
-      image: "https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=600",
+      image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=600&q=80", // Modern grocery store
       hours: "06:00am - 08:00pm",
       location: "Leicester United Kingdom",
       distance: "1.2km",
@@ -83,8 +83,8 @@ export default function ClientLandingPage() {
     },
     {
       id: 3,
-      name: "Yours Supermarket",
-      image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600",
+      name: "Fresh Market",
+      image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=600&q=80", // Colorful vegetables display
       hours: "06:00am - 06:00pm",
       location: "Leicester United Kingdom",
       distance: "2.8km",

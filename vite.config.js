@@ -6,13 +6,13 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
-    base: '/', // Changed from '/afrimercato-frontend/' for Netlify/Railway deployment
+    base: '/',
     plugins: [react()],
-    
+
     // Make env variables available in the app
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(
-        env.VITE_API_URL || 'https://afrimercato-backend-production-0329.up.railway.app'
+        env.VITE_API_URL || 'https://afrimercato-api.fly.dev'
       )
     },
     

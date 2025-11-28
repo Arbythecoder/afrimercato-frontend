@@ -14,8 +14,8 @@ const API_BASE_URL = (() => {
     return 'http://localhost:5000';
   }
 
-  // Production:  Railway backend
-  return 'https://afrimercato-backend-production-0329.up.railway.app';
+  // Production: Fly.io backend (will be api.afrimercato.com after DNS setup)
+  return 'https://afrimercato-api.fly.dev';
 })();
 
 console.log('🔗 API Base URL:', API_BASE_URL);

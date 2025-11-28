@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "start": "npx serve -s dist"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -28,6 +29,7 @@
     "react-is": "^18.2.0",
     "react-router-dom": "^6.20.0",
     "recharts": "^2.10.1",
+    "serve": "^14.2.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
