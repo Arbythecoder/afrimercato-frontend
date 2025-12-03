@@ -1,0 +1,110 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Afrimercato Global Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4A7C2C;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2D5016;
+}
+
+/* Smooth animations */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .transition-smooth {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .animate-slideDown {
+    animation: slideDown 0.2s ease-out;
+  }
+
+  .animate-slideUp {
+    animation: slideUp 0.3s ease-out;
+  }
+  
+  /* Login/Signup Page Animations */
+  .auth-container {
+    @apply flex flex-col items-center justify-center min-h-screen p-4 bg-gradient-to-b from-gray-50 to-gray-100;
+  }
+  
+  .auth-form {
+    @apply w-full max-w-md p-6 bg-white rounded-2xl shadow-xl;
+  }
+  
+  .auth-input {
+    @apply w-full px-4 py-3 mb-4 text-gray-700 bg-gray-50 border border-gray-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-300;
+  }
+  
+  .auth-button {
+    @apply w-full py-3 text-white bg-[#4A7C2C] rounded-lg hover:bg-[#2D5016] transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98];
+  }
+  
+  .auth-link {
+    @apply text-[#4A7C2C] hover:text-[#2D5016] transition-all duration-300;
+  }
+  
+  /* Mobile Optimizations */
+  @media (max-width: 640px) {
+    .auth-form {
+      @apply p-4 mx-4;
+    }
+    
+    .auth-input {
+      @apply py-2.5;
+    }
+    
+    .auth-button {
+      @apply py-2.5;
+    }
+  }
+}
