@@ -27,7 +27,7 @@ const VendorOnboarding = ({ onComplete }) => {
       street: '',
       city: '',
       state: '',
-      country: 'Nigeria',
+      country: 'United Kingdom',
       postalCode: ''
     },
 
@@ -492,7 +492,7 @@ const VendorOnboarding = ({ onComplete }) => {
                       value={formData.address.city}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                      placeholder="Lagos"
+                      placeholder="London"
                     />
                   </div>
 
@@ -506,7 +506,7 @@ const VendorOnboarding = ({ onComplete }) => {
                       value={formData.address.state}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                      placeholder="Lagos State"
+                      placeholder="Greater London"
                     />
                   </div>
                 </div>
