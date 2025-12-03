@@ -24,6 +24,7 @@ const { initSocket } = require('./src/config/socket');
 
 // Import routes
 const authRoutes = require('./src/routes/authRoutes');
+const otpRoutes = require('./src/routes/otpRoutes');
 const vendorRoutes = require('./src/routes/vendorRoutes');
 const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
 const riderAuthRoutes = require('./src/routes/riderAuthRoutes');
@@ -40,6 +41,7 @@ const pickerOrderRoutes = require('./src/routes/pickerOrderRoutes');
 const vendorPickerRoutes = require('./src/routes/vendorPickerRoutes');
 const locationRoutes = require('./src/routes/locationRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const trackingRoutes = require('./src/routes/trackingRoutes');
 const seedRoutes = require('./src/routes/seedRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
@@ -149,6 +151,14 @@ app.use(
 app.use(express.json({ limit: '10mb' })); // Max 10MB JSON payload
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// 3b. PASSPORT INITIALIZATION (OAuth)
+/**
+ * Initialize Passport for OAuth authentication
+ * Supports Google and Facebook sign-in
+ */
+const passport = require('passport');
+app.use(passport.initialize());
+
 // 4. LOGGING (Morgan)
 /**
  * Logs all HTTP requests to console
@@ -249,6 +259,11 @@ app.get('/api/health', (req, res) => {
 // Example: POST /api/auth/login, POST /api/auth/register
 app.use('/api/auth', authRoutes);
 
+// OTP routes (Phone verification)
+// All routes in otpRoutes will be prefixed with /api/auth/otp
+// Example: POST /api/auth/otp/send, POST /api/auth/otp/verify
+app.use('/api/auth/otp', otpRoutes);
+
 // Vendor routes
 // All routes in vendorRoutes will be prefixed with /api/vendor
 // Example: GET /api/vendor/dashboard/stats, POST /api/vendor/products
@@ -328,6 +343,11 @@ app.use('/api/vendor/pickers', vendorPickerRoutes);
 // All routes in locationRoutes will be prefixed with /api/location
 // Example: GET /api/location/search-vendors?location=Bristol%20UK&radius=10
 app.use('/api/location', locationRoutes);
+
+// Real-time order tracking routes (Live status updates and rider GPS)
+// All routes in trackingRoutes will be prefixed with /api/tracking
+// Example: GET /api/tracking/:orderId, POST /api/tracking/rider/location
+app.use('/api/tracking', trackingRoutes);
 
 // Seed routes (Administrative endpoint to seed database)
 // All routes in seedRoutes will be prefixed with /api/seed
