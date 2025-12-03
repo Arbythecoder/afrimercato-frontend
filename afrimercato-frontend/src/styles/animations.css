@@ -1,0 +1,465 @@
+/* =================================================================
+   SMOOTH ANIMATIONS - 800X BETTER EXPERIENCE
+   Using best practices for performance and visual appeal
+   ================================================================= */
+
+/* Fade In Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide Up Animation */
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideUp {
+  animation: slideUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide Down Animation */
+@keyframes slideDown {
+  from {
+    transform: translateY(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideDown {
+  animation: slideDown 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide In from Left */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInLeft {
+  animation: slideInLeft 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Slide In from Right */
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slideInRight {
+  animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Scale Up Animation */
+@keyframes scaleUp {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-scaleUp {
+  animation: scaleUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Bounce Animation */
+@keyframes bounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-bounce-custom {
+  animation: bounce 1s ease-in-out infinite;
+}
+
+/* Pulse Animation (Enhanced) */
+@keyframes pulse-enhanced {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.animate-pulse-enhanced {
+  animation: pulse-enhanced 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Shimmer Effect (for loading states) */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 0%,
+    #f8f8f8 20%,
+    #f0f0f0 40%,
+    #f0f0f0 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Skeleton Loader */
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #f0f0f0 25%,
+    #e0e0e0 50%,
+    #f0f0f0 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+/* Shake Animation (for errors) */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-5px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(5px);
+  }
+}
+
+.animate-shake {
+  animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97);
+}
+
+/* Progress Bar Animation */
+@keyframes progress {
+  0% {
+    width: 0%;
+  }
+}
+
+.animate-progress {
+  animation: progress 1s ease-out;
+}
+
+/* Glow Effect */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(255, 179, 0, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(255, 179, 0, 0.8);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Gradient Animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+/* =================================================================
+   HOVER EFFECTS - SMOOTH TRANSITIONS
+   ================================================================= */
+
+/* Lift on Hover */
+.hover-lift {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Scale on Hover */
+.hover-scale {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+/* Glow on Hover */
+.hover-glow {
+  transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 20px rgba(255, 179, 0, 0.5);
+}
+
+/* Brighten on Hover */
+.hover-brighten {
+  transition: filter 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hover-brighten:hover {
+  filter: brightness(1.1);
+}
+
+/* =================================================================
+   PAGE TRANSITIONS
+   ================================================================= */
+
+/* Page Enter */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: pageEnter 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Modal Backdrop */
+@keyframes backdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.backdrop-fade {
+  animation: backdropFade 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =================================================================
+   TOAST NOTIFICATIONS
+   ================================================================= */
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+.toast-enter {
+  animation: toastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.toast-exit {
+  animation: toastSlideOut 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* =================================================================
+   LOADING STATES
+   ================================================================= */
+
+/* Spinner */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin 1.5s linear infinite;
+}
+
+/* Dots Loading */
+@keyframes dotPulse {
+  0%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+.dot-pulse-1 {
+  animation: dotPulse 1.5s ease-in-out infinite;
+}
+
+.dot-pulse-2 {
+  animation: dotPulse 1.5s ease-in-out 0.2s infinite;
+}
+
+.dot-pulse-3 {
+  animation: dotPulse 1.5s ease-in-out 0.4s infinite;
+}
+
+/* =================================================================
+   SMOOTH SCROLLING
+   ================================================================= */
+
+.smooth-scroll {
+  scroll-behavior: smooth;
+}
+
+/* Hide scrollbar but keep functionality */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #FFB300;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #FFA726;
+}
+
+/* =================================================================
+   UTILITY CLASSES
+   ================================================================= */
+
+/* Smooth Transitions */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-fast {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.transition-slow {
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Transform Origin */
+.origin-center {
+  transform-origin: center;
+}
+
+.origin-top {
+  transform-origin: top;
+}
+
+.origin-bottom {
+  transform-origin: bottom;
+}
+
+/* Backdrop Blur Support */
+@supports (backdrop-filter: blur(10px)) {
+  .backdrop-blur-custom {
+    backdrop-filter: blur(10px);
+  }
+}
+
+/* =================================================================
+   RESPONSIVE ANIMATIONS
+   Disable animations on mobile for better performance if needed
+   ================================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

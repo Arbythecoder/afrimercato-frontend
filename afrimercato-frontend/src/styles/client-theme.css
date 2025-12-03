@@ -1,0 +1,230 @@
+/* =================================================================
+   AFRIMERCATO CLIENT THEME - EXACT COLORS FROM IMAGES
+   =================================================================
+   Based on client's images (Homepage.pdf, Just Eat screenshots)
+   Golden yellow + Teal green color scheme
+*/
+
+:root {
+  /* ===============================================
+     PRIMARY BRAND COLORS (from client images)
+     =============================================== */
+
+  /* Golden Yellow - Main brand color */
+  --color-primary: #FFB300;           /* Bright golden yellow */
+  --color-primary-light: #FFCA28;     /* Lighter yellow */
+  --color-primary-dark: #FF8F00;      /* Darker golden */
+  --color-primary-pale: #FFF9C4;      /* Very light yellow background */
+
+  /* Teal Green - Secondary brand color */
+  --color-secondary: #00897B;         /* Main teal */
+  --color-secondary-light: #26A69A;   /* Lighter teal */
+  --color-secondary-dark: #00695C;    /* Darker teal */
+  --color-secondary-pale: #E0F2F1;    /* Very light teal background */
+
+  /* Orange Accent - From images */
+  --color-accent-orange: #FFA726;     /* Warm orange */
+  --color-accent-orange-light: #FFB74D;
+  --color-accent-orange-dark: #F57C00;
+
+  /* ===============================================
+     NEUTRAL COLORS
+     =============================================== */
+  --color-white: #FFFFFF;
+  --color-black: #212121;
+  --color-gray-50: #FAFAFA;
+  --color-gray-100: #F5F5F5;
+  --color-gray-200: #EEEEEE;
+  --color-gray-300: #E0E0E0;
+  --color-gray-400: #BDBDBD;
+  --color-gray-500: #9E9E9E;
+  --color-gray-600: #757575;
+  --color-gray-700: #616161;
+  --color-gray-800: #424242;
+  --color-gray-900: #212121;
+
+  /* ===============================================
+     SEMANTIC COLORS
+     =============================================== */
+  --color-success: #4CAF50;
+  --color-success-light: #81C784;
+  --color-success-dark: #388E3C;
+  --color-success-bg: #E8F5E9;
+
+  --color-error: #F44336;
+  --color-error-light: #E57373;
+  --color-error-dark: #D32F2F;
+  --color-error-bg: #FFEBEE;
+
+  --color-warning: #FF9800;
+  --color-warning-light: #FFB74D;
+  --color-warning-dark: #F57C00;
+  --color-warning-bg: #FFF3E0;
+
+  --color-info: #2196F3;
+  --color-info-light: #64B5F6;
+  --color-info-dark: #1976D2;
+  --color-info-bg: #E3F2FD;
+
+  /* ===============================================
+     TEXT COLORS
+     =============================================== */
+  --text-primary: #212121;
+  --text-secondary: #757575;
+  --text-disabled: #BDBDBD;
+  --text-hint: #9E9E9E;
+  --text-on-primary: #FFFFFF;        /* White text on yellow background */
+  --text-on-secondary: #FFFFFF;      /* White text on teal background */
+
+  /* ===============================================
+     BACKGROUND COLORS
+     =============================================== */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F5F5F5;
+  --bg-tertiary: #FAFAFA;
+  --bg-dark: #212121;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+
+  /* ===============================================
+     BORDER & SHADOW
+     =============================================== */
+  --border-color: #E0E0E0;
+  --border-color-light: #EEEEEE;
+  --border-color-dark: #BDBDBD;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.15);
+  --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.2);
+
+  /* ===============================================
+     GRADIENTS (Like Uber Eats/Just Eat)
+     =============================================== */
+  --gradient-primary: linear-gradient(135deg, #FFB300 0%, #FFA726 100%);
+  --gradient-secondary: linear-gradient(135deg, #00897B 0%, #00695C 100%);
+  --gradient-warm: linear-gradient(135deg, #FFB300 0%, #FF8F00 100%);
+  --gradient-cool: linear-gradient(135deg, #00897B 0%, #004D40 100%);
+  --gradient-overlay: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.5) 100%);
+
+  /* ===============================================
+     SPACING (8px base)
+     =============================================== */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 48px;
+  --spacing-3xl: 64px;
+
+  /* ===============================================
+     TYPOGRAPHY
+     =============================================== */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-heading: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;   /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;   /* 18px */
+  --font-size-xl: 1.25rem;    /* 20px */
+  --font-size-2xl: 1.5rem;    /* 24px */
+  --font-size-3xl: 1.875rem;  /* 30px */
+  --font-size-4xl: 2.25rem;   /* 36px */
+  --font-size-5xl: 3rem;      /* 48px */
+
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+
+  /* ===============================================
+     BORDER RADIUS
+     =============================================== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 9999px;
+
+  /* ===============================================
+     TRANSITIONS
+     =============================================== */
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+
+  /* ===============================================
+     Z-INDEX LAYERS
+     =============================================== */
+  --z-base: 0;
+  --z-dropdown: 1000;
+  --z-sticky: 1010;
+  --z-fixed: 1020;
+  --z-modal-backdrop: 1030;
+  --z-modal: 1040;
+  --z-popover: 1050;
+  --z-tooltip: 1060;
+}
+
+/* =================================================================
+   DARK MODE (Optional)
+   ================================================================= */
+[data-theme="dark"] {
+  --color-primary: #FFB300;
+  --color-secondary: #26A69A;
+
+  --bg-primary: #121212;
+  --bg-secondary: #1E1E1E;
+  --bg-tertiary: #2C2C2C;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #B0B0B0;
+
+  --border-color: #3C3C3C;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.3);
+  --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+/* =================================================================
+   UTILITY CLASSES
+   ================================================================= */
+
+/* Background colors */
+.bg-primary { background-color: var(--color-primary) !important; }
+.bg-secondary { background-color: var(--color-secondary) !important; }
+.bg-white { background-color: var(--color-white) !important; }
+.bg-gray-50 { background-color: var(--color-gray-50) !important; }
+.bg-gray-100 { background-color: var(--color-gray-100) !important; }
+
+/* Text colors */
+.text-primary { color: var(--text-primary) !important; }
+.text-secondary { color: var(--text-secondary) !important; }
+.text-white { color: var(--color-white) !important; }
+.text-brand-primary { color: var(--color-primary) !important; }
+.text-brand-secondary { color: var(--color-secondary) !important; }
+
+/* Gradients */
+.gradient-primary { background: var(--gradient-primary) !important; }
+.gradient-secondary { background: var(--gradient-secondary) !important; }
+
+/* Shadows */
+.shadow-sm { box-shadow: var(--shadow-sm) !important; }
+.shadow-md { box-shadow: var(--shadow-md) !important; }
+.shadow-lg { box-shadow: var(--shadow-lg) !important; }
+.shadow-xl { box-shadow: var(--shadow-xl) !important; }
+
+/* Border radius */
+.rounded-sm { border-radius: var(--radius-sm) !important; }
+.rounded-md { border-radius: var(--radius-md) !important; }
+.rounded-lg { border-radius: var(--radius-lg) !important; }
+.rounded-xl { border-radius: var(--radius-xl) !important; }
+.rounded-full { border-radius: var(--radius-full) !important; }
