@@ -69,6 +69,30 @@ exports.register = asyncHandler(async (req, res) => {
   //   text: `Click here to verify: ${process.env.CLIENT_URL}/verify-email/${verificationToken}`
   // });
 
+  // AUTOMATICALLY CREATE CUSTOMER PROFILE (like Chowdeck, UberEats, JustEat)
+  // This allows users to immediately start ordering without extra steps
+  if (user.primaryRole === 'customer' || user.roles.includes('customer')) {
+    const Customer = require('../models/Customer');
+
+    try {
+      await Customer.create({
+        user: user._id,
+        preferences: {
+          notifications: {
+            email: true,
+            sms: true,
+            push: true
+          }
+        }
+      });
+      console.log(`✅ Customer profile auto-created for ${user.email}`);
+    } catch (customerError) {
+      console.error('Failed to create customer profile:', customerError);
+      // Don't fail registration if customer profile creation fails
+      // User can create it later
+    }
+  }
+
   // Generate JWT token for immediate login
   const token = user.generateAuthToken();
   const refreshToken = user.generateRefreshToken();

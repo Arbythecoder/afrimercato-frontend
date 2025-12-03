@@ -123,6 +123,11 @@ app.use(
   'http://localhost:5178'
 ];
 
+      // Allow all Cloudflare Pages preview deployments (*.afrimercato.pages.dev)
+      if (origin && origin.match(/^https:\/\/[a-z0-9]+\.afrimercato\.pages\.dev$/)) {
+        return callback(null, true);
+      }
+
       if (allowedOrigins.indexOf(origin) !== -1) {
         callback(null, true);
       } else {
