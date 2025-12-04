@@ -1,0 +1,90 @@
+services:
+  # Backend API Service
+  - type: web
+    name: afrimercato-backend
+    env: node
+    region: frankfurt  # EU region (closer to UK) - change to oregon/singapore if needed
+    plan: free # FREE TIER - Upgrade to 'starter' ($7/month) for production
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /api/health
+
+    # Auto-deploy on push to main branch
+    autoDeploy: true
+
+    # Health check configuration
+    healthCheck:
+      path: /api/health
+      interval: 60 # Check every 60 seconds
+      timeout: 10
+      unhealthyThreshold: 3
+
+    # Environment Variables
+    envVars:
+      # Node Environment
+      - key: NODE_ENV
+        value: production
+
+      # Server Configuration
+      - key: PORT
+        value: 5000
+
+      # Database (MongoDB Atlas)
+      - key: MONGODB_URI
+        sync: false  # ⚠️ SET THIS MANUALLY in Render dashboard
+
+      # JWT Authentication
+      - key: JWT_SECRET
+        generateValue: true  # Auto-generates 256-bit secret
+      - key: JWT_EXPIRE
+        value: 7d
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRE
+        value: 30d
+
+      # Frontend URL (Update after Vercel deployment)
+      - key: CLIENT_URL
+        value: https://afrimercato.vercel.app  # ⚠️ UPDATE with your Vercel URL
+
+      # Security
+      - key: BCRYPT_ROUNDS
+        value: 10
+
+      # Rate Limiting
+      - key: RATE_LIMIT_WINDOW
+        value: 15  # 15 minutes
+      - key: RATE_LIMIT_MAX
+        value: 100  # 100 requests per window
+
+      # File Upload
+      - key: MAX_FILE_SIZE
+        value: 5242880  # 5MB
+      - key: UPLOAD_PATH
+        value: ./uploads
+
+      # Email Service (Brevo) - Add these when you set up Brevo
+      - key: BREVO_API_KEY
+        sync: false  # ⚠️ SET THIS MANUALLY in Render dashboard
+      - key: BREVO_SENDER_EMAIL
+        value: noreply@afrimercato.com
+      - key: BREVO_SENDER_NAME
+        value: Afrimercato
+
+      # Payment (Paystack) - Add when integrating payments
+      - key: PAYSTACK_SECRET_KEY
+        sync: false  # ⚠️ SET THIS MANUALLY when ready
+      - key: PAYSTACK_PUBLIC_KEY
+        sync: false  # ⚠️ SET THIS MANUALLY when ready
+
+      # Cloudinary (Image Storage) - REQUIRED FOR IMAGE UPLOADS
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false  # SET THIS MANUALLY in Render dashboard
+      - key: CLOUDINARY_API_KEY
+        sync: false  # SET THIS MANUALLY in Render dashboard
+      - key: CLOUDINARY_API_SECRET
+        sync: false  # SET THIS MANUALLY in Render dashboard
+
+      # Data Encryption
+      - key: ENCRYPTION_SECRET
+        generateValue: true  # Auto-generates secret
