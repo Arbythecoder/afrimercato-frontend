@@ -170,6 +170,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// Trust proxy - Required for rate limiting behind Fly.io proxy
+app.set('trust proxy', 1);
+
 // 5. RATE LIMITING
 /**
  * Prevents abuse by limiting requests per IP address
