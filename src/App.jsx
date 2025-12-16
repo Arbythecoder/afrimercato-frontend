@@ -18,6 +18,10 @@ import AboutUs from './pages/AboutUs'
 import Delivery from './pages/Delivery'
 import ContactUs from './pages/ContactUs'
 
+// GDPR Pages
+import PrivacyPolicy from './pages/PrivacyPolicy'
+import TermsOfService from './pages/TermsOfService'
+
 // Customer Pages
 import ClientVendorStorefront from './pages/customer/ClientVendorStorefront' // Client-exact vendor storefront
 import CustomerDashboard from './pages/customer/CustomerDashboard'
@@ -48,8 +52,13 @@ import PickerDashboard from './pages/picker/PickerDashboard'
 import PickerOrderFulfillment from './pages/picker/PickerOrderFulfillment'
 import PickerPerformance from './pages/picker/PickerPerformance'
 
-// Layout
+// Admin Pages
+import AdminDashboard from './pages/admin/AdminDashboard'
+import VendorManagement from './pages/admin/VendorManagement'
+
+// Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
+import CookieConsent from './components/CookieConsent'
 
 // Helper component to redirect based on user role
 function RoleBasedRedirect() {
@@ -97,6 +106,11 @@ function AppContent() {
       <Route path="/about" element={<AboutUs />} />
       <Route path="/delivery" element={<Delivery />} />
       <Route path="/contact" element={<ContactUs />} />
+
+      {/* GDPR Compliance Pages */}
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/terms-of-service" element={<TermsOfService />} />
+
       <Route path="/products" element={<ProductBrowsing />} />
       <Route path="/cart" element={<ShoppingCart />} />
       <Route path="/orders" element={<OrderHistory />} />
@@ -244,6 +258,36 @@ function AppContent() {
           )
         }
       />
+
+      {/* Admin Routes */}
+      <Route
+        path="/admin/dashboard"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <AdminDashboard />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/admin/vendors"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <VendorManagement />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
     </Routes>
   )
 }
@@ -252,6 +296,7 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <CookieConsent />
     </AuthProvider>
   )
 }
