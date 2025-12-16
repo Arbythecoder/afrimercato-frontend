@@ -8,8 +8,25 @@ const stripe = process.env.STRIPE_SECRET_KEY
   ? require('stripe')(process.env.STRIPE_SECRET_KEY)
   : null;
 
+const axios = require('axios');
 const Order = require('../models/Order');
 const { asyncHandler } = require('../middleware/errorHandler');
+
+// PayPal Configuration
+const PAYPAL_API = process.env.PAYPAL_MODE === 'live'
+  ? 'https://api-m.paypal.com'
+  : 'https://api-m.sandbox.paypal.com';
+
+const getPayPalToken = async () => {
+  if (!process.env.PAYPAL_CLIENT_ID || !process.env.PAYPAL_CLIENT_SECRET) {
+    return null;
+  }
+  const auth = Buffer.from(`${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`).toString('base64');
+  const { data } = await axios.post(`${PAYPAL_API}/v1/oauth2/token`, 'grant_type=client_credentials', {
+    headers: { 'Authorization': `Basic ${auth}` }
+  });
+  return data.access_token;
+};
 
 /**
  * @route   POST /api/payments/create-intent
@@ -227,4 +244,59 @@ exports.processRefund = asyncHandler(async (req, res) => {
       status: refund.status
     }
   });
+});
+
+// =================================================================
+// PAYPAL PAYMENT METHODS
+// =================================================================
+
+/**
+ * @route   POST /api/payments/paypal/create-order
+ * @desc    Create PayPal order
+ * @access  Private
+ */
+exports.createPayPalOrder = asyncHandler(async (req, res) => {
+  const token = await getPayPalToken();
+  if (!token) {
+    return res.status(503).json({ success: false, message: 'PayPal not configured' });
+  }
+
+  const { orderId, amount } = req.body;
+  const { data } = await axios.post(`${PAYPAL_API}/v2/checkout/orders`, {
+    intent: 'CAPTURE',
+    purchase_units: [{
+      amount: { currency_code: 'GBP', value: amount.toFixed(2) },
+      reference_id: orderId
+    }]
+  }, {
+    headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' }
+  });
+
+  res.json({ success: true, orderID: data.id });
+});
+
+/**
+ * @route   POST /api/payments/paypal/capture
+ * @desc    Capture PayPal payment
+ * @access  Private
+ */
+exports.capturePayPalOrder = asyncHandler(async (req, res) => {
+  const token = await getPayPalToken();
+  const { orderID, afrimercatoOrderId } = req.body;
+
+  const { data } = await axios.post(`${PAYPAL_API}/v2/checkout/orders/${orderID}/capture`, {}, {
+    headers: { 'Authorization': `Bearer ${token}` }
+  });
+
+  if (data.status === 'COMPLETED' && afrimercatoOrderId) {
+    await Order.findByIdAndUpdate(afrimercatoOrderId, {
+      'payment.status': 'paid',
+      'payment.method': 'paypal',
+      'payment.transactionId': data.id,
+      'payment.paidAt': new Date(),
+      status: 'confirmed'
+    });
+  }
+
+  res.json({ success: true, data });
 });

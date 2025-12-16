@@ -45,6 +45,7 @@ const trackingRoutes = require('./src/routes/trackingRoutes');
 const seedRoutes = require('./src/routes/seedRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
+const gdprRoutes = require('./src/routes/gdprRoutes');
 
 /**
  * ==============================================================
@@ -364,9 +365,10 @@ app.get('/api/vendors/:id', (req, res) => {
   res.redirect(308, `/api/location/vendor/${req.params.id}`);
 });
 
-// Admin & Payment routes
+// Admin, Payment & GDPR routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/gdpr', gdprRoutes); // GDPR compliance & data rights
 
 /**
  * ==============================================================

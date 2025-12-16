@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { HERO_IMAGES } from '../utils/defaultImages'
@@ -7,14 +7,25 @@ import { HERO_IMAGES } from '../utils/defaultImages'
 function Register() {
   const navigate = useNavigate()
   const { register } = useAuth()
+  const [searchParams] = useSearchParams()
+  const roleFromUrl = searchParams.get('role') || 'customer'
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
     password: '',
     confirmPassword: '',
-    role: 'customer',
+    role: roleFromUrl,
   })
+
+  // Update role if URL parameter changes
+  useEffect(() => {
+    const role = searchParams.get('role')
+    if (role && ['customer', 'vendor', 'rider', 'picker'].includes(role)) {
+      setFormData(prev => ({ ...prev, role }))
+    }
+  }, [searchParams])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)

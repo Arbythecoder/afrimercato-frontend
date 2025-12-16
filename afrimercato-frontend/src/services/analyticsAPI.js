@@ -1,5 +1,6 @@
 // Direct API calls using fetch - consistent with api.js
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend-production-0329.up.railway.app/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev/api';
+
 
 const apiCall = async (endpoint) => {
   const token = localStorage.getItem('afrimercato_token');

@@ -105,6 +105,26 @@ const userSchema = new mongoose.Schema(
       default: null
     },
 
+    // OAUTH / SOCIAL LOGIN
+    // Google OAuth ID
+    googleId: {
+      type: String,
+      default: null,
+      sparse: true // Allows multiple nulls but unique when set
+    },
+    // Facebook OAuth ID
+    facebookId: {
+      type: String,
+      default: null,
+      sparse: true
+    },
+    // Authentication provider ('local', 'google', 'facebook')
+    authProvider: {
+      type: String,
+      enum: ['local', 'google', 'facebook'],
+      default: 'local'
+    },
+
     // EMAIL VERIFICATION
     // isEmailVerified: Has the user confirmed their email?
     // emailVerificationToken: Random code sent to email for verification
@@ -146,6 +166,24 @@ const userSchema = new mongoose.Schema(
     },
     // When account will be unlocked after too many failed attempts
     lockUntil: {
+      type: Date,
+      default: null
+    },
+
+    // GDPR DATA DELETION (Right to Erasure - Article 17)
+    deletionRequested: {
+      type: Boolean,
+      default: false
+    },
+    deletionRequestDate: {
+      type: Date,
+      default: null
+    },
+    deletionReason: {
+      type: String,
+      default: null
+    },
+    scheduledDeletionDate: {
       type: Date,
       default: null
     }
