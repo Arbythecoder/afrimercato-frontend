@@ -61,8 +61,8 @@ app.use(
 // ======================= CORS =======================
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  'https://arbythecoder.github.io/afrimercato-frontend',
   'https://arbythecoder.github.io',
-  'https://www.afrimercato.com',
   'http://localhost:3000',
   'http://localhost:5173'
 ];
