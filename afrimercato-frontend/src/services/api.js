@@ -1,22 +1,5 @@
 // API Base URL - uses environment variable or auto-detects
-const API_BASE_URL = (() => {
-  // First priority: Use environment variable if set
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
-  }
-
-  // Second priority: Auto-detect based on hostname
-  const isLocalhost = window.location.hostname === 'localhost' ||
-                      window.location.hostname === '127.0.0.1' ||
-                      window.location.hostname.includes('192.168');
-
-  if (isLocalhost) {
-    return 'http://localhost:5000';
-  }
-
-  // Production: Fly.io backend (will be api.afrimercato.com after DNS setup)
-  return 'https://afrimercato-api.fly.dev';
-})();
+const API_BASE_URL = "https://afrimercato-backend.onrender.com/api";
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
@@ -44,7 +27,7 @@ const refreshAccessToken = async () => {
   }
 
   try {
-   const response = await fetch(`${API_BASE_URL}/api/auth/refresh-token`, {  // ✅ Added /api
+   const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {  // ✅ Added /api
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -75,7 +58,7 @@ const refreshAccessToken = async () => {
 // Generic API call function with automatic token refresh
 const apiCall = async (endpoint, options = {}, isRetry = false) => {
   try {
-    const url = `${API_BASE_URL}/api${endpoint}`;  // ✅ ADDED /api HERE
+    const url = `${API_BASE_URL}${endpoint}`;  // ✅ ADDED /api HERE
 
     const config = {
       headers: {
