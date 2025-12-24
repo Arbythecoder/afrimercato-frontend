@@ -6,7 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
   
   return {
-    base: '/',
+    base: '/afrimercato-frontend/',
     plugins: [react()],
 
     // Make env variables available in the app
