@@ -1,5 +1,5 @@
 // API Base URL - uses environment variable or auto-detects
-const API_BASE_URL = "https://afrimercato-backend.onrender.com/api";
+const API_BASE_URL = "https://afrimercato-backend.fly.dev/api";
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
