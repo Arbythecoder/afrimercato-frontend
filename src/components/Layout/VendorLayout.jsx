@@ -1,13 +1,62 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import NotificationDropdown from '../Notifications/NotificationDropdown'
+import VendorOnboarding from '../VendorOnboarding'
+import { getVendorProfile } from '../../services/api'
 
 function VendorLayout({ children }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [hasProfile, setHasProfile] = useState(null) // null = loading, true = has profile, false = no profile
+  const [checkingProfile, setCheckingProfile] = useState(true)
+
+  // Check if vendor has a profile
+  useEffect(() => {
+    const checkVendorProfile = async () => {
+      try {
+        const response = await getVendorProfile()
+        setHasProfile(response.success && response.data)
+      } catch (error) {
+        // If error code is VENDOR_PROFILE_NOT_FOUND, they need to create a profile
+        if (error.response?.data?.errorCode === 'VENDOR_PROFILE_NOT_FOUND') {
+          setHasProfile(false)
+        } else if (error.message?.includes('Vendor profile not found')) {
+          setHasProfile(false)
+        } else {
+          console.error('Error checking vendor profile:', error)
+          setHasProfile(false)
+        }
+      } finally {
+        setCheckingProfile(false)
+      }
+    }
+
+    if (user?.role === 'vendor') {
+      checkVendorProfile()
+    } else {
+      setCheckingProfile(false)
+    }
+  }, [user])
+
+  // Loading state
+  if (checkingProfile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-afri-green border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Show onboarding if no profile
+  if (hasProfile === false) {
+    return <VendorOnboarding onComplete={() => setHasProfile(true)} />
+  }
 
   const navigation = [
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
