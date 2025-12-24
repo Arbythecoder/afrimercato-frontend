@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { authAPI } from '../services/api'
+import { authAPI, getUserProfile } from '../services/api'
 
 const AuthContext = createContext()
 
@@ -9,6 +9,24 @@ export const useAuth = () => {
     throw new Error('useAuth must be used within AuthProvider')
   }
   return context
+}
+
+// Helper function to decode JWT token (client-side only for UI purposes)
+const decodeToken = (token) => {
+  try {
+    const base64Url = token.split('.')[1]
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    )
+    return JSON.parse(jsonPayload)
+  } catch (error) {
+    console.error('Error decoding token:', error)
+    return null
+  }
 }
 
 export const AuthProvider = ({ children }) => {
@@ -23,18 +41,32 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     const token = localStorage.getItem('afrimercato_token')
-    const userData = localStorage.getItem('afrimercato_user')
 
     if (token) {
-      // Token exists, mark as authenticated
-      setIsAuthenticated(true)
+      // Decode token to get user role (for UI routing only - backend still validates)
+      const decoded = decodeToken(token)
 
-      // Load user data from localStorage if available
-      if (userData) {
+      if (decoded && decoded.id) {
+        // Fetch fresh user data from backend
         try {
-          setUser(JSON.parse(userData))
-        } catch (e) {
-          console.error('Error parsing user data:', e)
+          const response = await getUserProfile()
+          if (response.success) {
+            setUser(response.data)
+            setIsAuthenticated(true)
+          } else {
+            // Token invalid, clear it
+            localStorage.removeItem('afrimercato_token')
+            localStorage.removeItem('afrimercato_refresh_token')
+          }
+        } catch (error) {
+          // If profile fetch fails, use decoded token data as fallback
+          setUser({
+            _id: decoded.id,
+            email: decoded.email,
+            role: decoded.role || decoded.primaryRole,
+            name: decoded.name
+          })
+          setIsAuthenticated(true)
         }
       }
     }
@@ -49,7 +81,7 @@ export const AuthProvider = ({ children }) => {
       if (response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
-        localStorage.setItem('afrimercato_user', JSON.stringify(user))
+        // DO NOT store user data in localStorage - security risk
         setUser(user)
         setIsAuthenticated(true)
         return { success: true, user }
@@ -69,7 +101,7 @@ export const AuthProvider = ({ children }) => {
       if (response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
-        localStorage.setItem('afrimercato_user', JSON.stringify(user))
+        // DO NOT store user data in localStorage - security risk
         setUser(user)
         setIsAuthenticated(true)
         return { success: true, user }
@@ -84,7 +116,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('afrimercato_token')
-    localStorage.removeItem('afrimercato_user')
+    localStorage.removeItem('afrimercato_refresh_token')
     setUser(null)
     setIsAuthenticated(false)
   }
