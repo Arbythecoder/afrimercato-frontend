@@ -203,12 +203,12 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2 }}
-              className="hidden lg:block"
+              className="relative"
             >
               <img
                 src="https://images.unsplash.com/photo-1567393537607-1e1a6df6763a?w=800"
                 alt="Happy customer with groceries"
-                className="rounded-3xl shadow-2xl w-full object-cover"
+                className="rounded-3xl shadow-2xl w-full h-64 sm:h-80 lg:h-auto object-cover"
               />
             </motion.div>
           </div>
