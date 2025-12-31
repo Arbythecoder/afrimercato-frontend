@@ -65,7 +65,7 @@ const vendorSchema = new mongoose.Schema(
       },
       state: {
         type: String,
-        required: [true, 'Please provide state/region']
+        required: false  // County is optional for UK addresses
       },
       postalCode: {
         type: String

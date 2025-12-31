@@ -162,8 +162,8 @@ const VendorOnboarding = ({ onComplete }) => {
         }
         break
       case 3:
-        if (!formData.address.street.trim() || !formData.address.city.trim() || !formData.address.state.trim()) {
-          setError('Please fill in all address fields')
+        if (!formData.address.street.trim() || !formData.address.city.trim()) {
+          setError('Please fill in street and city')
           return false
         }
         break
@@ -498,7 +498,7 @@ const VendorOnboarding = ({ onComplete }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State *
+                      County (Optional)
                     </label>
                     <input
                       type="text"
@@ -506,7 +506,7 @@ const VendorOnboarding = ({ onComplete }) => {
                       value={formData.address.state}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                      placeholder="Greater London"
+                      placeholder="e.g., Greater London, Essex, Kent"
                     />
                   </div>
                 </div>
