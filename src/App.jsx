@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 // Pages
 import Login from './pages/Login'
 import Register from './pages/Register'
+import OAuthCallback from './pages/OAuthCallback'
 import Dashboard from './pages/vendor/Dashboard'
 import Products from './pages/vendor/Products'
 import Orders from './pages/vendor/Orders'
@@ -146,6 +147,9 @@ function AppContent() {
         path="/register"
         element={isAuthenticated ? <RoleBasedRedirect /> : <Register />}
       />
+
+      {/* OAuth Callback Route */}
+      <Route path="/oauth/callback" element={<OAuthCallback />} />
 
       {/* Protected Routes - Vendor Only */}
       <Route
