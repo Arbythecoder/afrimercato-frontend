@@ -146,7 +146,7 @@ const vendorSchema = new mongoose.Schema(
     // Store Approval Status (Admin must approve before store is public)
     approvalStatus: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'suspended'],
+      enum: ['pending', 'approved', 'rejected', 'suspended', 'needs_info'],
       default: 'pending'
     },
     approvalNote: {
@@ -160,6 +160,28 @@ const vendorSchema = new mongoose.Schema(
     },
     approvedAt: {
       type: Date,
+      default: null
+    },
+    rejectedAt: {
+      type: Date,
+      default: null
+    },
+    rejectionReason: {
+      type: String,
+      default: null
+    },
+
+    // Verification tracking
+    submittedForReviewAt: {
+      type: Date,
+      default: null
+    },
+    lastReviewedAt: {
+      type: Date,
+      default: null
+    },
+    reviewerNotes: {
+      type: String,
       default: null
     },
 

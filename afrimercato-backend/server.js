@@ -44,6 +44,7 @@ const notificationRoutes = require('./src/routes/notificationRoutes');
 const trackingRoutes = require('./src/routes/trackingRoutes');
 const seedRoutes = require('./src/routes/seedRoutes');
 const adminRoutes = require('./src/routes/adminRoutes');
+const adminVendorRoutes = require('./src/routes/adminVendorRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
 
 /**
@@ -366,6 +367,7 @@ app.get('/api/vendors/:id', (req, res) => {
 
 // Admin & Payment routes
 app.use('/api/admin', adminRoutes);
+app.use('/api/admin/vendors', adminVendorRoutes);
 app.use('/api/payments', paymentRoutes);
 
 /**
