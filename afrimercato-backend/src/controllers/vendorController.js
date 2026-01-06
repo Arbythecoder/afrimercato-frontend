@@ -9,6 +9,7 @@ const Product = require('../models/Product');
 const Order = require('../models/Order');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getFileUrl } = require('../middleware/upload');
+const { processVendorVerification } = require('../services/autoVerificationService');
 
 // =================================================================
 // VENDOR PROFILE OPERATIONS
@@ -45,7 +46,7 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
   // Generate unique store ID
   const storeId = `STR${Date.now()}${Math.floor(Math.random() * 1000)}`;
 
-  // Create vendor profile (AUTO-VERIFIED for production)
+  // Create vendor profile with PENDING status (will be auto-verified in 24-48 hours)
   const vendor = await Vendor.create({
     storeId,
     user: req.user.id,
@@ -57,14 +58,29 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
     alternativePhone,
     businessHours,
     bankDetails,
-    isVerified: true, // AUTO-VERIFY for production
+    approvalStatus: 'pending', // Start as pending
+    submittedForReviewAt: new Date(),
+    isVerified: false,
     isActive: true
   });
 
+  // Trigger automatic verification process (runs immediately + scheduled for 24-48h)
+  try {
+    await processVendorVerification(vendor._id);
+    console.log(`✅ Auto-verification initiated for vendor: ${vendor.storeName}`);
+  } catch (error) {
+    console.error('Auto-verification trigger failed:', error);
+    // Don't fail the whole request if auto-verification fails
+  }
+
   res.status(201).json({
     success: true,
-    message: 'Vendor profile created successfully! You can start selling now.',
-    data: { vendor }
+    message: 'Vendor profile created successfully! Your account will be reviewed within 24-48 hours.',
+    data: {
+      vendor,
+      approvalStatus: 'pending',
+      estimatedApprovalTime: '24-48 hours'
+    }
   });
 });
 

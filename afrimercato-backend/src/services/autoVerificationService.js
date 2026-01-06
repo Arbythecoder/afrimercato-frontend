@@ -327,9 +327,35 @@ const getAutoVerificationStats = async () => {
   }
 };
 
+/**
+ * Process verification for a single vendor (used when vendor first registers)
+ * This is called immediately after vendor creates profile
+ *
+ * @param {String} vendorId - Vendor MongoDB ID
+ * @returns {Object} - Result of verification
+ */
+const processVendorVerification = async (vendorId) => {
+  try {
+    console.log(`🔄 Processing verification for vendor: ${vendorId}`);
+    const result = await autoVerifyVendor(vendorId);
+
+    if (result.success && result.action === 'auto_approved') {
+      console.log(`✅ Vendor ${vendorId} auto-approved immediately`);
+    } else if (result.action === 'flagged_for_manual_review') {
+      console.log(`⚠️ Vendor ${vendorId} flagged for manual review - will auto-approve in 24-48h if criteria met`);
+    }
+
+    return result;
+  } catch (error) {
+    console.error(`❌ Error processing vendor ${vendorId}:`, error);
+    throw error;
+  }
+};
+
 module.exports = {
   autoVerifyVendor,
   calculateRiskScore,
   processAllPendingVendors,
-  getAutoVerificationStats
+  getAutoVerificationStats,
+  processVendorVerification
 };

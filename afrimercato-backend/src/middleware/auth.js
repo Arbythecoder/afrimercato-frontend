@@ -228,14 +228,35 @@ exports.verifyVendor = async (req, res, next) => {
       });
     }
 
-    // AUTO-VERIFY all vendors for production (no admin approval needed)
-    // if (!vendor.isVerified) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Your vendor account is pending verification. Please wait for admin approval.',
-    //     errorCode: 'VENDOR_NOT_VERIFIED'
-    //   });
-    // }
+    // Check if vendor is approved via approvalStatus (more granular than isVerified)
+    if (vendor.approvalStatus === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor account is pending verification. Our automated system will review your application within 24-48 hours.',
+        errorCode: 'VENDOR_PENDING_APPROVAL',
+        status: 'pending',
+        submittedAt: vendor.submittedForReviewAt || vendor.createdAt
+      });
+    }
+
+    if (vendor.approvalStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor application was not approved.',
+        errorCode: 'VENDOR_REJECTED',
+        status: 'rejected',
+        reason: vendor.rejectionReason
+      });
+    }
+
+    if (vendor.approvalStatus === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor account has been suspended.',
+        errorCode: 'VENDOR_SUSPENDED',
+        status: 'suspended'
+      });
+    }
 
     if (!vendor.isActive) {
       return res.status(403).json({

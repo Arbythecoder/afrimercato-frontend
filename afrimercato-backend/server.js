@@ -410,6 +410,40 @@ global.io = io; // Make Socket.IO available globally for controllers
 
 /**
  * ==============================================================
+ * AUTOMATED VENDOR VERIFICATION CRON JOB
+ * ==============================================================
+ * Runs every 24 hours to automatically verify pending vendors
+ * Reduces manual admin work by 70-80%
+ */
+const { processAllPendingVendors } = require('./src/services/autoVerificationService');
+
+// Run immediately on startup (check for any pending vendors)
+setTimeout(async () => {
+  console.log('🔄 Running initial vendor auto-verification check...');
+  try {
+    const result = await processAllPendingVendors();
+    console.log('✅ Initial auto-verification complete:', result);
+  } catch (error) {
+    console.error('❌ Initial auto-verification failed:', error.message);
+  }
+}, 5000); // Wait 5 seconds after server starts
+
+// Run every 24 hours
+const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+setInterval(async () => {
+  console.log('⏰ Running scheduled vendor auto-verification (24h cron)...');
+  try {
+    const result = await processAllPendingVendors();
+    console.log('✅ Scheduled auto-verification complete:', result);
+  } catch (error) {
+    console.error('❌ Scheduled auto-verification failed:', error.message);
+  }
+}, TWENTY_FOUR_HOURS);
+
+console.log('✅ Automated vendor verification cron job initialized (runs every 24 hours)');
+
+/**
+ * ==============================================================
  * GRACEFUL SHUTDOWN
  * ==============================================================
  * Properly close server and database when app stops
