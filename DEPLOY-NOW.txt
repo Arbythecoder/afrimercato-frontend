@@ -1,0 +1,104 @@
+# 🚀 DEPLOYMENT INSTRUCTIONS - URGENT FIXES
+
+## ✅ Step 1: Push to GitHub (DO THIS FIRST)
+
+### If you already have a GitHub repo:
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO_NAME.git
+git branch -M main
+git push -u origin main
+```
+
+### If you need to create a new GitHub repo:
+1. Go to: https://github.com/new
+2. Name: afrimercato (or whatever you want)
+3. Make it Private or Public
+4. Click "Create repository"
+5. Then run:
+```bash
+git remote add origin https://github.com/YOUR_USERNAME/afrimercato.git
+git branch -M main
+git push -u origin main
+```
+
+---
+
+## ✅ Step 2: Deploy Frontend to Cloudflare Pages
+
+### Option A: Connect GitHub Repo (Recommended - Auto-deploys on push)
+1. Go to: https://dash.cloudflare.com/
+2. Pages → Create a project → Connect to Git
+3. Select your GitHub repo: afrimercato
+4. Build settings:
+   - Framework preset: Vite
+   - Build command: `cd afrimercato-frontend && npm install && npm run build`
+   - Build output directory: `afrimercato-frontend/dist`
+5. Environment variables (set these):
+   ```
+   VITE_API_URL=https://YOUR_FLYIO_APP.fly.dev
+   ```
+6. Click "Save and Deploy"
+
+### Option B: Deploy via Wrangler CLI (Manual)
+```bash
+cd afrimercato-frontend
+npm run build
+npx wrangler pages deploy dist --project-name=afrimercato
+```
+
+---
+
+## ✅ Step 3: Deploy Backend to Fly.io
+
+### Check if fly.toml exists:
+```bash
+cd afrimercato-backend
+cat fly.toml
+```
+
+### Deploy to Fly.io:
+```bash
+cd afrimercato-backend
+fly deploy
+```
+
+### If you need to login first:
+```bash
+fly auth login
+```
+
+### If you need to create a new app:
+```bash
+fly apps create afrimercato-api
+fly deploy
+```
+
+### Set environment variables (if needed):
+```bash
+fly secrets set MONGODB_URI="your_mongodb_connection_string"
+fly secrets set JWT_SECRET="your_jwt_secret"
+```
+
+---
+
+## 🔍 Verify Deployment
+
+### Frontend:
+- Open: https://afrimercato.pages.dev (or your custom domain)
+- Test customer registration/login
+- Test checkout flow
+
+### Backend:
+- Open: https://afrimercato-api.fly.dev/health (or your fly app URL)
+- Should return: `{"status": "ok"}`
+
+---
+
+## 🆘 NEED YOUR CREDENTIALS?
+
+Please provide:
+1. **GitHub repo URL** (e.g., https://github.com/yourusername/afrimercato)
+2. **Cloudflare account email** (if you want me to help)
+3. **Fly.io app name** (if you already have one)
+
+I can then give you exact commands with YOUR details filled in!
