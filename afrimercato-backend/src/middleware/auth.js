@@ -207,6 +207,51 @@ exports.optionalAuth = async (req, res, next) => {
 };
 
 // =================================================================
+// CHECK VENDOR APPROVAL: Ensure vendor account is approved by admin
+// =================================================================
+/**
+ * This middleware checks if a vendor user account has been approved by admin
+ * Use this BEFORE verifyVendor to check user-level approval first
+ */
+exports.checkVendorApproval = async (req, res, next) => {
+  try {
+    // Only check if user is a vendor
+    if (!req.user.roles || !req.user.roles.includes('vendor')) {
+      return next(); // Not a vendor, skip this check
+    }
+
+    // Check approval status
+    if (req.user.approvalStatus === 'pending') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor account is pending admin approval. You will be notified once approved.',
+        errorCode: 'VENDOR_ACCOUNT_PENDING_APPROVAL',
+        approvalStatus: 'pending'
+      });
+    }
+
+    if (req.user.approvalStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor account application was rejected.',
+        errorCode: 'VENDOR_ACCOUNT_REJECTED',
+        approvalStatus: 'rejected',
+        reason: req.user.rejectionReason
+      });
+    }
+
+    // Account is approved, proceed
+    next();
+  } catch (error) {
+    console.error('Vendor approval check error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error checking vendor approval status'
+    });
+  }
+};
+
+// =================================================================
 // VERIFY VENDOR: Check User is a Verified Vendor
 // =================================================================
 /**

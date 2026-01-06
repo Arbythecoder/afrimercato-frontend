@@ -7,6 +7,9 @@ const express = require('express');
 const router = express.Router();
 
 const {
+  getPendingVendorAccounts,
+  approveVendorAccount,
+  rejectVendorAccount,
   getPendingVendors,
   getAllVendors,
   approveVendor,
@@ -23,7 +26,12 @@ router.use(protect, authorize('admin'));
 // Dashboard
 router.get('/stats', getAdminStats);
 
-// Vendor Management
+// Vendor User Account Management (Primary approval - must approve account first)
+router.get('/vendors/accounts/pending', getPendingVendorAccounts);
+router.put('/vendors/accounts/:id/approve', approveVendorAccount);
+router.put('/vendors/accounts/:id/reject', rejectVendorAccount);
+
+// Vendor Store Management (Secondary - for store profiles)
 router.get('/vendors', getAllVendors);
 router.get('/vendors/pending', getPendingVendors);
 router.put('/vendors/:id/approve', approveVendor);

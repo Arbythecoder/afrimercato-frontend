@@ -38,7 +38,7 @@ const {
 } = require('../controllers/vendorController');
 
 // Import middleware
-const { protect, authorize, verifyVendor } = require('../middleware/auth');
+const { protect, authorize, checkVendorApproval, verifyVendor } = require('../middleware/auth');
 const {
   validateProduct,
   validateVendorProfile,
@@ -56,13 +56,14 @@ const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware
  *
  * 1. protect → Verify user is logged in
  * 2. authorize('vendor') → Verify user role is 'vendor'
- * 3. verifyVendor → Verify vendor profile exists and is verified
- * 4. Additional validators → Validate request data
- * 5. Controller → Handle business logic
+ * 3. checkVendorApproval → Verify vendor account is approved by admin
+ * 4. verifyVendor → Verify vendor profile exists and is verified
+ * 5. Additional validators → Validate request data
+ * 6. Controller → Handle business logic
  */
 
-// Apply protection and authorization to ALL vendor routes
-router.use(protect, authorize('vendor'));
+// Apply protection, authorization, and approval check to ALL vendor routes
+router.use(protect, authorize('vendor'), checkVendorApproval);
 
 // =================================================================
 // VENDOR PROFILE ROUTES

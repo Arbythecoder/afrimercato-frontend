@@ -1,16 +1,19 @@
 // Automated Vendor Verification Service
-// This system automatically verifies vendor applications to scale without manual admin review
+// DISABLED: Now using manual admin approval for vendor accounts
+// Vendors must be approved by admin before accessing dashboard
 
 const Vendor = require('../models/Vendor');
 const User = require('../models/User');
 
 /**
- * AUTOMATED VERIFICATION SYSTEM
+ * AUTOMATED VERIFICATION SYSTEM - CURRENTLY DISABLED
  *
- * This service automatically approves vendors who pass all automated checks,
- * reducing manual admin work by ~70-80% as the platform scales.
+ * NOTE: This service is disabled in favor of manual admin approval.
+ * Vendors now require admin approval at the User account level before
+ * they can access any vendor features.
  *
- * Only high-risk applications are flagged for manual review.
+ * To re-enable automated approval, uncomment the cron job setup and
+ * change the approval flow in the admin panel.
  */
 
 /**

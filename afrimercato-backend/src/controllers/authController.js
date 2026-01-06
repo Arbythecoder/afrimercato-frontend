@@ -97,10 +97,16 @@ exports.register = asyncHandler(async (req, res) => {
   const token = user.generateAuthToken();
   const refreshToken = user.generateRefreshToken();
 
+  // Different messages for vendors vs customers
+  let message = 'Account created successfully! You can now start shopping.';
+  if (user.roles.includes('vendor')) {
+    message = 'Vendor account created successfully! Your account is pending admin approval. You will be notified once approved.';
+  }
+
   // Send response
   res.status(201).json({
     success: true,
-    message: 'Account created successfully! You can now start shopping.',
+    message,
     data: {
       user: {
         id: user._id,
@@ -108,7 +114,8 @@ exports.register = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.primaryRole || user.roles[0] || 'customer',
         roles: user.roles,
-        isEmailVerified: user.isEmailVerified
+        isEmailVerified: user.isEmailVerified,
+        approvalStatus: user.approvalStatus
       },
       token,
       refreshToken
@@ -184,7 +191,8 @@ exports.login = asyncHandler(async (req, res) => {
         role: user.primaryRole || user.roles[0] || 'customer',
         roles: user.roles,
         isEmailVerified: user.isEmailVerified,
-        avatar: user.avatar
+        avatar: user.avatar,
+        approvalStatus: user.approvalStatus
       },
       token,
       refreshToken

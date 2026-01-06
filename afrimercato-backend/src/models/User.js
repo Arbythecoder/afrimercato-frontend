@@ -128,6 +128,30 @@ const userSchema = new mongoose.Schema(
       default: true
     },
 
+    // VENDOR APPROVAL STATUS
+    // For vendors only - requires admin approval before they can access dashboard
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: function() {
+        // Only vendors need approval, everyone else is auto-approved
+        return this.roles && this.roles.includes('vendor') ? 'pending' : 'approved';
+      }
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User', // Reference to admin who approved
+      default: null
+    },
+    approvedAt: {
+      type: Date,
+      default: null
+    },
+    rejectionReason: {
+      type: String,
+      default: null
+    },
+
     // LAST LOGIN TRACKING
     // Helps you see when users were last active
     lastLogin: {

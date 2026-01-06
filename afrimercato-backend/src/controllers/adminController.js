@@ -10,7 +10,133 @@ const Product = require('../models/Product');
 const { asyncHandler } = require('../middleware/errorHandler');
 
 // =================================================================
-// VENDOR MANAGEMENT
+// VENDOR USER ACCOUNT MANAGEMENT (User-level approval)
+// =================================================================
+
+/**
+ * @route   GET /api/admin/vendors/accounts/pending
+ * @desc    Get all vendor user accounts pending approval
+ * @access  Private (Admin only)
+ */
+exports.getPendingVendorAccounts = asyncHandler(async (req, res) => {
+  const pendingVendors = await User.find({
+    roles: 'vendor',
+    approvalStatus: 'pending'
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: pendingVendors.length,
+    data: pendingVendors.map(user => ({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      approvalStatus: user.approvalStatus,
+      createdAt: user.createdAt
+    }))
+  });
+});
+
+/**
+ * @route   PUT /api/admin/vendors/accounts/:id/approve
+ * @desc    Approve a vendor user account
+ * @access  Private (Admin only)
+ */
+exports.approveVendorAccount = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  if (!user.roles.includes('vendor')) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is not a vendor'
+    });
+  }
+
+  user.approvalStatus = 'approved';
+  user.approvedBy = req.user._id;
+  user.approvedAt = new Date();
+
+  await user.save();
+
+  // TODO: Send email notification to vendor
+
+  res.status(200).json({
+    success: true,
+    message: 'Vendor account approved successfully. They can now access their dashboard.',
+    data: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      approvalStatus: user.approvalStatus,
+      approvedAt: user.approvedAt
+    }
+  });
+});
+
+/**
+ * @route   PUT /api/admin/vendors/accounts/:id/reject
+ * @desc    Reject a vendor user account
+ * @access  Private (Admin only)
+ */
+exports.rejectVendorAccount = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const { reason } = req.body;
+
+  if (!reason) {
+    return res.status(400).json({
+      success: false,
+      message: 'Please provide a rejection reason'
+    });
+  }
+
+  const user = await User.findById(id);
+
+  if (!user) {
+    return res.status(404).json({
+      success: false,
+      message: 'User not found'
+    });
+  }
+
+  if (!user.roles.includes('vendor')) {
+    return res.status(400).json({
+      success: false,
+      message: 'User is not a vendor'
+    });
+  }
+
+  user.approvalStatus = 'rejected';
+  user.rejectionReason = reason;
+
+  await user.save();
+
+  // TODO: Send email notification to vendor
+
+  res.status(200).json({
+    success: true,
+    message: 'Vendor account rejected',
+    data: {
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      approvalStatus: user.approvalStatus,
+      rejectionReason: user.rejectionReason
+    }
+  });
+});
+
+// =================================================================
+// VENDOR STORE MANAGEMENT (Store profile approval - secondary)
 // =================================================================
 
 /**
