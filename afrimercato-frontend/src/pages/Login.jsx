@@ -39,9 +39,24 @@ function Login() {
         return
       }
 
-      // Route based on user role
+      // Check vendor approval status
       const userRole = result.user?.role || result.user?.primaryRole || 'customer'
+      const approvalStatus = result.user?.approvalStatus
 
+      // If vendor with pending approval, redirect to pending page
+      if (userRole === 'vendor' && approvalStatus === 'pending') {
+        navigate('/vendor/pending-approval')
+        return
+      }
+
+      // If vendor with rejected approval, show error
+      if (userRole === 'vendor' && approvalStatus === 'rejected') {
+        setError('Your vendor account application was rejected. Please contact support.')
+        setLoading(false)
+        return
+      }
+
+      // Route based on user role
       switch (userRole) {
         case 'vendor':
           navigate('/dashboard')
