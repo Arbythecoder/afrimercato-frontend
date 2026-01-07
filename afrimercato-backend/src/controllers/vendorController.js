@@ -92,7 +92,7 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
 exports.getVendorProfile = asyncHandler(async (req, res) => {
   const vendor = await Vendor.findById(req.vendor._id).populate(
     'user',
-    'name email phone'
+    'name email phone approvalStatus approvedAt'
   );
 
   if (!vendor) {
@@ -103,9 +103,21 @@ exports.getVendorProfile = asyncHandler(async (req, res) => {
     });
   }
 
+  // Include user account approval status for frontend
+  const userApprovalStatus = req.user.approvalStatus;
+  const isPendingApproval = req.vendorPendingApproval || false;
+
   res.json({
     success: true,
-    data: { vendor }
+    data: {
+      vendor,
+      userApprovalStatus,
+      isPendingApproval,
+      // Add helpful message for pending vendors
+      ...(isPendingApproval && {
+        message: 'Your account is pending approval. You can set up your store, but it won\'t be visible to customers until approved.'
+      })
+    }
   });
 });
 

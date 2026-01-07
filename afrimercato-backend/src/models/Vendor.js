@@ -189,6 +189,13 @@ const vendorSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // PUBLIC VISIBILITY (UberEats-style)
+    // Controls whether store appears in customer searches
+    // False for pending approval, true after admin approves
+    isPublic: {
+      type: Boolean,
+      default: false
+    },
     verificationDocuments: [
       {
         type: String

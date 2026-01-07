@@ -211,7 +211,11 @@ exports.optionalAuth = async (req, res, next) => {
 // =================================================================
 /**
  * This middleware checks if a vendor user account has been approved by admin
- * Use this BEFORE verifyVendor to check user-level approval first
+ *
+ * INDUSTRY BEST PRACTICE (UberEats Model):
+ * - Allow vendors to access dashboard and set up store DURING approval
+ * - Block only customer-facing features (orders, analytics) until approved
+ * - This reduces time-to-market and improves vendor experience
  */
 exports.checkVendorApproval = async (req, res, next) => {
   try {
@@ -220,16 +224,7 @@ exports.checkVendorApproval = async (req, res, next) => {
       return next(); // Not a vendor, skip this check
     }
 
-    // Check approval status
-    if (req.user.approvalStatus === 'pending') {
-      return res.status(403).json({
-        success: false,
-        message: 'Your vendor account is pending admin approval. You will be notified once approved.',
-        errorCode: 'VENDOR_ACCOUNT_PENDING_APPROVAL',
-        approvalStatus: 'pending'
-      });
-    }
-
+    // Allow rejected vendors to see their rejection reason but block actions
     if (req.user.approvalStatus === 'rejected') {
       return res.status(403).json({
         success: false,
@@ -240,7 +235,14 @@ exports.checkVendorApproval = async (req, res, next) => {
       });
     }
 
-    // Account is approved, proceed
+    // Pending vendors can access dashboard and setup, but with limitations
+    // They can prepare their store while waiting for approval
+    if (req.user.approvalStatus === 'pending') {
+      // Attach pending status to request for controllers to handle
+      req.vendorPendingApproval = true;
+    }
+
+    // Account is approved or pending (both can proceed)
     next();
   } catch (error) {
     console.error('Vendor approval check error:', error);

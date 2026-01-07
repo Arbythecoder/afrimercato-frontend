@@ -68,17 +68,36 @@ exports.approveVendorAccount = asyncHandler(async (req, res) => {
 
   await user.save();
 
+  // Also make vendor store and products public (UberEats-style)
+  const Vendor = require('../models/Vendor');
+  const Product = require('../models/Product');
+
+  const vendor = await Vendor.findOne({ user: user._id });
+  if (vendor) {
+    vendor.isPublic = true;
+    vendor.isVerified = true;
+    vendor.approvalStatus = 'approved';
+    await vendor.save();
+
+    // Make all vendor's products public
+    await Product.updateMany(
+      { vendor: vendor._id },
+      { $set: { isPublic: true, isDraft: false } }
+    );
+  }
+
   // TODO: Send email notification to vendor
 
   res.status(200).json({
     success: true,
-    message: 'Vendor account approved successfully. They can now access their dashboard.',
+    message: 'Vendor account approved successfully. Their store is now live and visible to customers.',
     data: {
       id: user._id,
       name: user.name,
       email: user.email,
       approvalStatus: user.approvalStatus,
-      approvedAt: user.approvedAt
+      approvedAt: user.approvedAt,
+      storePublic: vendor ? true : false
     }
   });
 });

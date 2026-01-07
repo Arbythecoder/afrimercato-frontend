@@ -127,6 +127,20 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: false
     },
+    // DRAFT MODE (UberEats-style)
+    // Allows vendors to create products while waiting for account approval
+    // Products stay in draft until vendor account is approved
+    isDraft: {
+      type: Boolean,
+      default: false
+    },
+    // PUBLIC VISIBILITY
+    // Controls whether product appears in customer searches
+    // False for pending vendor accounts, true after approval
+    isPublic: {
+      type: Boolean,
+      default: true
+    },
 
     // PRODUCT SPECIFICATIONS
     specifications: {
