@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import OAuthCallback from './pages/OAuthCallback'
+import VendorPendingApproval from './pages/VendorPendingApproval'
 import Dashboard from './pages/vendor/Dashboard'
 import Products from './pages/vendor/Products'
 import Orders from './pages/vendor/Orders'
@@ -150,6 +151,9 @@ function AppContent() {
 
       {/* OAuth Callback Route */}
       <Route path="/oauth/callback" element={<OAuthCallback />} />
+
+      {/* Vendor Pending Approval Route */}
+      <Route path="/vendor/pending-approval" element={<VendorPendingApproval />} />
 
       {/* Protected Routes - Vendor Only */}
       <Route
