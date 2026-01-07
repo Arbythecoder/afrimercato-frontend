@@ -43,18 +43,16 @@ function Login() {
       const userRole = result.user?.role || result.user?.primaryRole || 'customer'
       const approvalStatus = result.user?.approvalStatus
 
-      // If vendor with pending approval, redirect to pending page
-      if (userRole === 'vendor' && approvalStatus === 'pending') {
-        navigate('/vendor/pending-approval')
-        return
-      }
-
       // If vendor with rejected approval, show error
       if (userRole === 'vendor' && approvalStatus === 'rejected') {
         setError('Your vendor account application was rejected. Please contact support.')
         setLoading(false)
         return
       }
+
+      // UberEats-style: Allow pending vendors to access dashboard
+      // They can set up their store while waiting for approval
+      // Store will be hidden from customers until approved
 
       // Route based on user role
       switch (userRole) {
