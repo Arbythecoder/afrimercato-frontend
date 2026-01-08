@@ -297,6 +297,7 @@ exports.validateVendorProfile = [
       'beverages',
       'household',
       'beauty-health',
+      'snacks',
       'other'
     ])
     .withMessage('Invalid category'),

@@ -47,6 +47,7 @@ const vendorSchema = new mongoose.Schema(
           'beverages',
           'household',
           'beauty-health',
+          'snacks',
           'other'
         ],
         message: '{VALUE} is not a valid category'
