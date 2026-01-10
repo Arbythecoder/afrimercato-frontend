@@ -26,11 +26,14 @@ exports.createProduct = async (req, res) => {
       });
     }
 
-    // Check if vendor is approved
-    if (vendor.approvalStatus !== 'approved') {
+    // Allow pending and approved vendors to create products
+    // Pending vendors can prepare their store while waiting for admin approval
+    // Their products won't be visible to customers until store is approved
+    if (vendor.approvalStatus !== 'approved' && vendor.approvalStatus !== 'pending') {
       return res.status(403).json({
         success: false,
-        message: 'Your account must be approved before adding products'
+        message: 'Your vendor account is not active. Please contact support.',
+        approvalStatus: vendor.approvalStatus
       });
     }
 

@@ -7,7 +7,7 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
-const { protect, vendorOnly } = require('../middleware/auth');
+const { protect, authorize, checkVendorApproval, verifyVendor } = require('../middleware/auth');
 const { uploadMultiple, handleUploadError } = require('../middleware/upload');
 
 // =================================================================
@@ -18,7 +18,9 @@ const { uploadMultiple, handleUploadError } = require('../middleware/upload');
 router.post(
   '/',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   uploadMultiple('images', 5),
   handleUploadError,
   productController.createProduct
@@ -28,7 +30,9 @@ router.post(
 router.get(
   '/',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   productController.getVendorProducts
 );
 
@@ -36,7 +40,9 @@ router.get(
 router.get(
   '/:productId',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   productController.getProduct
 );
 
@@ -44,7 +50,9 @@ router.get(
 router.put(
   '/:productId',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   uploadMultiple('images', 5),
   handleUploadError,
   productController.updateProduct
@@ -54,7 +62,9 @@ router.put(
 router.delete(
   '/:productId/images/:publicId',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   productController.deleteProductImage
 );
 
@@ -62,7 +72,9 @@ router.delete(
 router.delete(
   '/:productId',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   productController.deleteProduct
 );
 
@@ -70,7 +82,9 @@ router.delete(
 router.patch(
   '/:productId/stock',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   productController.updateStock
 );
 
@@ -78,7 +92,9 @@ router.patch(
 router.patch(
   '/:productId/toggle',
   protect,
-  vendorOnly,
+  authorize('vendor'),
+  checkVendorApproval,
+  verifyVendor,
   productController.toggleProductStatus
 );
 

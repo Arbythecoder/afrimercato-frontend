@@ -308,12 +308,5 @@ exports.getProcessingActivities = asyncHandler(async (req, res) => {
   });
 });
 
-module.exports = {
-  exportUserData,
-  requestDataDeletion,
-  cancelDeletionRequest,
-  getConsentStatus,
-  updateConsent,
-  requestDataRectification,
-  getProcessingActivities
-};
+// Functions are already exported using exports.functionName above
+// No need for module.exports = {} at the end
