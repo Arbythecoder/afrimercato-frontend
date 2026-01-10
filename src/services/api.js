@@ -225,17 +225,47 @@ export const getVendorProducts = async (filters = {}) => {
 };
 
 export const createProduct = async (productData) => {
-  return apiCall('/vendor/products', {
+  // Handle FormData (for file uploads) differently than JSON
+  const isFormData = productData instanceof FormData;
+
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE_URL}/vendor/products`, {
     method: 'POST',
-    body: JSON.stringify(productData)
+    headers: isFormData ? {
+      'Authorization': `Bearer ${token}`
+      // Don't set Content-Type for FormData - browser sets it with boundary
+    } : {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: isFormData ? productData : JSON.stringify(productData)
   });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to create product');
+  return data;
 };
 
 export const updateProduct = async (productId, productData) => {
-  return apiCall(`/vendor/products/${productId}`, {
+  // Handle FormData (for file uploads) differently than JSON
+  const isFormData = productData instanceof FormData;
+
+  const token = localStorage.getItem('token');
+  const response = await fetch(`${API_BASE_URL}/vendor/products/${productId}`, {
     method: 'PUT',
-    body: JSON.stringify(productData)
+    headers: isFormData ? {
+      'Authorization': `Bearer ${token}`
+      // Don't set Content-Type for FormData - browser sets it with boundary
+    } : {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: isFormData ? productData : JSON.stringify(productData)
   });
+
+  const data = await response.json();
+  if (!response.ok) throw new Error(data.message || 'Failed to update product');
+  return data;
 };
 
 export const deleteProduct = async (productId) => {

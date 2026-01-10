@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { productAPI } from '../services/api'
+import { productAPI, vendorAPI } from '../services/api'
 import BulkUploadModal from '../components/BulkUploadModal'
 import ProductModal from '../components/ProductModal'
 import BulkActionMenu from '../components/Products/BulkActionMenu'
@@ -16,6 +16,7 @@ function Products() {
   const [selectedProduct, setSelectedProduct] = useState(null)
   const [selectedProducts, setSelectedProducts] = useState([])
   const [showBulkMenu, setShowBulkMenu] = useState(false)
+  const [vendorStatus, setVendorStatus] = useState(null)
 
   const categories = [
     { value: 'all', label: 'All Categories' },
@@ -28,8 +29,20 @@ function Products() {
   ]
 
   useEffect(() => {
+    fetchVendorStatus()
     fetchProducts()
   }, [])
+
+  const fetchVendorStatus = async () => {
+    try {
+      const response = await vendorAPI.getProfile()
+      if (response.data.success) {
+        setVendorStatus(response.data.data)
+      }
+    } catch (err) {
+      console.error('Failed to load vendor status:', err)
+    }
+  }
 
   const fetchProducts = async () => {
     try {
@@ -98,31 +111,93 @@ function Products() {
     )
   }
 
+  // Check if vendor is verified
+  const isVendorApproved = vendorStatus?.approvalStatus === 'approved'
+  const isPending = vendorStatus?.approvalStatus === 'pending'
+  const isRejected = vendorStatus?.approvalStatus === 'rejected'
+
   return (
     <div className="space-y-6">
       {/* Header */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Products</h1>
           <p className="text-gray-600 mt-1">Manage your product inventory</p>
         </div>
-        <div className="mt-4 sm:mt-0 flex space-x-3">
-          <button
-            onClick={() => setShowBulkUploadModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
-          >
-            <span className="mr-2">�</span>
-            Bulk Upload
-          </button>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="inline-flex items-center px-4 py-2 bg-afri-green text-white rounded-lg hover:bg-afri-green-dark transition font-medium"
-          >
-            <span className="mr-2">+</span>
-            Add Product
-          </button>
-        </div>
+        {isVendorApproved && (
+          <div className="mt-4 sm:mt-0 flex space-x-3">
+            <button
+              onClick={() => setShowBulkUploadModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition font-medium"
+            >
+              <span className="mr-2">📤</span>
+              Bulk Upload
+            </button>
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="inline-flex items-center px-4 py-2 bg-afri-green text-white rounded-lg hover:bg-afri-green-dark transition font-medium"
+            >
+              <span className="mr-2">+</span>
+              Add Product
+            </button>
+          </div>
+        )}
       </div>
+
+      {/* Pending Verification Alert */}
+      {isPending && (
+        <div className="bg-yellow-50 border-l-4 border-yellow-400 p-6 rounded-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div className="ml-3 flex-1">
+              <h3 className="text-lg font-semibold text-yellow-800">Account Verification Pending</h3>
+              <div className="mt-2 text-sm text-yellow-700">
+                <p className="mb-2">
+                  Your vendor account is currently under review. Our automated verification system will process your application within <strong>24-48 hours</strong>.
+                </p>
+                <p className="mb-3">
+                  Once verified, you'll be able to:
+                </p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li>Add and manage products</li>
+                  <li>Receive and fulfill orders</li>
+                  <li>Access all vendor features</li>
+                </ul>
+                <div className="mt-4 p-3 bg-yellow-100 rounded">
+                  <p className="font-medium text-yellow-900">What happens next?</p>
+                  <p className="mt-1 text-sm">
+                    Our system automatically verifies business information, contact details, and compliance requirements.
+                    You'll receive an email notification once your account is approved.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rejected Alert */}
+      {isRejected && (
+        <div className="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
+          <div className="flex items-start">
+            <div className="flex-shrink-0">
+              <svg className="h-6 w-6 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-lg font-semibold text-red-800">Account Not Approved</h3>
+              <p className="mt-2 text-sm text-red-700">
+                {vendorStatus?.rejectionReason || 'Your vendor application was not approved. Please contact support at vendors@afrimercato.com for more information.'}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Filters and Bulk Actions */}
       <div className="bg-white rounded-xl shadow-sm p-4">

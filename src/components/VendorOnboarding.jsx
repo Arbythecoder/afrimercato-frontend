@@ -16,7 +16,7 @@ const VendorOnboarding = ({ onComplete }) => {
     // Step 1: Basic Info
     storeName: '',
     description: '',
-    category: 'fresh-produce',
+    category: '',
 
     // Step 2: Contact Info
     phone: '',
@@ -51,15 +51,18 @@ const VendorOnboarding = ({ onComplete }) => {
     }
   })
 
-  const categories = [
-    { value: 'fresh-produce', label: 'Fresh Produce', icon: '🥬' },
-    { value: 'meat-seafood', label: 'Meat & Seafood', icon: '🥩' },
-    { value: 'dairy-eggs', label: 'Dairy & Eggs', icon: '🥛' },
-    { value: 'bakery', label: 'Bakery', icon: '🍞' },
-    { value: 'pantry-staples', label: 'Pantry Staples', icon: '🌾' },
-    { value: 'beverages', label: 'Beverages', icon: '🥤' },
-    { value: 'snacks', label: 'Snacks', icon: '🍿' },
-    { value: 'specialty', label: 'Specialty Items', icon: '✨' }
+  const categorySuggestions = [
+    'Fresh Produce',
+    'Meat & Seafood',
+    'Dairy & Eggs',
+    'Bakery',
+    'Pantry Staples',
+    'Beverages',
+    'Snacks',
+    'Specialty Items',
+    'Groceries',
+    'Beauty & Health',
+    'Household'
   ]
 
   const handleChange = (e) => {
@@ -162,8 +165,8 @@ const VendorOnboarding = ({ onComplete }) => {
         }
         break
       case 3:
-        if (!formData.address.street.trim() || !formData.address.city.trim() || !formData.address.state.trim()) {
-          setError('Please fill in all address fields')
+        if (!formData.address.street.trim() || !formData.address.city.trim()) {
+          setError('Please fill in street and city')
           return false
         }
         break
@@ -377,28 +380,26 @@ const VendorOnboarding = ({ onComplete }) => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Store Category *
                   </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {categories.map((cat) => (
-                      <motion.button
-                        key={cat.value}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, category: cat.value }))}
-                        className={`p-4 rounded-lg border-2 transition-all ${
-                          formData.category === cat.value
-                            ? 'border-afri-green bg-afri-green/10 text-afri-green'
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
-                      >
-                        <div className="text-3xl mb-1">{cat.icon}</div>
-                        <div className="text-xs font-medium">{cat.label}</div>
-                      </motion.button>
+                  <input
+                    type="text"
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    list="category-suggestions"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
+                    placeholder="e.g., Fresh Produce, Bakery, Meat & Seafood..."
+                  />
+                  <datalist id="category-suggestions">
+                    {categorySuggestions.map((suggestion, index) => (
+                      <option key={index} value={suggestion} />
                     ))}
-                  </div>
+                  </datalist>
+                  <p className="mt-1 text-sm text-gray-500">
+                    Type your business category or select from suggestions
+                  </p>
                 </div>
               </motion.div>
             )}
@@ -498,7 +499,7 @@ const VendorOnboarding = ({ onComplete }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      State *
+                      County (Optional)
                     </label>
                     <input
                       type="text"
@@ -506,7 +507,7 @@ const VendorOnboarding = ({ onComplete }) => {
                       value={formData.address.state}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                      placeholder="Greater London"
+                      placeholder="e.g., Greater London, Essex, Kent"
                     />
                   </div>
                 </div>
