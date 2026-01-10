@@ -10,7 +10,7 @@ const Order = require('../models/Order');
 const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getFileUrl } = require('../middleware/upload');
-const { processVendorVerification } = require('../services/autoVerificationService');
+const { processVendorVerification } = require('../services/autoApprovalService');
 const { sendEmail } = require('../utils/email');
 
 // =================================================================
@@ -115,6 +115,19 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
   } catch (emailError) {
     console.error('Failed to send confirmation email:', emailError);
     // Don't fail the whole request if email fails
+  }
+
+  // Trigger auto-verification process in background
+  // This will automatically approve the vendor after checks pass
+  try {
+    // Run verification asynchronously (don't wait for it)
+    processVendorVerification(vendor._id).catch(err => {
+      console.error('Auto-verification failed for vendor:', vendor._id, err);
+    });
+    console.log(`🔄 Auto-verification initiated for vendor: ${vendor.storeName}`);
+  } catch (verificationError) {
+    console.error('Failed to initiate auto-verification:', verificationError);
+    // Don't fail the request if verification initiation fails
   }
 
   res.status(201).json({
@@ -398,6 +411,7 @@ exports.updateDeliverySettings = asyncHandler(async (req, res) => {
  */
 exports.getDashboardStats = asyncHandler(async (req, res) => {
   const vendorId = req.vendor._id;
+  const isPending = req.vendorPendingApproval === true;
 
   // Get date ranges
   const now = new Date();
@@ -545,6 +559,21 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     }
   ]);
 
+  // Calculate how long vendor has been pending
+  let hoursWaiting = 0;
+  let approvalMessage = null;
+
+  if (isPending && req.vendor.submittedForReviewAt) {
+    hoursWaiting = Math.floor((now - req.vendor.submittedForReviewAt) / (1000 * 60 * 60));
+    const hoursRemaining = Math.max(0, 24 - hoursWaiting);
+
+    if (hoursWaiting < 24) {
+      approvalMessage = `Your store is under review. Estimated approval in ${hoursRemaining} hours. You can add products and set up your store while waiting.`;
+    } else {
+      approvalMessage = 'Your store is being verified by our automated system. This usually takes 24-48 hours. You can continue setting up your store.';
+    }
+  }
+
   res.json({
     success: true,
     data: {
@@ -572,6 +601,16 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         fulfillmentRate: 95,
         responseTime: 2,
         cancellationRate: 2
+      },
+      // Add approval status info for frontend to display
+      approvalStatus: {
+        isPending: isPending,
+        status: req.vendor.approvalStatus,
+        message: approvalMessage,
+        hoursWaiting: hoursWaiting,
+        submittedAt: req.vendor.submittedForReviewAt,
+        canReceiveOrders: !isPending, // Can only receive orders after approval
+        storeVisible: !isPending // Store only visible to customers after approval
       }
     }
   });

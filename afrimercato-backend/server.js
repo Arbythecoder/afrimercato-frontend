@@ -410,16 +410,19 @@ global.io = io; // Make Socket.IO available globally for controllers
 
 /**
  * ==============================================================
- * AUTOMATED VENDOR VERIFICATION CRON JOB
+ * AUTOMATED VENDOR APPROVAL CRON JOB (24-48 HOUR APPROVAL)
  * ==============================================================
- * Runs every 24 hours to automatically verify pending vendors
- * Reduces manual admin work by 70-80%
+ * Automatically approves vendors after quality checks
+ * - Runs immediately on startup to catch any pending vendors
+ * - Runs every 6 hours to check for vendors ready for approval
+ * - Vendors with good profiles get auto-approved after 24-48 hours
+ * - Reduces manual admin work by 70-80%
  */
-const { processAllPendingVendors } = require('./src/services/autoVerificationService');
+const { processAllPendingVendors } = require('./src/services/autoApprovalService');
 
 // Run immediately on startup (check for any pending vendors)
 setTimeout(async () => {
-  console.log('🔄 Running initial vendor auto-verification check...');
+  console.log('\n🔄 Running initial vendor auto-verification check...');
   try {
     const result = await processAllPendingVendors();
     console.log('✅ Initial auto-verification complete:', result);
@@ -428,19 +431,22 @@ setTimeout(async () => {
   }
 }, 5000); // Wait 5 seconds after server starts
 
-// Run every 24 hours
-const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
+// Run every 6 hours (checks vendors that have been pending for 24-48 hours)
+const SIX_HOURS = 6 * 60 * 60 * 1000;
 setInterval(async () => {
-  console.log('⏰ Running scheduled vendor auto-verification (24h cron)...');
+  console.log('\n⏰ Running scheduled vendor auto-verification check (every 6 hours)...');
   try {
     const result = await processAllPendingVendors();
     console.log('✅ Scheduled auto-verification complete:', result);
   } catch (error) {
     console.error('❌ Scheduled auto-verification failed:', error.message);
   }
-}, TWENTY_FOUR_HOURS);
+}, SIX_HOURS);
 
-console.log('✅ Automated vendor verification cron job initialized (runs every 24 hours)');
+console.log('✅ Automated vendor verification system initialized');
+console.log('   - Checks pending vendors every 6 hours');
+console.log('   - Auto-approves low-risk vendors after 24-48 hours');
+console.log('   - Flags high-risk vendors for manual review\n');
 
 /**
  * ==============================================================

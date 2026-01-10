@@ -229,19 +229,25 @@ const autoVerifyVendor = async (vendorId) => {
 
 /**
  * Process all pending vendors (can be run on cron job)
- * Automatically processes vendors that have been pending for > 1 hour
+ * Automatically processes vendors that have been pending for 24-48 hours
  */
 const processAllPendingVendors = async () => {
   try {
-    // Get vendors pending for more than 1 hour
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+    // Get vendors pending for 24-48 hours
+    const now = new Date();
+    const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 24 hours
+    const fortyEightHoursAgo = new Date(now.getTime() - 48 * 60 * 60 * 1000); // 48 hours
 
+    // Find vendors created between 24-48 hours ago and still pending
     const pendingVendors = await Vendor.find({
       approvalStatus: 'pending',
-      createdAt: { $lt: oneHourAgo }
+      createdAt: {
+        $lte: twentyFourHoursAgo,  // At least 24 hours old
+        $gte: fortyEightHoursAgo   // But not older than 48 hours
+      }
     });
 
-    console.log(`Found ${pendingVendors.length} pending vendors to process`);
+    console.log(`Found ${pendingVendors.length} pending vendors (24-48 hours old) to process`);
 
     const results = {
       autoApproved: 0,

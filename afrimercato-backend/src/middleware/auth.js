@@ -276,14 +276,23 @@ exports.verifyVendor = async (req, res, next) => {
     }
 
     // Check if vendor is approved via approvalStatus (more granular than isVerified)
+    // ALLOW pending vendors to access dashboard and setup features
     if (vendor.approvalStatus === 'pending') {
-      return res.status(403).json({
-        success: false,
-        message: 'Your vendor account is pending verification. Our automated system will review your application within 24-48 hours.',
-        errorCode: 'VENDOR_PENDING_APPROVAL',
-        status: 'pending',
-        submittedAt: vendor.submittedForReviewAt || vendor.createdAt
-      });
+      // Attach pending status flag to request
+      // Controllers can use this to show appropriate messaging
+      req.vendorPendingApproval = true;
+      req.vendor = vendor;
+
+      // Allow access but with limitations (handled by individual route controllers)
+      // Pending vendors CAN:
+      // - Access dashboard
+      // - Add/edit products
+      // - Configure store settings
+      // - View their profile
+      // Pending vendors CANNOT:
+      // - Receive orders (store not visible to customers)
+      // - Access revenue/analytics (no orders yet)
+      return next();
     }
 
     if (vendor.approvalStatus === 'rejected') {
