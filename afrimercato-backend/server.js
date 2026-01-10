@@ -32,6 +32,7 @@ const riderStoreRoutes = require('./src/routes/riderStoreRoutes');
 const vendorRiderRoutes = require('./src/routes/vendorRiderRoutes');
 const customerRoutes = require('./src/routes/customerRoutes');
 const productBrowsingRoutes = require('./src/routes/productBrowsingRoutes');
+const productRoutes = require('./src/routes/productRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const checkoutRoutes = require('./src/routes/checkoutRoutes');
 const deliveryAssignmentRoutes = require('./src/routes/deliveryAssignmentRoutes');
@@ -302,6 +303,11 @@ app.use('/api/customers', customerRoutes);
 // All routes in productBrowsingRoutes will be prefixed with /api/products
 // Example: GET /api/products?category=vegetables, GET /api/products/search?q=tomato
 app.use('/api/products', productBrowsingRoutes);
+
+// Product management routes (Vendor only - create/edit products)
+// All routes in productRoutes will be prefixed with /api/vendor/products
+// Example: POST /api/vendor/products, PUT /api/vendor/products/:id
+app.use('/api/vendor/products', productRoutes);
 
 // Notification routes
 // All routes in notificationRoutes will be prefixed with /api/notifications
