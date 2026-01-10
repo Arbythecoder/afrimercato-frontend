@@ -14,7 +14,7 @@
 
 const Vendor = require('../models/Vendor');
 const User = require('../models/User');
-const { sendEmail } = require('../utils/email');
+const { sendStoreApprovedEmail } = require('../emails/vendorEmails');
 const cron = require('node-cron');
 
 /**
@@ -143,28 +143,15 @@ const autoApproveVendor = async (vendorId) => {
       });
     }
     
-    // Send approval email
+    // Send professional approval email (like Uber Eats)
     if (vendor.user && vendor.user.email) {
-      await sendEmail({
-        to: vendor.user.email,
-        subject: '🎉 Your Store is Now Live on Afrimercato!',
-        html: `
-          <h2>Congratulations ${vendor.user.name || 'Vendor'}!</h2>
-          <p>Your store <strong>${vendor.storeName}</strong> has been approved and is now live on Afrimercato!</p>
-          <p>✅ Your store is visible to customers</p>
-          <p>✅ You can now receive orders</p>
-          <p>✅ Start adding products to grow your business</p>
-          <h3>Next Steps:</h3>
-          <ul>
-            <li>Add products to your store</li>
-            <li>Set up your delivery preferences</li>
-            <li>Customize your store profile</li>
-            <li>Start receiving orders!</li>
-          </ul>
-          <a href="${process.env.FRONTEND_URL}/vendor/dashboard" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; display: inline-block; border-radius: 4px;">Go to Dashboard</a>
-          <p>Welcome to the Afrimercato family! 🎊</p>
-        `
-      });
+      try {
+        const user = await User.findById(vendor.user._id);
+        await sendStoreApprovedEmail(user, vendor);
+        console.log(`📧 Store approval email sent to: ${user.email}`);
+      } catch (emailError) {
+        console.error('Failed to send approval email:', emailError);
+      }
     }
     
     console.log(`✅ Auto-approved vendor: ${vendor.storeName} (${vendor.storeId})`);

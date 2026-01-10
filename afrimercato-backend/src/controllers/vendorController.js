@@ -11,7 +11,7 @@ const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getFileUrl } = require('../middleware/upload');
 const { processVendorVerification } = require('../services/autoApprovalService');
-const { sendEmail } = require('../utils/email');
+const { sendStoreProfileCreatedEmail } = require('../emails/vendorEmails');
 
 // =================================================================
 // VENDOR PROFILE OPERATIONS
@@ -76,44 +76,15 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
     isActive: true
   });
 
-  // Send confirmation email
+  // Send professional store profile created email (like Uber Eats)
   try {
     const user = await User.findById(req.user.id);
     if (user && user.email) {
-      await sendEmail({
-        to: user.email,
-        subject: 'Store Profile Created - Pending Approval',
-        html: `
-          <h2>Welcome to Afrimercato, ${user.name || 'Vendor'}!</h2>
-          <p>Your store <strong>${storeName}</strong> has been created successfully.</p>
-          
-          <h3>What happens next?</h3>
-          <p>Your store is currently under review. Our system will automatically verify and approve your store within <strong>24-48 hours</strong>.</p>
-          
-          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0;">
-            <h4>While you wait:</h4>
-            <ul>
-              <li>✅ Set up your store profile</li>
-              <li>✅ Add products to your inventory</li>
-              <li>✅ Configure delivery settings</li>
-              <li>❌ Your store won't be visible to customers yet</li>
-            </ul>
-          </div>
-          
-          <p>You'll receive an email once your store is approved!</p>
-          
-          <a href="${process.env.FRONTEND_URL}/vendor/dashboard" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; display: inline-block; border-radius: 4px;">Go to Dashboard</a>
-          
-          <p style="margin-top: 20px; color: #666; font-size: 14px;">
-            <strong>Store ID:</strong> ${storeId}<br>
-            <strong>Status:</strong> Pending Approval<br>
-            <strong>Expected Approval:</strong> Within 48 hours
-          </p>
-        `
-      });
+      await sendStoreProfileCreatedEmail(user, vendor);
+      console.log(`📧 Store profile created email sent to: ${user.email}`);
     }
   } catch (emailError) {
-    console.error('Failed to send confirmation email:', emailError);
+    console.error('Failed to send store profile email:', emailError);
     // Don't fail the whole request if email fails
   }
 

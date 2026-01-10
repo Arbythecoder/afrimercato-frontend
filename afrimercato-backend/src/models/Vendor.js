@@ -38,21 +38,10 @@ const vendorSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: {
-        values: [
-          'fresh-produce',
-          'groceries',
-          'meat-fish',
-          'bakery',
-          'beverages',
-          'household',
-          'beauty-health',
-          'snacks',
-          'other'
-        ],
-        message: '{VALUE} is not a valid category'
-      },
-      required: [true, 'Please select a business category']
+      required: [true, 'Please provide a business category'],
+      trim: true,
+      minlength: [2, 'Category must be at least 2 characters'],
+      maxlength: [50, 'Category cannot exceed 50 characters']
     },
 
     address: {

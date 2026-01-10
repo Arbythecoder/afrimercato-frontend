@@ -278,6 +278,11 @@ exports.validateOrder = [
 // =================================================================
 // VENDOR PROFILE VALIDATION
 // =================================================================
+// =================================================================
+// FIX FOR VENDOR PROFILE VALIDATION
+// Replace lines 281-312 in src/middleware/validator.js with this:
+// =================================================================
+
 exports.validateVendorProfile = [
   body('storeName')
     .trim()
@@ -287,26 +292,45 @@ exports.validateVendorProfile = [
     .withMessage('Store name cannot exceed 100 characters'),
 
   body('category')
+    .trim()
     .notEmpty()
     .withMessage('Business category is required')
-    .isIn([
-      'fresh-produce',
-      'groceries',
-      'meat-fish',
-      'bakery',
-      'beverages',
-      'household',
-      'beauty-health',
-      'snacks',
-      'other'
-    ])
-    .withMessage('Invalid category'),
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Category must be between 2 and 50 characters'),
 
-  body('address.street').trim().notEmpty().withMessage('Street address is required'),
+  body('description')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description cannot exceed 500 characters'),
 
-  body('address.city').trim().notEmpty().withMessage('City is required'),
+  // Address validation - FIXED
+  body('address').notEmpty().withMessage('Address is required'),
+  
+  body('address.street')
+    .trim()
+    .notEmpty()
+    .withMessage('Street address is required'),
 
-  body('address.state').trim().notEmpty().withMessage('State is required'),
+  body('address.city')
+    .trim()
+    .notEmpty()
+    .withMessage('City is required'),
+
+  // ✅ FIX: Make state optional (matches Vendor model)
+  body('address.state')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('State cannot exceed 50 characters'),
+
+  body('address.postalCode')
+    .optional({ checkFalsy: true })
+    .trim(),
+
+  body('address.country')
+    .optional({ checkFalsy: true })
+    .trim(),
 
   body('phone')
     .notEmpty()
@@ -314,9 +338,14 @@ exports.validateVendorProfile = [
     .matches(/^[0-9+\-\s()]+$/)
     .withMessage('Invalid phone number format'),
 
+  // Business hours validation
+  body('businessHours')
+    .optional()
+    .isObject()
+    .withMessage('Business hours must be an object'),
+
   validate
 ];
-
 // =================================================================
 // MONGODB ID VALIDATION
 // =================================================================
