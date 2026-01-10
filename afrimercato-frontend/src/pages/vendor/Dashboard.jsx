@@ -55,7 +55,7 @@ function Dashboard() {
       setLoading(true)
       const [statsResponse, chartResponse] = await Promise.all([
         vendorAPI.getDashboardStats(),
-        vendorAPI.getChartData({ timeRange }),
+        vendorAPI.getChartData(timeRange),
       ])
 
       if (statsResponse.success) {
