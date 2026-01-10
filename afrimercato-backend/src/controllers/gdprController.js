@@ -307,3 +307,13 @@ exports.getProcessingActivities = asyncHandler(async (req, res) => {
     gdprCompliance: 'GDPR Article 13 & 14 - Information to be provided'
   });
 });
+
+module.exports = {
+  exportUserData,
+  requestDataDeletion,
+  cancelDeletionRequest,
+  getConsentStatus,
+  updateConsent,
+  requestDataRectification,
+  getProcessingActivities
+};

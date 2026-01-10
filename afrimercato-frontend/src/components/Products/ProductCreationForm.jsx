@@ -275,7 +275,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
       }
     } catch (error) {
       console.error('Product save error:', error);
-      alert(error.response?.data?.message || error.message || 'Failed to save product');
+      alert(error.response?.data?.message || 'Failed to save product');
     } finally {
       setSaving(false);
     }

@@ -55,7 +55,7 @@ function Dashboard() {
       setLoading(true)
       const [statsResponse, chartResponse] = await Promise.all([
         vendorAPI.getDashboardStats(),
-        vendorAPI.getChartData({ timeRange }),
+        vendorAPI.getChartData(timeRange),
       ])
 
       if (statsResponse.success) {
@@ -329,8 +329,19 @@ function Dashboard() {
         </div>
       </div>
 
-      {/* Time Range Selector */}
-      <div className="flex justify-end">
+      {/* Quick Action: Add Product Button */}
+      <div className="flex justify-between items-center">
+        <Link
+          to="/products"
+          className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-afri-green to-emerald-600 text-white rounded-2xl shadow-2xl hover:shadow-3xl transform transition-all duration-300 hover:scale-[1.02] font-bold text-lg group"
+        >
+          <svg className="w-6 h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M12 4v16m8-8H4" />
+          </svg>
+          <span>Add New Product</span>
+        </Link>
+
+        {/* Time Range Selector */}
         <div className="inline-flex rounded-xl border border-gray-200 bg-white p-1 shadow-sm">
           {['7d', '30d', '90d'].map((range) => (
             <button

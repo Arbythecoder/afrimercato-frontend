@@ -5,6 +5,7 @@
 
 const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { sendVendorWelcomeEmail } = require('../emails/vendorEmails');
 
 /**
  * WHAT IS A CONTROLLER?
@@ -93,14 +94,31 @@ exports.register = asyncHandler(async (req, res) => {
     }
   }
 
+  // Send welcome email to vendors immediately (like Uber Eats)
+  if (user.roles.includes('vendor')) {
+    try {
+      await sendVendorWelcomeEmail(user);
+      console.log(`📧 Welcome email sent to vendor: ${user.email}`);
+    } catch (emailError) {
+      console.error('Failed to send vendor welcome email:', emailError);
+      // Don't fail registration if email fails
+    }
+  }
+
   // Generate JWT token for immediate login
   const token = user.generateAuthToken();
   const refreshToken = user.generateRefreshToken();
 
+  // Different messages for vendors vs customers
+  let message = 'Account created successfully! You can now start shopping.';
+  if (user.roles.includes('vendor')) {
+    message = 'Vendor account created successfully! Check your email for next steps. Your account is pending admin approval.';
+  }
+
   // Send response
   res.status(201).json({
     success: true,
-    message: 'Account created successfully! You can now start shopping.',
+    message,
     data: {
       user: {
         id: user._id,
@@ -108,7 +126,8 @@ exports.register = asyncHandler(async (req, res) => {
         email: user.email,
         role: user.primaryRole || user.roles[0] || 'customer',
         roles: user.roles,
-        isEmailVerified: user.isEmailVerified
+        isEmailVerified: user.isEmailVerified,
+        approvalStatus: user.approvalStatus
       },
       token,
       refreshToken
@@ -184,7 +203,8 @@ exports.login = asyncHandler(async (req, res) => {
         role: user.primaryRole || user.roles[0] || 'customer',
         roles: user.roles,
         isEmailVerified: user.isEmailVerified,
-        avatar: user.avatar
+        avatar: user.avatar,
+        approvalStatus: user.approvalStatus
       },
       token,
       refreshToken

@@ -1,0 +1,146 @@
+╔══════════════════════════════════════════════════════════════╗
+║       RAILWAY DEPLOYMENT - COPY THIS CHECKLIST              ║
+║              Follow these 5 steps exactly                    ║
+╚══════════════════════════════════════════════════════════════╝
+
+📋 BEFORE YOU START (2 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Go to: https://cloud.mongodb.com/
+[ ] Sign in with Google
+[ ] Create FREE cluster (M0)
+[ ] Database Access → Add User:
+    Username: admin
+    Password: (choose a password)
+[ ] Network Access → Add IP: 0.0.0.0/0
+[ ] Click "Connect" → "Drivers" → Copy connection string
+[ ] Save this string (you'll need it):
+    mongodb+srv://admin:PASSWORD@cluster0.xxxxx.mongodb.net/afrimercato
+
+✅ MongoDB ready!
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 1: Create Railway Account (1 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Go to: https://railway.app/
+[ ] Click "Start a New Project"
+[ ] Sign up with your NEW Gmail
+[ ] Verify email (check inbox)
+[ ] See $5 free credit? ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 2: Deploy Backend (3 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Click "New Project" → "Deploy from GitHub repo"
+[ ] Click "Configure GitHub App" → Authorize Railway
+[ ] Select repository: Arbythecoder/afrimercato-backend
+[ ] Wait for build to start...
+
+[ ] Click backend service → "Variables" tab
+[ ] Click "RAW Editor"
+[ ] Open file: .env.production.template (in afrihub folder)
+[ ] Copy EVERYTHING from that file
+[ ] Paste into Railway RAW Editor
+[ ] ⚠️ REPLACE these values:
+    - MONGODB_URI = (your MongoDB connection string)
+    - CLIENT_URL = (leave for now, update in Step 4)
+
+[ ] Click "Settings" tab → "Networking"
+[ ] Click "Generate Domain"
+[ ] Copy your backend URL: _______________________________
+[ ] Test it: Open https://your-backend.up.railway.app/api/health
+[ ] See {"success": true}? ✅
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 3: Deploy Frontend (2 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Go to: https://netlify.com
+[ ] Login with GitHub
+[ ] Click "Add new site" → "Import an existing project"
+[ ] Choose: Arbythecoder/afrimercato-frontend
+[ ] Build settings:
+    - Build command: npm run build
+    - Publish directory: dist
+[ ] Click "Show advanced" → "New variable"
+    Name: VITE_API_URL
+    Value: https://your-backend.up.railway.app/api
+           (use YOUR backend URL from Step 2!)
+[ ] Click "Deploy site"
+[ ] Wait 2-3 minutes...
+[ ] Copy your frontend URL: _______________________________
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 4: Connect Backend & Frontend (2 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Go back to Railway → Backend service
+[ ] Click "Variables" tab
+[ ] Find CLIENT_URL
+[ ] Change to your frontend URL (from Step 3)
+[ ] Find FRONTEND_URL
+[ ] Change to your frontend URL (from Step 3)
+[ ] Backend redeploys automatically (wait 1 min)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+STEP 5: Test Everything (2 min)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[ ] Open your frontend URL
+[ ] Press F12 (open browser console)
+[ ] Go to Network tab
+[ ] Click "Register"
+[ ] Fill form, select "Vendor"
+[ ] Click Sign Up
+[ ] Check Network tab - API calls to backend working? ✅
+[ ] Check console - any CORS errors? (should be NONE)
+[ ] Complete onboarding (all 5 steps)
+[ ] Go to MongoDB Atlas → Browse Collections
+[ ] See "users" and "vendors" collections? ✅
+
+🎉 YOU'RE LIVE! 🎉
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📝 SAVE YOUR URLS:
+
+Backend:  _________________________________________________
+Frontend: _________________________________________________
+MongoDB:  _________________________________________________
+
+
+🚀 SHARE YOUR APP:
+
+"My AfriMercato app is live at: [your-frontend-url]"
+
+
+⏱️ TOTAL TIME: 10 minutes
+💰 TOTAL COST: $0 (free credit)
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+TROUBLESHOOTING
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ Backend "Application Error"?
+   → Check Railway logs: Deployments → View Logs
+   → Usually: MongoDB URI wrong or missing env var
+
+❌ Frontend can't reach backend?
+   → Check CORS: Backend CLIENT_URL matches frontend exactly?
+   → Include https:// in URL?
+
+❌ "CORS error" in browser console?
+   → Backend CLIENT_URL needs updating
+   → Make sure no trailing slash
+
+❌ MongoDB connection failed?
+   → Is password correct in connection string?
+   → Did you whitelist 0.0.0.0/0 in Network Access?
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Need detailed guide? Open: RAILWAY-5-STEPS.md

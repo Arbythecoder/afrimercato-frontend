@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AfriMercato - Vendor Complete Test</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            margin-bottom: 20px;
+        }
+        .card-header {
+            background: linear-gradient(135deg, #2D5016 0%, #4A7C23 100%);
+            color: white;
+            border-radius: 15px 15px 0 0 !important;
+            padding: 15px 20px;
+        }
+        .btn-custom {
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-weight: 600;
+        }
+        .status-badge {
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-weight: 600;
+            display: inline-block;
+        }
+        .status-connected { background: #d4edda; color: #155724; }
+        .status-disconnected { background: #f8d7da; color: #721c24; }
+        .log-output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .form-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1 class="text-white text-center mb-4">
+            <i class="fas fa-flask me-2"></i>
+            AfriMercato Vendor Testing Suite
+        </h1>
+
+        <!-- Server Status -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-server me-2"></i>Server Status</h5>
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>Backend API:</strong> http://localhost:5000/api
+                    </div>
+                    <span id="serverStatus" class="status-badge status-disconnected">Checking...</span>
+                </div>
+                <button class="btn btn-primary btn-sm mt-3" onclick="checkServerStatus()">
+                    <i class="fas fa-sync me-2"></i>Refresh Status
+                </button>
+            </div>
+        </div>
+
+        <!-- Auth Status -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user-lock me-2"></i>Authentication Status</h5>
+            </div>
+            <div class="card-body">
+                <div id="authStatus">
+                    <span class="status-badge status-disconnected">Not Logged In</span>
+                </div>
+                <button class="btn btn-warning btn-sm mt-3" onclick="logout()">
+                    <i class="fas fa-sign-out-alt me-2"></i>Logout
+                </button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-6">
+                <!-- Vendor Registration -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-user-plus me-2"></i>1. Vendor Registration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-section">
+                            <div class="mb-3">
+                                <label class="form-label">Vendor Name</label>
+                                <input type="text" class="form-control" id="regName" value="Green Valley Farms">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="regEmail" value="">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password (Min 8 chars, uppercase, lowercase, number)</label>
+                                <input type="password" class="form-control" id="regPassword" value="Password123">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Confirm Password</label>
+                                <input type="password" class="form-control" id="regConfirmPassword" value="Password123">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Phone</label>
+                                <input type="text" class="form-control" id="regPhone" value="+234-800-555-0001">
+                            </div>
+                            <button class="btn btn-success btn-custom w-100" onclick="registerVendor()">
+                                <i class="fas fa-user-plus me-2"></i>Register Vendor
+                            </button>
+                            <button class="btn btn-secondary btn-custom w-100 mt-2" onclick="generateRandomEmail()">
+                                <i class="fas fa-random me-2"></i>Generate Random Email
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-6">
+                <!-- Vendor Login -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0"><i class="fas fa-sign-in-alt me-2"></i>2. Vendor Login</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="form-section">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" id="loginEmail" value="">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Password</label>
+                                <input type="password" class="form-control" id="loginPassword" value="Password123">
+                            </div>
+                            <button class="btn btn-primary btn-custom w-100" onclick="loginVendor()">
+                                <i class="fas fa-sign-in-alt me-2"></i>Login
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Create Store -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-store me-2"></i>3. Create Vendor Store</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Business Name</label>
+                            <input type="text" class="form-control" id="businessName" value="Green Valley Farms">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Business Type</label>
+                            <select class="form-select" id="businessType">
+                                <option value="individual">Individual</option>
+                                <option value="company">Company</option>
+                                <option value="cooperative">Cooperative</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description</label>
+                            <textarea class="form-control" id="businessDesc" rows="2">We supply fresh organic produce from our farm to your table</textarea>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Address</label>
+                            <input type="text" class="form-control" id="businessAddress" value="123 Farm Road, Ibadan">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">City</label>
+                            <input type="text" class="form-control" id="businessCity" value="Ibadan">
+                        </div>
+                    </div>
+                    <button class="btn btn-success btn-custom w-100" onclick="createVendorStore()">
+                        <i class="fas fa-store me-2"></i>Create Store
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Product -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-box me-2"></i>4. Add Product</h5>
+            </div>
+            <div class="card-body">
+                <div class="form-section">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Product Name *</label>
+                            <input type="text" class="form-control" id="productName" value="Fresh Organic Tomatoes">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Category *</label>
+                            <select class="form-select" id="productCategory">
+                                <option value="vegetables">Vegetables</option>
+                                <option value="fruits">Fruits</option>
+                                <option value="grains">Grains</option>
+                                <option value="dairy">Dairy</option>
+                                <option value="meat">Meat</option>
+                                <option value="fish">Fish</option>
+                                <option value="poultry">Poultry</option>
+                                <option value="bakery">Bakery</option>
+                                <option value="beverages">Beverages</option>
+                                <option value="spices">Spices</option>
+                            </select>
+                        </div>
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label">Description *</label>
+                            <textarea class="form-control" id="productDesc" rows="2">Fresh organic tomatoes grown without pesticides. Rich in vitamins and perfect for cooking.</textarea>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Price (₦) *</label>
+                            <input type="number" class="form-control" id="productPrice" value="500">
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Unit *</label>
+                            <select class="form-select" id="productUnit">
+                                <option value="kg">Kilogram (kg)</option>
+                                <option value="g">Gram (g)</option>
+                                <option value="piece">Piece</option>
+                                <option value="bunch">Bunch</option>
+                                <option value="pack">Pack</option>
+                                <option value="liter">Liter</option>
+                                <option value="dozen">Dozen</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Stock Quantity *</label>
+                            <input type="number" class="form-control" id="productStock" value="100">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Image URL (optional)</label>
+                            <input type="text" class="form-control" id="productImage" value="https://images.unsplash.com/photo-1546094096-0df4bcaaa337?w=400">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Low Stock Threshold</label>
+                            <input type="number" class="form-control" id="productThreshold" value="10">
+                        </div>
+                    </div>
+                    <button class="btn btn-success btn-custom w-100" onclick="addProduct()">
+                        <i class="fas fa-plus me-2"></i>Add Product
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Log -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-terminal me-2"></i>Activity Log</h5>
+            </div>
+            <div class="card-body">
+                <div id="logOutput" class="log-output">
+                    <div>> AfriMercato Vendor Testing Suite Ready</div>
+                    <div>> Waiting for actions...</div>
+                </div>
+                <button class="btn btn-secondary btn-sm mt-3" onclick="clearLog()">
+                    <i class="fas fa-trash me-2"></i>Clear Log
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Utility Functions
+        function log(message, type = 'info') {
+            const logOutput = document.getElementById('logOutput');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#ff4444' : type === 'success' ? '#00ff00' : '#00ffff';
+            logOutput.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logOutput.scrollTop = logOutput.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('logOutput').innerHTML = '<div>> Log cleared</div>';
+        }
+
+        function getAuthToken() {
+            return localStorage.getItem('afrimercato_token');
+        }
+
+        function setAuthToken(token) {
+            localStorage.setItem('afrimercato_token', token);
+            updateAuthStatus();
+        }
+
+        function updateAuthStatus() {
+            const token = getAuthToken();
+            const authStatus = document.getElementById('authStatus');
+            if (token) {
+                authStatus.innerHTML = `
+                    <span class="status-badge status-connected">Logged In</span>
+                    <div class="mt-2"><small>Token: ${token.substring(0, 20)}...</small></div>
+                `;
+            } else {
+                authStatus.innerHTML = '<span class="status-badge status-disconnected">Not Logged In</span>';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('afrimercato_token');
+            updateAuthStatus();
+            log('Logged out successfully', 'info');
+        }
+
+        function generateRandomEmail() {
+            const random = Math.floor(Math.random() * 10000);
+            const email = `vendor${random}@test.com`;
+            document.getElementById('regEmail').value = email;
+            document.getElementById('loginEmail').value = email;
+            log(`Generated random email: ${email}`, 'info');
+        }
+
+        // Server Status Check
+        async function checkServerStatus() {
+            const statusBadge = document.getElementById('serverStatus');
+            statusBadge.textContent = 'Checking...';
+            statusBadge.className = 'status-badge status-disconnected';
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                if (response.ok) {
+                    statusBadge.textContent = 'Connected ✓';
+                    statusBadge.className = 'status-badge status-connected';
+                    log('Server is online and responding', 'success');
+                } else {
+                    throw new Error('Server returned error');
+                }
+            } catch (error) {
+                statusBadge.textContent = 'Disconnected ✗';
+                statusBadge.className = 'status-badge status-disconnected';
+                log('Server is offline or unreachable', 'error');
+            }
+        }
+
+        // 1. Register Vendor
+        async function registerVendor() {
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const confirmPassword = document.getElementById('regConfirmPassword').value;
+            const phone = document.getElementById('regPhone').value;
+
+            if (!email) {
+                alert('Please enter an email or generate a random one');
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                log('✗ Passwords do not match', 'error');
+                return;
+            }
+
+            log(`Attempting to register vendor: ${email}`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        password,
+                        confirmPassword,
+                        phone,
+                        role: 'vendor'
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    log(`✓ Vendor registered successfully: ${email}`, 'success');
+                    log(`User ID: ${data.data.user._id}`, 'success');
+
+                    // Auto-login after registration
+                    if (data.data.token) {
+                        setAuthToken(data.data.token);
+                        log('✓ Auto-logged in with token', 'success');
+                    }
+
+                    // Update login form
+                    document.getElementById('loginEmail').value = email;
+                    alert('Vendor registered successfully! You can now create your store.');
+                } else {
+                    log(`✗ Registration failed: ${data.message}`, 'error');
+                    alert(`Registration failed: ${data.message}`);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // 2. Login Vendor
+        async function loginVendor() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email) {
+                alert('Please enter email');
+                return;
+            }
+
+            log(`Attempting to login: ${email}`, 'info');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setAuthToken(data.data.token);
+                    log(`✓ Login successful for: ${email}`, 'success');
+                    log(`✓ Token saved: ${data.data.token.substring(0, 30)}...`, 'success');
+                    alert('Login successful! You can now create your store.');
+                } else {
+                    log(`✗ Login failed: ${data.message}`, 'error');
+                    alert(`Login failed: ${data.message}`);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // 3. Create Vendor Store
+        async function createVendorStore() {
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
+            const businessName = document.getElementById('businessName').value;
+            const businessType = document.getElementById('businessType').value;
+            const description = document.getElementById('businessDesc').value;
+            const address = document.getElementById('businessAddress').value;
+            const city = document.getElementById('businessCity').value;
+
+            log('Creating vendor store...', 'info');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/vendor/profile`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        storeName: businessName,
+                        category: 'fresh-produce',
+                        description,
+                        phone: '+234-800-555-0001',
+                        address: {
+                            street: address,
+                            city: city,
+                            state: 'Oyo',
+                            country: 'Nigeria'
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    log(`✓ Store created successfully: ${businessName}`, 'success');
+                    log(`✓ Vendor ID: ${data.data.vendor._id}`, 'success');
+                    alert('Store created successfully! You can now add products.');
+                } else {
+                    log(`✗ Store creation failed: ${data.message}`, 'error');
+                    alert(`Store creation failed: ${data.message}`);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // 4. Add Product
+        async function addProduct() {
+            const token = getAuthToken();
+            if (!token) {
+                alert('Please login first!');
+                return;
+            }
+
+            const name = document.getElementById('productName').value;
+            const category = document.getElementById('productCategory').value;
+            const description = document.getElementById('productDesc').value;
+            const price = parseFloat(document.getElementById('productPrice').value);
+            const unit = document.getElementById('productUnit').value;
+            const stock = parseInt(document.getElementById('productStock').value);
+            const imageUrl = document.getElementById('productImage').value;
+            const threshold = parseInt(document.getElementById('productThreshold').value);
+
+            // Validation
+            if (!name || !description) {
+                alert('Please fill in all required fields (name and description)');
+                return;
+            }
+
+            log('Creating product...', 'info');
+            log(`Product: ${name} | Price: ₦${price} | Stock: ${stock}`, 'info');
+
+            const productData = {
+                name,
+                category,
+                description,
+                price,
+                unit,
+                stock,
+                lowStockThreshold: threshold,
+                inStock: stock > 0,
+                isActive: true
+            };
+
+            // Add image if provided
+            if (imageUrl) {
+                productData.images = [{ url: imageUrl, isPrimary: true }];
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/vendor/products`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(productData)
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    log(`✓ Product added successfully: ${name}`, 'success');
+                    log(`✓ Product ID: ${data.data.product._id}`, 'success');
+                    alert('Product added successfully! Check vendor-products-page.html to view it.');
+                } else {
+                    log(`✗ Product creation failed: ${data.message}`, 'error');
+                    alert(`Product creation failed: ${data.message}`);
+                }
+            } catch (error) {
+                log(`✗ Error: ${error.message}`, 'error');
+                alert(`Error: ${error.message}`);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            checkServerStatus();
+            updateAuthStatus();
+            generateRandomEmail();
+            log('✓ Testing suite initialized', 'success');
+        });
+    </script>
+</body>
+</html>

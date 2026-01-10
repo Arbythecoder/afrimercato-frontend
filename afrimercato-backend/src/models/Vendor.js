@@ -38,20 +38,10 @@ const vendorSchema = new mongoose.Schema(
 
     category: {
       type: String,
-      enum: {
-        values: [
-          'fresh-produce',
-          'groceries',
-          'meat-fish',
-          'bakery',
-          'beverages',
-          'household',
-          'beauty-health',
-          'other'
-        ],
-        message: '{VALUE} is not a valid category'
-      },
-      required: [true, 'Please select a business category']
+      required: [true, 'Please provide a business category'],
+      trim: true,
+      minlength: [2, 'Category must be at least 2 characters'],
+      maxlength: [50, 'Category cannot exceed 50 characters']
     },
 
     address: {
@@ -65,7 +55,7 @@ const vendorSchema = new mongoose.Schema(
       },
       state: {
         type: String,
-        required: [true, 'Please provide state/region']
+        required: false  // County is optional for UK addresses
       },
       postalCode: {
         type: String
@@ -146,7 +136,7 @@ const vendorSchema = new mongoose.Schema(
     // Store Approval Status (Admin must approve before store is public)
     approvalStatus: {
       type: String,
-      enum: ['pending', 'approved', 'rejected', 'suspended'],
+      enum: ['pending', 'approved', 'rejected', 'suspended', 'needs_info'],
       default: 'pending'
     },
     approvalNote: {
@@ -162,8 +152,37 @@ const vendorSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    rejectedAt: {
+      type: Date,
+      default: null
+    },
+    rejectionReason: {
+      type: String,
+      default: null
+    },
+
+    // Verification tracking
+    submittedForReviewAt: {
+      type: Date,
+      default: null
+    },
+    lastReviewedAt: {
+      type: Date,
+      default: null
+    },
+    reviewerNotes: {
+      type: String,
+      default: null
+    },
 
     isVerified: {
+      type: Boolean,
+      default: false
+    },
+    // PUBLIC VISIBILITY (UberEats-style)
+    // Controls whether store appears in customer searches
+    // False for pending approval, true after admin approves
+    isPublic: {
       type: Boolean,
       default: false
     },

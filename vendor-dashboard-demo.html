@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afrimercato - Vendor Dashboard Demo</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #f5f5f5;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(135deg, #2D5016 0%, #4A7C23 100%);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .stat-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .stat-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .stat-label {
+            color: #6c757d;
+            font-size: 0.875rem;
+        }
+
+        .table-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .badge-status {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: 500;
+        }
+
+        .btn-action {
+            padding: 0.5rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 500;
+        }
+
+        .alert-demo {
+            border-radius: 12px;
+            border: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navbar -->
+    <nav class="navbar navbar-custom navbar-dark sticky-top">
+        <div class="container-fluid px-4">
+            <span class="navbar-brand mb-0 h1">
+                <i class="fas fa-store me-2"></i>
+                Afrimercato Vendor Dashboard
+            </span>
+            <div class="d-flex align-items-center">
+                <span class="text-white me-3">
+                    <i class="fas fa-user-circle fa-lg me-2"></i>
+                    <span class="d-none d-sm-inline">Demo Vendor</span>
+                </span>
+                <button class="btn btn-outline-light btn-sm" onclick="alert('Logout functionality')">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4">
+        <!-- Alert Banner -->
+        <div class="alert alert-info alert-demo mb-4" role="alert">
+            <i class="fas fa-info-circle me-2"></i>
+            <strong>Demo Mode:</strong> This is a live demonstration of your Afrimercato vendor dashboard. Backend API is running on <code>http://localhost:5000</code>
+        </div>
+
+        <!-- Page Header -->
+        <div class="row mb-4">
+            <div class="col">
+                <h2 class="fw-bold mb-2">
+                    <i class="fas fa-chart-line me-2"></i>
+                    Dashboard Overview
+                </h2>
+                <p class="text-muted mb-0">Welcome back! Here's what's happening with your store today.</p>
+            </div>
+        </div>
+
+        <!-- Statistics Cards -->
+        <div class="row g-4 mb-4" id="statsContainer">
+            <!-- Stats will be loaded here -->
+            <div class="col-12">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-success" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted">Loading dashboard statistics...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Orders Table -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card table-card">
+                    <div class="card-header bg-white border-0 py-3">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-bold">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                Recent Orders
+                            </h5>
+                            <button class="btn btn-sm btn-success btn-action" onclick="window.location.href='#orders'">
+                                <i class="fas fa-list me-2"></i>
+                                View All Orders
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0" id="ordersTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="px-4">Order ID</th>
+                                        <th>Customer</th>
+                                        <th>Product</th>
+                                        <th>Quantity</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="ordersTableBody">
+                                    <tr>
+                                        <td colspan="7" class="text-center py-5">
+                                            <div class="spinner-border text-success" role="status">
+                                                <span class="visually-hidden">Loading...</span>
+                                            </div>
+                                            <p class="mt-3 text-muted">Loading orders...</p>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card table-card">
+                    <div class="card-body p-4">
+                        <h5 class="mb-3 fw-bold">
+                            <i class="fas fa-bolt me-2"></i>
+                            Quick Actions
+                        </h5>
+                        <div class="d-flex flex-wrap gap-2">
+                            <button class="btn btn-success btn-action" onclick="alert('Navigate to Add Product page')">
+                                <i class="fas fa-plus me-2"></i>
+                                Add New Product
+                            </button>
+                            <button class="btn btn-outline-success btn-action" onclick="alert('Navigate to Products page')">
+                                <i class="fas fa-box me-2"></i>
+                                Manage Products
+                            </button>
+                            <button class="btn btn-outline-success btn-action" onclick="alert('Navigate to Orders page')">
+                                <i class="fas fa-shopping-cart me-2"></i>
+                                View All Orders
+                            </button>
+                            <button class="btn btn-outline-success btn-action" onclick="alert('Navigate to Profile page')">
+                                <i class="fas fa-cog me-2"></i>
+                                Store Settings
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Dashboard JavaScript -->
+    <script>
+        // API Base URL
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // Get auth token from localStorage (for demo, we'll handle auth errors gracefully)
+        const getAuthToken = () => {
+            return localStorage.getItem('afrimercato_token');
+        };
+
+        // Format currency
+        const formatCurrency = (amount) => {
+            return '₦' + amount.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        };
+
+        // Format date
+        const formatDate = (dateString) => {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        };
+
+        // Get status badge color
+        const getStatusBadge = (status) => {
+            const statusColors = {
+                'pending': 'warning',
+                'confirmed': 'info',
+                'preparing': 'primary',
+                'ready': 'success',
+                'out-for-delivery': 'info',
+                'delivered': 'success',
+                'completed': 'success',
+                'cancelled': 'danger'
+            };
+            const color = statusColors[status] || 'secondary';
+            return `<span class="badge bg-${color} badge-status">${status.toUpperCase()}</span>`;
+        };
+
+        // Load Dashboard Statistics
+        async function loadDashboardStats() {
+            const token = getAuthToken();
+
+            if (!token) {
+                displayAuthError();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/vendor/dashboard/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (data.success) {
+                    displayStats(data.data.overview);
+                    displayRecentOrders(data.data.recentOrders);
+                } else {
+                    throw new Error(data.message || 'Failed to load dashboard data');
+                }
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                displayError('Failed to load dashboard data. ' + error.message);
+            }
+        }
+
+        // Display Statistics Cards
+        function displayStats(overview) {
+            const statsContainer = document.getElementById('statsContainer');
+
+            const stats = [
+                {
+                    icon: 'fas fa-naira-sign',
+                    iconBg: 'bg-success bg-opacity-10 text-success',
+                    value: formatCurrency(overview.totalRevenue || 0),
+                    label: 'Total Revenue',
+                    change: '+15.3%',
+                    changeClass: 'text-success'
+                },
+                {
+                    icon: 'fas fa-box',
+                    iconBg: 'bg-primary bg-opacity-10 text-primary',
+                    value: overview.totalProducts || 0,
+                    label: 'Total Products',
+                    change: `${overview.activeProducts || 0} active`,
+                    changeClass: 'text-muted'
+                },
+                {
+                    icon: 'fas fa-shopping-cart',
+                    iconBg: 'bg-info bg-opacity-10 text-info',
+                    value: overview.totalOrders || 0,
+                    label: 'Total Orders',
+                    change: `${overview.pendingOrders || 0} pending`,
+                    changeClass: 'text-warning'
+                },
+                {
+                    icon: 'fas fa-chart-line',
+                    iconBg: 'bg-warning bg-opacity-10 text-warning',
+                    value: formatCurrency(overview.monthlyRevenue || 0),
+                    label: 'This Month',
+                    change: '+8.5%',
+                    changeClass: 'text-success'
+                }
+            ];
+
+            statsContainer.innerHTML = stats.map(stat => `
+                <div class="col-xl-3 col-md-6">
+                    <div class="card stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div class="stat-icon ${stat.iconBg}">
+                                    <i class="${stat.icon}"></i>
+                                </div>
+                                <span class="${stat.changeClass} small fw-bold">
+                                    <i class="fas fa-arrow-up me-1"></i>
+                                    ${stat.change}
+                                </span>
+                            </div>
+                            <h3 class="stat-value">${stat.value}</h3>
+                            <p class="stat-label mb-0">${stat.label}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Display Recent Orders
+        function displayRecentOrders(orders) {
+            const tbody = document.getElementById('ordersTableBody');
+
+            if (!orders || orders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <p class="text-muted">No orders yet</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = orders.slice(0, 10).map(order => `
+                <tr>
+                    <td class="px-4 fw-bold">${order.orderNumber}</td>
+                    <td>${order.customer?.name || 'Unknown'}</td>
+                    <td>${order.items && order.items.length > 0 ? order.items[0].name : 'Multiple items'}</td>
+                    <td>${order.items && order.items.length > 0 ? order.items[0].quantity : order.items?.length || 0}</td>
+                    <td class="fw-bold">${formatCurrency(order.pricing.total)}</td>
+                    <td>${getStatusBadge(order.status)}</td>
+                    <td>${formatDate(order.createdAt)}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Display Auth Error
+        function displayAuthError() {
+            const statsContainer = document.getElementById('statsContainer');
+            const ordersTableBody = document.getElementById('ordersTableBody');
+
+            const errorMessage = `
+                <div class="col-12">
+                    <div class="alert alert-warning alert-demo" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            Authentication Required
+                        </h5>
+                        <p class="mb-3">You need to login to view your vendor dashboard. Please follow these steps:</p>
+                        <ol class="mb-3">
+                            <li>Register as a vendor using the API</li>
+                            <li>Login to get your authentication token</li>
+                            <li>The token will be saved automatically</li>
+                            <li>Refresh this page to see your dashboard</li>
+                        </ol>
+                        <hr>
+                        <p class="mb-0">
+                            <strong>Backend Status:</strong>
+                            <span class="badge bg-success">Running on http://localhost:5000</span>
+                        </p>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="mb-3">Quick Test with PowerShell:</h5>
+                            <pre class="bg-dark text-light p-3 rounded"><code>
+# Register a vendor
+$response = Invoke-RestMethod -Uri "http://localhost:5000/api/auth/register" -Method Post -ContentType "application/json" -Body (@{
+    name = "Test Vendor"
+    email = "vendor@test.com"
+    password = "password123"
+    role = "vendor"
+} | ConvertTo-Json)
+
+# Login
+$login = Invoke-RestMethod -Uri "http://localhost:5000/api/auth/login" -Method Post -ContentType "application/json" -Body (@{
+    email = "vendor@test.com"
+    password = "password123"
+} | ConvertTo-Json)
+
+Write-Output "Token: $($login.data.token)"
+
+# Save token to localStorage (copy this token)
+                            </code></pre>
+                            <button class="btn btn-primary" onclick="showLoginModal()">
+                                <i class="fas fa-key me-2"></i>
+                                Enter Auth Token Manually
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            statsContainer.innerHTML = errorMessage;
+            ordersTableBody.innerHTML = `
+                <tr>
+                    <td colspan="7" class="text-center py-4">
+                        <i class="fas fa-lock fa-2x text-warning mb-3"></i>
+                        <p class="text-muted">Please login to view orders</p>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Display Error
+        function displayError(message) {
+            const statsContainer = document.getElementById('statsContainer');
+            statsContainer.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-danger alert-demo" role="alert">
+                        <h5 class="alert-heading">
+                            <i class="fas fa-exclamation-circle me-2"></i>
+                            Error Loading Dashboard
+                        </h5>
+                        <p class="mb-0">${message}</p>
+                        <hr>
+                        <p class="mb-0">
+                            Please make sure:
+                            <ul class="mt-2">
+                                <li>Backend server is running on <code>http://localhost:5000</code></li>
+                                <li>You are logged in as a vendor</li>
+                                <li>Your vendor profile is verified</li>
+                            </ul>
+                        </p>
+                        <button class="btn btn-danger mt-3" onclick="location.reload()">
+                            <i class="fas fa-redo me-2"></i>
+                            Retry
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Show login modal
+        function showLoginModal() {
+            const token = prompt('Enter your authentication token:');
+            if (token) {
+                localStorage.setItem('afrimercato_token', token);
+                location.reload();
+            }
+        }
+
+        // Initialize dashboard on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Afrimercato Vendor Dashboard Demo');
+            console.log('📡 API URL:', API_BASE_URL);
+            console.log('🔑 Auth Token:', getAuthToken() ? 'Present' : 'Missing');
+
+            loadDashboardStats();
+        });
+    </script>
+</body>
+</html>

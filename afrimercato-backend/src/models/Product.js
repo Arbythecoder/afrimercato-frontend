@@ -30,36 +30,24 @@ const productSchema = new mongoose.Schema(
       maxlength: [2000, 'Description cannot exceed 2000 characters']
     },
 
-    // PRODUCT CATEGORY
+    // PRODUCT CATEGORY (FREE TEXT - UK Standard)
+    // Allows custom categories like "African Foods", "Organic Products", etc.
     category: {
       type: String,
       required: [true, 'Please specify product category'],
-      enum: {
-        values: [
-          'fruits',
-          'vegetables',
-          'grains',
-          'dairy',
-          'meat',
-          'fish',
-          'poultry',
-          'bakery',
-          'beverages',
-          'spices',
-          'snacks',
-          'household',
-          'beauty',
-          'other'
-        ],
-        message: '{VALUE} is not a valid category'
-      }
+      trim: true,
+      minlength: [2, 'Category must be at least 2 characters'],
+      maxlength: [50, 'Category cannot exceed 50 characters']
     },
 
-    // PRODUCT IMAGES
-    // Array of image URLs/paths
+    // PRODUCT IMAGES (1-5 images, UK Standard)
     images: [
       {
         url: {
+          type: String,
+          required: true
+        },
+        publicId: {
           type: String,
           required: true
         },
@@ -89,15 +77,19 @@ const productSchema = new mongoose.Schema(
       max: 100
     },
 
-    // UNIT OF MEASUREMENT
-    // How is this product sold?
+    // UNIT OF MEASUREMENT (UK Standard)
     unit: {
       type: String,
       required: [true, 'Please specify unit'],
       enum: {
-        values: ['kg', 'g', 'lb', 'piece', 'bunch', 'pack', 'liter', 'ml', 'dozen'],
+        values: ['kg', 'g', 'lb', 'oz', 'l', 'ml', 'pint', 'piece', 'pack', 'bunch', 'bag', 'box', 'tray'],
         message: '{VALUE} is not a valid unit'
       }
+    },
+    // Unit Quantity (e.g., 0.5kg, 250g)
+    unitQuantity: {
+      type: Number,
+      min: [0, 'Unit quantity cannot be negative']
     },
 
     // STOCK/INVENTORY
@@ -117,6 +109,11 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    // Unlimited stock option
+    unlimitedStock: {
+      type: Boolean,
+      default: false
+    },
 
     // PRODUCT STATUS
     isActive: {
@@ -126,6 +123,20 @@ const productSchema = new mongoose.Schema(
     isFeatured: {
       type: Boolean,
       default: false
+    },
+    // DRAFT MODE (UberEats-style)
+    // Allows vendors to create products while waiting for account approval
+    // Products stay in draft until vendor account is approved
+    isDraft: {
+      type: Boolean,
+      default: false
+    },
+    // PUBLIC VISIBILITY
+    // Controls whether product appears in customer searches
+    // False for pending vendor accounts, true after approval
+    isPublic: {
+      type: Boolean,
+      default: true
     },
 
     // PRODUCT SPECIFICATIONS
@@ -139,8 +150,38 @@ const productSchema = new mongoose.Schema(
       shelfLife: String // How long does it last?
     },
 
-    // TAGS (for searching)
-    // Example: ['organic', 'fresh', 'local']
+    // PRODUCT VARIANTS (SIZES) - UK Standard
+    // Like Uber Eats: Small/Medium/Large with different prices
+    variants: [
+      {
+        name: {
+          type: String,
+          required: true,
+          trim: true
+        },
+        size: {
+          type: String,
+          trim: true
+        },
+        price: {
+          type: Number,
+          required: true,
+          min: 0
+        },
+        stock: {
+          type: Number,
+          default: 0,
+          min: 0
+        },
+        inStock: {
+          type: Boolean,
+          default: true
+        }
+      }
+    ],
+
+    // TAGS (for searching) - UK Standard with dietary info
+    // Example: ['Vegan', 'Organic', 'Gluten-Free', 'Halal']
     tags: [
       {
         type: String,
@@ -158,6 +199,50 @@ const productSchema = new mongoose.Schema(
     reviewCount: {
       type: Number,
       default: 0
+    },
+
+    // AVAILABILITY & SCHEDULING - UK Standard
+    availability: {
+      days: {
+        monday: { type: Boolean, default: true },
+        tuesday: { type: Boolean, default: true },
+        wednesday: { type: Boolean, default: true },
+        thursday: { type: Boolean, default: true },
+        friday: { type: Boolean, default: true },
+        saturday: { type: Boolean, default: true },
+        sunday: { type: Boolean, default: true }
+      },
+      timeSlots: {
+        enabled: { type: Boolean, default: false },
+        start: { type: String, default: '09:00' },
+        end: { type: String, default: '18:00' }
+      },
+      maxOrdersPerDay: {
+        type: Number,
+        min: 0
+      },
+      prepTime: {
+        type: Number,
+        min: 0,
+        default: 15
+      }
+    },
+
+    // SEO & METADATA
+    slug: {
+      type: String,
+      unique: true,
+      sparse: true
+    },
+    keywords: [String],
+    sortOrder: {
+      type: Number,
+      default: 0
+    },
+
+    // VENDOR INFO (auto-filled)
+    storeName: {
+      type: String
     },
 
     // SALES STATISTICS
@@ -185,17 +270,19 @@ productSchema.index({ isActive: 1, inStock: 1 });
 productSchema.index({ rating: -1 }); // Sort by rating
 
 // =================================================================
-// MIDDLEWARE: UPDATE STOCK STATUS
+// MIDDLEWARE: UPDATE STOCK STATUS & AUTO-GENERATE FIELDS
 // =================================================================
-/**
- * Automatically set inStock to false when stock reaches 0
- */
 productSchema.pre('save', function (next) {
-  // If stock is 0 or less, mark as out of stock
-  if (this.stock <= 0) {
-    this.inStock = false;
-  } else {
+  // Handle unlimited stock
+  if (this.unlimitedStock) {
     this.inStock = true;
+  } else {
+    // If stock is 0 or less, mark as out of stock
+    if (this.stock <= 0) {
+      this.inStock = false;
+    } else {
+      this.inStock = true;
+    }
   }
 
   // Calculate discount if originalPrice is set
@@ -205,8 +292,42 @@ productSchema.pre('save', function (next) {
     );
   }
 
+  // Auto-generate slug from name
+  if (!this.slug && this.name) {
+    this.slug = this.name
+      .toLowerCase()
+      .replace(/[^\w\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+  }
+
+  // Extract keywords from name and description
+  if (!this.keywords || this.keywords.length === 0) {
+    const text = `${this.name} ${this.description}`.toLowerCase();
+    this.keywords = text
+      .split(/\s+/)
+      .filter(word => word.length > 3)
+      .slice(0, 20);
+  }
+
+  // Ensure at least one image is marked as primary
+  if (this.images && this.images.length > 0) {
+    const hasPrimary = this.images.some(img => img.isPrimary);
+    if (!hasPrimary) {
+      this.images[0].isPrimary = true;
+    }
+  }
+
   next();
 });
+
+// =================================================================
+// VALIDATION
+// =================================================================
+productSchema.path('images').validate(function(images) {
+  return images && images.length >= 1 && images.length <= 5;
+}, 'Product must have between 1 and 5 images');
 
 // =================================================================
 // VIRTUALS

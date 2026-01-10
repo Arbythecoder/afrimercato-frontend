@@ -207,6 +207,53 @@ exports.optionalAuth = async (req, res, next) => {
 };
 
 // =================================================================
+// CHECK VENDOR APPROVAL: Ensure vendor account is approved by admin
+// =================================================================
+/**
+ * This middleware checks if a vendor user account has been approved by admin
+ *
+ * INDUSTRY BEST PRACTICE (UberEats Model):
+ * - Allow vendors to access dashboard and set up store DURING approval
+ * - Block only customer-facing features (orders, analytics) until approved
+ * - This reduces time-to-market and improves vendor experience
+ */
+exports.checkVendorApproval = async (req, res, next) => {
+  try {
+    // Only check if user is a vendor
+    if (!req.user.roles || !req.user.roles.includes('vendor')) {
+      return next(); // Not a vendor, skip this check
+    }
+
+    // Allow rejected vendors to see their rejection reason but block actions
+    if (req.user.approvalStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor account application was rejected.',
+        errorCode: 'VENDOR_ACCOUNT_REJECTED',
+        approvalStatus: 'rejected',
+        reason: req.user.rejectionReason
+      });
+    }
+
+    // Pending vendors can access dashboard and setup, but with limitations
+    // They can prepare their store while waiting for approval
+    if (req.user.approvalStatus === 'pending') {
+      // Attach pending status to request for controllers to handle
+      req.vendorPendingApproval = true;
+    }
+
+    // Account is approved or pending (both can proceed)
+    next();
+  } catch (error) {
+    console.error('Vendor approval check error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error checking vendor approval status'
+    });
+  }
+};
+
+// =================================================================
 // VERIFY VENDOR: Check User is a Verified Vendor
 // =================================================================
 /**
@@ -228,14 +275,44 @@ exports.verifyVendor = async (req, res, next) => {
       });
     }
 
-    // AUTO-VERIFY all vendors for production (no admin approval needed)
-    // if (!vendor.isVerified) {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: 'Your vendor account is pending verification. Please wait for admin approval.',
-    //     errorCode: 'VENDOR_NOT_VERIFIED'
-    //   });
-    // }
+    // Check if vendor is approved via approvalStatus (more granular than isVerified)
+    // ALLOW pending vendors to access dashboard and setup features
+    if (vendor.approvalStatus === 'pending') {
+      // Attach pending status flag to request
+      // Controllers can use this to show appropriate messaging
+      req.vendorPendingApproval = true;
+      req.vendor = vendor;
+
+      // Allow access but with limitations (handled by individual route controllers)
+      // Pending vendors CAN:
+      // - Access dashboard
+      // - Add/edit products
+      // - Configure store settings
+      // - View their profile
+      // Pending vendors CANNOT:
+      // - Receive orders (store not visible to customers)
+      // - Access revenue/analytics (no orders yet)
+      return next();
+    }
+
+    if (vendor.approvalStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor application was not approved.',
+        errorCode: 'VENDOR_REJECTED',
+        status: 'rejected',
+        reason: vendor.rejectionReason
+      });
+    }
+
+    if (vendor.approvalStatus === 'suspended') {
+      return res.status(403).json({
+        success: false,
+        message: 'Your vendor account has been suspended.',
+        errorCode: 'VENDOR_SUSPENDED',
+        status: 'suspended'
+      });
+    }
 
     if (!vendor.isActive) {
       return res.status(403).json({
