@@ -14,6 +14,120 @@ const { getFileUrl } = require('../middleware/upload');
 // VENDOR PROFILE OPERATIONS
 // =================================================================
 
+// =================================================================
+// @route   POST /api/vendor/register
+// @desc    Register a new vendor
+// @access  Public
+// =================================================================
+// =================================================================
+// @route   POST /api/vendor/register
+// @desc    Register a new vendor
+// @access  Public
+// =================================================================
+exports.registerVendor = asyncHandler(async (req, res) => {
+  const {
+    storeName,
+    fullName,
+    email,
+    phone,
+    password,
+    storeDescription,
+    category,
+    address
+  } = req.body;
+
+  // Check if email already exists
+  const existingUser = await User.findOne({ email });
+  if (existingUser) {
+    return res.status(400).json({
+      success: false,
+      message: 'A user with this email already exists',
+      errorCode: 'EMAIL_EXISTS',
+      userMessage: 'This email is already registered. Please use a different email or login.'
+    });
+  }
+
+  // Create user account with roles array
+  const user = await User.create({
+    name: fullName,
+    email,
+    password,
+    phone,
+    roles: ['vendor'], // FIX: Use array for roles
+    primaryRole: 'vendor'
+  });
+
+  // Generate unique store ID
+  const storeId = await generateStoreId(category);
+
+  // Create vendor profile with PENDING status (not auto-verified)
+  const vendor = await Vendor.create({
+    user: user._id,
+    storeId,
+    storeName,
+    description: storeDescription,
+    category,
+    address,
+    phone,
+    approvalStatus: 'pending', // NOT auto-verified!
+    isVerified: false,
+    verificationStep: 'email_pending'
+  });
+
+  // Generate email verification token
+  const verificationToken = user.generateEmailVerificationToken();
+  await user.save();
+
+  // Send WELCOME email with onboarding steps
+  const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
+  await sendEmail({
+    to: email,
+    subject: 'Welcome to Afrimercato! Verify Your Email',
+    template: 'vendor-welcome', // Create this template
+    context: {
+      name: fullName,
+      storeName,
+      storeId,
+      verificationUrl,
+      steps: [
+        '1. Verify your email (click link above)',
+        '2. Complete your store profile',
+        '3. We\'ll verify your business (24-48 hours)',
+        '4. Start adding products!'
+      ],
+      supportEmail: 'vendors@afrimercato.com'
+    }
+  });
+
+  // USER-FRIENDLY RESPONSE (no technical errors!)
+  res.status(201).json({
+    success: true,
+    message: 'Registration successful! 🎉',
+    data: {
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.roles[0],
+      },
+      vendor: {
+        id: vendor._id,
+        storeId: vendor.storeId,
+        storeName: vendor.storeName,
+        isVerified: vendor.isVerified,
+        approvalStatus: vendor.approvalStatus
+      },
+      onboarding: {
+        currentStep: 1, // Email verification
+        totalSteps: 4,
+        nextAction: 'verify_email',
+        message: 'Please check your email to verify your account.',
+        estimatedTime: '24-48 hours for business verification'
+      }
+    }
+  });
+});
+
 /**
  * @route   POST /api/vendor/profile
  * @desc    Create vendor profile
