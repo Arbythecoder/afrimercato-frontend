@@ -157,7 +157,11 @@
       "Bash(cmd /c \"del /Q *.md *.txt 2>nul\")",
       "Bash(cmd /c \"del /Q *.js *.ps1 *.html 2>nul\")",
       "Bash(cmd /c \"rmdir /S /Q node_modules .claude 2>nul\")",
-      "Bash(del /Q *.md)"
+      "Bash(del /Q *.md)",
+      "Bash(node:*)",
+      "Bash(cmd /c \"taskkill /PID 121280 /F\")",
+      "Bash(powershell -ExecutionPolicy Bypass -File update-fly-secrets.ps1:*)",
+      "Bash(where.exe:*)"
     ],
     "deny": [],
     "ask": []
