@@ -7,9 +7,11 @@
 const Vendor = require('../models/Vendor');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
+const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { getFileUrl } = require('../middleware/upload');
 const { processVendorVerification } = require('../services/autoVerificationService');
+const { sendEmail } = require('../utils/email');
 
 // =================================================================
 // VENDOR PROFILE OPERATIONS
@@ -20,6 +22,12 @@ const { processVendorVerification } = require('../services/autoVerificationServi
  * @desc    Create vendor profile
  * @access  Private (User with role='vendor')
  */
+// =================================================================
+// UPDATED VENDOR CONTROLLER - FOR AUTO-APPROVAL SYSTEM
+// =================================================================
+// Replace the createVendorProfile function in src/controllers/vendorController.js
+// Lines 22-74 with this version:
+
 exports.createVendorProfile = asyncHandler(async (req, res) => {
   const {
     storeName,
@@ -44,45 +52,110 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
   }
 
   // Generate unique store ID
-  const storeId = `STR${Date.now()}${Math.floor(Math.random() * 1000)}`;
+  const storeId = await generateUniqueStoreId(category);
 
-  // Create vendor profile with PENDING status (will be auto-verified in 24-48 hours)
+  // Create vendor profile with PENDING status
+  // Will be auto-approved by cron job in 24-48 hours
   const vendor = await Vendor.create({
     storeId,
     user: req.user.id,
     storeName,
-    description,
+    description: description || '',
     category,
     address,
     phone,
     alternativePhone,
-    businessHours,
-    bankDetails,
-    approvalStatus: 'pending', // Start as pending
+    businessHours: businessHours || undefined,
+    bankDetails: bankDetails || undefined,
+    
+    // Auto-approval settings
+    approvalStatus: 'pending',
     submittedForReviewAt: new Date(),
     isVerified: false,
+    isPublic: false, // Hidden from customers until approved
     isActive: true
   });
 
-  // Trigger automatic verification process (runs immediately + scheduled for 24-48h)
+  // Send confirmation email
   try {
-    await processVendorVerification(vendor._id);
-    console.log(`✅ Auto-verification initiated for vendor: ${vendor.storeName}`);
-  } catch (error) {
-    console.error('Auto-verification trigger failed:', error);
-    // Don't fail the whole request if auto-verification fails
+    const user = await User.findById(req.user.id);
+    if (user && user.email) {
+      await sendEmail({
+        to: user.email,
+        subject: 'Store Profile Created - Pending Approval',
+        html: `
+          <h2>Welcome to Afrimercato, ${user.name || 'Vendor'}!</h2>
+          <p>Your store <strong>${storeName}</strong> has been created successfully.</p>
+          
+          <h3>What happens next?</h3>
+          <p>Your store is currently under review. Our system will automatically verify and approve your store within <strong>24-48 hours</strong>.</p>
+          
+          <div style="background-color: #f0f0f0; padding: 15px; border-radius: 5px; margin: 20px 0;">
+            <h4>While you wait:</h4>
+            <ul>
+              <li>✅ Set up your store profile</li>
+              <li>✅ Add products to your inventory</li>
+              <li>✅ Configure delivery settings</li>
+              <li>❌ Your store won't be visible to customers yet</li>
+            </ul>
+          </div>
+          
+          <p>You'll receive an email once your store is approved!</p>
+          
+          <a href="${process.env.FRONTEND_URL}/vendor/dashboard" style="background-color: #4CAF50; color: white; padding: 14px 20px; text-decoration: none; display: inline-block; border-radius: 4px;">Go to Dashboard</a>
+          
+          <p style="margin-top: 20px; color: #666; font-size: 14px;">
+            <strong>Store ID:</strong> ${storeId}<br>
+            <strong>Status:</strong> Pending Approval<br>
+            <strong>Expected Approval:</strong> Within 48 hours
+          </p>
+        `
+      });
+    }
+  } catch (emailError) {
+    console.error('Failed to send confirmation email:', emailError);
+    // Don't fail the whole request if email fails
   }
 
   res.status(201).json({
     success: true,
-    message: 'Vendor profile created successfully! Your account will be reviewed within 24-48 hours.',
+    message: 'Vendor profile created successfully! Your store will be reviewed within 24-48 hours.',
     data: {
       vendor,
       approvalStatus: 'pending',
-      estimatedApprovalTime: '24-48 hours'
+      estimatedApprovalTime: '24-48 hours',
+      canAddProducts: true, // Can add products while waiting
+      canReceiveOrders: false, // Can't receive orders until approved
+      isPublic: false // Not visible to customers yet
     }
   });
 });
+
+// Helper function to generate unique store ID
+const generateUniqueStoreId = async (category) => {
+  const categoryPrefixes = {
+    'fresh-produce': 'FP',
+    'groceries': 'GR',
+    'meat-fish': 'MF',
+    'bakery': 'BK',
+    'beverages': 'BV',
+    'household': 'HH',
+    'beauty-health': 'BH',
+    'snacks': 'SN',
+    'other': 'OT'
+  };
+
+  const prefix = categoryPrefixes[category] || 'ST';
+
+  // Get count of vendors in this category
+  const count = await Vendor.countDocuments({ category });
+  const sequenceNumber = String(count + 1).padStart(4, '0');
+
+  // Generate random characters
+  const randomChars = Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  return `${prefix}-${sequenceNumber}-${randomChars}`;
+};
 
 /**
  * @route   GET /api/vendor/profile
