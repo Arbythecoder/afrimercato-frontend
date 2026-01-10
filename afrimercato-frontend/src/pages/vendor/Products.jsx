@@ -44,6 +44,7 @@ function Products() {
   }
 
   const handleAddProduct = () => {
+    console.log('✅ Opening product creation modal...')
     setEditingProduct(null)
     setShowProductModal(true)
   }
@@ -102,26 +103,30 @@ function Products() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-afri-green to-afri-green-dark bg-clip-text text-transparent">
-            Products
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-afri-green to-afri-green-dark bg-clip-text text-transparent">
+            {products.length === 0 ? 'Your Products' : `Managing ${products.length} Product${products.length !== 1 ? 's' : ''}`}
           </h1>
-          <p className="text-afri-gray-600 mt-2">Manage your inventory and product listings</p>
+          <p className="text-afri-gray-600 mt-2">
+            {products.length === 0
+              ? 'Create your first product to start selling'
+              : 'Manage your inventory and product listings'}
+          </p>
         </div>
         <button
           onClick={handleAddProduct}
-          className="mt-4 md:mt-0 bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-6 py-3 rounded-lg font-semibold shadow-lg transform transition-all duration-300 hover:scale-105 hover:shadow-xl flex items-center group"
+          className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-8 py-4 rounded-xl font-bold text-lg shadow-2xl transform transition-all duration-300 hover:scale-105 hover:shadow-3xl flex items-center justify-center group animate-pulse hover:animate-none"
         >
           <svg
-            className="w-5 h-5 mr-2 transform group-hover:rotate-90 transition-transform duration-300"
+            className="w-6 h-6 mr-3 transform group-hover:rotate-90 transition-transform duration-300"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
           >
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Product
+          {products.length === 0 ? 'Create Your First Product' : 'Create New Product'}
         </button>
       </div>
 
@@ -206,27 +211,92 @@ function Products() {
           </div>
         </div>
       ) : products.length === 0 ? (
-        <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-          <svg className="w-24 h-24 text-afri-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-            />
-          </svg>
-          <h3 className="text-xl font-semibold text-afri-gray-900 mb-2">No products found</h3>
-          <p className="text-afri-gray-500 mb-6">
-            {filters.search || filters.category || filters.status
-              ? 'Try adjusting your filters'
-              : 'Get started by adding your first product'}
-          </p>
+        <div className="bg-gradient-to-br from-white to-green-50 rounded-2xl shadow-2xl p-12 text-center border border-green-100">
+          {/* Store Icon */}
+          <div className="text-8xl mb-6 animate-bounce">🏪</div>
+
+          <h3 className="text-3xl font-bold text-afri-gray-900 mb-4">No Products Yet</h3>
+
+          {filters.search || filters.category || filters.status ? (
+            <p className="text-afri-gray-600 mb-8 text-lg">Try adjusting your filters to see products</p>
+          ) : (
+            <div className="max-w-2xl mx-auto">
+              <p className="text-afri-gray-700 mb-6 text-lg leading-relaxed">
+                Get started by creating your first product. You can add:
+              </p>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8 text-left">
+                <div className="bg-white rounded-lg p-4 shadow-md">
+                  <span className="text-2xl mb-2 block">📝</span>
+                  <p className="font-semibold text-afri-gray-900">Product name</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-md">
+                  <span className="text-2xl mb-2 block">📸</span>
+                  <p className="font-semibold text-afri-gray-900">Images</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-md">
+                  <span className="text-2xl mb-2 block">📄</span>
+                  <p className="font-semibold text-afri-gray-900">Description</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-md">
+                  <span className="text-2xl mb-2 block">💰</span>
+                  <p className="font-semibold text-afri-gray-900">Price</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-md">
+                  <span className="text-2xl mb-2 block">🏷️</span>
+                  <p className="font-semibold text-afri-gray-900">Category</p>
+                </div>
+                <div className="bg-white rounded-lg p-4 shadow-md">
+                  <span className="text-2xl mb-2 block">📦</span>
+                  <p className="font-semibold text-afri-gray-900">Stock</p>
+                </div>
+              </div>
+
+              <p className="text-afri-gray-600 mb-8">
+                ...all customized by you!
+              </p>
+            </div>
+          )}
+
           <button
             onClick={handleAddProduct}
-            className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-6 py-3 rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105"
+            className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-12 py-5 rounded-xl font-bold text-xl shadow-2xl hover:shadow-3xl transition-all transform hover:scale-110 inline-flex items-center group mb-8"
           >
-            Add Your First Product
+            <svg
+              className="w-7 h-7 mr-3 transform group-hover:rotate-90 transition-transform duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            {filters.search || filters.category || filters.status ? 'Clear Filters & Add Product' : 'CREATE YOUR FIRST PRODUCT'}
+            <svg
+              className="w-6 h-6 ml-3 transform group-hover:translate-x-2 transition-transform duration-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
           </button>
+
+          {/* Help Section */}
+          <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6 max-w-xl mx-auto">
+            <div className="flex items-start gap-3">
+              <span className="text-3xl">💡</span>
+              <div className="text-left">
+                <h4 className="font-bold text-blue-900 mb-2">New to selling?</h4>
+                <p className="text-blue-800 text-sm mb-2">Creating a product is easy! Click above to:</p>
+                <ul className="text-blue-700 text-sm space-y-1">
+                  <li>• Upload product images</li>
+                  <li>• Enter product name & description</li>
+                  <li>• Set your own price</li>
+                  <li>• Choose category & stock quantity</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -403,6 +473,7 @@ function Products() {
             setEditingProduct(null)
           }}
           onSave={() => {
+            console.log('✅ Product saved successfully!')
             fetchProducts()
             setShowProductModal(false)
             setEditingProduct(null)

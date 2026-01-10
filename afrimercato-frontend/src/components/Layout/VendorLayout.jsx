@@ -9,6 +9,7 @@ function VendorLayout({ children }) {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024)
   const [vendorStatus, setVendorStatus] = useState(null)
   const [loading, setLoading] = useState(true)
 
@@ -23,6 +24,14 @@ function VendorLayout({ children }) {
 
   useEffect(() => {
     fetchVendorStatus()
+
+    // Handle window resize for responsive hamburger menu
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 1024)
+    }
+
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
   }, [])
 
   const fetchVendorStatus = async () => {
@@ -48,6 +57,12 @@ function VendorLayout({ children }) {
   }
 
   const isActive = (path) => location.pathname === path
+
+  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+
+  const closeSidebar = () => {
+    if (isMobile) setSidebarOpen(false)
+  }
 
   // Check vendor approval status
   const isPending = vendorStatus?.approvalStatus === 'pending'
@@ -282,6 +297,7 @@ function VendorLayout({ children }) {
               <Link
                 key={item.name}
                 to={item.path}
+                onClick={closeSidebar}
                 className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
                   isActive(item.path)
                     ? 'bg-afri-green text-white'
@@ -313,8 +329,8 @@ function VendorLayout({ children }) {
         <div className="sticky top-0 z-30 bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
             <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-500 hover:text-gray-700"
+              onClick={toggleSidebar}
+              className={`${isMobile ? 'block' : 'hidden'} text-gray-700 hover:text-afri-green transition-colors`}
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
