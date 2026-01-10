@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { vendorAPI } from '../../services/api'
-import ProductModal from '../../components/Products/ProductModal'
+import ProductCreationForm from '../../components/Products/ProductCreationForm'
 import BulkActionsModal from '../../components/Products/BulkActionsModal'
 
 const categories = [
@@ -466,7 +466,7 @@ function Products() {
 
       {/* Modals */}
       {showProductModal && (
-        <ProductModal
+        <ProductCreationForm
           product={editingProduct}
           onClose={() => {
             setShowProductModal(false)
