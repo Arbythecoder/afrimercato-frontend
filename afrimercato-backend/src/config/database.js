@@ -26,12 +26,17 @@ const mongoose = require('mongoose');
  */
 const connectDB = async () => {
   try {
+    // Disable buffering to get immediate errors instead of timeouts
+    mongoose.set('bufferCommands', false);
+
     // MongoDB connection options
     const options = {
-      serverSelectionTimeoutMS: 10000, // Increased to 10 seconds
+      serverSelectionTimeoutMS: 30000, // Increased to 30 seconds
       socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000, // Added connection timeout
+      connectTimeoutMS: 30000, // Increased connection timeout
       family: 4, // Use IPv4, skip trying IPv6
+      maxPoolSize: 10,
+      minPoolSize: 2,
     };
 
     // Connect to MongoDB
