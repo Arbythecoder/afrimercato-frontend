@@ -133,11 +133,11 @@ const vendorSchema = new mongoose.Schema(
       routingNumber: String
     },
 
-    // Store Approval Status (Admin must approve before store is public)
+    // Store Approval Status (Auto-approved - no admin verification required)
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected', 'suspended', 'needs_info'],
-      default: 'pending'
+      default: 'approved'
     },
     approvalNote: {
       type: String,

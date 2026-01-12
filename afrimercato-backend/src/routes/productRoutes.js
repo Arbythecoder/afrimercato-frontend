@@ -7,8 +7,26 @@
 const express = require('express');
 const router = express.Router();
 const productController = require('../controllers/productController');
-const { protect, authorize, checkVendorApproval, verifyVendor } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
 const { uploadMultiple, handleUploadError } = require('../middleware/upload');
+const Vendor = require('../models/Vendor');
+
+// Simple middleware to attach vendor without any approval checks
+const attachVendor = async (req, res, next) => {
+  try {
+    const vendor = await Vendor.findOne({ user: req.user._id });
+    if (!vendor) {
+      return res.status(404).json({
+        success: false,
+        message: 'Vendor profile not found'
+      });
+    }
+    req.vendor = vendor;
+    next();
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Error finding vendor' });
+  }
+};
 
 // =================================================================
 // PROTECTED ROUTES (VENDOR ONLY)
@@ -19,8 +37,7 @@ router.post(
   '/',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   uploadMultiple('images', 5),
   handleUploadError,
   productController.createProduct
@@ -31,8 +48,7 @@ router.get(
   '/',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   productController.getVendorProducts
 );
 
@@ -41,8 +57,7 @@ router.get(
   '/:productId',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   productController.getProduct
 );
 
@@ -51,8 +66,7 @@ router.put(
   '/:productId',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   uploadMultiple('images', 5),
   handleUploadError,
   productController.updateProduct
@@ -63,8 +77,7 @@ router.delete(
   '/:productId/images/:publicId',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   productController.deleteProductImage
 );
 
@@ -73,8 +86,7 @@ router.delete(
   '/:productId',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   productController.deleteProduct
 );
 
@@ -83,8 +95,7 @@ router.patch(
   '/:productId/stock',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   productController.updateStock
 );
 
@@ -93,8 +104,7 @@ router.patch(
   '/:productId/toggle',
   protect,
   authorize('vendor'),
-  checkVendorApproval,
-  verifyVendor,
+  attachVendor,
   productController.toggleProductStatus
 );
 

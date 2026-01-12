@@ -149,14 +149,11 @@ const userSchema = new mongoose.Schema(
     },
 
     // VENDOR APPROVAL STATUS
-    // For vendors only - requires admin approval before they can access dashboard
+    // Auto-approved - no admin verification required
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: function() {
-        // Only vendors need approval, everyone else is auto-approved
-        return this.roles && this.roles.includes('vendor') ? 'pending' : 'approved';
-      }
+      default: 'approved'
     },
     approvedBy: {
       type: mongoose.Schema.Types.ObjectId,
