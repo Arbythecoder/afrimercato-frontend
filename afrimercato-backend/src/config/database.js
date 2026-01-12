@@ -26,9 +26,6 @@ const mongoose = require('mongoose');
  */
 const connectDB = async () => {
   try {
-    // Disable buffering to get immediate errors instead of timeouts
-    mongoose.set('bufferCommands', false);
-
     // MongoDB connection options
     const options = {
       serverSelectionTimeoutMS: 30000, // Increased to 30 seconds

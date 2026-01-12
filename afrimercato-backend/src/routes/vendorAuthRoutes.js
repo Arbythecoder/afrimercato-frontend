@@ -17,9 +17,8 @@ const {
 // Import middleware
 const { loginLimiter } = require('../middleware/rateLimit');
 const {
-  validateVendorRegistration,
-  validateLogin,
-  validateOTP
+  validateRegister,
+  validateLogin
 } = require('../middleware/validator');
 
 // @route   POST /api/vendor/register
