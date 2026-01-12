@@ -6,7 +6,7 @@
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 const { asyncHandler } = require('../middleware/errorHandler');
-const { sendEmail } = require('../utils/email');
+const { sendEmail } = require('../utils/emailService');
 const { generateOTP } = require('../utils/otp');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');

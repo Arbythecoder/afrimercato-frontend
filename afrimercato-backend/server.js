@@ -220,6 +220,11 @@ app.get('/api/vendors/:id', (req, res) => {
   res.redirect(308, `/api/location/vendor/${req.params.id}`);
 });
 
+// Subscription & Rider management routes
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/rider/stores', riderStoreRoutes);
+app.use('/api/vendor/riders', vendorRiderRoutes);
+
 // Admin & Payment routes
 app.use('/api/admin', adminRoutes);
 app.use('/api/admin/vendors', adminVendorRoutes);
