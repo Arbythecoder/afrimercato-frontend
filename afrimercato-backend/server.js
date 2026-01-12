@@ -21,6 +21,7 @@ const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 const authRoutes = require('./src/routes/authRoutes');
 const otpRoutes = require('./src/routes/otpRoutes');
 const vendorRoutes = require('./src/routes/vendorRoutes');
+const vendorAuthRoutes = require('./src/routes/vendorAuthRoutes');
 const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
 const riderAuthRoutes = require('./src/routes/riderAuthRoutes');
 const riderStoreRoutes = require('./src/routes/riderStoreRoutes');
@@ -140,6 +141,8 @@ app.get('/api/health', (_req, res) => {
 // Auth
 app.use('/api/auth', authRoutes);
 app.use('/api/auth/otp', otpRoutes);
+app.use('/api/vendor/auth', vendorAuthRoutes);
+app.use('/api/rider/auth', riderAuthRoutes);
 
 // Vendor & customer
 app.use('/api/vendor', vendorRoutes);
