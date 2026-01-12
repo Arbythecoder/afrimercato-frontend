@@ -332,7 +332,7 @@ function Dashboard() {
       {/* Quick Action: Add Product Button */}
       <div className="flex justify-between items-center">
         <Link
-          to="/products"
+          to="/vendor/products"
           className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-afri-green to-emerald-600 text-white rounded-2xl shadow-2xl hover:shadow-3xl transform transition-all duration-300 hover:scale-[1.02] font-bold text-lg group"
         >
           <svg className="w-6 h-6 group-hover:rotate-90 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -535,7 +535,7 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">Top Products</h3>
-            <Link to="/products" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>
+            <Link to="/vendor/products" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>
           </div>
           <div className="space-y-4">
             {(stats?.topProducts || []).slice(0, 5).map((product, index) => (
@@ -597,7 +597,7 @@ function Dashboard() {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Link to="/products" className="group relative bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+        <Link to="/vendor/products" className="group relative bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity"></div>
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
           <div className="relative z-10 flex items-center justify-between">
