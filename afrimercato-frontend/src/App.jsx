@@ -187,7 +187,7 @@ function AppContent() {
         }
       />
       <Route
-        path="/products"
+        path="/vendor/products"
         element={
           isAuthenticated ? (
             user?.role === 'vendor' ? (

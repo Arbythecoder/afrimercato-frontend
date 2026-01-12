@@ -430,6 +430,121 @@ exports.validateBulkStock = [
 ];
 
 // =================================================================
+// VENDOR REGISTRATION VALIDATION RULES
+// =================================================================
+exports.validateVendorRegistration = [
+  // Personal Information
+  body('fullName')
+    .trim()
+    .notEmpty()
+    .withMessage('Full name is required')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Full name must be between 2 and 100 characters'),
+
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email address')
+    .normalizeEmail(),
+
+  body('phone')
+    .trim()
+    .notEmpty()
+    .withMessage('Phone number is required')
+    .matches(/^[0-9+\-\s()]+$/)
+    .withMessage('Invalid phone number format'),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
+
+  // Store Information
+  body('storeName')
+    .trim()
+    .notEmpty()
+    .withMessage('Store name is required')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('Store name must be between 2 and 100 characters'),
+
+  body('storeDescription')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Store description cannot exceed 500 characters'),
+
+  body('category')
+    .notEmpty()
+    .withMessage('Business category is required')
+    .isIn([
+      'fresh-produce',
+      'groceries',
+      'meat-fish',
+      'bakery',
+      'beverages',
+      'household',
+      'beauty-health',
+      'other'
+    ])
+    .withMessage('Invalid business category'),
+
+  // Address validation
+  body('address')
+    .notEmpty()
+    .withMessage('Address is required'),
+
+  body('address.street')
+    .trim()
+    .notEmpty()
+    .withMessage('Street address is required'),
+
+  body('address.city')
+    .trim()
+    .notEmpty()
+    .withMessage('City is required'),
+
+  body('address.state')
+    .optional({ checkFalsy: true })
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('State cannot exceed 50 characters'),
+
+  body('address.postalCode')
+    .optional({ checkFalsy: true })
+    .trim(),
+
+  body('address.country')
+    .optional({ checkFalsy: true })
+    .trim(),
+
+  validate
+];
+
+// =================================================================
+// OTP VERIFICATION VALIDATION RULES
+// =================================================================
+exports.validateOTP = [
+  body('userId')
+    .notEmpty()
+    .withMessage('User ID is required')
+    .isMongoId()
+    .withMessage('Invalid user ID format'),
+
+  body('otp')
+    .notEmpty()
+    .withMessage('OTP code is required')
+    .isLength({ min: 6, max: 6 })
+    .withMessage('OTP must be 6 digits')
+    .matches(/^[0-9]{6}$/)
+    .withMessage('OTP must contain only numbers'),
+
+  validate
+];
+
+// =================================================================
 // RIDER REGISTRATION VALIDATION RULES (Per SRS 2.1.4.1)
 // =================================================================
 exports.validateRiderRegistration = [

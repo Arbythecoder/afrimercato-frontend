@@ -7,6 +7,9 @@ const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+
+// Passport OAuth configuration
+require('./src/config/passport');
 const passport = require('passport');
 
 // DB & socket
