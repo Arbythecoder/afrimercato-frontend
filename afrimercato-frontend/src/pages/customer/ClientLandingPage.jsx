@@ -153,18 +153,16 @@ export default function ClientLandingPage() {
               >
                 Log in
               </Link>
-              <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                <Link
-                  to="/register"
-                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all"
-                >
-                  <span className="hidden sm:inline">Sign Up</span>
-                  <span className="sm:hidden">Join</span>
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                </Link>
-              </motion.div>
+              <Link
+                to="/register"
+                className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
+              >
+                <span className="hidden sm:inline">Sign Up</span>
+                <span className="sm:hidden">Join</span>
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+              </Link>
 
               {/* Mobile Menu Button */}
               <button
