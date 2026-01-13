@@ -336,7 +336,7 @@ function Register() {
 
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number
+                Phone Number (UK/Ireland)
               </label>
               <input
                 id="phone"
@@ -346,9 +346,9 @@ function Register() {
                 value={formData.phone}
                 onChange={handleChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                placeholder="+44 7700 900000"
+                placeholder="+44 7700 900000 or +353 85 123 4567"
               />
-              <p className="text-xs text-gray-500 mt-1">Used for OTP verification & order updates</p>
+              <p className="text-xs text-gray-500 mt-1">UK: +44 7xxx xxxxxx | Ireland: +353 8x xxx xxxx</p>
             </div>
 
             <div>

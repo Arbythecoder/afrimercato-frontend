@@ -16,17 +16,10 @@ const categories = [
 
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
+// STRICT: Only UK and Ireland allowed for vendors
 const countries = [
-  { code: 'GB', name: 'United Kingdom', region: 'Europe' },
-  { code: 'US', name: 'United States', region: 'North America' },
-  { code: 'CA', name: 'Canada', region: 'North America' },
-  { code: 'DE', name: 'Germany', region: 'Europe' },
-  { code: 'FR', name: 'France', region: 'Europe' },
-  { code: 'ES', name: 'Spain', region: 'Europe' },
-  { code: 'IT', name: 'Italy', region: 'Europe' },
-  { code: 'NL', name: 'Netherlands', region: 'Europe' },
-  { code: 'BE', name: 'Belgium', region: 'Europe' },
-  { code: 'IE', name: 'Ireland', region: 'Europe' },
+  { code: 'GB', name: 'United Kingdom', region: 'Europe', phoneCodes: ['+44'], postcodeFormat: 'UK Postcode (e.g., SW1A 1AA)' },
+  { code: 'IE', name: 'Ireland', region: 'Europe', phoneCodes: ['+353'], postcodeFormat: 'Eircode (e.g., D02 AF30)' },
 ]
 
 function Settings() {
@@ -35,8 +28,7 @@ function Settings() {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [postcodeLoading, setPostcodeLoading] = useState(false)
-  const [addressSuggestions, setAddressSuggestions] = useState([])
-  const [showAddressSuggestions, setShowAddressSuggestions] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({})
 
   const [vendorProfile, setVendorProfile] = useState({
     storeName: '',
@@ -132,34 +124,83 @@ function Settings() {
     setPasswordData((prev) => ({ ...prev, [field]: value }))
   }
 
+  // Validate UK/Ireland phone number
+  const validatePhone = (phone, country) => {
+    if (!phone) return true // Optional field
+
+    const cleanPhone = phone.replace(/\s/g, '')
+
+    if (country === 'United Kingdom') {
+      // UK: +44 followed by 10 digits, or 07xxx xxxxxx (11 digits)
+      const ukPattern = /^(\+44|0)[1-9]\d{9}$/
+      return ukPattern.test(cleanPhone)
+    } else if (country === 'Ireland') {
+      // Ireland: +353 followed by 9 digits, or 08x xxx xxxx
+      const iePattern = /^(\+353|0)[1-9]\d{8}$/
+      return iePattern.test(cleanPhone)
+    }
+    return true
+  }
+
+  // Validate UK/Ireland postcode
+  const validatePostcode = (postcode, country) => {
+    if (!postcode) return false
+
+    const cleanPostcode = postcode.replace(/\s/g, '').toUpperCase()
+
+    if (country === 'United Kingdom') {
+      // UK postcode format
+      const ukPattern = /^[A-Z]{1,2}\d{1,2}[A-Z]?\d[A-Z]{2}$/
+      return ukPattern.test(cleanPostcode)
+    } else if (country === 'Ireland') {
+      // Ireland Eircode format
+      const iePattern = /^[A-Z]\d{2}[A-Z0-9]{4}$/
+      return iePattern.test(cleanPostcode)
+    }
+    return false
+  }
+
   const lookupPostcode = async () => {
     const postcode = vendorProfile.address?.postalCode?.trim()
+    const country = vendorProfile.address?.country || 'United Kingdom'
 
     if (!postcode) {
       warning('Please enter a postcode first')
       return
     }
 
+    // Validate postcode format first
+    if (!validatePostcode(postcode, country)) {
+      warning(`Invalid ${country === 'United Kingdom' ? 'UK postcode' : 'Eircode'} format`)
+      return
+    }
+
     try {
       setPostcodeLoading(true)
-      // Using free UK postcode lookup API
-      const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
-      const data = await response.json()
 
-      if (data.status === 200 && data.result) {
-        const result = data.result
-        // Auto-fill city and county
-        setVendorProfile((prev) => ({
-          ...prev,
-          address: {
-            ...prev.address,
-            city: result.admin_district || result.postcode_area || '',
-            state: result.admin_county || result.region || '',
-          },
-        }))
-        success('Address details filled! Please enter your street address.')
+      if (country === 'United Kingdom') {
+        // Using free UK postcode lookup API
+        const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
+        const data = await response.json()
+
+        if (data.status === 200 && data.result) {
+          const result = data.result
+          // Auto-fill city and county
+          setVendorProfile((prev) => ({
+            ...prev,
+            address: {
+              ...prev.address,
+              city: result.admin_district || result.postcode_area || '',
+              state: result.admin_county || result.region || '',
+            },
+          }))
+          success('Address details filled! Please enter your street address.')
+        } else {
+          warning('Postcode not found. Please check and try again.')
+        }
       } else {
-        warning('Postcode not found. Please check and try again.')
+        // Ireland - manual entry (no free API available)
+        warning('Eircode verified! Please enter your address details manually.')
       }
     } catch (err) {
       console.error('Postcode lookup error:', err)
@@ -170,11 +211,51 @@ function Settings() {
   }
 
   const saveVendorProfile = async () => {
+    // Validate before saving
+    const errors = {}
+    const country = vendorProfile.address?.country || 'United Kingdom'
+
+    // Validate phone numbers
+    if (vendorProfile.phone && !validatePhone(vendorProfile.phone, country)) {
+      errors.phone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number. Format: ${country === 'United Kingdom' ? '+44 7xxx xxxxxx or 07xxx xxxxxx' : '+353 8x xxx xxxx or 08x xxx xxxx'}`
+    }
+    if (vendorProfile.alternativePhone && !validatePhone(vendorProfile.alternativePhone, country)) {
+      errors.alternativePhone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number`
+    }
+
+    // Validate postcode
+    if (vendorProfile.address?.postalCode && !validatePostcode(vendorProfile.address.postalCode, country)) {
+      errors.postalCode = `Invalid ${country === 'United Kingdom' ? 'UK postcode' : 'Eircode'} format`
+    }
+
+    // Validate required fields
+    if (!vendorProfile.storeName?.trim()) {
+      errors.storeName = 'Store name is required'
+    }
+    if (!vendorProfile.address?.street?.trim()) {
+      errors.street = 'Street address is required'
+    }
+    if (!vendorProfile.address?.city?.trim()) {
+      errors.city = 'City is required'
+    }
+    if (!vendorProfile.address?.postalCode?.trim()) {
+      errors.postalCode = 'Postcode is required'
+    }
+
+    setValidationErrors(errors)
+
+    if (Object.keys(errors).length > 0) {
+      const errorMessages = Object.values(errors).join('\n')
+      error(`Please fix the following errors:\n\n${errorMessages}`)
+      return
+    }
+
     try {
       setSaving(true)
       const response = await vendorAPI.updateProfile(vendorProfile)
       if (response.success) {
         success('Vendor profile updated successfully!')
+        setValidationErrors({})
       }
     } catch (err) {
       error(err.response?.data?.message || 'Failed to update vendor profile')
@@ -326,23 +407,52 @@ function Settings() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Primary Phone</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Primary Phone *
+                  <span className="text-xs font-normal text-gray-500 ml-2">
+                    {vendorProfile.address?.country === 'Ireland' ? '(e.g., +353 85 123 4567 or 085 123 4567)' : '(e.g., +44 7700 900000 or 07700 900000)'}
+                  </span>
+                </label>
                 <input
                   type="tel"
                   value={vendorProfile.phone}
-                  onChange={(e) => handleVendorChange('phone', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    handleVendorChange('phone', e.target.value)
+                    if (validationErrors.phone) {
+                      setValidationErrors(prev => ({ ...prev, phone: undefined }))
+                    }
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                    validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                  placeholder={vendorProfile.address?.country === 'Ireland' ? '+353 85 123 4567' : '+44 7700 900000'}
                 />
+                {validationErrors.phone && (
+                  <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.phone}</p>
+                )}
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Alternative Phone</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Alternative Phone (Optional)
+                </label>
                 <input
                   type="tel"
                   value={vendorProfile.alternativePhone || ''}
-                  onChange={(e) => handleVendorChange('alternativePhone', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    handleVendorChange('alternativePhone', e.target.value)
+                    if (validationErrors.alternativePhone) {
+                      setValidationErrors(prev => ({ ...prev, alternativePhone: undefined }))
+                    }
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                    validationErrors.alternativePhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                  }`}
+                  placeholder={vendorProfile.address?.country === 'Ireland' ? '+353 85 123 4567' : '+44 7700 900000'}
                 />
+                {validationErrors.alternativePhone && (
+                  <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.alternativePhone}</p>
+                )}
               </div>
             </div>
           </div>

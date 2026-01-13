@@ -142,6 +142,15 @@ function ProductCreationForm({ product, onClose, onSave }) {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+
+    // Clear error for this field when user starts typing
+    if (errors[name]) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -162,6 +171,15 @@ function ProductCreationForm({ product, onClose, onSave }) {
     }
 
     setImages(prev => [...prev, ...files]);
+
+    // Clear image error if it exists
+    if (errors.images) {
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.images;
+        return newErrors;
+      });
+    }
 
     // Create previews
     files.forEach(file => {
@@ -212,6 +230,33 @@ function ProductCreationForm({ product, onClose, onSave }) {
     }));
   };
 
+  const validateStep = (step) => {
+    const newErrors = {};
+
+    if (step === 1) {
+      if (!formData.name.trim()) newErrors.name = 'Product name is required (3-100 chars)';
+      if (!formData.description.trim() || formData.description.length < 10) {
+        newErrors.description = 'Description is required (10-500 chars)';
+      }
+      if (!formData.category.trim()) newErrors.category = 'Category is required';
+    }
+
+    if (step === 2) {
+      if (images.length === 0 && imagePreviews.length === 0) {
+        newErrors.images = 'At least 1 image is required (max 5)';
+      }
+    }
+
+    if (step === 3) {
+      if (!formData.price || formData.price <= 0) newErrors.price = 'Valid price is required';
+      if ((!formData.stock || formData.stock <= 0) && !formData.unlimitedStock) {
+        newErrors.stock = 'Stock quantity is required (or check Unlimited Stock)';
+      }
+    }
+
+    return newErrors;
+  };
+
   const validate = () => {
     const newErrors = {};
 
@@ -224,7 +269,9 @@ function ProductCreationForm({ product, onClose, onSave }) {
     if (images.length === 0 && imagePreviews.length === 0) {
       newErrors.images = 'At least 1 image is required (max 5)';
     }
-    if (!formData.stock && !formData.unlimitedStock) newErrors.stock = 'Stock quantity is required';
+    if ((!formData.stock || formData.stock <= 0) && !formData.unlimitedStock) {
+      newErrors.stock = 'Stock quantity is required (or check Unlimited Stock)';
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -234,7 +281,15 @@ function ProductCreationForm({ product, onClose, onSave }) {
     e.preventDefault();
 
     if (!validate()) {
-      alert('Please fix the errors in the form');
+      // Show specific errors in alert
+      const errorMessages = Object.entries(errors).map(([field, msg]) => `${field}: ${msg}`).join('\n');
+      alert(`Please fix the following errors:\n\n${errorMessages}`);
+
+      // Jump to first error step
+      if (errors.name || errors.description || errors.category) setCurrentStep(1);
+      else if (errors.images) setCurrentStep(2);
+      else if (errors.price || errors.stock) setCurrentStep(3);
+
       return;
     }
 
@@ -290,55 +345,55 @@ function ProductCreationForm({ product, onClose, onSave }) {
   ];
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="bg-white rounded-xl shadow-2xl max-w-4xl w-full my-8"
+        className="bg-white rounded-lg sm:rounded-xl shadow-2xl max-w-4xl w-full my-4 sm:my-8"
       >
-        {/* Header */}
-        <div className="flex justify-between items-center p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-800">
+        {/* Header - Mobile Optimized */}
+        <div className="flex justify-between items-center p-4 sm:p-6 border-b">
+          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">
             {product ? 'Edit Product' : 'Create New Product'}
           </h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition"
+            className="p-2 hover:bg-gray-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
-            <FiX className="w-6 h-6" />
+            <FiX className="w-5 h-5 sm:w-6 sm:h-6" />
           </button>
         </div>
 
-        {/* Progress Steps */}
-        <div className="px-6 py-4 border-b bg-gray-50">
-          <div className="flex justify-between items-center">
+        {/* Progress Steps - Mobile Optimized */}
+        <div className="px-3 sm:px-6 py-3 sm:py-4 border-b bg-gray-50 overflow-x-auto">
+          <div className="flex justify-between items-center min-w-max sm:min-w-0">
             {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center flex-1">
+              <div key={step.id} className="flex items-center flex-1 min-w-fit">
                 <div className="flex items-center">
                   <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold ${
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold ${
                       currentStep >= step.id
                         ? 'bg-green-500 text-white'
                         : 'bg-gray-200 text-gray-600'
                     }`}
                   >
-                    {currentStep > step.id ? <FiCheck /> : step.id}
+                    {currentStep > step.id ? <FiCheck className="w-3 h-3 sm:w-4 sm:h-4" /> : step.id}
                   </div>
-                  <span className={`ml-2 text-sm ${currentStep >= step.id ? 'text-green-600 font-semibold' : 'text-gray-500'}`}>
+                  <span className={`ml-1 sm:ml-2 text-xs sm:text-sm whitespace-nowrap ${currentStep >= step.id ? 'text-green-600 font-semibold' : 'text-gray-500'}`}>
                     {step.name}
                   </span>
                 </div>
                 {index < steps.length - 1 && (
-                  <div className={`flex-1 h-1 mx-4 ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'}`} />
+                  <div className={`flex-1 h-1 mx-2 sm:mx-4 min-w-[20px] ${currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'}`} />
                 )}
               </div>
             ))}
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6">
-          <div className="max-h-[60vh] overflow-y-auto">
+        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+          <div className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
             {/* STEP 1: BASIC INFO */}
             {currentStep === 1 && (
               <motion.div
@@ -355,11 +410,13 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                      errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="e.g., Organic Cherry Tomatoes"
                     maxLength={100}
                   />
-                  {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name}</p>}
+                  {errors.name && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.name}</p>}
                 </div>
 
                 <div>
@@ -371,12 +428,16 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     value={formData.description}
                     onChange={handleChange}
                     rows={4}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                      errors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="Fresh organic cherry tomatoes grown in Ireland. Sweet and juicy, perfect for salads."
                     maxLength={500}
                   />
-                  <p className="text-sm text-gray-500 mt-1">{formData.description.length}/500 characters</p>
-                  {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description}</p>}
+                  <p className={`text-sm mt-1 ${formData.description.length < 10 ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>
+                    {formData.description.length}/500 characters {formData.description.length < 10 && '(minimum 10)'}
+                  </p>
+                  {errors.description && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.description}</p>}
                 </div>
 
                 <div>
@@ -389,7 +450,9 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     value={formData.category}
                     onChange={handleChange}
                     list="category-suggestions"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
+                      errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                     placeholder="e.g., Fresh Produce, Bakery, Meat & Seafood..."
                     maxLength={50}
                   />
@@ -399,7 +462,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     ))}
                   </datalist>
                   <p className="text-sm text-gray-500 mt-1">Type your category or select from suggestions</p>
-                  {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category}</p>}
+                  {errors.category && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.category}</p>}
                 </div>
               </motion.div>
             )}
@@ -454,10 +517,10 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     )}
                   </div>
 
-                  <p className="text-sm text-gray-500">
-                    First image will be the main product image. Drag to reorder (coming soon).
+                  <p className={`text-sm ${errors.images ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+                    {errors.images ? '⚠️ At least 1 image is required!' : 'First image will be the main product image. Drag to reorder (coming soon).'}
                   </p>
-                  {errors.images && <p className="text-red-500 text-sm mt-1">{errors.images}</p>}
+                  {errors.images && <p className="text-red-500 text-sm mt-2 font-semibold bg-red-50 p-3 rounded-lg">{errors.images}</p>}
                 </div>
               </motion.div>
             )}
@@ -481,10 +544,12 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       onChange={handleChange}
                       step="0.01"
                       min="0.01"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+                        errors.price ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                       placeholder="2.99"
                     />
-                    {errors.price && <p className="text-red-500 text-sm mt-1">{errors.price}</p>}
+                    {errors.price && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.price}</p>}
                   </div>
 
                   <div>
@@ -553,10 +618,13 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       onChange={handleChange}
                       min="0"
                       disabled={formData.unlimitedStock}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 disabled:bg-gray-100"
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${
+                        formData.unlimitedStock ? 'bg-gray-100 border-gray-300' :
+                        errors.stock ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                       placeholder="50"
                     />
-                    {errors.stock && <p className="text-red-500 text-sm mt-1">{errors.stock}</p>}
+                    {errors.stock && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.stock}</p>}
                   </div>
 
                   <div>
@@ -798,7 +866,19 @@ function ProductCreationForm({ product, onClose, onSave }) {
               {currentStep < 5 ? (
                 <button
                   type="button"
-                  onClick={() => setCurrentStep(prev => Math.min(5, prev + 1))}
+                  onClick={() => {
+                    // Validate current step before proceeding
+                    const stepErrors = validateStep(currentStep);
+                    if (Object.keys(stepErrors).length > 0) {
+                      setErrors(stepErrors);
+                      const errorMessages = Object.entries(stepErrors).map(([field, msg]) => `${field}: ${msg}`).join('\n');
+                      alert(`Please fix the following before continuing:\n\n${errorMessages}`);
+                      return;
+                    }
+                    // Clear errors and move to next step
+                    setErrors({});
+                    setCurrentStep(prev => Math.min(5, prev + 1));
+                  }}
                   className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
                 >
                   Next
