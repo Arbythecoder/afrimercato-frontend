@@ -180,30 +180,17 @@ exports.validateProduct = [
     .withMessage('Price must be a positive number'),
 
   body('category')
+    .trim()
     .notEmpty()
     .withMessage('Category is required')
-    .isIn([
-      'fruits',
-      'vegetables',
-      'grains',
-      'dairy',
-      'meat',
-      'fish',
-      'poultry',
-      'bakery',
-      'beverages',
-      'spices',
-      'snacks',
-      'household',
-      'beauty',
-      'other'
-    ])
-    .withMessage('Invalid category'),
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Category must be between 2 and 50 characters'),
 
   body('unit')
+    .trim()
     .notEmpty()
     .withMessage('Unit is required')
-    .isIn(['kg', 'g', 'lb', 'piece', 'bunch', 'pack', 'liter', 'ml', 'dozen'])
+    .isIn(['kg', 'g', 'lb', 'oz', 'l', 'ml', 'pint', 'piece', 'pack', 'bunch', 'bag', 'box', 'tray', 'liter', 'dozen'])
     .withMessage('Invalid unit'),
 
   body('stock')
