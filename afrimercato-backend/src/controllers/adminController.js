@@ -8,6 +8,10 @@ const User = require('../models/User');
 const Order = require('../models/Order');
 const Product = require('../models/Product');
 const { asyncHandler } = require('../middleware/errorHandler');
+const {
+  sendVendorApprovalEmail,
+  sendVendorRejectionEmail
+} = require('../utils/emailService');
 
 // =================================================================
 // VENDOR USER ACCOUNT MANAGEMENT (User-level approval)
@@ -86,7 +90,10 @@ exports.approveVendorAccount = asyncHandler(async (req, res) => {
     );
   }
 
-  // TODO: Send email notification to vendor
+  // Send email notification to vendor
+  if (vendor) {
+    await sendVendorApprovalEmail(user.email, vendor.storeName, 'Your vendor account has been approved');
+  }
 
   res.status(200).json({
     success: true,
@@ -139,7 +146,11 @@ exports.rejectVendorAccount = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  // TODO: Send email notification to vendor
+  // Send email notification to vendor
+  const vendor = await Vendor.findOne({ user: user._id });
+  if (vendor) {
+    await sendVendorRejectionEmail(user.email, vendor.storeName, reason);
+  }
 
   res.status(200).json({
     success: true,
@@ -243,7 +254,8 @@ exports.approveVendor = asyncHandler(async (req, res) => {
 
   await vendor.save();
 
-  // TODO: Send email notification to vendor
+  // Send email notification to vendor
+  await sendVendorApprovalEmail(vendor.user.email || vendor.email, vendor.storeName, note);
 
   res.status(200).json({
     success: true,
@@ -283,7 +295,8 @@ exports.rejectVendor = asyncHandler(async (req, res) => {
 
   await vendor.save();
 
-  // TODO: Send email notification to vendor
+  // Send email notification to vendor
+  await sendVendorRejectionEmail(vendor.user.email || vendor.email, vendor.storeName, reason);
 
   res.status(200).json({
     success: true,

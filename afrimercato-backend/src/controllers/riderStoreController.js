@@ -6,7 +6,9 @@
 
 const Rider = require('../models/Rider');
 const Vendor = require('../models/Vendor');
+const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { sendVendorRiderRequestEmail } = require('../utils/emailService');
 
 // =================================================================
 // @route   GET /api/rider/stores/nearby
@@ -231,8 +233,11 @@ exports.requestConnection = asyncHandler(async (req, res) => {
 
   await rider.save();
 
-  // TODO: Send notification to vendor about new connection request
-  // This will be implemented when we add notification system
+  // Send notification to vendor about new connection request
+  const vendorUser = await User.findById(vendor.user);
+  if (vendorUser) {
+    await sendVendorRiderRequestEmail(vendorUser.email, vendor.storeName, rider.fullName);
+  }
 
   res.status(201).json({
     success: true,

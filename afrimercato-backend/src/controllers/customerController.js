@@ -911,4 +911,240 @@ exports.removeFromWishlist = async (req, res) => {
   }
 };
 
+/**
+ * Quick signup/login for checkout (Deliveroo/Just Eat flow)
+ * POST /api/customers/checkout-auth
+ */
+exports.checkoutAuth = async (req, res) => {
+  try {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: errors.array()
+      });
+    }
+
+    const { email, password, firstName, lastName, phone, isSignup } = req.body;
+
+    // Try to login first
+    const user = await User.findOne({
+      email: email.toLowerCase(),
+      role: 'customer'
+    });
+
+    if (user && !isSignup) {
+      // User exists, verify password
+      const isMatch = await bcrypt.compare(password, user.password);
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid email or password'
+        });
+      }
+
+      // Check if account is suspended
+      const customer = await Customer.findOne({ user: user._id });
+      if (customer && customer.status.isSuspended) {
+        return res.status(403).json({
+          success: false,
+          message: 'Your account has been suspended. Please contact support.',
+          suspensionReason: customer.status.suspensionReason
+        });
+      }
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          id: user._id,
+          email: user.email,
+          role: user.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.json({
+        success: true,
+        message: 'Login successful',
+        isNewUser: false,
+        data: {
+          token,
+          user: {
+            id: user._id,
+            name: user.name,
+            email: user.email,
+            role: user.role
+          },
+          customer: {
+            id: customer._id,
+            profile: customer.profile
+          }
+        }
+      });
+    }
+
+    // User doesn't exist or explicit signup, create new account
+    if (!user || isSignup) {
+      if (user && isSignup) {
+        return res.status(400).json({
+          success: false,
+          message: 'Email already registered. Please login instead.'
+        });
+      }
+
+      // Validate signup fields
+      if (!firstName || !lastName || !phone) {
+        return res.status(400).json({
+          success: false,
+          message: 'First name, last name, and phone are required for signup'
+        });
+      }
+
+      // Hash password
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      // Create user account
+      const newUser = new User({
+        name: `${firstName} ${lastName}`,
+        email: email.toLowerCase(),
+        password: hashedPassword,
+        role: 'customer',
+        roles: ['customer'],
+        primaryRole: 'customer',
+        isVerified: true
+      });
+
+      await newUser.save();
+
+      // Create customer profile
+      const newCustomer = new Customer({
+        user: newUser._id,
+        profile: {
+          firstName,
+          lastName,
+          phone
+        },
+        metadata: {
+          source: req.body.source || 'web'
+        }
+      });
+
+      await newCustomer.save();
+
+      // Generate referral code
+      await newCustomer.generateReferralCode();
+
+      // Generate JWT token
+      const token = jwt.sign(
+        {
+          id: newUser._id,
+          email: newUser.email,
+          role: newUser.role
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: '7d' }
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: 'Account created successfully',
+        isNewUser: true,
+        data: {
+          token,
+          user: {
+            id: newUser._id,
+            name: newUser.name,
+            email: newUser.email,
+            role: newUser.role
+          },
+          customer: {
+            id: newCustomer._id,
+            profile: newCustomer.profile,
+            referralCode: newCustomer.metadata.referralCode
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error('Checkout auth error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Authentication failed. Please try again.',
+      error: error.message
+    });
+  }
+};
+
+/**
+ * Sync guest cart to authenticated user
+ * POST /api/customers/sync-cart
+ */
+exports.syncCart = async (req, res) => {
+  try {
+    const { guestCartItems } = req.body;
+
+    if (!guestCartItems || !Array.isArray(guestCartItems)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid cart data'
+      });
+    }
+
+    // Find or create customer
+    const customer = await Customer.findOne({ user: req.user._id });
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Customer profile not found'
+      });
+    }
+
+    // Find or create cart for customer
+    const Cart = require('../models/Cart');
+    let cart = await Cart.findOne({ customer: customer._id, status: 'active' });
+
+    if (!cart) {
+      cart = new Cart({
+        customer: customer._id,
+        items: [],
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      });
+    }
+
+    // Merge guest cart items with authenticated cart
+    for (const guestItem of guestCartItems) {
+      const { productId, quantity, vendorId, price, productSnapshot } = guestItem;
+
+      await cart.addItem({
+        product: productId,
+        vendor: vendorId,
+        quantity,
+        price,
+        productSnapshot
+      });
+    }
+
+    await cart.populate('items.product');
+    await cart.populate('items.vendor', 'businessName');
+
+    res.json({
+      success: true,
+      message: 'Cart synced successfully',
+      data: {
+        cart
+      }
+    });
+  } catch (error) {
+    console.error('Cart sync error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to sync cart',
+      error: error.message
+    });
+  }
+};
+
 module.exports = exports;

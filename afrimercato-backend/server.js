@@ -47,6 +47,9 @@ const adminRoutes = require('./src/routes/adminRoutes');
 const adminVendorRoutes = require('./src/routes/adminVendorRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
 const gdprRoutes = require('./src/routes/gdprRoutes');
+const payoutRoutes = require('./src/routes/payoutRoutes');
+const couponRoutes = require('./src/routes/couponRoutes');
+const ticketRoutes = require('./src/routes/ticketRoutes');
 
 // App init
 const app = express();
@@ -233,6 +236,11 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/admin/vendors', adminVendorRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/gdpr', gdprRoutes);
+
+// Payout, Coupon & Ticket routes
+app.use('/api', payoutRoutes);
+app.use('/api', couponRoutes);
+app.use('/api', ticketRoutes);
 
 // Seeder
 app.use('/api/seed', seedRoutes);

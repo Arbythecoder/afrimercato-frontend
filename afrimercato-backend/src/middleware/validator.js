@@ -776,5 +776,283 @@ exports.validateLocation = [
   validate
 ];
 
+// =================================================================
+// CUSTOMER REGISTRATION VALIDATION RULES
+// =================================================================
+exports.validateCustomerRegistration = [
+  body('email')
+    .trim()
+    .notEmpty()
+    .withMessage('Email is required')
+    .isEmail()
+    .withMessage('Please provide a valid email address')
+    .normalizeEmail(),
+
+  body('password')
+    .notEmpty()
+    .withMessage('Password is required')
+    .isLength({ min: 6 })
+    .withMessage('Password must be at least 6 characters'),
+
+  body('firstName')
+    .trim()
+    .notEmpty()
+    .withMessage('First name is required')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('First name must be between 2 and 50 characters'),
+
+  body('lastName')
+    .trim()
+    .notEmpty()
+    .withMessage('Last name is required')
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters'),
+
+  body('phone')
+    .trim()
+    .notEmpty()
+    .withMessage('Phone number is required')
+    .matches(/^[0-9+\-\s()]+$/)
+    .withMessage('Invalid phone number format'),
+
+  validate
+];
+
+// =================================================================
+// CUSTOMER ADDRESS VALIDATION RULES
+// =================================================================
+exports.validateCustomerAddress = [
+  body('street')
+    .trim()
+    .notEmpty()
+    .withMessage('Street address is required')
+    .isLength({ min: 5, max: 200 })
+    .withMessage('Street address must be between 5 and 200 characters'),
+
+  body('city')
+    .trim()
+    .notEmpty()
+    .withMessage('City is required')
+    .isLength({ min: 2, max: 100 })
+    .withMessage('City must be between 2 and 100 characters'),
+
+  body('postcode')
+    .trim()
+    .notEmpty()
+    .withMessage('Postcode is required'),
+
+  body('apartment')
+    .optional()
+    .trim()
+    .isLength({ max: 50 })
+    .withMessage('Apartment cannot exceed 50 characters'),
+
+  body('deliveryInstructions')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Delivery instructions cannot exceed 500 characters'),
+
+  body('label')
+    .optional()
+    .trim()
+    .isIn(['Home', 'Work', 'Other'])
+    .withMessage('Label must be Home, Work, or Other'),
+
+  body('latitude')
+    .optional()
+    .isFloat({ min: -90, max: 90 })
+    .withMessage('Latitude must be between -90 and 90'),
+
+  body('longitude')
+    .optional()
+    .isFloat({ min: -180, max: 180 })
+    .withMessage('Longitude must be between -180 and 180'),
+
+  validate
+];
+
+// =================================================================
+// CUSTOMER PROFILE UPDATE VALIDATION
+// =================================================================
+exports.validateCustomerProfile = [
+  body('firstName')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('First name must be between 2 and 50 characters'),
+
+  body('lastName')
+    .optional()
+    .trim()
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Last name must be between 2 and 50 characters'),
+
+  body('phone')
+    .optional()
+    .trim()
+    .matches(/^[0-9+\-\s()]+$/)
+    .withMessage('Invalid phone number format'),
+
+  body('dateOfBirth')
+    .optional()
+    .isISO8601()
+    .withMessage('Date of birth must be a valid date'),
+
+  body('gender')
+    .optional()
+    .isIn(['male', 'female', 'other', 'prefer_not_to_say'])
+    .withMessage('Gender must be male, female, other, or prefer_not_to_say'),
+
+  validate
+];
+
+// =================================================================
+// COUPON VALIDATION RULES
+// =================================================================
+exports.validateCoupon = [
+  body('code')
+    .trim()
+    .notEmpty()
+    .withMessage('Coupon code is required')
+    .isLength({ min: 3, max: 50 })
+    .withMessage('Coupon code must be between 3 and 50 characters')
+    .matches(/^[A-Z0-9_-]+$/i)
+    .withMessage('Coupon code can only contain letters, numbers, hyphens and underscores'),
+
+  body('name')
+    .trim()
+    .notEmpty()
+    .withMessage('Coupon name is required')
+    .isLength({ max: 100 })
+    .withMessage('Name cannot exceed 100 characters'),
+
+  body('description')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Description cannot exceed 500 characters'),
+
+  body('discountType')
+    .notEmpty()
+    .withMessage('Discount type is required')
+    .isIn(['percentage', 'fixed', 'free_shipping'])
+    .withMessage('Discount type must be percentage, fixed, or free_shipping'),
+
+  body('discountValue')
+    .notEmpty()
+    .withMessage('Discount value is required')
+    .isFloat({ min: 0 })
+    .withMessage('Discount value must be a positive number'),
+
+  body('validFrom')
+    .notEmpty()
+    .withMessage('Valid from date is required')
+    .isISO8601()
+    .withMessage('Valid from must be a valid date'),
+
+  body('validUntil')
+    .notEmpty()
+    .withMessage('Valid until date is required')
+    .isISO8601()
+    .withMessage('Valid until must be a valid date'),
+
+  body('usageLimit')
+    .optional()
+    .isInt({ min: 1 })
+    .withMessage('Usage limit must be at least 1'),
+
+  body('minPurchase')
+    .optional()
+    .isFloat({ min: 0 })
+    .withMessage('Minimum purchase must be a positive number'),
+
+  validate
+];
+
+exports.validateCouponCode = [
+  body('code')
+    .trim()
+    .notEmpty()
+    .withMessage('Coupon code is required'),
+
+  validate
+];
+
+// =================================================================
+// SUPPORT TICKET VALIDATION RULES
+// =================================================================
+exports.validateTicket = [
+  body('subject')
+    .trim()
+    .notEmpty()
+    .withMessage('Subject is required')
+    .isLength({ min: 5, max: 200 })
+    .withMessage('Subject must be between 5 and 200 characters'),
+
+  body('description')
+    .trim()
+    .notEmpty()
+    .withMessage('Description is required')
+    .isLength({ min: 10, max: 2000 })
+    .withMessage('Description must be between 10 and 2000 characters'),
+
+  body('category')
+    .notEmpty()
+    .withMessage('Category is required')
+    .isIn([
+      'order_issue',
+      'payment_issue',
+      'delivery_issue',
+      'product_quality',
+      'refund_request',
+      'account_issue',
+      'technical_issue',
+      'feedback',
+      'gdpr_request',
+      'other'
+    ])
+    .withMessage('Invalid category'),
+
+  body('priority')
+    .optional()
+    .isIn(['low', 'normal', 'high', 'urgent'])
+    .withMessage('Priority must be low, normal, high, or urgent'),
+
+  body('relatedOrder')
+    .optional()
+    .isMongoId()
+    .withMessage('Invalid order ID'),
+
+  validate
+];
+
+exports.validateTicketMessage = [
+  body('message')
+    .trim()
+    .notEmpty()
+    .withMessage('Message is required')
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Message must be between 1 and 2000 characters'),
+
+  validate
+];
+
+exports.validateTicketFeedback = [
+  body('rating')
+    .notEmpty()
+    .withMessage('Rating is required')
+    .isInt({ min: 1, max: 5 })
+    .withMessage('Rating must be between 1 and 5'),
+
+  body('comment')
+    .optional()
+    .trim()
+    .isLength({ max: 500 })
+    .withMessage('Comment cannot exceed 500 characters'),
+
+  validate
+];
+
 // Export the validate function for custom use
 exports.validate = validate;

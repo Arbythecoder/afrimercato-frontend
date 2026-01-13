@@ -10,6 +10,8 @@ const Rider = require('../models/Rider');
 const Picker = require('../models/Picker');
 const Order = require('../models/Order');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { sendGDPRConfirmationEmail } = require('../utils/emailService');
+const crypto = require('crypto');
 
 /**
  * @route   GET /api/gdpr/export-data

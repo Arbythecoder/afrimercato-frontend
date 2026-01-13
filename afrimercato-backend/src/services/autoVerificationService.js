@@ -158,6 +158,7 @@ const autoVerifyVendor = async (vendorId) => {
 
       await vendor.save();
 
+      // FEATURE CANCELLED: Admin verification system disabled
       // TODO: Send approval email
       // await sendAutoApprovalEmail(vendor.user.email, vendor.storeName);
 
@@ -182,6 +183,7 @@ const autoVerifyVendor = async (vendorId) => {
 
       await vendor.save();
 
+      // FEATURE CANCELLED: Admin verification system disabled
       // TODO: Send approval email + notify admin to monitor
       // await sendAutoApprovalEmail(vendor.user.email, vendor.storeName);
       // await notifyAdminMonitoring(vendor, riskAssessment);
@@ -200,6 +202,7 @@ const autoVerifyVendor = async (vendorId) => {
       vendor.reviewerNotes = `Flagged for manual review. Risk score: ${riskAssessment.score}/100. Reasons: ${riskAssessment.reasons.join(', ')}`;
       await vendor.save();
 
+      // FEATURE CANCELLED: Admin verification system disabled
       // TODO: Notify admin of high-risk application
       // await notifyAdminHighRisk(vendor, riskAssessment);
 

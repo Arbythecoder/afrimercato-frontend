@@ -182,11 +182,12 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
     businessHours: businessHours || undefined,
     bankDetails: bankDetails || undefined,
     
-    // Auto-approval settings
-    approvalStatus: 'pending',
+    // Auto-approval settings - PRODUCTION READY
+    approvalStatus: 'approved', // Auto-approve for launch
     submittedForReviewAt: new Date(),
-    isVerified: false,
-    isPublic: false, // Hidden from customers until approved
+    approvedAt: new Date(),
+    isVerified: true, // Auto-verify for production
+    isPublic: true, // Visible to customers immediately
     isActive: true
   });
 

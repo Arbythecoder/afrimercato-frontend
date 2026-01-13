@@ -6,40 +6,32 @@
 const express = require('express');
 const router = express.Router();
 const customerController = require('../controllers/customerController');
-const { body } = require('express-validator');
 const { protect, authorize } = require('../middleware/auth');
-
-// Validation middleware
-const registerValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters'),
-  body('firstName').notEmpty().trim().withMessage('First name is required'),
-  body('lastName').notEmpty().trim().withMessage('Last name is required'),
-  body('phone').notEmpty().withMessage('Phone number is required')
-];
-
-const loginValidation = [
-  body('email').isEmail().normalizeEmail().withMessage('Please provide a valid email'),
-  body('password').notEmpty().withMessage('Password is required')
-];
-
-const addressValidation = [
-  body('street').notEmpty().withMessage('Street address is required'),
-  body('city').notEmpty().withMessage('City is required'),
-  body('postcode').notEmpty().withMessage('Postcode is required')
-];
+const {
+  validateCustomerRegistration,
+  validateLogin,
+  validateCustomerAddress,
+  validateCustomerProfile
+} = require('../middleware/validator');
 
 // Public routes (no authentication required)
-router.post('/register', registerValidation, customerController.register);
-router.post('/login', loginValidation, customerController.login);
+router.post('/register', validateCustomerRegistration, customerController.register);
+router.post('/login', validateLogin, customerController.login);
+
+// Checkout auth - quick signup/login at checkout (Deliveroo/Just Eat flow)
+// This endpoint handles both signup and login in one request
+router.post('/checkout-auth', customerController.checkoutAuth);
 
 // Protected routes (authentication required)
 router.use(protect); // All routes below require authentication
 router.use(authorize('customer')); // All routes below require customer role
 
+// Cart sync (after checkout auth, sync guest cart to authenticated user)
+router.post('/sync-cart', customerController.syncCart);
+
 // Profile routes
 router.get('/profile', customerController.getProfile);
-router.put('/profile', customerController.updateProfile);
+router.put('/profile', validateCustomerProfile, customerController.updateProfile);
 router.get('/stats', customerController.getStats);
 
 // Dashboard routes
@@ -54,7 +46,7 @@ router.delete('/wishlist/:productId', customerController.removeFromWishlist);
 
 // Address routes
 router.get('/addresses', customerController.getAddresses);
-router.post('/addresses', addressValidation, customerController.addAddress);
+router.post('/addresses', validateCustomerAddress, customerController.addAddress);
 router.put('/addresses/:addressId', customerController.updateAddress);
 router.delete('/addresses/:addressId', customerController.deleteAddress);
 

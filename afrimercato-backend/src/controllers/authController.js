@@ -6,6 +6,7 @@
 const User = require('../models/User');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { sendVendorWelcomeEmail } = require('../emails/vendorEmails');
+const { sendPasswordResetEmail } = require('../utils/emailService');
 
 /**
  * WHAT IS A CONTROLLER?
@@ -358,12 +359,8 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   // Create reset URL
   const resetUrl = `${process.env.CLIENT_URL}/reset-password/${resetToken}`;
 
-  // TODO: Send email
-  // await sendEmail({
-  //   to: user.email,
-  //   subject: 'Password Reset Request',
-  //   text: `Click here to reset your password: ${resetUrl}\n\nThis link expires in 10 minutes.`
-  // });
+  // Send password reset email
+  await sendPasswordResetEmail(user.email, user.name, resetToken);
 
   res.json({
     success: true,

@@ -1,6 +1,12 @@
 /**
  * Shopping Cart Routes
- * Multi-vendor cart like Jumia/Konga
+ * Multi-vendor cart like Jumia/Konga/Deliveroo
+ *
+ * FLOW:
+ * 1. Guest users: Cart stored in frontend (localStorage/session)
+ * 2. At checkout: User must login/signup
+ * 3. After auth: Cart synced to backend
+ *
  * - Add/update/remove items
  * - Apply coupons
  * - Calculate delivery fees
@@ -12,7 +18,7 @@ const router = express.Router();
 const cartController = require('../controllers/cartController');
 const { protect } = require('../middleware/auth');
 
-// All cart routes require authentication
+// All cart routes require authentication (cart is synced at checkout)
 router.use(protect);
 
 // ======================

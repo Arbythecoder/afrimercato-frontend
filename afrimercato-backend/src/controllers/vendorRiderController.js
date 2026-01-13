@@ -7,6 +7,11 @@
 const Vendor = require('../models/Vendor');
 const Rider = require('../models/Rider');
 const { asyncHandler } = require('../middleware/errorHandler');
+const {
+  sendRiderApprovalEmail,
+  sendRiderRejectionEmail,
+  sendRiderRemovalEmail
+} = require('../utils/emailService');
 
 // =================================================================
 // @route   GET /api/vendor/riders/requests
@@ -146,7 +151,11 @@ exports.approveRider = asyncHandler(async (req, res) => {
 
   await rider.save();
 
-  // TODO: Send notification to rider about approval
+  // Send notification to rider about approval
+  const riderUser = await require('../models/User').findById(rider.user);
+  if (riderUser) {
+    await sendRiderApprovalEmail(riderUser.email, rider.fullName, vendor.storeName);
+  }
 
   res.json({
     success: true,
@@ -218,10 +227,15 @@ exports.rejectRider = asyncHandler(async (req, res) => {
 
   // Reject the connection
   connection.status = 'rejected';
+  connection.rejectionReason = reason;
 
   await rider.save();
 
-  // TODO: Send notification to rider about rejection
+  // Send notification to rider about rejection
+  const riderUser = await require('../models/User').findById(rider.user);
+  if (riderUser) {
+    await sendRiderRejectionEmail(riderUser.email, rider.fullName, vendor.storeName, reason);
+  }
 
   res.json({
     success: true,
@@ -364,7 +378,12 @@ exports.removeRider = asyncHandler(async (req, res) => {
   rider.connectedStores.splice(connectionIndex, 1);
   await rider.save();
 
-  // TODO: Send notification to rider about removal
+  // Send notification to rider about removal
+  const riderUser = await require('../models/User').findById(rider.user);
+  if (riderUser) {
+    await sendRiderRemovalEmail(riderUser.email, rider.fullName, vendor.storeName, reason);
+  }
+
   // TODO: Reassign any active deliveries from this rider
 
   res.json({

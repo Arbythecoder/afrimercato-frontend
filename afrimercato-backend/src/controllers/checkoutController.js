@@ -9,8 +9,10 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Customer = require('../models/Customer');
 const Vendor = require('../models/Vendor');
+const User = require('../models/User');
 const axios = require('axios');
 const crypto = require('crypto');
+const { sendPaymentFailureEmail } = require('../utils/emailService');
 
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 const PAYSTACK_BASE_URL = 'https://api.paystack.co';
@@ -446,12 +448,27 @@ exports.paystackWebhook = async (req, res) => {
 
       case 'charge.failed':
         console.log(`❌ Payment failed: ${event.data.reference}`);
-        // TODO: Notify customer of failed payment
+        // Notify customer of failed payment
+        const failedOrder = await Order.findOne({ 'payment.reference': event.data.reference }).populate('customer');
+        if (failedOrder && failedOrder.customer) {
+          const customerUser = await User.findById(failedOrder.customer.user);
+          if (customerUser) {
+            await sendPaymentFailureEmail(customerUser.email, customerUser.name, failedOrder.orderNumber);
+          }
+        }
         break;
 
       case 'transfer.success':
         console.log(`💸 Transfer successful: ${event.data.reference}`);
-        // TODO: Update vendor payout status
+        // Update vendor payout status
+        const payoutOrder = await Order.findOne({ 'payment.reference': event.data.reference });
+        if (payoutOrder) {
+          payoutOrder.payment.vendorPaidOut = true;
+          payoutOrder.payment.vendorPayoutDate = new Date();
+          payoutOrder.payment.vendorPayoutReference = event.data.transfer_code || event.data.id;
+          await payoutOrder.save();
+          console.log(`✅ Vendor payout marked for order: ${payoutOrder.orderNumber}`);
+        }
         break;
 
       default:
@@ -603,7 +620,36 @@ exports.cancelOrder = async (req, res) => {
       });
     }
 
-    // TODO: Initiate refund if payment was made
+    // Initiate refund if payment was made
+    if (order.payment.status === 'completed' && order.payment.reference) {
+      try {
+        // Initiate Paystack refund
+        const refundResponse = await axios.post(
+          `${PAYSTACK_BASE_URL}/refund`,
+          {
+            transaction: order.payment.reference,
+            amount: order.pricing.total * 100, // Convert to kobo/cents
+            currency: 'GBP'
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+              'Content-Type': 'application/json'
+            }
+          }
+        );
+
+        if (refundResponse.data.status) {
+          order.payment.refundStatus = 'initiated';
+          order.payment.refundReference = refundResponse.data.data.id;
+          await order.save();
+          console.log(`💰 Refund initiated for order: ${order.orderNumber}`);
+        }
+      } catch (refundError) {
+        console.error('Refund initiation error:', refundError.message);
+        // Continue with cancellation even if refund fails
+      }
+    }
 
     res.json({
       success: true,

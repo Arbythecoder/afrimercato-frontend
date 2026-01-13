@@ -2,6 +2,13 @@
 
 const Vendor = require('../models/Vendor');
 const User = require('../models/User');
+const {
+  sendVendorApprovalEmail,
+  sendVendorRejectionEmail,
+  sendVendorInfoRequestEmail,
+  sendVendorSuspensionEmail,
+  sendVendorReactivationEmail
+} = require('../utils/emailService');
 
 /**
  * Get all pending vendor applications
@@ -171,8 +178,8 @@ exports.approveVendor = async (req, res) => {
 
     await vendor.save();
 
-    // TODO: Send approval email to vendor
-    // await sendApprovalEmail(vendor.user.email, vendor.storeName);
+    // Send approval email to vendor
+    await sendVendorApprovalEmail(vendor.user.email, vendor.storeName, approvalNote);
 
     res.json({
       success: true,
@@ -221,8 +228,8 @@ exports.rejectVendor = async (req, res) => {
 
     await vendor.save();
 
-    // TODO: Send rejection email to vendor
-    // await sendRejectionEmail(vendor.user.email, vendor.storeName, rejectionReason);
+    // Send rejection email to vendor
+    await sendVendorRejectionEmail(vendor.user.email, vendor.storeName, rejectionReason);
 
     res.json({
       success: true,
@@ -269,8 +276,8 @@ exports.requestMoreInfo = async (req, res) => {
 
     await vendor.save();
 
-    // TODO: Send email to vendor requesting more information
-    // await sendRequestInfoEmail(vendor.user.email, vendor.storeName, requestMessage);
+    // Send email to vendor requesting more information
+    await sendVendorInfoRequestEmail(vendor.user.email, vendor.storeName, requestMessage);
 
     res.json({
       success: true,
@@ -318,8 +325,8 @@ exports.suspendVendor = async (req, res) => {
 
     await vendor.save();
 
-    // TODO: Send suspension email to vendor
-    // await sendSuspensionEmail(vendor.user.email, vendor.storeName, suspensionReason);
+    // Send suspension email to vendor
+    await sendVendorSuspensionEmail(vendor.user.email, vendor.storeName, suspensionReason);
 
     res.json({
       success: true,
@@ -367,8 +374,8 @@ exports.reactivateVendor = async (req, res) => {
 
     await vendor.save();
 
-    // TODO: Send reactivation email
-    // await sendReactivationEmail(vendor.user.email, vendor.storeName);
+    // Send reactivation email
+    await sendVendorReactivationEmail(vendor.user.email, vendor.storeName);
 
     res.json({
       success: true,
