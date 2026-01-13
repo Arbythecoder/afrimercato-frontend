@@ -484,19 +484,49 @@ export const requestInvoice = async (invoiceData) => {
 };
 
 // USER PROFILE
+// Note: Use role-specific profile endpoints instead:
+// - Vendors: getVendorProfile() → /vendor/profile
+// - Customers: Use customer endpoints → /customers/*
+// This function is deprecated and should not be used
 export const getUserProfile = async () => {
-  return apiCall('/users/profile');
+  // Try to get user role from token or localStorage
+  const userRole = localStorage.getItem('userRole');
+
+  if (userRole === 'vendor') {
+    return apiCall('/vendor/profile');
+  } else if (userRole === 'customer') {
+    // Return customer dashboard stats as profile substitute
+    return apiCall('/customers/dashboard/stats');
+  }
+
+  // Fallback: Try vendor endpoint first (most common case)
+  try {
+    return await apiCall('/vendor/profile');
+  } catch (error) {
+    // If vendor fails, try customer endpoint
+    return await apiCall('/customers/dashboard/stats');
+  }
 };
 
 export const updateUserProfile = async (profileData) => {
-  return apiCall('/users/profile', {
-    method: 'PATCH',
+  const userRole = localStorage.getItem('userRole');
+
+  if (userRole === 'vendor') {
+    return apiCall('/vendor/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+  }
+
+  // Default to vendor for backwards compatibility
+  return apiCall('/vendor/profile', {
+    method: 'PUT',
     body: JSON.stringify(profileData)
   });
 };
 
 export const changePassword = async (passwordData) => {
-  return apiCall('/users/change-password', {
+  return apiCall('/auth/change-password', {
     method: 'PATCH',
     body: JSON.stringify(passwordData)
   });
