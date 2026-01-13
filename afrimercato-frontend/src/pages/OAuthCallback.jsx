@@ -35,9 +35,9 @@ function OAuthCallback() {
           return
         }
 
-        // Store tokens
-        localStorage.setItem('token', token)
-        localStorage.setItem('refreshToken', refreshToken)
+        // Store tokens with correct key names to match the rest of the app
+        localStorage.setItem('afrimercato_token', token)
+        localStorage.setItem('afrimercato_refresh_token', refreshToken)
 
         // Fetch user data
         const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
