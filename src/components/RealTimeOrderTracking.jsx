@@ -69,7 +69,7 @@ function RealTimeOrderTracking({ orderId, onClose }) {
    */
   const connectSocket = () => {
     const API_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
-    const token = localStorage.getItem('token')
+    const token = localStorage.getItem('afrimercato_token')
 
     socketRef.current = io(API_URL, {
       auth: { token }

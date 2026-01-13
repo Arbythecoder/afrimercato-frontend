@@ -39,7 +39,7 @@ function VendorManagement() {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('afrimercato_token');
       const { data } = await axios.get(`${API_URL}/admin/vendors`, {
         params: { status: filter, search: searchQuery },
         headers: { Authorization: `Bearer ${token}` }
@@ -58,7 +58,7 @@ function VendorManagement() {
 
     try {
       setProcessing(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('afrimercato_token');
       const endpoint = modalAction === 'approve' ? 'approve' :
                       modalAction === 'reject' ? 'reject' : 'suspend';
 

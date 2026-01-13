@@ -31,7 +31,7 @@ function AdminDashboard() {
   const fetchAdminStats = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem('afrimercato_token');
       const { data } = await axios.get(`${API_URL}/admin/stats`, {
         headers: { Authorization: `Bearer ${token}` }
       });
