@@ -170,8 +170,8 @@ exports.validateProduct = [
     .trim()
     .notEmpty()
     .withMessage('Product description is required')
-    .isLength({ max: 2000 })
-    .withMessage('Description cannot exceed 2000 characters'),
+    .isLength({ min: 1, max: 2000 })
+    .withMessage('Description must be between 1 and 2000 characters'),
 
   body('price')
     .notEmpty()
@@ -183,19 +183,18 @@ exports.validateProduct = [
     .trim()
     .notEmpty()
     .withMessage('Category is required')
-    .isLength({ min: 2, max: 50 })
-    .withMessage('Category must be between 2 and 50 characters'),
+    .isLength({ min: 1, max: 100 })
+    .withMessage('Category must be between 1 and 100 characters'),
 
   body('unit')
     .trim()
     .notEmpty()
     .withMessage('Unit is required')
-    .isIn(['kg', 'g', 'lb', 'oz', 'l', 'ml', 'pint', 'piece', 'pack', 'bunch', 'bag', 'box', 'tray', 'liter', 'dozen'])
-    .withMessage('Invalid unit'),
+    .isLength({ min: 1, max: 50 })
+    .withMessage('Unit must be between 1 and 50 characters'),
 
   body('stock')
-    .notEmpty()
-    .withMessage('Stock quantity is required')
+    .optional({ checkFalsy: true })
     .isInt({ min: 0 })
     .withMessage('Stock must be a non-negative integer'),
 

@@ -234,9 +234,9 @@ function ProductCreationForm({ product, onClose, onSave }) {
     const newErrors = {};
 
     if (step === 1) {
-      if (!formData.name.trim()) newErrors.name = 'Product name is required (3-100 chars)';
-      if (!formData.description.trim() || formData.description.length < 10) {
-        newErrors.description = 'Description is required (10-500 chars)';
+      if (!formData.name.trim()) newErrors.name = 'Product name is required';
+      if (!formData.description.trim()) {
+        newErrors.description = 'Description is required';
       }
       if (!formData.category.trim()) newErrors.category = 'Category is required';
     }
@@ -260,16 +260,16 @@ function ProductCreationForm({ product, onClose, onSave }) {
   const validate = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) newErrors.name = 'Product name is required (3-100 chars)';
-    if (!formData.description.trim() || formData.description.length < 10) {
-      newErrors.description = 'Description is required (10-500 chars)';
+    if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
     }
     if (!formData.category.trim()) newErrors.category = 'Category is required';
     if (!formData.price || formData.price <= 0) newErrors.price = 'Valid price is required';
     if (images.length === 0 && imagePreviews.length === 0) {
       newErrors.images = 'At least 1 image is required (max 5)';
     }
-    if ((!formData.stock || formData.stock <= 0) && !formData.unlimitedStock) {
+    if (!formData.unlimitedStock && (!formData.stock || formData.stock <= 0)) {
       newErrors.stock = 'Stock quantity is required (or check Unlimited Stock)';
     }
 
@@ -421,7 +421,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description * (min 10 characters)
+                    Description *
                   </label>
                   <textarea
                     name="description"
@@ -432,10 +432,10 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       errors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
                     }`}
                     placeholder="Fresh organic cherry tomatoes grown in Ireland. Sweet and juicy, perfect for salads."
-                    maxLength={500}
+                    maxLength={2000}
                   />
-                  <p className={`text-sm mt-1 ${formData.description.length < 10 ? 'text-orange-500 font-semibold' : 'text-gray-500'}`}>
-                    {formData.description.length}/500 characters {formData.description.length < 10 && '(minimum 10)'}
+                  <p className="text-sm mt-1 text-gray-500">
+                    {formData.description.length}/2000 characters
                   </p>
                   {errors.description && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.description}</p>}
                 </div>
