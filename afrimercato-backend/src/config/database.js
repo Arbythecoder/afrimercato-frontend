@@ -29,11 +29,13 @@ const connectDB = async () => {
     // MongoDB connection options
     const options = {
       serverSelectionTimeoutMS: 30000, // Increased to 30 seconds
-      socketTimeoutMS: 45000,
+      socketTimeoutMS: 75000, // Increased socket timeout to prevent disconnections
       connectTimeoutMS: 30000, // Increased connection timeout
       family: 4, // Use IPv4, skip trying IPv6
       maxPoolSize: 10,
       minPoolSize: 2,
+      retryWrites: true,
+      retryReads: true,
     };
 
     // Connect to MongoDB

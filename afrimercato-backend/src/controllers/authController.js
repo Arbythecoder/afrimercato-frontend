@@ -94,15 +94,11 @@ exports.register = asyncHandler(async (req, res) => {
     }
   }
 
-  // Send welcome email to vendors immediately (like Uber Eats)
+  // Send welcome email to vendors in background (non-blocking)
   if (user.roles.includes('vendor')) {
-    try {
-      await sendVendorWelcomeEmail(user);
-      console.log(`📧 Welcome email sent to vendor: ${user.email}`);
-    } catch (emailError) {
-      console.error('Failed to send vendor welcome email:', emailError);
-      // Don't fail registration if email fails
-    }
+    sendVendorWelcomeEmail(user).catch(err =>
+      console.error('❌ Failed to send vendor welcome email:', err.message)
+    );
   }
 
   // Generate JWT token for immediate login
