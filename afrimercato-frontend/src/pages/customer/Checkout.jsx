@@ -121,28 +121,28 @@ function Checkout() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <header className="bg-white border-b sticky top-0 z-40 shadow-sm">
-        <div className="container mx-auto px-6 py-4">
+        <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🛒</span>
-              <span className="text-xl font-bold text-gray-900">Afrimercato Checkout</span>
+              <span className="text-xl sm:text-2xl">🛒</span>
+              <span className="text-base sm:text-xl font-bold text-gray-900">Afrimercato Checkout</span>
             </div>
             <button
               onClick={() => navigate(-1)}
-              className="text-gray-600 hover:text-gray-900"
+              className="text-gray-600 hover:text-gray-900 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
-              ⬅️ Back
+              ⬅️ <span className="hidden sm:inline ml-1">Back</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-8">
-        <div className="grid lg:grid-cols-3 gap-8">
+      <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
+        <div className="grid lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left: Checkout Form */}
           <div className="lg:col-span-2">
-            {/* Progress Steps */}
-            <div className="flex items-center justify-between mb-8">
+            {/* Progress Steps - Hidden on mobile for single-page experience */}
+            <div className="hidden sm:flex items-center justify-between mb-8">
               <div className={`flex items-center ${step >= 1 ? 'text-green-600' : 'text-gray-400'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
                   {step > 1 ? '✓' : '1'}
@@ -167,8 +167,8 @@ function Checkout() {
 
             {/* Step 1: Delivery Address */}
             {step === 1 && (
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Delivery Address</h2>
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Delivery Address</h2>
                 <form onSubmit={handleAddressSubmit}>
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
@@ -178,9 +178,10 @@ function Checkout() {
                       <input
                         type="text"
                         required
+                        autoComplete="name"
                         value={address.fullName}
                         onChange={(e) => setAddress({ ...address, fullName: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                         placeholder="John Doe"
                       />
                     </div>
@@ -191,9 +192,11 @@ function Checkout() {
                       <input
                         type="tel"
                         required
+                        autoComplete="tel"
+                        inputMode="tel"
                         value={address.phone}
                         onChange={(e) => setAddress({ ...address, phone: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                         placeholder="+44 7700 900000"
                       />
                     </div>
@@ -208,7 +211,7 @@ function Checkout() {
                       required
                       value={address.street}
                       onChange={(e) => setAddress({ ...address, street: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                       placeholder="123 High Street"
                     />
                   </div>
@@ -221,9 +224,10 @@ function Checkout() {
                       <input
                         type="text"
                         required
+                        autoComplete="address-level2"
                         value={address.city}
                         onChange={(e) => setAddress({ ...address, city: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                         placeholder="London"
                       />
                     </div>
@@ -234,9 +238,10 @@ function Checkout() {
                       <input
                         type="text"
                         required
+                        autoComplete="postal-code"
                         value={address.postcode}
-                        onChange={(e) => setAddress({ ...address, postcode: e.target.value })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                        onChange={(e) => setAddress({ ...address, postcode: e.target.value.toUpperCase() })}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                         placeholder="SW1A 1AA"
                       />
                     </div>
@@ -249,7 +254,7 @@ function Checkout() {
                     <textarea
                       value={address.instructions}
                       onChange={(e) => setAddress({ ...address, instructions: e.target.value })}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                       rows="3"
                       placeholder="e.g., Leave at door, Ring doorbell, etc."
                     ></textarea>
@@ -257,7 +262,7 @@ function Checkout() {
 
                   <button
                     type="submit"
-                    className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold text-lg hover:shadow-lg transition"
+                    className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold text-lg hover:shadow-lg transition min-h-[44px]"
                   >
                     Continue to Payment →
                   </button>
@@ -316,14 +321,14 @@ function Checkout() {
                     <button
                       type="button"
                       onClick={() => setStep(1)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition"
+                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
                     >
                       ← Back
                     </button>
                     <button
                       type="button"
                       onClick={() => setStep(3)}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px]"
                     >
                       Review Order →
                     </button>
@@ -389,14 +394,14 @@ function Checkout() {
                     <button
                       type="button"
                       onClick={() => setStep(2)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition"
+                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
                     >
                       ← Back
                     </button>
                     <button
                       type="submit"
                       disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition disabled:opacity-50"
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition disabled:opacity-50 min-h-[44px]"
                     >
                       {loading ? 'Placing Order...' : `Place Order (£${total.toFixed(2)})`}
                     </button>
@@ -418,6 +423,7 @@ function Checkout() {
                     <img
                       src={item.images?.[0]?.url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'}
                       alt={item.name}
+                      loading="lazy"
                       className="w-16 h-16 object-cover rounded"
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
