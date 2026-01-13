@@ -242,11 +242,9 @@ function Login() {
                 </label>
               </div>
 
-              <motion.div whileHover={{ scale: 1.05 }}>
-                <Link to="/forgot-password" className="text-sm text-afri-green hover:text-afri-green-dark font-medium">
-                  Forgot password?
-                </Link>
-              </motion.div>
+              <Link to="/forgot-password" className="text-sm text-afri-green hover:text-afri-green-dark font-medium transition-transform hover:scale-105">
+                Forgot password?
+              </Link>
             </motion.div>
 
             <motion.button
@@ -345,13 +343,10 @@ function Login() {
               </div>
             </div>
 
-            <motion.div 
-              className="mt-6 text-center"
-              whileHover={{ scale: 1.05 }}
-            >
+            <div className="mt-6 text-center">
               <Link
                 to="/register"
-                className="text-afri-green hover:text-afri-green-dark font-semibold text-base inline-flex items-center"
+                className="text-afri-green hover:text-afri-green-dark font-semibold text-base inline-flex items-center transition-transform hover:scale-105"
               >
                 Create an account
                 <motion.span
@@ -362,7 +357,7 @@ function Login() {
                   →
                 </motion.span>
               </Link>
-            </motion.div>
+            </div>
           </motion.div>
         </motion.div>
 
