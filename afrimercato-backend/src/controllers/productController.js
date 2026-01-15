@@ -17,6 +17,11 @@ exports.createProduct = async (req, res) => {
   try {
     const vendorId = req.vendor._id;
 
+    console.log('📦 Creating product...');
+    console.log('Vendor ID:', vendorId);
+    console.log('Request body:', req.body);
+    console.log('Files:', req.files);
+
     // Get vendor info
     const vendor = await Vendor.findById(vendorId);
     if (!vendor) {
@@ -27,36 +32,59 @@ exports.createProduct = async (req, res) => {
     }
 
     // NO APPROVAL REQUIRED - Vendors can create products immediately after signup
-    // Parse product data
+    // Parse product data from FormData
     const productData = {
-      ...req.body,
       vendor: vendorId,
-      storeName: vendor.storeName || vendor.businessName
+      storeName: vendor.storeName || vendor.businessName,
+      name: req.body.name,
+      description: req.body.description,
+      category: req.body.category,
+      // Convert string numbers to actual numbers
+      price: parseFloat(req.body.price),
+      originalPrice: req.body.originalPrice ? parseFloat(req.body.originalPrice) : undefined,
+      stock: parseInt(req.body.stock || 0),
+      lowStockThreshold: parseInt(req.body.lowStockThreshold || 10),
+      // Convert string booleans to actual booleans
+      inStock: req.body.inStock === 'true' || req.body.inStock === true,
+      unlimitedStock: req.body.unlimitedStock === 'true' || req.body.unlimitedStock === true,
+      unit: req.body.unit,
+      unitQuantity: req.body.unitQuantity ? parseFloat(req.body.unitQuantity) : undefined
     };
 
+    console.log('Parsed product data:', productData);
+
     // Parse variants if sent as JSON string
-    if (typeof productData.variants === 'string') {
+    if (req.body.variants) {
       try {
-        productData.variants = JSON.parse(productData.variants);
+        productData.variants = typeof req.body.variants === 'string'
+          ? JSON.parse(req.body.variants)
+          : req.body.variants;
       } catch (e) {
+        console.error('Error parsing variants:', e);
         productData.variants = [];
       }
     }
 
     // Parse tags if sent as JSON string
-    if (typeof productData.tags === 'string') {
+    if (req.body.tags) {
       try {
-        productData.tags = JSON.parse(productData.tags);
+        productData.tags = typeof req.body.tags === 'string'
+          ? JSON.parse(req.body.tags)
+          : req.body.tags;
       } catch (e) {
+        console.error('Error parsing tags:', e);
         productData.tags = [];
       }
     }
 
     // Parse availability if sent as JSON string
-    if (typeof productData.availability === 'string') {
+    if (req.body.availability) {
       try {
-        productData.availability = JSON.parse(productData.availability);
+        productData.availability = typeof req.body.availability === 'string'
+          ? JSON.parse(req.body.availability)
+          : req.body.availability;
       } catch (e) {
+        console.error('Error parsing availability:', e);
         productData.availability = undefined;
       }
     }
@@ -96,6 +124,12 @@ exports.createProduct = async (req, res) => {
 
   } catch (error) {
     console.error('Create product error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      errors: error.errors,
+      stack: error.stack
+    });
 
     // Clean up uploaded images if product creation fails
     if (req.files && req.files.length > 0) {
@@ -106,6 +140,21 @@ exports.createProduct = async (req, res) => {
           console.error('Error deleting image:', err);
         }
       }
+    }
+
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const validationErrors = Object.values(error.errors).map(err => ({
+        field: err.path,
+        message: err.message,
+        value: err.value
+      }));
+
+      return res.status(400).json({
+        success: false,
+        message: 'Validation failed',
+        errors: validationErrors
+      });
     }
 
     res.status(500).json({
@@ -536,7 +585,7 @@ exports.toggleProductStatus = async (req, res) => {
       vendor: vendorId
     });
 
-    if (!product) {
+    if (!product) { 
       return res.status(404).json({
         success: false,
         message: 'Product not found'

@@ -57,6 +57,8 @@ Visit: https://console.cloud.google.com/
    https://afrimercato-backend.fly.dev/api/auth/google/callback
    ```
 
+
+
 7. Click **"Create"**
 
 ### Step 6: Copy Your Credentials

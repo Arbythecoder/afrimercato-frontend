@@ -53,7 +53,7 @@ if (process.env.CLOUDINARY_CLOUD_NAME &&
     destination: function (req, file, cb) {
       let uploadPath = 'uploads/';
 
-      if (file.fieldname === 'productImages') {
+      if (file.fieldname === 'productImages' || file.fieldname === 'images') {
         uploadPath += 'products/';
       } else if (file.fieldname === 'logo') {
         uploadPath += 'logos/';
@@ -87,6 +87,7 @@ const fileFilter = (req, file, cb) => {
   // Check if it's an image upload
   if (
     file.fieldname === 'productImages' ||
+    file.fieldname === 'images' || // Support both 'images' and 'productImages'
     file.fieldname === 'logo' ||
     file.fieldname === 'avatar'
   ) {

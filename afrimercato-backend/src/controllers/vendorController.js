@@ -854,9 +854,63 @@ exports.getProduct = asyncHandler(async (req, res) => {
  * @access  Private (Vendor)
  */
 exports.createProduct = asyncHandler(async (req, res) => {
+  // Check if images were uploaded
+  if (!req.files || req.files.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'At least one product image is required',
+      errorCode: 'NO_IMAGES',
+      userMessage: 'Please upload at least one product image'
+    });
+  }
+
+  // Parse numeric fields
+  let price = parseFloat(req.body.price);
+  let stock = req.body.stock ? parseInt(req.body.stock) : 0;
+  let originalPrice = req.body.originalPrice ? parseFloat(req.body.originalPrice) : undefined;
+  let lowStockThreshold = req.body.lowStockThreshold ? parseInt(req.body.lowStockThreshold) : 10;
+
+  // Validate numeric conversions
+  if (isNaN(price) || price <= 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Price must be a valid positive number',
+      errorCode: 'INVALID_PRICE'
+    });
+  }
+
+  if (isNaN(stock) || stock < 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Stock must be a valid non-negative number',
+      errorCode: 'INVALID_STOCK'
+    });
+  }
+
+  // Convert uploaded files to image objects
+  const images = req.files.map((file) => ({
+    url: getFileUrl(file.path),
+    publicId: file.filename,
+    isPrimary: req.files.indexOf(file) === 0 // First image is primary
+  }));
+
+  // Create product data
   const productData = {
-    ...req.body,
-    vendor: req.vendor._id
+    vendor: req.vendor._id,
+    name: req.body.name,
+    description: req.body.description,
+    category: req.body.category,
+    price,
+    stock,
+    unit: req.body.unit,
+    originalPrice,
+    lowStockThreshold,
+    images,
+    // Optional fields
+    tags: req.body.tags ? (typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags) : [],
+    variants: req.body.variants ? (typeof req.body.variants === 'string' ? JSON.parse(req.body.variants) : req.body.variants) : [],
+    availability: req.body.availability ? (typeof req.body.availability === 'string' ? JSON.parse(req.body.availability) : req.body.availability) : {},
+    unlimitedStock: req.body.unlimitedStock === 'true' || req.body.unlimitedStock === true
   };
 
   const product = await Product.create(productData);

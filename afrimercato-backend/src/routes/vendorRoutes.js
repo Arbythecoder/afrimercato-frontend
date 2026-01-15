@@ -34,11 +34,19 @@ const {
   getOrdersReport,
   getRevenueReport,
   getDeliverySettings,
-  updateDeliverySettings
+  updateDeliverySettings,
+  getOnboardingStatus,          // new import
+  getVendorDashboard,
+  registerVendor,
+  loginVendor,
+  verifyOTP,
+  verifyVendorEmail,
+vendorAuthController,
+vendorController
 } = require('../controllers/vendorController');
 
 // Import middleware
-const { protect, authorize, checkVendorApproval, verifyVendor } = require('../middleware/auth');
+const { protect, authorize, verifyVendor } = require('../middleware/auth');
 const {
   validateProduct,
   validateVendorProfile,
@@ -47,7 +55,10 @@ const {
   validateBulkDelete,
   validateBulkStatus,
   validateBulkPrice,
-  validateBulkStock
+  validateBulkStock,
+   validateVendorRegistration,  // ADD THIS
+  validateLogin,
+  validateOTP
 } = require('../middleware/validator');
 const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware/upload');
 
@@ -56,23 +67,37 @@ const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware
  *
  * 1. protect → Verify user is logged in
  * 2. authorize('vendor') → Verify user role is 'vendor'
- * 3. checkVendorApproval → Verify vendor account is approved by admin
- * 4. verifyVendor → Verify vendor profile exists and is verified
- * 5. Additional validators → Validate request data
- * 6. Controller → Handle business logic
+ * 3. verifyVendor → Verify vendor profile exists and is verified
+ * 4. Additional validators → Validate request data
+ * 5. Controller → Handle business logic
  */
 
-// Apply protection, authorization, and approval check to ALL vendor routes
-router.use(protect, authorize('vendor'), checkVendorApproval);
+// Apply protection and authorization to ALL vendor routes
+router.use(protect, authorize('vendor'));
 
 // =================================================================
 // VENDOR PROFILE ROUTES
 // =================================================================
+// @route   POST /api/vendor/register
+// @desc    Register a new vendor (PUBLIC - no login required)
+// @access  Public
+router.post('/register', validateVendorRegistration, registerVendor);
 
 // @route   POST /api/vendor/profile
 // @desc    Create vendor profile (first-time setup)
 // @access  Private (Vendor role only)
 router.post('/profile', validateVendorProfile, createVendorProfile);
+
+// @route   GET /api/vendor/onboarding/status
+// @desc    Get vendor onboarding status
+// @access  Private (Vendor role only)
+router.get('/onboarding/status', getOnboardingStatus); // NEW ROUTE!
+
+// @route   GET /api/vendor/dashboard
+// @desc    Get vendor dashboard with onboarding check
+// @access  Private (Vendor role only)
+router.get('/dashboard', getVendorDashboard); // NEW ROUTE!
+
 
 // Routes below require verified vendor profile
 router.use(verifyVendor);
@@ -123,7 +148,12 @@ router.get('/products', validatePagination, getProducts);
 // @route   POST /api/vendor/products
 // @desc    Create new product
 // @access  Private (Verified Vendor)
-router.post('/products', validateProduct, createProduct);
+router.post('/products', 
+  uploadMultiple('images', 5),    // ← NEW: Handle file uploads (max 5)
+  handleUploadError,               // ← NEW: Handle upload errors
+  validateProduct,                 // Existing: Validate form data
+  createProduct
+);
 
 // @route   GET /api/vendor/products/:id
 // @desc    Get single product details
@@ -212,5 +242,46 @@ router.get('/reports/orders', getOrdersReport);
 // @desc    Get revenue report
 // @access  Private (Verified Vendor)
 router.get('/reports/revenue', getRevenueReport);
+// =================================================================
+// ALL OTHER ROUTES REQUIRE VERIFIED VENDOR PROFILE
+// =================================================================
+// Add this middleware ONLY for routes that need existing vendor profile
+router.use('/products', verifyVendor);
+router.use('/orders', verifyVendor);
+router.use('/analytics', verifyVendor);
+router.use('/reports', verifyVendor);
 
+// Profile routes that need vendor profile
+router.get('/profile', verifyVendor, getVendorProfile);
+router.put('/profile', verifyVendor, updateVendorProfile);
+// Apply protection and authorization to OTHER vendor routes
+router.use(protect, authorize('vendor'));
+
+// @route   GET /api/vendor/onboarding/status
+// @desc    Get vendor onboarding status (Protected, but no vendor profile needed)
+// @access  Private (Vendor role only)
+router.get('/onboarding/status', getOnboardingStatus);
+
+// @route   GET /api/vendor/dashboard
+// @desc    Get vendor dashboard with onboarding check (Protected, but no vendor profile needed)
+// @access  Private (Vendor role only)
+router.get('/dashboard', getVendorDashboard);
+
+// @route   POST /api/vendor/profile
+// @desc    Create vendor profile (first-time setup)
+// @access  Private (Vendor role only)
+router.post('/profile', validateVendorProfile, createVendorProfile);
+
+// =================================================================
+// ALL ROUTES BELOW REQUIRE VERIFIED VENDOR PROFILE
+// =================================================================
+// Add verifyVendor middleware for routes that need existing vendor profile
+router.use(verifyVendor);
+
+// Profile routes (requires vendor profile)
+router.get('/profile', getVendorProfile);
+router.put('/profile', updateVendorProfile);
+
+// Dashboard stats (requires vendor profile)
+router.get('/dashboard/stats', verifyVendor, getDashboardStats);
 module.exports = router;

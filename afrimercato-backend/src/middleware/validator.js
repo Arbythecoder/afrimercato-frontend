@@ -159,6 +159,7 @@ exports.validateNewPassword = [
 // PRODUCT VALIDATION RULES
 // =================================================================
 exports.validateProduct = [
+  // NAME - matches your model's maxlength: 200
   body('name')
     .trim()
     .notEmpty()
@@ -166,38 +167,44 @@ exports.validateProduct = [
     .isLength({ max: 200 })
     .withMessage('Product name cannot exceed 200 characters'),
 
+  // DESCRIPTION - matches your model's maxlength: 2000
   body('description')
     .trim()
     .notEmpty()
     .withMessage('Product description is required')
-    .isLength({ min: 1, max: 2000 })
-    .withMessage('Description must be between 1 and 2000 characters'),
+    .isLength({ max: 2000 })
+    .withMessage('Description cannot exceed 2000 characters'),
 
-  body('price')
-    .notEmpty()
-    .withMessage('Price is required')
-    .isFloat({ min: 0 })
-    .withMessage('Price must be a positive number'),
-
+  // CATEGORY - matches your model's min:2, max:50
   body('category')
     .trim()
     .notEmpty()
     .withMessage('Category is required')
-    .isLength({ min: 1, max: 100 })
-    .withMessage('Category must be between 1 and 100 characters'),
+    .isLength({ min: 2, max: 50 })
+    .withMessage('Category must be between 2 and 50 characters'),
 
+  // PRICE - required and positive
+  body('price')
+    .notEmpty()
+    .withMessage('Price is required')
+    .isFloat({ min: 0.01 })
+    .withMessage('Price must be greater than 0'),
+
+  // UNIT - matches your model's enum values
   body('unit')
     .trim()
     .notEmpty()
     .withMessage('Unit is required')
-    .isLength({ min: 1, max: 50 })
-    .withMessage('Unit must be between 1 and 50 characters'),
+    .isIn(['kg', 'g', 'lb', 'oz', 'l', 'ml', 'pint', 'piece', 'pack', 'bunch', 'bag', 'box', 'tray'])
+    .withMessage('Invalid unit'),
 
+  // STOCK - required unless unlimitedStock is true
   body('stock')
     .optional({ checkFalsy: true })
     .isInt({ min: 0 })
     .withMessage('Stock must be a non-negative integer'),
 
+  // ORIGINAL PRICE - optional
   body('originalPrice')
     .optional()
     .isFloat({ min: 0 })
