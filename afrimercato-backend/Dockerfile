@@ -4,13 +4,7 @@ FROM node:18-alpine
 # Set working directory
 WORKDIR /app
 
-# Copy package files (package-lock.json is optional)
-COPY package.json ./
-
-# Install dependencies
-RUN npm install --omit=dev
-
-# Copy application files
+# Copy entire application (including node_modules)
 COPY . .
 
 # Expose port
