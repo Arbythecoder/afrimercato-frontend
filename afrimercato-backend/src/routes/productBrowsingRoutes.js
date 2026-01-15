@@ -6,18 +6,34 @@
 const express = require('express');
 const router = express.Router();
 const { protect } = require('../middleware/auth');
+const {
+  browseProducts,
+  getProductDetails,
+  searchProducts,
+  getCategories,
+  getFeaturedVendors,
+  getVendorProducts,
+  getTrendingProducts,
+  getDealProducts,
+  getNearbyProducts,
+  getRecommendations,
+  getNewProducts
+} = require('../controllers/productBrowsingController');
 
-// Public product search and filter
-router.get('/', (req, res) => res.status(501).json({ message: 'Get products with filters' }));
-router.get('/search', (req, res) => res.status(501).json({ message: 'Search products' }));
-router.get('/category/:category', (req, res) => res.status(501).json({ message: 'Get products by category' }));
-router.get('/categories', (req, res) => res.status(501).json({ message: 'Get all categories' }));
-router.get('/price-range', (req, res) => res.status(501).json({ message: 'Get price range' }));
-router.get('/featured', (req, res) => res.status(501).json({ message: 'Get featured products' }));
-router.get('/deals', (req, res) => res.status(501).json({ message: 'Get discounted deals' }));
-router.get('/new-arrivals', (req, res) => res.status(501).json({ message: 'Get new arrivals' }));
-router.get('/:productId', (req, res) => res.status(501).json({ message: 'Get product details' }));
-router.get('/vendor/:vendorId', (req, res) => res.status(501).json({ message: 'Get products by vendor' }));
-router.get('/recommendations/for-you', protect, (req, res) => res.status(501).json({ message: 'Get personalized recommendations' }));
+// Public routes
+router.get('/', browseProducts);
+router.get('/search', searchProducts);
+router.get('/categories', getCategories);
+router.get('/trending', getTrendingProducts);
+router.get('/deals', getDealProducts);
+router.get('/new-arrivals', getNewProducts);
+router.get('/featured-vendors', getFeaturedVendors);
+router.get('/nearby', getNearbyProducts);
+router.get('/vendor/:vendorId', getVendorProducts);
+router.get('/:productId', getProductDetails);
+
+// Protected routes
+router.get('/recommendations/for-you', protect, getRecommendations);
 
 module.exports = router;
+
