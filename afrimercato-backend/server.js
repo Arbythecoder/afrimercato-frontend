@@ -18,6 +18,7 @@ const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 
 // Import all routes
 const vendorRoutes = require('./src/routes/vendorRoutes');
+const vendorDashboardRoutes = require('./src/routes/vendorDashboardRoutes');
 const authRoutes = require('./src/routes/authRoutes');
 const customerRoutes = require('./src/routes/customerRoutes');
 const riderAuthRoutes = require('./src/routes/riderAuthRoutes');
@@ -149,6 +150,7 @@ app.use('/api/picker-auth', pickerAuthRoutes);
 
 // ======================= VENDOR ROUTES =======================
 app.use('/api/vendor', vendorRoutes);
+app.use('/api/vendor/dashboard', vendorDashboardRoutes);
 app.use('/api/vendor/riders', vendorRiderRoutes);
 app.use('/api/vendor/pickers', vendorPickerRoutes);
 
