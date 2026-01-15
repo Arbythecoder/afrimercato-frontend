@@ -1,0 +1,2 @@
+// Stub model
+module.exports = {};
