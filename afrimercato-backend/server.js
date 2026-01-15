@@ -16,31 +16,37 @@ const { initSocket } = require('./src/config/socket');
 // Error handlers
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 
-
-// Import routes
-const authRoutes = require('./src/routes/authRoutes');
-const otpRoutes = require('./src/routes/otpRoutes');
+// Import all routes
 const vendorRoutes = require('./src/routes/vendorRoutes');
-const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
-const riderAuthRoutes = require('./src/routes/riderAuthRoutes');
-const riderStoreRoutes = require('./src/routes/riderStoreRoutes');
-const vendorRiderRoutes = require('./src/routes/vendorRiderRoutes');
+const authRoutes = require('./src/routes/authRoutes');
 const customerRoutes = require('./src/routes/customerRoutes');
+const riderAuthRoutes = require('./src/routes/riderAuthRoutes');
+const pickerAuthRoutes = require('./src/routes/pickerAuthRoutes');
 const productBrowsingRoutes = require('./src/routes/productBrowsingRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const checkoutRoutes = require('./src/routes/checkoutRoutes');
-const deliveryAssignmentRoutes = require('./src/routes/deliveryAssignmentRoutes');
-const pickerDeliveryRoutes = require('./src/routes/pickerDeliveryRoutes');
-const pickerAuthRoutes = require('./src/routes/pickerAuthRoutes');
+const paymentRoutes = require('./src/routes/paymentRoutes');
+const riderStoreRoutes = require('./src/routes/riderStoreRoutes');
+const vendorRiderRoutes = require('./src/routes/vendorRiderRoutes');
 const pickerOrderRoutes = require('./src/routes/pickerOrderRoutes');
 const vendorPickerRoutes = require('./src/routes/vendorPickerRoutes');
+const pickerDeliveryRoutes = require('./src/routes/pickerDeliveryRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
+const adminVendorRoutes = require('./src/routes/adminVendorRoutes');
+const adminCustomerRoutes = require('./src/routes/adminCustomerRoutes');
+const otpRoutes = require('./src/routes/otpRoutes');
+const couponRoutes = require('./src/routes/couponRoutes');
+const subscriptionRoutes = require('./src/routes/subscriptionRoutes');
+const analyticsRoutes = require('./src/routes/analyticsRoutes');
 const locationRoutes = require('./src/routes/locationRoutes');
 const notificationRoutes = require('./src/routes/notificationRoutes');
+const ticketRoutes = require('./src/routes/ticketRoutes');
+const payoutRoutes = require('./src/routes/payoutRoutes');
+const gdprRoutes = require('./src/routes/gdprRoutes');
 const trackingRoutes = require('./src/routes/trackingRoutes');
 const seedRoutes = require('./src/routes/seedRoutes');
-const adminRoutes = require('./src/routes/adminRoutes');
-const paymentRoutes = require('./src/routes/paymentRoutes');
-const gdprRoutes = require('./src/routes/gdprRoutes');
+const adminRiderRoutes = require('./src/routes/adminRiderRoutes');
+const adminPickerRoutes = require('./src/routes/adminPickerRoutes');
 
 // App init
 const app = express();
@@ -135,21 +141,50 @@ app.get('/api/health', (_req, res) => {
   });
 });
 
-// Auth
+// ======================= AUTHENTICATION ROUTES =======================
 app.use('/api/auth', authRoutes);
-app.use('/api/auth/otp', otpRoutes);
+app.use('/api/otp', otpRoutes);
+app.use('/api/rider-auth', riderAuthRoutes);
+app.use('/api/picker-auth', pickerAuthRoutes);
 
-// Vendor & customer
+// ======================= VENDOR ROUTES =======================
 app.use('/api/vendor', vendorRoutes);
-app.use('/api/vendor/auth', vendorAuthRoutes);
+app.use('/api/vendor/riders', vendorRiderRoutes);
+app.use('/api/vendor/pickers', vendorPickerRoutes);
+
+// ======================= CUSTOMER ROUTES =======================
 app.use('/api/customers', customerRoutes);
-
-// Admin, payments, GDPR
-app.use('/api/admin', adminRoutes);
+app.use('/api/products', productBrowsingRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/checkout', checkoutRoutes);
 app.use('/api/payments', paymentRoutes);
-app.use('/api/gdpr', gdprRoutes);
 
-// Seeder
+// ======================= RIDER ROUTES =======================
+app.use('/api/riders', riderStoreRoutes);
+
+// ======================= PICKER ROUTES =======================
+app.use('/api/pickers', pickerOrderRoutes);
+
+// ======================= DELIVERY & TRACKING =======================
+app.use('/api/deliveries', pickerDeliveryRoutes);
+app.use('/api/tracking', trackingRoutes);
+
+// ======================= ADMIN ROUTES =======================
+app.use('/api/admin', adminRoutes);
+app.use('/api/admin/vendors', adminVendorRoutes);
+app.use('/api/admin/customers', adminCustomerRoutes);
+app.use('/api/admin/riders', adminRiderRoutes);
+app.use('/api/admin/pickers', adminPickerRoutes);
+
+// ======================= FEATURE ROUTES =======================
+app.use('/api/coupons', couponRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/locations', locationRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/support', ticketRoutes);
+app.use('/api/payouts', payoutRoutes);
+app.use('/api/privacy', gdprRoutes);
 app.use('/api/seed', seedRoutes);
 
 // ======================= ERRORS =======================
