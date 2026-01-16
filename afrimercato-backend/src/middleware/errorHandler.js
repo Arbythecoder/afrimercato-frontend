@@ -47,7 +47,15 @@ const errorHandler = (err, req, res, next) => {
   });
 };
 
+/**
+ * Async handler wrapper - catches errors in async route handlers
+ */
+const asyncHandler = (fn) => (req, res, next) => {
+  return Promise.resolve(fn(req, res, next)).catch(next);
+};
+
 module.exports = {
   notFound,
-  errorHandler
+  errorHandler,
+  asyncHandler
 };
