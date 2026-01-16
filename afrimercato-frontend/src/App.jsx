@@ -54,7 +54,6 @@ const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
 
 // Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
-import CookieConsent from './components/CookieConsent'
 
 // Loading fallback for lazy-loaded pages
 function LazyLoadingFallback() {
