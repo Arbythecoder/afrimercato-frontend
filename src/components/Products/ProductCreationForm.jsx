@@ -296,6 +296,13 @@ function ProductCreationForm({ product, onClose, onSave }) {
     try {
       setSaving(true);
 
+      // Validate images before sending
+      if (!images || images.length === 0) {
+        alert('❌ At least one product image is required');
+        setSaving(false);
+        return;
+      }
+
       // Create FormData for multipart upload
       const submitData = new FormData();
 
@@ -311,8 +318,10 @@ function ProductCreationForm({ product, onClose, onSave }) {
       submitData.append('tags', JSON.stringify(formData.tags));
       submitData.append('variants', JSON.stringify(variants));
 
-      // Add images
+      // Add images with debug logging
+      console.log(`📸 Sending ${images.length} image(s)`);
       images.forEach((image, index) => {
+        console.log(`  Image ${index + 1}: ${image.name} (${image.size} bytes)`);
         submitData.append('images', image);
       });
 
