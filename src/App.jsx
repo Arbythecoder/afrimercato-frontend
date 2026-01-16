@@ -1,6 +1,8 @@
-import { Routes, Route, Navigate, Suspense } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
+import { ChatContainer } from './components/Chat'
+import CookieConsent from './components/CookieConsent'
 
 // Lazy load pages for code splitting - ⚡ Improves initial load time
 const Login = lazy(() => import('./pages/Login'))
@@ -328,6 +330,7 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
+      <ChatContainer />
       <CookieConsent />
     </AuthProvider>
   )
