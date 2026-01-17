@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
-import { ChatContainer } from './components/Chat'
 import CookieConsent from './components/CookieConsent'
 
 // Lazy load pages for code splitting - ⚡ Improves initial load time
@@ -24,7 +23,6 @@ const Delivery = lazy(() => import('./pages/Delivery'))
 const ContactUs = lazy(() => import('./pages/ContactUs'))
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
-const VendorDashboardPage = lazy(() => import('./pages/VendorDashboard/VendorDashboardPage'))
 const ClientVendorStorefront = lazy(() => import('./pages/customer/ClientVendorStorefront'))
 const CustomerDashboard = lazy(() => import('./pages/customer/CustomerDashboard'))
 const ProductBrowsing = lazy(() => import('./pages/customer/ProductBrowsing'))
@@ -183,7 +181,7 @@ function AppContent() {
         element={
           isAuthenticated ? (
             user?.role === 'vendor' ? (
-              <VendorDashboardPage />
+              <Dashboard />
             ) : (
               <RoleBasedRedirect />
             )
@@ -329,7 +327,6 @@ function App() {
   return (
     <AuthProvider>
       <AppContent />
-      <ChatContainer />
       <CookieConsent />
     </AuthProvider>
   )
