@@ -472,11 +472,15 @@ function Products() {
             setShowProductModal(false)
             setEditingProduct(null)
           }}
-          onSave={() => {
-            console.log('✅ Product saved successfully!')
-            fetchProducts()
-            setShowProductModal(false)
-            setEditingProduct(null)
+          onSave={(response) => {
+            if (response && response.success) {
+              console.log('✅ Product saved successfully!')
+              fetchProducts()
+              setShowProductModal(false)
+              setEditingProduct(null)
+            } else {
+              console.warn('Product save responded with failure or no response:', response)
+            }
           }}
         />
       )}

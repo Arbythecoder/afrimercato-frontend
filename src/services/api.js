@@ -26,14 +26,21 @@ const refreshAccessToken = async () => {
     throw new Error('No refresh token available');
   }
 
+  // Use AbortController to enforce a timeout on token refresh
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
+
   try {
-   const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {  // ✅ Added /api
+    const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ refreshToken })
+      body: JSON.stringify({ refreshToken }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       throw new Error('Failed to refresh token');
@@ -57,19 +64,24 @@ const refreshAccessToken = async () => {
 
 // Generic API call function with automatic token refresh
 const apiCall = async (endpoint, options = {}, isRetry = false) => {
+  // Enforce a request timeout using AbortController to avoid hanging the UI
+  const controller = new AbortController();
+  const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 10000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
   try {
-    const url = `${API_BASE_URL}${endpoint}`;  // ✅ ADDED /api HERE
+    const url = `${API_BASE_URL}${endpoint}`;
 
     const config = {
       headers: {
         ...options.headers
       },
       credentials: 'include',
+      signal: controller.signal,
       ...options
     };
 
     // Only add Content-Type: application/json if body is NOT FormData
-    // FormData needs multipart/form-data which browser sets automatically
     if (!(options.body instanceof FormData)) {
       config.headers['Content-Type'] = 'application/json';
     }
@@ -79,54 +91,41 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('🌐 Fetching:', url);  // ✅ Debug log
+    console.log('🌐 Fetching:', url);
 
     const response = await fetch(url, config);
+    clearTimeout(timeoutId);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
 
       // Handle 401 - Token expired or invalid
       if (response.status === 401 && !isRetry) {
-        // Check if this is a token expiration issue
         if (errorData.errorCode === 'TOKEN_EXPIRED' || errorData.errorCode === 'INVALID_TOKEN') {
-
-          // Prevent multiple simultaneous refresh attempts
           if (isRefreshing) {
-            // Queue this request to be retried after token refresh
             return new Promise((resolve, reject) => {
               failedQueue.push({ resolve, reject });
             })
-            .then(token => {
-              return apiCall(endpoint, options, true);
-            })
-            .catch(err => {
-              throw err;
-            });
+            .then(token => apiCall(endpoint, options, true))
+            .catch(err => { throw err; });
           }
 
           isRefreshing = true;
 
           try {
-            // Attempt to refresh the token
             const newToken = await refreshAccessToken();
             processQueue(null, newToken);
-
-            // Retry the original request with new token
             isRefreshing = false;
             return apiCall(endpoint, options, true);
           } catch (refreshError) {
             processQueue(refreshError, null);
             isRefreshing = false;
-
-            // Refresh failed - redirect to login
             window.location.href = '/login';
             throw new Error('Session expired. Please log in again.');
           }
         }
       }
 
-      // For other 401 errors or if retry failed
       if (response.status === 401) {
         localStorage.removeItem('afrimercato_token');
         localStorage.removeItem('afrimercato_refresh_token');
@@ -139,8 +138,14 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
     const data = await response.json();
     return data;
   } catch (error) {
+    // Normalize AbortError message
+    if (error.name === 'AbortError') {
+      throw new Error('Request timed out');
+    }
     console.error(`❌ API Error (${endpoint}):`, error);
     throw error;
+  } finally {
+    clearTimeout(timeoutId);
   }
 };
 

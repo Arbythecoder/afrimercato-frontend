@@ -49,12 +49,17 @@ export const AuthProvider = ({ children }) => {
       if (decoded && decoded.id) {
         // Fetch fresh user data from backend
         try {
-          const response = await getUserProfile()
-          if (response.success) {
+          // Guard the profile fetch with a timeout so the UI doesn't hang forever
+          const profilePromise = getUserProfile()
+          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 12000))
+
+          const response = await Promise.race([profilePromise, timeoutPromise])
+
+          if (response && response.success) {
             setUser(response.data)
             setIsAuthenticated(true)
           } else {
-            // Token invalid, clear it
+            // Token invalid or server returned error - clear tokens
             localStorage.removeItem('afrimercato_token')
             localStorage.removeItem('afrimercato_refresh_token')
           }

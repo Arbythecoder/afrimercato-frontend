@@ -334,8 +334,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
       if (response.success) {
         alert(product ? 'Product updated successfully!' : 'Product created successfully!');
-        onSave();
-        onClose();
+        // Pass full response to parent so it can decide what to do (refresh, close modal, etc.)
+        onSave(response);
       }
     } catch (error) {
       console.error('Product save error:', error);
