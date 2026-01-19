@@ -248,32 +248,32 @@ router.get('/reports/revenue', protect, authorize('vendor'), getRevenueReport);
 // =================================================================
 // ALL OTHER ROUTES REQUIRE VERIFIED VENDOR PROFILE
 // =================================================================
-// Add this middleware ONLY for routes that need existing vendor profile
-router.use('/products', verifyVendor);
-router.use('/orders', verifyVendor);
-router.use('/analytics', verifyVendor);
-router.use('/reports', verifyVendor);
-
-// Profile routes that need vendor profile
-router.get('/profile', verifyVendor, getVendorProfile);
-router.put('/profile', verifyVendor, updateVendorProfile);
-// Apply protection and authorization to OTHER vendor routes
-router.use(protect, authorize('vendor'));
-
-// @route   GET /api/vendor/onboarding/status
-// @desc    Get vendor onboarding status (Protected, but no vendor profile needed)
-// @access  Private (Vendor role only)
-router.get('/onboarding/status', getOnboardingStatus);
-
-// @route   GET /api/vendor/dashboard
-// @desc    Get vendor dashboard with onboarding check (Protected, but no vendor profile needed)
-// @access  Private (Vendor role only)
-router.get('/dashboard', getVendorDashboard);
-
-// @route   POST /api/vendor/profile
-// @desc    Create vendor profile (first-time setup)
-// @access  Private (Vendor role only)
-router.post('/profile', validateVendorProfile, createVendorProfile);
+// TODO: Implement verifyVendor middleware or remove this section
+// router.use('/products', verifyVendor);
+// router.use('/orders', verifyVendor);
+// router.use('/analytics', verifyVendor);
+// router.use('/reports', verifyVendor);
+//
+// // Profile routes that need vendor profile
+// router.get('/profile', verifyVendor, getVendorProfile);
+// router.put('/profile', verifyVendor, updateVendorProfile);
+// // Apply protection and authorization to OTHER vendor routes
+// router.use(protect, authorize('vendor'));
+//
+// // @route   GET /api/vendor/onboarding/status
+// // @desc    Get vendor onboarding status (Protected, but no vendor profile needed)
+// // @access  Private (Vendor role only)
+// router.get('/onboarding/status', getOnboardingStatus);
+//
+// // @route   GET /api/vendor/dashboard
+// // @desc    Get vendor dashboard with onboarding check (Protected, but no vendor profile needed)
+// // @access  Private (Vendor role only)
+// router.get('/dashboard', getVendorDashboard);
+//
+// // @route   POST /api/vendor/profile
+// // @desc    Create vendor profile (first-time setup)
+// // @access  Private (Vendor role only)
+// router.post('/profile', validateVendorProfile, createVendorProfile);
 
 // =================================================================
 // ALL ROUTES BELOW REQUIRE VERIFIED VENDOR PROFILE
