@@ -1,0 +1,109 @@
+openapi: 3.0.3
+info:
+  title: Afrimercato API
+  version: 1.0.0
+  description: OpenAPI skeleton generated from SRS_AFRIMERCATO_v1.1.md
+servers:
+  - url: https://api.afrimercato.local/v1
+paths:
+  /auth/login:
+    post:
+      summary: User login (OAuth token exchange)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: OK
+  /auth/refresh:
+    post:
+      summary: Refresh access token
+      responses:
+        '200':
+          description: OK
+  /vendors:
+    post:
+      summary: Create vendor/store (requires auth)
+      responses:
+        '201':
+          description: Created
+    get:
+      summary: List vendors (search & filters)
+      responses:
+        '200':
+          description: OK
+  /vendors/{vendorId}/products:
+    get:
+      summary: List products for vendor
+      parameters:
+        - name: vendorId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+    post:
+      summary: Create product for vendor
+      responses:
+        '201':
+          description: Created
+  /products/{productId}:
+    get:
+      summary: Get product details
+      parameters:
+        - name: productId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+  /cart:
+    post:
+      summary: Add/update cart
+      responses:
+        '200':
+          description: OK
+  /checkout:
+    post:
+      summary: Begin checkout and create order
+      responses:
+        '201':
+          description: Order created
+  /payments/webhook:
+    post:
+      summary: Payment gateway webhook endpoint
+      responses:
+        '200':
+          description: Received
+  /orders/{orderId}/tracking:
+    get:
+      summary: Get tracking updates for order
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+security:
+  - bearerAuth: []

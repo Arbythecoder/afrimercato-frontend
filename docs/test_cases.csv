@@ -1,0 +1,7 @@
+FR_ID,Acceptance Criteria,High-level Test Steps,Expected Result
+FR-1.1,User can register and receive verification email,"1. POST /auth/register; 2. Check email link; 3. GET /auth/verify?token=","Account activated; login succeeds"
+FR-2.2,Vendor can create product with SKU and stock,"1. Auth as vendor; 2. POST /vendors/{id}/products with payload; 3. GET product","201 Created; GET returns product with correct fields"
+FR-3.1,Customer can search stores by location,"1. GET /vendors?lat=..&lon=..; 2. Verify results contain nearby stores","Response contains vendor list sorted by distance"
+FR-3.2,Customer completes payment via gateway,"1. Checkout; 2. Redirect/submit to payment gateway sandbox; 3. Webhook fires; 4. Order status becomes 'paid'","Order status == paid and payment token stored"
+FR-5.1,Tracking updates propagate within SLA,"1. Push mock tracking update; 2. Observe /orders/{id}/tracking","UI and API show latest coordinates within 5s"
+FR-7.1,Admin can suspend a vendor,"1. Auth as admin; 2. POST /admin/vendors/{id}/suspend; 3. Vendor cannot accept orders","Vendor.status == suspended; order API rejects new orders"

@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
 import CookieConsent from './components/CookieConsent'
@@ -49,6 +49,7 @@ const PickerOrderFulfillment = lazy(() => import('./pages/picker/PickerOrderFulf
 const PickerPerformance = lazy(() => import('./pages/picker/PickerPerformance'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
+const VendorOnboarding = lazy(() => import('./components/VendorOnboarding'))
 
 // Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
@@ -102,7 +103,9 @@ function AppContent() {
   }
 
   return (
-    <Suspense fallback={<LazyLoadingFallback />}>
+    <>
+      <VendorBanner />
+      <Suspense fallback={<LazyLoadingFallback />}>
       <Routes>
       {/* Public Routes - Customer Marketplace */}
       {/* CLIENT-EXACT Landing Page - Just Eats / Uber Eats style with location-first approach */}
@@ -174,6 +177,9 @@ function AppContent() {
 
       {/* Vendor Pending Approval Route */}
       <Route path="/vendor/pending-approval" element={<VendorPendingApproval />} />
+
+      {/* Vendor Onboarding */}
+      <Route path="/vendor/onboarding" element={<VendorOnboarding />} />
 
       {/* New Production Vendor Dashboard */}
       <Route
@@ -320,6 +326,29 @@ function AppContent() {
       />
     </Routes>
     </Suspense>
+    </>
+  )
+}
+
+// Small floating banner to surface vendor onboarding
+function VendorBanner() {
+  const { isAuthenticated } = useAuth()
+  const location = useLocation()
+
+  // Don't show the banner to authenticated users or on admin/vendor/rider/picker pages
+  if (isAuthenticated) return null
+  const path = location.pathname || ''
+  if (path.startsWith('/vendor') || path.startsWith('/rider') || path.startsWith('/picker') || path.startsWith('/admin') || path.startsWith('/login') || path.startsWith('/register')) return null
+
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <a
+        href="/vendor/onboarding"
+        className="bg-afri-green text-white px-4 py-2 rounded-lg shadow-lg hover:opacity-95"
+      >
+        Become a vendor
+      </a>
+    </div>
   )
 }
 

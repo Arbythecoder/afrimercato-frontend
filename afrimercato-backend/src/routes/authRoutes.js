@@ -21,8 +21,10 @@ router.post(
   [
     body('email').isEmail().normalizeEmail().withMessage('Valid email required'),
     body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
-    body('firstName').trim().notEmpty().withMessage('First name required'),
-    body('lastName').trim().notEmpty().withMessage('Last name required'),
+    // Accept either a combined `name` or separate `firstName`/`lastName`
+    body('name').optional().trim(),
+    body('firstName').optional().trim(),
+    body('lastName').optional().trim(),
     body('phone').optional().trim(),
   ],
   asyncHandler(async (req, res) => {
@@ -32,7 +34,7 @@ router.post(
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { email, password, firstName, lastName, phone } = req.body;
+    const { email, password, firstName: fName, lastName: lName, name, phone, role } = req.body;
 
     // Check if user exists
     let user = await User.findOne({ email });
@@ -40,13 +42,31 @@ router.post(
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
+    // Normalize name fields: prefer explicit firstName/lastName, otherwise split `name`
+    let firstName = fName;
+    let lastName = lName;
+    if ((!firstName || !lastName) && name) {
+      const parts = name.trim().split(/\s+/);
+      firstName = parts.shift();
+      lastName = parts.join(' ') || '';
+    }
+
+    // Validate we have at least a first name
+    if (!firstName) {
+      return res.status(400).json({ success: false, message: 'First name required' });
+    }
+
+    // Determine role assignment (allow only known roles)
+    const allowedRoles = ['customer', 'vendor', 'rider', 'picker', 'admin'];
+    const assignedRole = role && allowedRoles.includes(role) ? role : 'customer';
+
     // Create new user
     user = new User({
       email,
       firstName,
       lastName,
       phone,
-      roles: ['customer']
+      roles: [assignedRole]
     });
 
     // Hash password

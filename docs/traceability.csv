@@ -1,0 +1,13 @@
+FR_ID,Functional Requirement,Likely Code Locations (candidate),Related Tests (candidate)
+FR-1,User Accounts,afrimercato-backend/src/controllers/authController.js; afrimercato-frontend/src/context/AuthContext.js,test-rider-api.js; test-auth.js
+FR-2.1,Vendor create store,afrimercato-backend/src/controllers/vendorController.js; afrimercato-frontend/src/components/VendorOnboarding.jsx,test-vendor-api.ps1
+FR-2.2,Vendor product CRUD,afrimercato-backend/src/controllers/vendorProductController.js; afrimercato-frontend/src/components/Products/ProductCreationForm.jsx,test-vendor-complete.js
+FR-3.1,Customer search/store discovery,afrimercato-backend/src/controllers/productBrowsingController.js; afrimercato-frontend/src/pages/customer/ClientStoresPage.jsx,test-location-search.js
+FR-3.2,Payments integration,afrimercato-backend/src/controllers/paymentController.js; afrimercato-frontend/src/services/api.js,test-payment-flow.js
+FR-4.1,Picker registration and tasks,afrimercato-backend/src/controllers/riderController.js; afrimercato-frontend/src/pages/picker/PickerDashboard.jsx,test-rider-api.js
+FR-5.1,Delivery tracking sync,afrimercato-backend/src/services/trackingService.js; afrimercato-frontend/src/pages/customer/OrderTracking.jsx,test-geolocation.js
+FR-6.1,Payments & refunds,afrimercato-backend/src/controllers/paymentController.js; afrimercato-backend/src/services/payments/*,test-payment-refund.js
+FR-7.1,Admin account management,afrimercato-backend/src/controllers/adminController.js; afrimercato-frontend/src/pages/admin/*,test-admin-api.js
+FR-8.1,Notifications,afrimercato-backend/src/services/notifications/*; afrimercato-frontend/src/services/notifications.js,test-notifications.js
+FR-9.1,Data import/migration,tools/importer.js or afrimercato-backend/scripts,manual-import-tests
+FR-10.1,GDPR controls,afrimercato-backend/src/controllers/privacyController.js; afrimercato-frontend/src/pages/PrivacyPolicy.jsx,privacy-compliance-tests
