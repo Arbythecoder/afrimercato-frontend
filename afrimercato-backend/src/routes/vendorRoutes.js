@@ -278,13 +278,14 @@ router.get('/reports/revenue', protect, authorize('vendor'), getRevenueReport);
 // =================================================================
 // ALL ROUTES BELOW REQUIRE VERIFIED VENDOR PROFILE
 // =================================================================
-// Add verifyVendor middleware for routes that need existing vendor profile
-router.use(verifyVendor);
+// TODO: Implement verifyVendor middleware or remove this section
+// router.use(verifyVendor);
+//
+// // Profile routes (requires vendor profile)
+// router.get('/profile', getVendorProfile);
+// router.put('/profile', updateVendorProfile);
+//
+// // Dashboard stats (requires vendor profile)
+// router.get('/dashboard/stats', verifyVendor, getDashboardStats);
 
-// Profile routes (requires vendor profile)
-router.get('/profile', getVendorProfile);
-router.put('/profile', updateVendorProfile);
-
-// Dashboard stats (requires vendor profile)
-router.get('/dashboard/stats', verifyVendor, getDashboardStats);
 module.exports = router;
