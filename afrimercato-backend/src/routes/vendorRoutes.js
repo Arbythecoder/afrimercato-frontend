@@ -35,8 +35,8 @@ const {
   getRevenueReport,
   getDeliverySettings,
   updateDeliverySettings,
-  getOnboardingStatus,          // new import
-  getVendorDashboard,
+  // getOnboardingStatus,          // TODO: implement
+  // getVendorDashboard,           // TODO: implement
   registerVendor,
   loginVendor,
   verifyOTP,
@@ -88,15 +88,16 @@ router.post('/register', validateVendorRegistration, registerVendor);
 // @access  Private (Vendor role only)
 router.post('/profile', validateVendorProfile, createVendorProfile);
 
+// TODO: Implement getOnboardingStatus and getVendorDashboard controllers
 // @route   GET /api/vendor/onboarding/status
 // @desc    Get vendor onboarding status
 // @access  Private (Vendor role only)
-router.get('/onboarding/status', getOnboardingStatus); // NEW ROUTE!
+// router.get('/onboarding/status', getOnboardingStatus); // TODO: implement
 
 // @route   GET /api/vendor/dashboard
 // @desc    Get vendor dashboard with onboarding check
 // @access  Private (Vendor role only)
-router.get('/dashboard', getVendorDashboard); // NEW ROUTE!
+// router.get('/dashboard', getVendorDashboard); // TODO: implement
 
 
 // Routes below require verified vendor profile
