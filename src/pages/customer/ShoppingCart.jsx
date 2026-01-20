@@ -6,6 +6,7 @@ function ShoppingCart() {
   const navigate = useNavigate()
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
+  const [repeatPurchaseFrequency, setRepeatPurchaseFrequency] = useState(null)
 
   useEffect(() => {
     loadCart()
@@ -153,6 +154,38 @@ function ShoppingCart() {
                   </div>
                 </div>
               ))}
+
+              {/* Repeat Purchase Section */}
+              <div className="bg-gradient-to-br from-afri-green-light/10 to-afri-green/10 rounded-xl p-6 border border-afri-green-light">
+                <h3 className="text-lg font-bold text-gray-900 mb-4">🔄 Set item(s) for repurchase</h3>
+                <p className="text-sm text-gray-600 mb-4">Never run out of your favorites! Select how often you'd like this order to repeat automatically.</p>
+                
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'].map((frequency) => (
+                    <button
+                      key={frequency}
+                      onClick={() => setRepeatPurchaseFrequency(
+                        repeatPurchaseFrequency === frequency.toLowerCase().replace('-', '-') ? null : frequency.toLowerCase().replace('-', '-')
+                      )}
+                      className={`py-3 px-4 rounded-lg font-semibold transition-all transform hover:scale-105 ${
+                        repeatPurchaseFrequency === frequency.toLowerCase().replace('-', '-')
+                          ? 'bg-afri-green text-white shadow-lg'
+                          : 'bg-white text-gray-700 border-2 border-afri-green-light hover:border-afri-green hover:bg-afri-green-light/5'
+                      }`}
+                    >
+                      <span className="block text-sm">{frequency}</span>
+                    </button>
+                  ))}
+                </div>
+
+                {repeatPurchaseFrequency && (
+                  <div className="mt-4 p-3 bg-afri-green-light/10 rounded-lg border-l-4 border-afri-green">
+                    <p className="text-sm text-gray-700">
+                      ✓ This order will repeat <span className="font-bold capitalize">{repeatPurchaseFrequency}</span> until you cancel.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Order Summary */}
@@ -184,7 +217,15 @@ function ShoppingCart() {
                 </div>
 
                 <button
-                  onClick={() => navigate('/checkout')}
+                  onClick={() => {
+                    // Store repeat purchase preference before checkout
+                    if (repeatPurchaseFrequency) {
+                      localStorage.setItem('repeatPurchaseFrequency', repeatPurchaseFrequency)
+                    } else {
+                      localStorage.removeItem('repeatPurchaseFrequency')
+                    }
+                    navigate('/checkout')
+                  }}
                   className="w-full py-4 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:scale-105"
                 >
                   Proceed to Checkout

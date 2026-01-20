@@ -63,6 +63,9 @@ function Checkout() {
     setLoading(true)
 
     try {
+      // Get repeat purchase frequency from localStorage
+      const repeatPurchaseFrequency = localStorage.getItem('repeatPurchaseFrequency')
+
       // Prepare order data
       const orderData = {
         items: cart.map(item => ({
@@ -81,7 +84,9 @@ function Checkout() {
           subtotal: cartTotal,
           deliveryFee,
           total
-        }
+        },
+        // Include repeat purchase frequency if selected
+        ...(repeatPurchaseFrequency && { repeatPurchaseFrequency })
       }
 
       // Call checkout API
@@ -97,8 +102,9 @@ function Checkout() {
       const data = await response.json()
 
       if (data.success) {
-        // Clear cart
+        // Clear cart and repeat purchase preference
         localStorage.removeItem('cart')
+        localStorage.removeItem('repeatPurchaseFrequency')
 
         // Redirect to order confirmation
         navigate(`/order-confirmation/${data.data.order._id}`)
