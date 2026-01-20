@@ -467,25 +467,15 @@ export const requestInvoice = async (invoiceData) => {
 // USER PROFILE
 // Note: Use role-specific profile endpoints instead:
 // - Vendors: getVendorProfile() → /vendor/profile
-// - Customers: Use customer endpoints → /customers/*
-// This function is deprecated and should not be used
+// Get user profile - FAST version for auth check (3 second timeout max)
 export const getUserProfile = async () => {
-  // Try to get user role from token or localStorage
-  const userRole = localStorage.getItem('userRole');
-
-  if (userRole === 'vendor') {
-    return apiCall('/vendor/profile');
-  } else if (userRole === 'customer') {
-    // Return customer dashboard stats as profile substitute
-    return apiCall('/customers/dashboard/stats');
-  }
-
-  // Fallback: Try vendor endpoint first (most common case)
   try {
-    return await apiCall('/vendor/profile');
+    // Quick timeout - don't block UI
+    return await apiCall('/auth/me', { timeout: 3000 });
   } catch (error) {
-    // If vendor fails, try customer endpoint
-    return await apiCall('/customers/dashboard/stats');
+    // Silently fail - allows UI to load
+    console.warn('Profile fetch failed (timeout or offline), continuing...');
+    return null;
   }
 };
 
