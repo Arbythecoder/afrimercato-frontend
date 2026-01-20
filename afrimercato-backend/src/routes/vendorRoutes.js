@@ -128,7 +128,7 @@ router.get('/dashboard/chart-data', getDashboardChartData);
 // @route   GET /api/vendor/products
 // @desc    Get all vendor products (with pagination & filters)
 // @access  Private (Verified Vendor)
-router.get('/products', validatePagination, getProducts);
+router.get('/products', protect, authorize('vendor'), validatePagination, getProducts);
 
 // @route   POST /api/vendor/products
 // @desc    Create new product
