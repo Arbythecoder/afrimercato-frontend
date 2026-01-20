@@ -18,7 +18,7 @@ const Vendor = require('../models/Vendor');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
-const Payout = require('../models/Payout');
+// const Payout = require('../models/Payout'); // TODO: Implement Payout model
 const { asyncHandler } = require('../middleware/errorHandler');
 
 // =================================================================
@@ -399,7 +399,9 @@ exports.getOrdersByStatus = asyncHandler(async (req, res) => {
  * @route   GET /api/vendor/dashboard/payouts
  * @desc    Get payout history and pending payouts
  * @access  Private (Verified Vendor)
+ * TODO: Implement Payout model before using this function
  */
+/* 
 exports.getPayoutHistory = asyncHandler(async (req, res) => {
   const { page = 1, limit = 10 } = req.query;
   const vendorId = req.vendor._id;
@@ -465,6 +467,16 @@ exports.getPayoutHistory = asyncHandler(async (req, res) => {
         accountNumber: maskAccountNumber(payout.bankDetails.accountNumber)
       } : null
     }))
+  });
+});
+*/
+
+// Stub function - TODO: implement when Payout model is created
+exports.getPayoutHistory = asyncHandler(async (req, res) => {
+  return res.status(200).json({
+    success: true,
+    message: 'Payout history feature coming soon',
+    data: []
   });
 });
 
