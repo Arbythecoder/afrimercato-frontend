@@ -16,6 +16,22 @@ const userSchema = new mongoose.Schema({
   emailVerificationExpires: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
+  // Repeat purchase subscription preferences
+  repeatPurchaseFrequency: {
+    type: String,
+    enum: ['weekly', 'bi-weekly', 'monthly', 'quarterly', null],
+    default: null
+  },
+  repeatPurchaseSettings: {
+    enabled: { type: Boolean, default: false },
+    frequency: {
+      type: String,
+      enum: ['weekly', 'bi-weekly', 'monthly', 'quarterly'],
+      default: 'weekly'
+    },
+    nextRepeatDate: Date,
+    autoRenewNotificationSent: { type: Boolean, default: false }
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

@@ -20,6 +20,17 @@ const orderSchema = new mongoose.Schema({
   rider: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   picker: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   deliveryDate: Date,
+  // Repeat purchase subscription data
+  repeatPurchase: {
+    enabled: { type: Boolean, default: false },
+    frequency: {
+      type: String,
+      enum: ['weekly', 'bi-weekly', 'monthly', 'quarterly'],
+      default: null
+    },
+    nextRepeatDate: Date,
+    active: { type: Boolean, default: true }
+  },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }
 });

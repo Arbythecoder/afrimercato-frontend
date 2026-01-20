@@ -395,7 +395,7 @@ exports.validateCart = asyncHandler(async (req, res) => {
 
   if (issues.length > 0 || validItems.length === 0) {
     // Update cart with valid items only
-    customer.cart = customer.cart.filter(item => 
+    customer.cart = customer.cart.filter(item =>
       validItems.some(v => v.productId.toString() === item.productId.toString())
     );
     await customer.save();
@@ -406,5 +406,116 @@ exports.validateCart = asyncHandler(async (req, res) => {
     issues,
     validItems,
     message: issues.length > 0 ? 'Cart has some issues' : 'Cart is valid'
+  });
+});
+
+// =================================================================
+// REPURCHASE SCHEDULING (Set in Cart before Checkout)
+// =================================================================
+
+/**
+ * @route   POST /api/cart/repurchase-schedule
+ * @desc    Set repurchase schedule for cart items (before checkout)
+ * @access  Private (customer)
+ *
+ * This is the "Set item(s) for repurchase" feature shown in cart view
+ * with checkbox options: Weekly, Bi-weekly, Monthly, Quarterly
+ */
+exports.setCartRepurchaseSchedule = asyncHandler(async (req, res) => {
+  const { frequency } = req.body;
+
+  // Validate frequency
+  const validFrequencies = ['weekly', 'bi-weekly', 'monthly', 'quarterly'];
+
+  // Allow null/undefined to clear the setting
+  if (frequency && !validFrequencies.includes(frequency)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid repurchase frequency. Options: weekly, bi-weekly, monthly, quarterly'
+    });
+  }
+
+  const customer = await User.findById(req.user.id);
+
+  if (!customer) {
+    return res.status(404).json({
+      success: false,
+      message: 'Customer not found'
+    });
+  }
+
+  // Update user's pending repurchase preference (will be applied at checkout)
+  customer.pendingRepurchaseFrequency = frequency || null;
+  await customer.save();
+
+  // Calculate next date if frequency is set
+  let nextRepeatDate = null;
+  if (frequency) {
+    const daysToAdd = {
+      'weekly': 7,
+      'bi-weekly': 14,
+      'monthly': 30,
+      'quarterly': 90
+    };
+    nextRepeatDate = new Date();
+    nextRepeatDate.setDate(nextRepeatDate.getDate() + daysToAdd[frequency]);
+  }
+
+  res.status(200).json({
+    success: true,
+    message: frequency
+      ? `Repurchase schedule set to ${frequency}. This will apply when you checkout.`
+      : 'Repurchase schedule cleared.',
+    data: {
+      frequency: frequency || null,
+      nextRepeatDate,
+      appliedAt: 'checkout'
+    }
+  });
+});
+
+/**
+ * @route   GET /api/cart/repurchase-schedule
+ * @desc    Get current repurchase schedule preference
+ * @access  Private (customer)
+ */
+exports.getCartRepurchaseSchedule = asyncHandler(async (req, res) => {
+  const customer = await User.findById(req.user.id);
+
+  if (!customer) {
+    return res.status(404).json({
+      success: false,
+      message: 'Customer not found'
+    });
+  }
+
+  // Get pending preference (set in cart) or existing active subscription
+  const pendingFrequency = customer.pendingRepurchaseFrequency;
+  const activeSettings = customer.repeatPurchaseSettings;
+
+  res.status(200).json({
+    success: true,
+    data: {
+      // Pending = set in cart, not yet applied
+      pending: {
+        frequency: pendingFrequency || null,
+        message: pendingFrequency
+          ? `${pendingFrequency} repurchase will be activated at checkout`
+          : null
+      },
+      // Active = already applied from previous order
+      active: {
+        enabled: activeSettings?.enabled || false,
+        frequency: activeSettings?.frequency || null,
+        nextRepeatDate: activeSettings?.nextRepeatDate || null
+      },
+      // Available options for UI checkboxes
+      options: [
+        { value: 'weekly', label: 'Weekly', description: 'Every 7 days' },
+        { value: 'bi-weekly', label: 'Bi-weekly', description: 'Every 14 days' },
+        { value: 'monthly', label: 'Monthly', description: 'Every 30 days' },
+        { value: 'quarterly', label: 'Quarterly', description: 'Every 90 days' }
+      ]
+    }
   });
 });

@@ -150,13 +150,22 @@ exports.previewOrder = asyncHandler(async (req, res) => {
  * @access  Private (customer)
  */
 exports.processCheckout = asyncHandler(async (req, res) => {
-  const { addressId, paymentMethod, transactionRef } = req.body;
+  const { addressId, paymentMethod, transactionRef, repeatPurchaseFrequency } = req.body;
 
   // Validate inputs
   if (!addressId || !paymentMethod) {
     return res.status(400).json({
       success: false,
       message: 'Address and payment method are required'
+    });
+  }
+
+  // Validate repeat purchase frequency if provided
+  const validFrequencies = ['weekly', 'bi-weekly', 'monthly', 'quarterly'];
+  if (repeatPurchaseFrequency && !validFrequencies.includes(repeatPurchaseFrequency)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid repeat purchase frequency'
     });
   }
 
@@ -231,6 +240,13 @@ exports.processCheckout = asyncHandler(async (req, res) => {
   for (const vendorId in ordersByVendor) {
     const vendorOrder = ordersByVendor[vendorId];
 
+    // Build repeat purchase data if frequency provided
+    const repeatPurchaseData = repeatPurchaseFrequency ? {
+      enabled: true,
+      frequency: repeatPurchaseFrequency,
+      nextRepeatDate: calculateNextRepeatDate(repeatPurchaseFrequency)
+    } : undefined;
+
     const order = await Order.create({
       orderNumber: generateOrderNumber(),
       customer: customer._id,
@@ -248,10 +264,27 @@ exports.processCheckout = asyncHandler(async (req, res) => {
         city: address.city,
         postcode: address.postcode,
         landmark: address.landmark
-      }
+      },
+      ...(repeatPurchaseData && { repeatPurchase: repeatPurchaseData })
     });
 
     createdOrders.push(order);
+  }
+
+  // Update customer repeat purchase settings if frequency provided
+  if (repeatPurchaseFrequency) {
+    await User.findByIdAndUpdate(
+      customer._id,
+      {
+        repeatPurchaseFrequency: repeatPurchaseFrequency,
+        repeatPurchaseSettings: {
+          enabled: true,
+          frequency: repeatPurchaseFrequency,
+          nextRepeatDate: calculateNextRepeatDate(repeatPurchaseFrequency),
+          autoRenewNotificationSent: false
+        }
+      }
+    );
   }
 
   // Clear cart
@@ -409,3 +442,118 @@ function calculateDeliveryDays(location) {
   // In production, this would be based on actual distance/location
   return '2-3 business days';
 }
+
+/**
+ * Calculate next repeat purchase date based on frequency
+ */
+function calculateNextRepeatDate(frequency) {
+  const today = new Date();
+  const daysToAdd = {
+    'weekly': 7,
+    'bi-weekly': 14,
+    'monthly': 30,
+    'quarterly': 90
+  };
+  
+  const nextDate = new Date(today);
+  nextDate.setDate(nextDate.getDate() + (daysToAdd[frequency] || 7));
+  return nextDate;
+}
+
+// =================================================================
+// REPEAT PURCHASE OPERATIONS
+// =================================================================
+
+/**
+ * @route   POST /api/checkout/repeat-purchase/set
+ * @desc    Set or update repeat purchase subscription for customer
+ * @access  Private (customer)
+ */
+exports.setRepeatPurchase = asyncHandler(async (req, res) => {
+  const { frequency, orderId } = req.body;
+
+  // Validate frequency
+  const validFrequencies = ['weekly', 'bi-weekly', 'monthly', 'quarterly'];
+  if (!frequency || !validFrequencies.includes(frequency)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid repeat purchase frequency. Valid options: weekly, bi-weekly, monthly, quarterly'
+    });
+  }
+
+  // Update customer repeat purchase settings
+  const customer = await User.findByIdAndUpdate(
+    req.user.id,
+    {
+      repeatPurchaseFrequency: frequency,
+      repeatPurchaseSettings: {
+        enabled: true,
+        frequency: frequency,
+        nextRepeatDate: calculateNextRepeatDate(frequency),
+        autoRenewNotificationSent: false
+      },
+      updatedAt: new Date()
+    },
+    { new: true }
+  );
+
+  if (!customer) {
+    return res.status(404).json({
+      success: false,
+      message: 'Customer not found'
+    });
+  }
+
+  // If orderId provided, update that specific order as well
+  if (orderId) {
+    await Order.findByIdAndUpdate(
+      orderId,
+      {
+        repeatPurchase: {
+          enabled: true,
+          frequency: frequency,
+          nextRepeatDate: calculateNextRepeatDate(frequency)
+        }
+      },
+      { new: true }
+    );
+  }
+
+  return res.status(200).json({
+    success: true,
+    message: 'Repeat purchase subscription activated',
+    data: {
+      frequency: frequency,
+      nextRepeatDate: calculateNextRepeatDate(frequency),
+      message: `Your order will automatically repeat ${frequency} until you cancel.`
+    }
+  });
+});
+
+/**
+ * @route   GET /api/checkout/repeat-purchase/settings
+ * @desc    Get customer's repeat purchase settings
+ * @access  Private (customer)
+ */
+exports.getRepeatPurchaseSettings = asyncHandler(async (req, res) => {
+  const customer = await User.findById(req.user.id).select(
+    'repeatPurchaseFrequency repeatPurchaseSettings'
+  );
+
+  if (!customer) {
+    return res.status(404).json({
+      success: false,
+      message: 'Customer not found'
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    data: {
+      enabled: customer.repeatPurchaseSettings?.enabled || false,
+      frequency: customer.repeatPurchaseSettings?.frequency || null,
+      nextRepeatDate: customer.repeatPurchaseSettings?.nextRepeatDate || null,
+      autoRenewNotificationSent: customer.repeatPurchaseSettings?.autoRenewNotificationSent || false
+    }
+  });
+});
