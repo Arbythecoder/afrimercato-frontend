@@ -54,10 +54,11 @@ const authorize = (...roles) => {
       });
     }
 
-    if (!roles.includes(req.user.role)) {
+    const userRoles = req.user.roles || [req.user.role]; // Support both roles array and role string
+    if (!userRoles.some(role => roles.includes(role))) {
       return res.status(403).json({
         success: false,
-        message: `User role '${req.user.role}' is not authorized for this route`
+        message: `User roles '${userRoles}' is not authorized for this route`
       });
     }
 

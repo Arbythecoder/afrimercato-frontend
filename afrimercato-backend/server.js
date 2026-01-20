@@ -52,10 +52,11 @@ const adminPickerRoutes = require('./src/routes/adminPickerRoutes');
 // App init
 const app = express();
 
-// Connect DB (non-blocking)
-connectDB().catch(err =>
-  console.error('DB connection failed:', err.message)
-);
+// Connect DB - BLOCKING (must connect before starting)
+connectDB().catch(err => {
+  console.error('✗ MongoDB connection failed:', err.message);
+  process.exit(1);
+});
 
 // Security headers
 app.use(
@@ -72,7 +73,10 @@ const allowedOrigins = [
   'https://arbythecoder.github.io',
   'http://localhost:3000',
   'http://localhost:5173',
-  'http://localhost:5174'
+  'http://localhost:5174',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:5173',
+  'https://afrimercato-frontend.fly.dev'
 ];
 
 app.use(
@@ -115,12 +119,14 @@ if (process.env.NODE_ENV === 'development') {
 // Trust proxy (Railway/Fly)
 app.set('trust proxy', 1);
 
-// Rate limiting
+// Rate limiting (increased + exclude auth endpoints)
 app.use(
   '/api',
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100
+    max: 500, // Increased from 100 to 500
+    skip: (req) => req.path.includes('/auth/') || req.path.includes('/login'),
+    message: 'Too many requests, please try again later'
   })
 );
 
