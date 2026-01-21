@@ -608,7 +608,7 @@ export default function ClientVendorStorefront() {
 
                     <button
                       onClick={() => {
-                        localStorage.setItem('cart', JSON.stringify(cart))
+                        localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
                         navigate('/checkout')
                       }}
                       className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-4 rounded-lg font-bold text-lg transition-all"

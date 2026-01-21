@@ -35,7 +35,7 @@ function Checkout() {
 
   useEffect(() => {
     // Load cart from localStorage
-    const savedCart = JSON.parse(localStorage.getItem('cart') || '[]')
+    const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
     setCart(savedCart)
 
     if (savedCart.length === 0) {
@@ -103,7 +103,7 @@ function Checkout() {
 
       if (data.success) {
         // Clear cart and repeat purchase preference
-        localStorage.removeItem('cart')
+        localStorage.removeItem('afrimercato_cart')
         localStorage.removeItem('repeatPurchaseFrequency')
 
         // Redirect to order confirmation
