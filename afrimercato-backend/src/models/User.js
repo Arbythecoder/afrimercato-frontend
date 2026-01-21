@@ -41,8 +41,6 @@ userSchema.methods.generateEmailVerificationToken = function() {
   return 'token_' + Math.random().toString(36).substring(2, 15);
 };
 
-userSchema.methods.save = async function() {
-  return this;
-};
+// NOTE: Do NOT override save() - use default Mongoose persistence
 
 module.exports = mongoose.model('User', userSchema);
