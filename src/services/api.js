@@ -464,33 +464,66 @@ export const requestInvoice = async (invoiceData) => {
   });
 };
 
-// USER PROFILE
-// Note: Use role-specific profile endpoints instead:
-// - Vendors: getVendorProfile() → /vendor/profile
-// Get user profile - FAST version for auth check (3 second timeout max)
+// USER PROFILE - Intelligent wrapper that handles all roles
+// Automatically routes to the correct endpoint based on user role
 export const getUserProfile = async () => {
   try {
-    // Quick timeout - don't block UI
-    return await apiCall('/auth/me', { timeout: 3000 });
+    // Try unified auth endpoint first (3 second timeout - fast)
+    const result = await apiCall('/auth/me', { timeout: 3000 });
+    if (result?.success) return result;
   } catch (error) {
-    // Silently fail - allows UI to load
-    console.warn('Profile fetch failed (timeout or offline), continuing...');
-    return null;
+    console.warn('Auth /me endpoint failed, trying role-specific endpoints...');
   }
+
+  // Fallback: Try role-specific endpoints
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('afrimercato_user_role');
+  
+  try {
+    if (userRole === 'vendor') {
+      return await apiCall('/vendor/profile', { timeout: 3000 });
+    } else if (userRole === 'customer') {
+      return await apiCall('/customers/dashboard/stats', { timeout: 3000 });
+    } else if (userRole === 'rider') {
+      return await apiCall('/rider/profile', { timeout: 3000 });
+    } else if (userRole === 'picker') {
+      return await apiCall('/picker/profile', { timeout: 3000 });
+    }
+  } catch (error) {
+    console.warn(`Failed to fetch ${userRole} profile:`, error.message);
+  }
+
+  // Silent fail - don't block UI
+  return null;
 };
 
+// UPDATE USER PROFILE - Intelligent wrapper for all roles
+// Automatically routes update to correct endpoint based on role
 export const updateUserProfile = async (profileData) => {
-  const userRole = localStorage.getItem('userRole');
+  const userRole = localStorage.getItem('userRole') || localStorage.getItem('afrimercato_user_role');
 
+  // Route to role-specific update endpoint
   if (userRole === 'vendor') {
-    return apiCall('/vendor/profile', {
+    return updateVendorProfile(profileData);
+  } else if (userRole === 'customer') {
+    // Customer profile updates go to general endpoint
+    return apiCall('/auth/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+  } else if (userRole === 'rider') {
+    return apiCall('/rider/profile', {
+      method: 'PUT',
+      body: JSON.stringify(profileData)
+    });
+  } else if (userRole === 'picker') {
+    return apiCall('/picker/profile', {
       method: 'PUT',
       body: JSON.stringify(profileData)
     });
   }
 
-  // Default to vendor for backwards compatibility
-  return apiCall('/vendor/profile', {
+  // Default fallback to general auth endpoint
+  return apiCall('/auth/profile', {
     method: 'PUT',
     body: JSON.stringify(profileData)
   });
