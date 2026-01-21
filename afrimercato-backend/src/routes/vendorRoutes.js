@@ -47,6 +47,7 @@ vendorController
 
 // Import middleware
 const { protect, authorize } = require('../middleware/auth');
+const { attachVendor } = require('../middleware/vendorMiddleware');
 const {
   validateProduct,
   validateVendorProfile,
@@ -128,13 +129,13 @@ router.get('/dashboard/chart-data', getDashboardChartData);
 // @route   GET /api/vendor/products
 // @desc    Get all vendor products (with pagination & filters)
 // @access  Private (Verified Vendor)
-router.get('/products', protect, authorize('vendor'), validatePagination, getProducts);
+router.get('/products', protect, authorize('vendor'), attachVendor, validatePagination, getProducts);
 
 // @route   POST /api/vendor/products
 // @desc    Create new product
 // @access  Private (Verified Vendor)
 router.post('/products', 
-  protect, authorize('vendor'),
+  protect, authorize('vendor'), attachVendor,
   uploadMultiple('images', 5),    // ← NEW: Handle file uploads (max 5)
   handleUploadError,               // ← NEW: Handle upload errors
   validateProduct,                 // Existing: Validate form data
@@ -144,17 +145,17 @@ router.post('/products',
 // @route   GET /api/vendor/products/:id
 // @desc    Get single product details
 // @access  Private (Verified Vendor)
-router.get('/products/:id', protect, authorize('vendor'), validateMongoId('id'), getProduct);
+router.get('/products/:id', protect, authorize('vendor'), attachVendor, validateMongoId('id'), getProduct);
 
 // @route   PUT /api/vendor/products/:id
 // @desc    Update product
 // @access  Private (Verified Vendor)
-router.put('/products/:id', protect, authorize('vendor'), [validateMongoId('id'), validateProduct], updateProduct);
+router.put('/products/:id', protect, authorize('vendor'), attachVendor, [validateMongoId('id'), validateProduct], updateProduct);
 
 // @route   DELETE /api/vendor/products/:id
 // @desc    Delete product
 // @access  Private (Verified Vendor)
-router.delete('/products/:id', protect, authorize('vendor'), validateMongoId('id'), deleteProduct);
+router.delete('/products/:id', protect, authorize('vendor'), attachVendor, validateMongoId('id'), deleteProduct);
 
 // @route   PATCH /api/vendor/products/:id/stock
 // @desc    Update product stock quantity
