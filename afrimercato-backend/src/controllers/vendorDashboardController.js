@@ -18,7 +18,7 @@ const Vendor = require('../models/Vendor');
 const Product = require('../models/Product');
 const Order = require('../models/Order');
 const User = require('../models/User');
-// const Payout = require('../models/Payout'); // TODO: Implement Payout model - NOT YET CREATED
+const Payout = require('../models/Payout'); // MVP stub model
 const { asyncHandler } = require('../middleware/errorHandler');
 
 // =================================================================
