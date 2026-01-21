@@ -85,13 +85,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.login({ email, password })
 
-      if (response.success) {
+      if (response && response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
         // DO NOT store user data in localStorage - security risk
         setUser(user)
         setIsAuthenticated(true)
         return { success: true, user }
+      } else {
+        return {
+          success: false,
+          message: response?.message || 'Login failed'
+        }
       }
     } catch (error) {
       return {
@@ -105,13 +110,18 @@ export const AuthProvider = ({ children }) => {
     try {
       const response = await authAPI.register(userData)
 
-      if (response.success) {
+      if (response && response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
         // DO NOT store user data in localStorage - security risk
         setUser(user)
         setIsAuthenticated(true)
         return { success: true, user }
+      } else {
+        return {
+          success: false,
+          message: response?.message || 'Registration failed'
+        }
       }
     } catch (error) {
       return {
