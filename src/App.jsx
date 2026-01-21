@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
 import CookieConsent from './components/CookieConsent'
@@ -342,12 +342,12 @@ function VendorBanner() {
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <a
-        href="/vendor/onboarding"
+      <Link
+        to="/vendor/onboarding"
         className="bg-afri-green text-white px-4 py-2 rounded-lg shadow-lg hover:opacity-95"
       >
         Become a vendor
-      </a>
+      </Link>
     </div>
   )
 }
