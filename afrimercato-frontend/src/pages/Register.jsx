@@ -3,12 +3,20 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { HERO_IMAGES } from '../utils/defaultImages'
+import { isFeatureEnabled, FEATURE_INFO } from '../config/features'
+
+// MVP Allowed roles - only customer and vendor
+const MVP_ROLES = ['customer', 'vendor']
 
 function Register() {
   const navigate = useNavigate()
   const { register } = useAuth()
   const [searchParams] = useSearchParams()
   const roleFromUrl = searchParams.get('role') || 'customer'
+  
+  // Check if attempted role is allowed in MVP
+  const [showComingSoon, setShowComingSoon] = useState(false)
+  const [blockedRole, setBlockedRole] = useState(null)
 
   const [formData, setFormData] = useState({
     name: '',
@@ -16,14 +24,22 @@ function Register() {
     phone: '',
     password: '',
     confirmPassword: '',
-    role: roleFromUrl,
+    role: MVP_ROLES.includes(roleFromUrl) ? roleFromUrl : 'customer',
   })
 
   // Update role if URL parameter changes
   useEffect(() => {
     const role = searchParams.get('role')
-    if (role && ['customer', 'vendor', 'rider', 'picker'].includes(role)) {
-      setFormData(prev => ({ ...prev, role }))
+    if (role) {
+      if (MVP_ROLES.includes(role)) {
+        setFormData(prev => ({ ...prev, role }))
+        setShowComingSoon(false)
+        setBlockedRole(null)
+      } else {
+        // Show coming soon for rider/picker
+        setShowComingSoon(true)
+        setBlockedRole(role)
+      }
     }
   }, [searchParams])
   const [error, setError] = useState('')
@@ -265,14 +281,50 @@ function Register() {
             <p className="text-gray-600">{roleContent.title}</p>
           </motion.div>
 
+          {/* Coming Soon Modal for Rider/Picker */}
+          {showComingSoon && blockedRole && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-amber-50 border border-amber-200 rounded-xl p-6 mb-6"
+            >
+              <div className="flex items-start gap-4">
+                <div className="bg-amber-100 rounded-full p-3">
+                  <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-semibold text-amber-800 mb-1">
+                    {blockedRole === 'rider' ? 'Rider Program Coming Soon!' : 'Picker Program Coming Soon!'}
+                  </h3>
+                  <p className="text-amber-700 text-sm mb-3">
+                    {blockedRole === 'rider' 
+                      ? 'Our delivery partner program is launching Q2 2026. Sign up as a customer now and we\'ll notify you when riders can join!'
+                      : 'Our fulfillment team program is launching Q2 2026. Sign up as a customer now and we\'ll notify you when pickers can join!'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowComingSoon(false)
+                      setBlockedRole(null)
+                      navigate('/register?role=customer')
+                    }}
+                    className="text-amber-800 font-medium text-sm hover:text-amber-900 underline"
+                  >
+                    Continue as Customer →
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* Register Card */}
           <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
           <p className="text-gray-600 mb-6">
             {formData.role === 'vendor' && 'Join thousands of vendors on Afrimercato'}
             {formData.role === 'customer' && 'Start shopping for fresh African groceries'}
-            {formData.role === 'rider' && 'Deliver groceries and earn on your schedule'}
-            {formData.role === 'picker' && 'Help fulfill orders from local stores'}
           </p>
 
           {error && (
@@ -282,7 +334,7 @@ function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Role Selection */}
+            {/* Role Selection - MVP only (Customer/Vendor) */}
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
                 I want to register as
@@ -297,9 +349,11 @@ function Register() {
               >
                 <option value="customer">Customer - Shop for groceries</option>
                 <option value="vendor">Vendor - Sell products</option>
-                <option value="rider">Rider - Deliver orders</option>
-                <option value="picker">Picker - Fulfill orders</option>
+                {/* Rider and Picker disabled for MVP */}
               </select>
+              <p className="text-xs text-gray-500 mt-1">
+                🚀 Rider & Picker programs launching soon!
+              </p>
             </div>
 
             <div>

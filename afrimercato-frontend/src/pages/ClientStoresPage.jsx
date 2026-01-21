@@ -336,12 +336,49 @@ export default function ClientStoresPage() {
                   }`}
                 >
                   {tab}
+                  {(tab === 'pickers' || tab === 'riders') && (
+                    <span className="ml-1.5 text-xs opacity-75">(Soon)</span>
+                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Filter Tabs */}
+          {/* Coming Soon for Pickers/Riders */}
+          {(activeTab === 'pickers' || activeTab === 'riders') && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16 px-4"
+            >
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full mb-6">
+                <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                {activeTab === 'pickers' ? 'Pickers Directory Coming Soon!' : 'Riders Directory Coming Soon!'}
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto mb-6">
+                {activeTab === 'pickers' 
+                  ? 'Our picker network is being built. Soon you\'ll be able to browse and connect with order pickers in your area.'
+                  : 'Our delivery partner network is expanding. Soon you\'ll be able to see rider availability and track deliveries in real-time.'}
+              </p>
+              <p className="text-sm text-gray-500 mb-8">Expected launch: Q2 2026</p>
+              <button
+                onClick={() => setActiveTab('stores')}
+                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-6 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
+              >
+                Browse Stores Instead
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+            </motion.div>
+          )}
+
+          {/* Filter Tabs - Only show for stores */}
+          {activeTab === 'stores' && (
           <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
             <div className="flex flex-wrap items-center gap-4">
               {[
@@ -373,9 +410,10 @@ export default function ClientStoresPage() {
               <span className="text-[#00897B] font-medium">See All Stores</span>
             </div>
           </div>
+          )}
 
           {/* Loading State */}
-          {loading && (
+          {loading && activeTab === 'stores' && (
             <div className="text-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00897B] mx-auto"></div>
               <p className="text-gray-600 mt-4">Finding stores...</p>
@@ -383,7 +421,7 @@ export default function ClientStoresPage() {
           )}
 
           {/* Store Cards Grid */}
-          {!loading && (
+          {!loading && activeTab === 'stores' && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {stores.map((store, index) => (
                 <motion.div

@@ -388,8 +388,8 @@ export default function Home() {
               <h4 className="text-white font-bold mb-4">For Partners</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/partner" className="hover:text-yellow-400">Become a Vendor</Link></li>
-                <li><Link to="/register?role=rider" className="hover:text-yellow-400">Become a Rider</Link></li>
-                <li><Link to="/register?role=picker" className="hover:text-yellow-400">Become a Picker</Link></li>
+                <li><span className="text-gray-500 cursor-not-allowed" title="Coming Q2 2026">Become a Rider (Coming Soon)</span></li>
+                <li><span className="text-gray-500 cursor-not-allowed" title="Coming Q2 2026">Become a Picker (Coming Soon)</span></li>
               </ul>
             </div>
             <div>
