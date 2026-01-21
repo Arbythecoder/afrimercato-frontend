@@ -65,11 +65,13 @@ export const AuthProvider = ({ children }) => {
           }
         } catch (error) {
           // If profile fetch fails, use decoded token data as fallback
+          // IMPORTANT: JWT contains 'roles' array, not 'role' string
+          const userRoles = decoded.roles || [];
           setUser({
             _id: decoded.id,
             email: decoded.email,
-            role: decoded.role || decoded.primaryRole,
-            name: decoded.name
+            roles: userRoles,
+            role: userRoles[0] || 'customer'
           })
           setIsAuthenticated(true)
         }

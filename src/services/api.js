@@ -464,65 +464,33 @@ export const requestInvoice = async (invoiceData) => {
   });
 };
 
-// USER PROFILE - Intelligent wrapper that handles all roles
-// Automatically routes to the correct endpoint based on user role
+// USER PROFILE - Fetch from backend only (no localStorage guessing)
+// Role comes from JWT/profile response, not client-side storage
 export const getUserProfile = async () => {
   try {
     // Try unified auth endpoint first (3 second timeout - fast)
     const result = await apiCall('/auth/me', { timeout: 3000 });
     if (result?.success) return result;
   } catch (error) {
-    console.warn('Auth /me endpoint failed, trying role-specific endpoints...');
+    console.warn('Auth /me endpoint failed, trying /auth/profile...');
   }
 
-  // Fallback: Try role-specific endpoints
-  const userRole = localStorage.getItem('userRole') || localStorage.getItem('afrimercato_user_role');
-  
+  // Fallback: Try standard profile endpoint
   try {
-    if (userRole === 'vendor') {
-      return await apiCall('/vendor/profile', { timeout: 3000 });
-    } else if (userRole === 'customer') {
-      return await apiCall('/customers/dashboard/stats', { timeout: 3000 });
-    } else if (userRole === 'rider') {
-      return await apiCall('/rider/profile', { timeout: 3000 });
-    } else if (userRole === 'picker') {
-      return await apiCall('/picker/profile', { timeout: 3000 });
-    }
+    const result = await apiCall('/auth/profile', { timeout: 3000 });
+    if (result?.success) return result;
   } catch (error) {
-    console.warn(`Failed to fetch ${userRole} profile:`, error.message);
+    console.warn('Auth /profile endpoint failed:', error.message);
   }
 
-  // Silent fail - don't block UI
+  // Silent fail - don't block UI, let AuthContext handle fallback
   return null;
 };
 
-// UPDATE USER PROFILE - Intelligent wrapper for all roles
-// Automatically routes update to correct endpoint based on role
+// UPDATE USER PROFILE - Uses general auth endpoint
+// Role-specific updates should be handled by role-specific pages calling their own APIs
 export const updateUserProfile = async (profileData) => {
-  const userRole = localStorage.getItem('userRole') || localStorage.getItem('afrimercato_user_role');
-
-  // Route to role-specific update endpoint
-  if (userRole === 'vendor') {
-    return updateVendorProfile(profileData);
-  } else if (userRole === 'customer') {
-    // Customer profile updates go to general endpoint
-    return apiCall('/auth/profile', {
-      method: 'PUT',
-      body: JSON.stringify(profileData)
-    });
-  } else if (userRole === 'rider') {
-    return apiCall('/rider/profile', {
-      method: 'PUT',
-      body: JSON.stringify(profileData)
-    });
-  } else if (userRole === 'picker') {
-    return apiCall('/picker/profile', {
-      method: 'PUT',
-      body: JSON.stringify(profileData)
-    });
-  }
-
-  // Default fallback to general auth endpoint
+  // Use unified profile update endpoint - backend knows user's role from JWT
   return apiCall('/auth/profile', {
     method: 'PUT',
     body: JSON.stringify(profileData)
