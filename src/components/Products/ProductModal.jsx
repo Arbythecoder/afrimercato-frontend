@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { vendorAPI } from '../../services/api'
 
 const categories = [
@@ -21,6 +22,7 @@ const categories = [
 const units = ['kg', 'g', 'lb', 'piece', 'bunch', 'pack', 'liter', 'ml', 'dozen']
 
 function ProductModal({ product, onClose, onSave }) {
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -150,9 +152,9 @@ function ProductModal({ product, onClose, onSave }) {
       const errorMessage = error.message || 'Failed to save product'
       
       // Check for specific error types
-      if (errorMessage.includes('401') || errorMessage.includes('Session expired')) {
+      if (errorMessage.includes('401') || errorMessage.includes('Session expired') || error.code === 'AUTH_EXPIRED') {
         alert('❌ Your session has expired. Please log in again.')
-        window.location.href = '/login'
+        navigate('/login')
       } else if (errorMessage.includes('501')) {
         alert('❌ This feature is not yet available. Coming soon!')
       } else {
