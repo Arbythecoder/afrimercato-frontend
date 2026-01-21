@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { notificationAPI } from '../../services/api'
 
 function NotificationDropdown() {
+  const navigate = useNavigate()
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -77,7 +79,7 @@ function NotificationDropdown() {
 
       // Navigate to action URL if available
       if (notification.actionUrl) {
-        window.location.href = notification.actionUrl
+        navigate(notification.actionUrl)
       }
     } catch (error) {
       console.error('Error marking notification as read:', error)
@@ -229,7 +231,7 @@ function NotificationDropdown() {
               <button
                 onClick={() => {
                   setIsOpen(false)
-                  window.location.href = '/notifications'
+                  navigate('/notifications')
                 }}
                 className="w-full text-center text-sm text-afri-green hover:text-afri-green-dark font-medium transition-colors"
               >

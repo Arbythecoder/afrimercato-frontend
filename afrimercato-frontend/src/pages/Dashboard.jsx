@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { vendorAPI } from '../services/api'
 import { analyticsAPI } from '../services/analyticsAPI'
 import AdvancedAnalytics from '../components/Analytics/AdvancedAnalytics'
@@ -17,6 +17,7 @@ import {
 } from 'recharts'
 
 function Dashboard() {
+  const navigate = useNavigate()
   const [activeTab, setActiveTab] = useState('overview')
   const [stats, setStats] = useState(null)
   const [analyticsData, setAnalyticsData] = useState(null)
@@ -76,7 +77,7 @@ function Dashboard() {
         if (errorMsg.includes('401') || errorMsg.includes('Session expired') || errorMsg.includes('Unauthorized')) {
           setError('Your session has expired. Please log in again.')
           setTimeout(() => {
-            window.location.href = '/login'
+            navigate('/login')
           }, 2000)
         } else {
           setError(errorMsg)

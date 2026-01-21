@@ -120,8 +120,11 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
           } catch (refreshError) {
             processQueue(refreshError, null);
             isRefreshing = false;
-            window.location.href = '/login';
-            throw new Error('Session expired. Please log in again.');
+            // DO NOT use window.location.href - let React handle navigation
+            // Components will check isAuthenticated and redirect via <Navigate />
+            const authError = new Error('Session expired. Please log in again.');
+            authError.code = 'AUTH_EXPIRED';
+            throw authError;
           }
         }
       }
@@ -129,7 +132,10 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
       if (response.status === 401) {
         localStorage.removeItem('afrimercato_token');
         localStorage.removeItem('afrimercato_refresh_token');
-        throw new Error('Session expired. Please log in again.');
+        // DO NOT redirect here - throw error and let component handle it
+        const authError = new Error('Session expired. Please log in again.');
+        authError.code = 'AUTH_EXPIRED';
+        throw authError;
       }
 
       // Create error with status code for better handling
@@ -206,10 +212,10 @@ export const logoutUser = async () => {
       method: 'POST'
     });
   } finally {
-    // Clear both tokens
+    // Clear both tokens - navigation is handled by AuthContext
     localStorage.removeItem('afrimercato_token');
     localStorage.removeItem('afrimercato_refresh_token');
-    window.location.href = '/login';
+    // DO NOT redirect here - let React components handle navigation
   }
 };
 
@@ -597,9 +603,10 @@ export const bulkUpdateStock = async (data) => {
 
 // UTILITIES
 export const handleApiError = (error) => {
-  if (error.message.includes('401') || error.message.includes('Session expired')) {
+  if (error.message.includes('401') || error.message.includes('Session expired') || error.code === 'AUTH_EXPIRED') {
     localStorage.removeItem('afrimercato_token');
-    window.location.href = '/login';
+    localStorage.removeItem('afrimercato_refresh_token');
+    // DO NOT redirect here - let React components handle navigation
     return 'Please log in to continue';
   }
   
