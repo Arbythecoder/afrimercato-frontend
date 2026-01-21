@@ -132,7 +132,21 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
         throw new Error('Session expired. Please log in again.');
       }
 
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      // Create error with status code for better handling
+      const statusMessage = {
+        400: 'Bad Request',
+        401: 'Unauthorized',
+        403: 'Access Denied',
+        404: 'Not Found',
+        500: 'Server Error',
+        501: 'Feature Not Implemented'
+      };
+      
+      const errorMsg = errorData.message || statusMessage[response.status] || `HTTP error! status: ${response.status}`;
+      const error = new Error(errorMsg);
+      error.status = response.status;
+      error.data = errorData;
+      throw error;
     }
 
     const data = await response.json();
