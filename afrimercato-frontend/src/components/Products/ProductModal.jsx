@@ -140,10 +140,24 @@ function ProductModal({ product, onClose, onSave }) {
       if (response.success) {
         alert(product ? 'Product updated successfully!' : 'Product created successfully!')
         onSave()
+      } else {
+        // Handle non-success response
+        alert(`❌ ${response.message || 'Failed to save product'}`)
       }
     } catch (error) {
       console.error('Product save error:', error)
-      alert(error.response?.data?.message || 'Failed to save product')
+      // apiCall throws Error with message directly
+      const errorMessage = error.message || 'Failed to save product'
+      
+      // Check for specific error types
+      if (errorMessage.includes('401') || errorMessage.includes('Session expired')) {
+        alert('❌ Your session has expired. Please log in again.')
+        window.location.href = '/login'
+      } else if (errorMessage.includes('501')) {
+        alert('❌ This feature is not yet available. Coming soon!')
+      } else {
+        alert(`❌ ${errorMessage}`)
+      }
     } finally {
       setSaving(false)
     }
