@@ -96,17 +96,17 @@ router.get('/profile', protect, authorize('vendor'), getVendorProfile);
 // @route   PUT /api/vendor/profile
 // @desc    Update vendor profile
 // @access  Private (Verified Vendor)
-router.put('/profile', updateVendorProfile);
+router.put('/profile', protect, authorize('vendor'), attachVendor, updateVendorProfile);
 
 // @route   GET /api/vendor/delivery-settings
 // @desc    Get vendor delivery settings (Premium feature)
 // @access  Private (Verified Vendor)
-router.get('/delivery-settings', getDeliverySettings);
+router.get('/delivery-settings', protect, authorize('vendor'), attachVendor, getDeliverySettings);
 
 // @route   PUT /api/vendor/delivery-settings
 // @desc    Update vendor delivery settings (Premium feature)
 // @access  Private (Verified Vendor)
-router.put('/delivery-settings', updateDeliverySettings);
+router.put('/delivery-settings', protect, authorize('vendor'), attachVendor, updateDeliverySettings);
 
 // =================================================================
 // DASHBOARD ROUTES
@@ -115,12 +115,12 @@ router.put('/delivery-settings', updateDeliverySettings);
 // @route   GET /api/vendor/dashboard/stats
 // @desc    Get dashboard statistics
 // @access  Private (Verified Vendor)
-router.get('/dashboard/stats', getDashboardStats);
+router.get('/dashboard/stats', protect, authorize('vendor'), attachVendor, getDashboardStats);
 
 // @route   GET /api/vendor/dashboard/chart-data
 // @desc    Get dashboard chart data for analytics
 // @access  Private (Verified Vendor)
-router.get('/dashboard/chart-data', getDashboardChartData);
+router.get('/dashboard/chart-data', protect, authorize('vendor'), attachVendor, getDashboardChartData);
 
 // =================================================================
 // PRODUCT ROUTES
