@@ -255,7 +255,9 @@ export const createProduct = async (productData) => {
 
   return apiCall('/vendor/products', {
     method: 'POST',
-    body: isFormData ? productData : JSON.stringify(productData)
+    body: isFormData ? productData : JSON.stringify(productData),
+    // Longer timeout for file uploads (60 seconds)
+    timeout: isFormData ? 60000 : 10000
   });
 };
 
@@ -265,7 +267,9 @@ export const updateProduct = async (productId, productData) => {
 
   return apiCall(`/vendor/products/${productId}`, {
     method: 'PUT',
-    body: isFormData ? productData : JSON.stringify(productData)
+    body: isFormData ? productData : JSON.stringify(productData),
+    // Longer timeout for file uploads (60 seconds)
+    timeout: isFormData ? 60000 : 10000
   });
 };
 
@@ -404,6 +408,10 @@ export const getVendorProductsByVendorId = async (vendorId) => {
 // PRODUCTS (Customer)
 export const getFeaturedProducts = async () => {
   return apiCall('/products/featured');
+};
+
+export const getFeaturedVendors = async (limit = 10) => {
+  return apiCall(`/products/featured-vendors?limit=${limit}`);
 };
 
 export const getAllProducts = async (filters = {}) => {
@@ -787,6 +795,7 @@ export const customerAPI = {
 
 export const productAPI = {
   getFeatured: getFeaturedProducts,
+  getFeaturedVendors,
   getAll: getAllProducts,
   getById: getProductById
 };

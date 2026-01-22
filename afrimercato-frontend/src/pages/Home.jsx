@@ -2,75 +2,96 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { MapPinIcon, MagnifyingGlassIcon, StarIcon, ClockIcon } from '@heroicons/react/24/solid'
+import { getFeaturedVendors } from '../services/api'
 
 export default function Home() {
   const navigate = useNavigate()
   const [location, setLocation] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [featuredStores, setFeaturedStores] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  // Featured Stores (like Just Eat / Uber Eats)
-  const featuredStores = [
+  // Fallback stores to show when no vendors are registered yet
+  const fallbackStores = [
     {
-      id: 1,
-      name: 'Green Valley Farms',
-      category: 'Fresh Produce',
-      image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600',
+      _id: 'demo-1',
+      storeName: 'Green Valley Farms',
+      storeDescription: 'Fresh Produce',
+      logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600',
       rating: 4.8,
-      deliveryTime: '20-30 min',
-      minOrder: '£10',
-      tags: ['Vegetables', 'Fruits', 'Organic']
+      location: { city: 'London' },
+      totalOrders: 150
     },
     {
-      id: 2,
-      name: 'African Spice Market',
-      category: 'African Groceries',
-      image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600',
+      _id: 'demo-2',
+      storeName: 'African Spice Market',
+      storeDescription: 'African Groceries',
+      logo: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600',
       rating: 4.9,
-      deliveryTime: '25-35 min',
-      minOrder: '£15',
-      tags: ['Spices', 'Grains', 'Authentic']
+      location: { city: 'Manchester' },
+      totalOrders: 200
     },
     {
-      id: 3,
-      name: 'Fresh Meat & Fish',
-      category: 'Butcher & Seafood',
-      image: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
+      _id: 'demo-3',
+      storeName: 'Fresh Meat & Fish',
+      storeDescription: 'Butcher & Seafood',
+      logo: 'https://images.unsplash.com/photo-1607623814075-e51df1bdc82f?w=600',
       rating: 4.7,
-      deliveryTime: '30-40 min',
-      minOrder: '£20',
-      tags: ['Halal', 'Fresh Fish', 'Quality']
+      location: { city: 'Birmingham' },
+      totalOrders: 120
     },
     {
-      id: 4,
-      name: 'Daily Dairy',
-      category: 'Dairy & Bakery',
-      image: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600',
+      _id: 'demo-4',
+      storeName: 'Daily Dairy',
+      storeDescription: 'Dairy & Bakery',
+      logo: 'https://images.unsplash.com/photo-1563636619-e9143da7973b?w=600',
       rating: 4.6,
-      deliveryTime: '15-25 min',
-      minOrder: '£8',
-      tags: ['Milk', 'Cheese', 'Bread']
+      location: { city: 'Leeds' },
+      totalOrders: 80
     },
     {
-      id: 5,
-      name: 'Tropical Fruits Hub',
-      category: 'Exotic Fruits',
-      image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600',
+      _id: 'demo-5',
+      storeName: 'Tropical Fruits Hub',
+      storeDescription: 'Exotic Fruits',
+      logo: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600',
       rating: 4.8,
-      deliveryTime: '20-30 min',
-      minOrder: '£12',
-      tags: ['Plantain', 'Mango', 'Yam']
+      location: { city: 'Bristol' },
+      totalOrders: 100
     },
     {
-      id: 6,
-      name: 'Lagos Kitchen Store',
-      category: 'Nigerian Foods',
-      image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600',
+      _id: 'demo-6',
+      storeName: 'Lagos Kitchen Store',
+      storeDescription: 'Nigerian Foods',
+      logo: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600',
       rating: 4.9,
-      deliveryTime: '25-35 min',
-      minOrder: '£15',
-      tags: ['Nigerian', 'Palm Oil', 'Cassava']
+      location: { city: 'Liverpool' },
+      totalOrders: 180
     }
   ]
+
+  // Fetch featured vendors from backend
+  useEffect(() => {
+    const fetchFeaturedStores = async () => {
+      try {
+        setLoading(true)
+        const response = await getFeaturedVendors(6)
+        if (response.success && response.data && response.data.length > 0) {
+          setFeaturedStores(response.data)
+        } else {
+          // Use fallback stores if no vendors available
+          setFeaturedStores(fallbackStores)
+        }
+      } catch (error) {
+        console.error('Error fetching featured vendors:', error)
+        // Use fallback stores on error
+        setFeaturedStores(fallbackStores)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedStores()
+  }, [])
 
   const handleLocationSearch = (e) => {
     e.preventDefault()
@@ -264,51 +285,82 @@ export default function Home() {
 
           {/* Store Cards Grid */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredStores.map((store) => (
-              <motion.div
-                key={store.id}
-                whileHover={{ y: -5 }}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
-                onClick={() => navigate(`/store/${store.id}`)}
-              >
-                {/* Store Image */}
-                <div className="relative h-48">
-                  <img src={store.image} alt={store.name} className="w-full h-full object-cover" />
-                  <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                    <StarIcon className="w-4 h-4 text-yellow-500" />
-                    <span className="font-bold text-gray-900">{store.rating}</span>
+            {loading ? (
+              // Loading skeleton
+              [...Array(6)].map((_, i) => (
+                <div key={i} className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-pulse">
+                  <div className="h-48 bg-gray-200"></div>
+                  <div className="p-5">
+                    <div className="h-6 bg-gray-200 rounded mb-2 w-3/4"></div>
+                    <div className="h-4 bg-gray-200 rounded mb-4 w-1/2"></div>
+                    <div className="flex gap-2 mb-4">
+                      <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                      <div className="h-6 bg-gray-200 rounded-full w-16"></div>
+                    </div>
+                    <div className="h-4 bg-gray-200 rounded w-full pt-3 border-t"></div>
                   </div>
                 </div>
-
-                {/* Store Info */}
-                <div className="p-5">
-                  <h3 className="text-xl font-bold text-gray-900 mb-1">
-                    {store.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 mb-3">{store.category}</p>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {store.tags.slice(0, 3).map((tag, i) => (
-                      <span key={i} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Delivery Info */}
-                  <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t">
-                    <div className="flex items-center gap-1">
-                      <ClockIcon className="w-4 h-4" />
-                      <span>{store.deliveryTime}</span>
-                    </div>
-                    <div className="font-semibold text-gray-900">
-                      Min. {store.minOrder}
+              ))
+            ) : (
+              featuredStores.map((store) => (
+                <motion.div
+                  key={store._id}
+                  whileHover={{ y: -5 }}
+                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
+                  onClick={() => !store._id.startsWith('demo-') && navigate(`/store/${store._id}`)}
+                >
+                  {/* Store Image */}
+                  <div className="relative h-48">
+                    <img
+                      src={store.logo || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600'}
+                      alt={store.storeName}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600'
+                      }}
+                    />
+                    <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                      <StarIcon className="w-4 h-4 text-yellow-500" />
+                      <span className="font-bold text-gray-900">{store.rating?.toFixed(1) || '4.5'}</span>
                     </div>
                   </div>
-                </div>
-              </motion.div>
-            ))}
+
+                  {/* Store Info */}
+                  <div className="p-5">
+                    <h3 className="text-xl font-bold text-gray-900 mb-1">
+                      {store.storeName}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-3">{store.storeDescription || 'African Groceries'}</p>
+
+                    {/* Location Tag */}
+                    <div className="flex flex-wrap gap-2 mb-4">
+                      {store.location?.city && (
+                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1">
+                          <MapPinIcon className="w-3 h-3" />
+                          {store.location.city}
+                        </span>
+                      )}
+                      {store.totalOrders > 0 && (
+                        <span className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
+                          {store.totalOrders}+ orders
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Delivery Info */}
+                    <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t">
+                      <div className="flex items-center gap-1">
+                        <ClockIcon className="w-4 h-4" />
+                        <span>20-40 min</span>
+                      </div>
+                      <div className="font-semibold text-green-600">
+                        View Store →
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
 
           {/* View More */}
