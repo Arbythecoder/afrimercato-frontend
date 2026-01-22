@@ -17,9 +17,9 @@ let storage;
 let isCloudinary = false;
 
 // Check if Cloudinary is configured
-const cloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
+let cloudinaryConfigured = !!(process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET;
+    process.env.CLOUDINARY_API_SECRET);
 
 if (cloudinaryConfigured) {
   try {
@@ -32,6 +32,7 @@ if (cloudinaryConfigured) {
     console.error('❌ Failed to initialize Cloudinary storage:', error.message);
     console.log('📁 Falling back to local disk storage');
     cloudinaryConfigured = false;
+    isCloudinary = false;
   }
 }
 
