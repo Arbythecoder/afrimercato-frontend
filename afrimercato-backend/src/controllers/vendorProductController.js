@@ -29,6 +29,15 @@ const { asyncHandler } = require('../middleware/errorHandler');
  * @standard UK Standard | Complete Validation
  */
 exports.createProduct = asyncHandler(async (req, res) => {
+  // Defensive check for vendor attachment
+  if (!req.vendor || !req.vendor._id) {
+    console.error('❌ createProduct: req.vendor is undefined or missing _id');
+    return res.status(403).json({
+      success: false,
+      message: 'Vendor profile not found. Please complete vendor registration first.'
+    });
+  }
+
   const vendorId = req.vendor._id;
   const {
     name,
@@ -38,13 +47,42 @@ exports.createProduct = asyncHandler(async (req, res) => {
     originalPrice,
     unit,
     stock,
-    images,
     sku,
     barcode,
-    specifications
+    specifications,
+    tags,
+    availability,
+    variants
   } = req.body;
 
-  // Comprehensive validation
+  // Process uploaded images from multer (req.files contains uploaded files)
+  let imageUrls = [];
+
+  if (req.files && req.files.length > 0) {
+    // Cloudinary: files have 'path' property with the URL
+    // Local storage: files have 'path' property with local path
+    imageUrls = req.files.map(file => {
+      // Cloudinary returns the URL in file.path
+      if (file.path && file.path.startsWith('http')) {
+        return file.path;
+      }
+      // For local storage, construct URL
+      return `${process.env.API_URL || 'http://localhost:5000'}/${file.path.replace(/\\/g, '/')}`;
+    });
+    console.log(`📸 Processed ${imageUrls.length} uploaded image(s)`);
+  } else if (req.body.images) {
+    // Fallback: images passed as JSON array (for updates or pre-uploaded URLs)
+    try {
+      imageUrls = typeof req.body.images === 'string'
+        ? JSON.parse(req.body.images)
+        : req.body.images;
+    } catch (e) {
+      // If it's a single URL string
+      imageUrls = [req.body.images];
+    }
+  }
+
+  // Validate required fields
   if (!name || !category || !price || stock === undefined) {
     return res.status(400).json({
       success: false,
@@ -52,18 +90,41 @@ exports.createProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  if (price < 0) {
+  // Validate image upload
+  if (imageUrls.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'At least one product image is required'
+    });
+  }
+
+  if (parseFloat(price) < 0) {
     return res.status(400).json({
       success: false,
       message: 'Price cannot be negative'
     });
   }
 
-  if (stock < 0) {
+  if (parseInt(stock) < 0) {
     return res.status(400).json({
       success: false,
       message: 'Stock cannot be negative'
     });
+  }
+
+  // Parse JSON fields that may come as strings from FormData
+  let parsedTags = [];
+  let parsedAvailability = {};
+  let parsedVariants = [];
+  let parsedSpecifications = {};
+
+  try {
+    parsedTags = tags ? (typeof tags === 'string' ? JSON.parse(tags) : tags) : [];
+    parsedAvailability = availability ? (typeof availability === 'string' ? JSON.parse(availability) : availability) : {};
+    parsedVariants = variants ? (typeof variants === 'string' ? JSON.parse(variants) : variants) : [];
+    parsedSpecifications = specifications ? (typeof specifications === 'string' ? JSON.parse(specifications) : specifications) : {};
+  } catch (parseError) {
+    console.warn('Warning: Could not parse some JSON fields:', parseError.message);
   }
 
   // Generate SKU if not provided
@@ -78,10 +139,13 @@ exports.createProduct = asyncHandler(async (req, res) => {
     originalPrice: originalPrice ? parseFloat(originalPrice) : parseFloat(price),
     unit: unit || 'piece',
     stock: parseInt(stock),
-    images: images || [],
+    images: imageUrls,
     sku: productSku,
     barcode,
-    specifications: specifications || {},
+    tags: parsedTags,
+    availability: parsedAvailability,
+    variants: parsedVariants,
+    specifications: parsedSpecifications,
     isActive: true,
     createdAt: new Date(),
     updatedAt: new Date()
@@ -89,6 +153,8 @@ exports.createProduct = asyncHandler(async (req, res) => {
 
   // Populate vendor info
   await product.populate('vendor', 'storeName storeId');
+
+  console.log(`✅ Product created: ${product.name} (ID: ${product._id}) with ${imageUrls.length} image(s)`);
 
   res.status(201).json({
     success: true,

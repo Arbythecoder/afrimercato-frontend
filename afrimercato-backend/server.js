@@ -77,32 +77,43 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
   'https://afrimercato-frontend.fly.dev'
-];
+].filter(Boolean); // Remove undefined values
 
-app.use(
-  cors({
-    origin: (origin, callback) => {
-      if (!origin) return callback(null, true);
+const corsOptions = {
+  origin: (origin, callback) => {
+    // Allow requests with no origin (mobile apps, curl, Postman)
+    if (!origin) return callback(null, true);
 
-      // Allow Cloudflare previews
-      if (/^https:\/\/[a-z0-9-]+\.afrimercato\.pages\.dev$/.test(origin)) {
-        return callback(null, true);
-      }
+    // Allow Cloudflare previews
+    if (/^https:\/\/[a-z0-9-]+\.afrimercato\.pages\.dev$/.test(origin)) {
+      return callback(null, true);
+    }
 
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, true);
-      }
+    // Allow GitHub Pages with any path
+    if (origin.startsWith('https://arbythecoder.github.io')) {
+      return callback(null, true);
+    }
 
-      return callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-  })
-);
+    if (allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
 
-// Preflight support
-app.options('*', cors());
+    // Log rejected origins for debugging (don't throw error, just reject)
+    console.warn(`⚠️ CORS rejected origin: ${origin}`);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  exposedHeaders: ['Content-Length', 'X-Request-Id'],
+  maxAge: 86400 // 24 hours - cache preflight requests
+};
+
+// Apply CORS middleware
+app.use(cors(corsOptions));
+
+// Explicit preflight handler for all routes
+app.options('*', cors(corsOptions));
 
 // Body parsers
 app.use(express.json({ limit: '10mb' }));

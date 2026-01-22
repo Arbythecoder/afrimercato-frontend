@@ -155,6 +155,22 @@ router.post(
 );
 
 // ==============================================
+// GET /api/auth/me - Get current user (alias for profile)
+// ==============================================
+router.get('/me', protect, asyncHandler(async (req, res) => {
+  const user = await User.findById(req.user.id);
+
+  if (!user) {
+    return res.status(404).json({ success: false, message: 'User not found' });
+  }
+
+  res.json({
+    success: true,
+    data: { user }
+  });
+}));
+
+// ==============================================
 // GET /api/auth/profile - Get logged-in user profile
 // ==============================================
 router.get('/profile', protect, asyncHandler(async (req, res) => {

@@ -2,7 +2,7 @@
 // FILE UPLOAD MIDDLEWARE (MULTER + CLOUDINARY)
 // =================================================================
 // Handles product images, vendor logos, and document uploads
-// Uses Cloudinary for cloud storage (works on Railway, Heroku, etc.)
+// Uses Cloudinary for cloud storage (works on Railway, Heroku, Fly.io, etc.)
 
 const multer = require('multer');
 const path = require('path');
@@ -17,17 +17,25 @@ let storage;
 let isCloudinary = false;
 
 // Check if Cloudinary is configured
-if (process.env.CLOUDINARY_CLOUD_NAME &&
+const cloudinaryConfigured = process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET) {
+    process.env.CLOUDINARY_API_SECRET;
 
-  // Use Cloudinary storage
-  const { productStorage } = require('../config/cloudinary');
-  storage = productStorage;
-  isCloudinary = true;
-  console.log('📸 Using Cloudinary for image storage');
+if (cloudinaryConfigured) {
+  try {
+    // Use Cloudinary storage (multer-storage-cloudinary)
+    const { productStorage } = require('../config/cloudinary');
+    storage = productStorage;
+    isCloudinary = true;
+    console.log('📸 Using Cloudinary for image storage');
+  } catch (error) {
+    console.error('❌ Failed to initialize Cloudinary storage:', error.message);
+    console.log('📁 Falling back to local disk storage');
+    cloudinaryConfigured = false;
+  }
+}
 
-} else {
+if (!cloudinaryConfigured || !isCloudinary) {
   // Fallback to local disk storage (for local development)
   console.log('📁 Using local disk storage (Cloudinary not configured)');
 
