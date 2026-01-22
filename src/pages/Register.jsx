@@ -333,7 +333,7 @@ function Register() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-5">
             {/* Role Selection - MVP only (Customer/Vendor) */}
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
@@ -509,7 +509,7 @@ function Register() {
                 'Create Account'
               )}
             </button>
-          </form>
+          </div>
 
           <div className="mt-6">
             <div className="relative">
