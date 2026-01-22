@@ -1,0 +1,44 @@
+name: Deploy to Fly.io
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      
+      - name: Set Fly.io secrets
+        run: |
+          flyctl secrets set \
+            MONGODB_URI="${{ secrets.MONGODB_URI }}" \
+            JWT_SECRET="${{ secrets.JWT_SECRET }}" \
+            JWT_REFRESH_SECRET="${{ secrets.JWT_REFRESH_SECRET }}" \
+            CLOUDINARY_CLOUD_NAME="${{ secrets.CLOUDINARY_CLOUD_NAME }}" \
+            CLOUDINARY_API_KEY="${{ secrets.CLOUDINARY_API_KEY }}" \
+            CLOUDINARY_API_SECRET="${{ secrets.CLOUDINARY_API_SECRET }}" \
+            SMTP_PASSWORD="${{ secrets.SMTP_PASSWORD }}" \
+            SMTP_HOST="smtp-relay.brevo.com" \
+            SMTP_PORT="587" \
+            SMTP_USER="afrimercatomarketplace@gmail.com" \
+            EMAIL_FROM="afrimercatomarketplace@gmail.com" \
+            GOOGLE_CLIENT_ID="1004174139642-cve442jrrhukt9pboohp79abrkedc035.apps.googleusercontent.com" \
+            GOOGLE_CLIENT_SECRET="${{ secrets.GOOGLE_CLIENT_SECRET }}" \
+            ENCRYPTION_SECRET="${{ secrets.ENCRYPTION_SECRET }}" \
+            CLIENT_URL="https://arbythecoder.github.io/afrimercato-frontend/" \
+            FRONTEND_URL="https://arbythecoder.github.io/afrimercato-frontend" \
+            JWT_EXPIRE="7d" \
+            JWT_REFRESH_EXPIRE="30d"
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      
+      - name: Deploy to Fly.io
+        run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
