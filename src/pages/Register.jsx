@@ -3,7 +3,6 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { HERO_IMAGES } from '../utils/defaultImages'
-import { isFeatureEnabled, FEATURE_INFO } from '../config/features'
 
 // MVP Allowed roles - only customer and vendor
 const MVP_ROLES = ['customer', 'vendor']
@@ -367,6 +366,7 @@ function Register() {
                 required
                 value={formData.name}
                 onChange={handleChange}
+                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="John Doe"
               />
@@ -383,6 +383,7 @@ function Register() {
                 required
                 value={formData.email}
                 onChange={handleChange}
+                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="your.email@example.com"
               />
@@ -399,6 +400,7 @@ function Register() {
                 required
                 value={formData.phone}
                 onChange={handleChange}
+                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="+44 7700 900000 or +353 85 123 4567"
               />
@@ -417,6 +419,7 @@ function Register() {
                   required
                   value={formData.password}
                   onChange={handleChange}
+                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                   placeholder="••••••••"
                 />
@@ -452,6 +455,7 @@ function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(e); } }}
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                   placeholder="••••••••"
                 />
