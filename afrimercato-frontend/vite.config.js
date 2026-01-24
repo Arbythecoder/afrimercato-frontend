@@ -4,9 +4,12 @@ import react from '@vitejs/plugin-react'
 export default defineConfig(({ mode }) => {
   // Load env file based on mode
   const env = loadEnv(mode, process.cwd(), '')
-  
+
+  // Use root path for Cloudflare Pages, subfolder for GitHub Pages
+  const isGitHubPages = process.env.DEPLOY_TARGET === 'github'
+
   return {
-    base: '/afrimercato-frontend/',
+    base: isGitHubPages ? '/afrimercato-frontend/' : '/',
     plugins: [react()],
 
     // Make env variables available in the app

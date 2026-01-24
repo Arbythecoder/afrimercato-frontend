@@ -177,6 +177,7 @@ function Login() {
                 required
                 value={formData.email}
                 onChange={handleChange}
+                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(e); } }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="your.email@example.com"
               />
@@ -200,6 +201,7 @@ function Login() {
                   required
                   value={formData.password}
                   onChange={handleChange}
+                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(e); } }}
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                   placeholder="••••••••"
                 />
