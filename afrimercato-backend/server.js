@@ -76,7 +76,10 @@ const allowedOrigins = [
   'http://localhost:5174',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
-  'https://afrimercato-frontend.fly.dev'
+  'https://afrimercato-frontend.fly.dev',
+  // Cloudflare Pages domains (update with your actual project name)
+  'https://afrimercato.pages.dev',
+  'https://afrimercato-frontend.pages.dev'
 ].filter(Boolean); // Remove undefined values
 
 const corsOptions = {
