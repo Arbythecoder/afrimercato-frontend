@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
     // Make env variables available in the app
     define: {
       'import.meta.env.VITE_API_URL': JSON.stringify(
-        env.VITE_API_URL || 'https://afrimercato-api.fly.dev'
+        env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
       )
     },
     
