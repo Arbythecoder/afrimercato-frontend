@@ -77,9 +77,9 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
         isActive: formData.isActive
       }
 
-      // Add images if available
+      // Add images if available - extract URLs only (backend expects string[])
       if (imageUrls.length > 0) {
-        submitData.images = imageUrls
+        submitData.images = imageUrls.map(img => img.url).filter(Boolean)
       }
 
       // Save product
