@@ -106,8 +106,16 @@ function Checkout() {
         localStorage.removeItem('afrimercato_cart')
         localStorage.removeItem('repeatPurchaseFrequency')
 
-        // Redirect to order confirmation
-        navigate(`/order-confirmation/${data.data.order._id}`)
+        // If card payment, redirect to Stripe Checkout
+        if (payment.method === 'card' && data.data.payment?.url) {
+          // Store order ID for verification callback
+          localStorage.setItem('pending_order_id', data.data.order._id)
+          // Redirect to Stripe Checkout page
+          window.location.href = data.data.payment.url
+        } else {
+          // For cash on delivery, redirect to order confirmation
+          navigate(`/order-confirmation/${data.data.order._id}`)
+        }
       } else {
         alert('Order failed: ' + data.message)
       }

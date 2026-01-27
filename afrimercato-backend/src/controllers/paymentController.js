@@ -1,42 +1,137 @@
 // =================================================================
-// PAYMENT CONTROLLER - COMPLETE MVP
+// PAYMENT CONTROLLER - STRIPE INTEGRATION
 // =================================================================
 // File: src/controllers/paymentController.js
-// Handles payment processing and transaction management
+// Handles payment processing with Stripe
 
 const Order = require('../models/Order');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const { asyncHandler } = require('../middleware/errorHandler');
 
+// Initialize Stripe
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
 // =================================================================
-// PAYMENT OPERATIONS
+// STRIPE PAYMENT OPERATIONS
 // =================================================================
 
 /**
- * @route   POST /api/payment/process
- * @desc    Process payment
+ * @route   POST /api/payment/stripe/create-checkout-session
+ * @desc    Create Stripe Checkout Session
  * @access  Private
  */
-exports.processPayment = asyncHandler(async (req, res) => {
-  const { amount, orderId, paymentMethod, cardDetails } = req.body;
+exports.createCheckoutSession = asyncHandler(async (req, res) => {
+  const { orderId } = req.body;
 
-  // Validate inputs
-  if (!amount || !orderId || !paymentMethod) {
+  if (!orderId) {
     return res.status(400).json({
       success: false,
-      message: 'Amount, order ID, and payment method are required'
+      message: 'Order ID is required'
     });
   }
 
-  if (paymentMethod === 'card' && !cardDetails) {
-    return res.status(400).json({
+  // Find order
+  const order = await Order.findById(orderId).populate('items.product');
+
+  if (!order) {
+    return res.status(404).json({
       success: false,
-      message: 'Card details are required for card payments'
+      message: 'Order not found'
     });
   }
 
-  // Get order
+  // Verify customer owns order
+  if (order.customer.toString() !== req.user.id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to pay for this order'
+    });
+  }
+
+  // Get customer email
+  const customer = await User.findById(req.user.id);
+
+  try {
+    // Create line items for Stripe
+    const lineItems = order.items.map(item => ({
+      price_data: {
+        currency: 'gbp',
+        product_data: {
+          name: item.name || item.product?.name || 'Product',
+          description: `Quantity: ${item.quantity}`
+        },
+        unit_amount: Math.round(item.price * 100) // Convert to pence
+      },
+      quantity: item.quantity
+    }));
+
+    // Add delivery fee if applicable
+    if (order.deliveryFee && order.deliveryFee > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'gbp',
+          product_data: {
+            name: 'Delivery Fee'
+          },
+          unit_amount: Math.round(order.deliveryFee * 100)
+        },
+        quantity: 1
+      });
+    }
+
+    // Create Stripe Checkout Session
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      mode: 'payment',
+      customer_email: customer.email,
+      line_items: lineItems,
+      metadata: {
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        customerId: req.user.id
+      },
+      success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
+      cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/cancel?order_id=${order._id}`
+    });
+
+    // Update order with Stripe session ID
+    order.transactionRef = session.id;
+    order.paymentMethod = 'card';
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        sessionId: session.id,
+        url: session.url
+      }
+    });
+  } catch (error) {
+    console.error('Stripe session error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create payment session'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/payment/stripe/create-payment-intent
+ * @desc    Create Stripe Payment Intent for inline checkout
+ * @access  Private
+ */
+exports.createPaymentIntent = asyncHandler(async (req, res) => {
+  const { orderId, amount } = req.body;
+
+  if (!orderId || !amount) {
+    return res.status(400).json({
+      success: false,
+      message: 'Order ID and amount are required'
+    });
+  }
+
+  // Find order
   const order = await Order.findById(orderId);
 
   if (!order) {
@@ -46,7 +141,7 @@ exports.processPayment = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verify customer
+  // Verify customer owns order
   if (order.customer.toString() !== req.user.id) {
     return res.status(403).json({
       success: false,
@@ -54,39 +149,230 @@ exports.processPayment = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verify amount
-  if (parseFloat(amount) !== parseFloat(order.totalAmount)) {
+  try {
+    // Create Payment Intent
+    const paymentIntent = await stripe.paymentIntents.create({
+      amount: Math.round(amount * 100), // Convert to pence
+      currency: 'gbp',
+      metadata: {
+        orderId: order._id.toString(),
+        orderNumber: order.orderNumber,
+        customerId: req.user.id
+      }
+    });
+
+    // Update order with payment intent ID
+    order.transactionRef = paymentIntent.id;
+    order.paymentMethod = 'card';
+    await order.save();
+
+    res.status(200).json({
+      success: true,
+      data: {
+        clientSecret: paymentIntent.client_secret,
+        paymentIntentId: paymentIntent.id
+      }
+    });
+  } catch (error) {
+    console.error('Payment Intent error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to create payment intent'
+    });
+  }
+});
+
+/**
+ * @route   GET /api/payment/stripe/verify/:sessionId
+ * @desc    Verify Stripe payment session
+ * @access  Private
+ */
+exports.verifyStripePayment = asyncHandler(async (req, res) => {
+  const { sessionId } = req.params;
+
+  if (!sessionId) {
     return res.status(400).json({
       success: false,
-      message: 'Payment amount does not match order total'
+      message: 'Session ID is required'
     });
   }
 
-  // Process payment based on method
+  try {
+    // Retrieve session from Stripe
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    // Find order
+    const order = await Order.findOne({ transactionRef: sessionId });
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        message: 'Order not found'
+      });
+    }
+
+    // Update order based on payment status
+    if (session.payment_status === 'paid') {
+      order.paymentStatus = 'paid';
+      order.status = 'confirmed';
+      order.paidAt = new Date();
+      order.paymentDetails = {
+        gateway: 'stripe',
+        sessionId: session.id,
+        paymentIntent: session.payment_intent,
+        amountPaid: session.amount_total / 100
+      };
+      await order.save();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Payment verified successfully',
+        data: {
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          status: 'success',
+          amount: session.amount_total / 100
+        }
+      });
+    }
+
+    return res.status(200).json({
+      success: false,
+      message: 'Payment not completed',
+      data: {
+        status: session.payment_status
+      }
+    });
+  } catch (error) {
+    console.error('Stripe verification error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to verify payment'
+    });
+  }
+});
+
+/**
+ * @route   POST /api/payment/webhook
+ * @desc    Stripe webhook handler
+ * @access  Public (webhook verification)
+ */
+exports.handleStripeWebhook = asyncHandler(async (req, res) => {
+  const sig = req.headers['stripe-signature'];
+  const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+  let event;
+
+  try {
+    event = stripe.webhooks.constructEvent(req.body, sig, endpointSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err.message);
+    return res.status(400).send(`Webhook Error: ${err.message}`);
+  }
+
+  // Handle the event
+  switch (event.type) {
+    case 'checkout.session.completed': {
+      const session = event.data.object;
+      const order = await Order.findOne({ transactionRef: session.id });
+
+      if (order && order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'paid';
+        order.status = 'confirmed';
+        order.paidAt = new Date();
+        order.paymentDetails = {
+          gateway: 'stripe',
+          sessionId: session.id,
+          paymentIntent: session.payment_intent,
+          amountPaid: session.amount_total / 100
+        };
+        await order.save();
+      }
+      break;
+    }
+
+    case 'payment_intent.succeeded': {
+      const paymentIntent = event.data.object;
+      const order = await Order.findOne({ transactionRef: paymentIntent.id });
+
+      if (order && order.paymentStatus !== 'paid') {
+        order.paymentStatus = 'paid';
+        order.status = 'confirmed';
+        order.paidAt = new Date();
+        await order.save();
+      }
+      break;
+    }
+
+    case 'payment_intent.payment_failed': {
+      const paymentIntent = event.data.object;
+      const order = await Order.findOne({ transactionRef: paymentIntent.id });
+
+      if (order) {
+        order.paymentStatus = 'failed';
+        order.status = 'payment_failed';
+
+        // Restore stock
+        for (const item of order.items) {
+          const product = await Product.findById(item.product);
+          if (product) {
+            product.stock += item.quantity;
+            await product.save();
+          }
+        }
+        await order.save();
+      }
+      break;
+    }
+
+    default:
+      console.log(`Unhandled event type ${event.type}`);
+  }
+
+  res.status(200).json({ received: true });
+});
+
+// =================================================================
+// LEGACY PAYMENT OPERATIONS
+// =================================================================
+
+/**
+ * @route   POST /api/payment/process
+ * @desc    Process payment (legacy - for wallet/cash)
+ * @access  Private
+ */
+exports.processPayment = asyncHandler(async (req, res) => {
+  const { amount, orderId, paymentMethod } = req.body;
+
+  if (!amount || !orderId || !paymentMethod) {
+    return res.status(400).json({
+      success: false,
+      message: 'Amount, order ID, and payment method are required'
+    });
+  }
+
+  const order = await Order.findById(orderId);
+
+  if (!order) {
+    return res.status(404).json({
+      success: false,
+      message: 'Order not found'
+    });
+  }
+
+  if (order.customer.toString() !== req.user.id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Not authorized to pay for this order'
+    });
+  }
+
   let transactionRef;
   let paymentStatus = 'pending';
 
   try {
     switch(paymentMethod) {
-      case 'card':
-        // In production, integrate with payment gateway (Stripe, PayPal, etc.)
-        transactionRef = generateTransactionRef('CARD');
-        paymentStatus = 'pending'; // Wait for webhook confirmation
-        break;
-
-      case 'mobile_money':
-        // Integrate with mobile money provider
-        transactionRef = generateTransactionRef('MOMO');
-        paymentStatus = 'pending';
-        break;
-
-      case 'bank_transfer':
-        transactionRef = generateTransactionRef('BANK');
-        paymentStatus = 'pending';
-        break;
-
       case 'wallet':
-        // Check wallet balance
         const customer = await User.findById(req.user.id);
         if (!customer.walletBalance || customer.walletBalance < amount) {
           return res.status(400).json({
@@ -97,23 +383,27 @@ exports.processPayment = asyncHandler(async (req, res) => {
         customer.walletBalance -= amount;
         await customer.save();
         transactionRef = generateTransactionRef('WALLET');
-        paymentStatus = 'success';
+        paymentStatus = 'paid';
+        break;
+
+      case 'cash':
+        transactionRef = generateTransactionRef('CASH');
+        paymentStatus = 'pending'; // Will be marked paid on delivery
         break;
 
       default:
         return res.status(400).json({
           success: false,
-          message: 'Invalid payment method'
+          message: 'For card payments, use /api/payment/stripe/create-checkout-session'
         });
     }
 
-    // Update order
     order.paymentMethod = paymentMethod;
     order.transactionRef = transactionRef;
     order.paymentStatus = paymentStatus;
 
-    if (paymentStatus === 'success') {
-      order.status = 'processing';
+    if (paymentStatus === 'paid') {
+      order.status = 'confirmed';
       order.paidAt = Date.now();
     }
 
@@ -121,7 +411,7 @@ exports.processPayment = asyncHandler(async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: paymentStatus === 'success' ? 'Payment successful' : 'Payment initiated',
+      message: paymentStatus === 'paid' ? 'Payment successful' : 'Order confirmed',
       data: {
         orderId: order._id,
         transactionRef,
@@ -153,29 +443,22 @@ exports.getPaymentMethods = asyncHandler(async (req, res) => {
     });
   }
 
-  // Get saved payment methods
   const savedMethods = customer.paymentMethods || [];
 
-  // Available payment methods
   const availableMethods = [
     {
       id: 'card',
       name: 'Debit/Credit Card',
+      description: 'Pay securely with Stripe',
       enabled: true,
       icon: 'card'
     },
     {
-      id: 'mobile_money',
-      name: 'Mobile Money',
+      id: 'cash',
+      name: 'Cash on Delivery',
+      description: 'Pay when you receive your order',
       enabled: true,
-      icon: 'mobile',
-      providers: ['MTN', 'Vodafone', 'AirtelTigo']
-    },
-    {
-      id: 'bank_transfer',
-      name: 'Bank Transfer',
-      enabled: true,
-      icon: 'bank'
+      icon: 'cash'
     },
     {
       id: 'wallet',
@@ -219,12 +502,10 @@ exports.addPaymentMethod = asyncHandler(async (req, res) => {
     });
   }
 
-  // Initialize payment methods array
   if (!customer.paymentMethods) {
     customer.paymentMethods = [];
   }
 
-  // Validate card (basic validation)
   if (!validateCardNumber(cardNumber)) {
     return res.status(400).json({
       success: false,
@@ -232,7 +513,6 @@ exports.addPaymentMethod = asyncHandler(async (req, res) => {
     });
   }
 
-  // Encrypt sensitive data in production
   const newMethod = {
     _id: new require('mongoose').Types.ObjectId(),
     type: 'card',
@@ -270,7 +550,6 @@ exports.getPaymentStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verify user owns this order
   if (order.customer.toString() !== req.user.id) {
     return res.status(403).json({
       success: false,
@@ -310,7 +589,6 @@ exports.requestRefund = asyncHandler(async (req, res) => {
     });
   }
 
-  // Verify customer
   if (order.customer.toString() !== req.user.id) {
     return res.status(403).json({
       success: false,
@@ -318,7 +596,6 @@ exports.requestRefund = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if already refunded or cancelled
   if (order.refundStatus === 'completed' || order.status === 'cancelled') {
     return res.status(400).json({
       success: false,
@@ -326,7 +603,6 @@ exports.requestRefund = asyncHandler(async (req, res) => {
     });
   }
 
-  // Check if refund request already exists
   if (order.refundStatus === 'pending') {
     return res.status(400).json({
       success: false,
@@ -334,7 +610,6 @@ exports.requestRefund = asyncHandler(async (req, res) => {
     });
   }
 
-  // Only allow refunds for orders within 30 days
   const daysSinceOrder = (Date.now() - order.createdAt) / (1000 * 60 * 60 * 24);
   if (daysSinceOrder > 30) {
     return res.status(400).json({
@@ -343,7 +618,6 @@ exports.requestRefund = asyncHandler(async (req, res) => {
     });
   }
 
-  // Create refund request
   order.refundRequest = {
     reason,
     details,
@@ -362,58 +636,6 @@ exports.requestRefund = asyncHandler(async (req, res) => {
       refundAmount: order.totalAmount,
       status: 'pending'
     }
-  });
-});
-
-/**
- * @route   POST /api/payment/webhook
- * @desc    Payment gateway webhook handler
- * @access  Public (webhook verification)
- */
-exports.handlePaymentWebhook = asyncHandler(async (req, res) => {
-  const { transactionRef, status, amount, timestamp, signature } = req.body;
-
-  // Verify webhook signature (implement with your payment gateway)
-  // const isValid = verifyWebhookSignature(req.body, signature);
-  // if (!isValid) {
-  //   return res.status(401).json({ success: false, message: 'Invalid signature' });
-  // }
-
-  const order = await Order.findOne({ transactionRef });
-
-  if (!order) {
-    return res.status(404).json({
-      success: false,
-      message: 'Order not found'
-    });
-  }
-
-  // Update payment status
-  const paymentStatus = status === 'completed' ? 'paid' : status === 'failed' ? 'failed' : 'pending';
-
-  order.paymentStatus = paymentStatus;
-
-  if (paymentStatus === 'paid') {
-    order.status = 'processing';
-    order.paidAt = Date.now();
-  } else if (paymentStatus === 'failed') {
-    // Refund if payment failed - restore stock
-    for (const item of order.items) {
-      const product = await Product.findById(item.product);
-      if (product) {
-        product.stock += item.quantity;
-        await product.save();
-      }
-    }
-    order.status = 'payment_failed';
-  }
-
-  await order.save();
-
-  // Respond to webhook
-  res.status(200).json({
-    success: true,
-    message: 'Webhook processed'
   });
 });
 
@@ -447,18 +669,12 @@ exports.getTransactionHistory = asyncHandler(async (req, res) => {
 // HELPER FUNCTIONS
 // =================================================================
 
-/**
- * Generate transaction reference
- */
 function generateTransactionRef(prefix) {
   const timestamp = Date.now().toString().slice(-8);
   const random = Math.random().toString(36).substring(2, 7).toUpperCase();
   return `${prefix}-${timestamp}-${random}`;
 }
 
-/**
- * Validate card number using Luhn algorithm
- */
 function validateCardNumber(cardNumber) {
   const digits = cardNumber.replace(/\D/g, '');
   if (digits.length < 13 || digits.length > 19) return false;
@@ -483,9 +699,6 @@ function validateCardNumber(cardNumber) {
   return sum % 10 === 0;
 }
 
-/**
- * Mask card number for display
- */
 function maskCardNumber(cardNumber) {
   const digits = cardNumber.replace(/\D/g, '');
   return `****-****-****-${digits.slice(-4)}`;

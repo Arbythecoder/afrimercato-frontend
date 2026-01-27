@@ -35,14 +35,7 @@ const {
   getRevenueReport,
   getDeliverySettings,
   updateDeliverySettings,
-  // getOnboardingStatus,          // TODO: implement
-  // getVendorDashboard,           // TODO: implement
-  registerVendor,
-  loginVendor,
-  verifyOTP,
-  verifyVendorEmail,
-vendorAuthController,
-vendorController
+  registerVendor
 } = require('../controllers/vendorController');
 
 // Import middleware
@@ -91,7 +84,8 @@ router.post('/profile', protect, authorize('vendor'), validateVendorProfile, cre
 // @route   GET /api/vendor/profile
 // @desc    Get own vendor profile
 // @access  Private (Vendor)
-router.get('/profile', protect, authorize('vendor'), getVendorProfile);
+router.get('/profile', protect, authorize('vendor'), attachVendor, getVendorProfile);
+
 
 // @route   PUT /api/vendor/profile
 // @desc    Update vendor profile

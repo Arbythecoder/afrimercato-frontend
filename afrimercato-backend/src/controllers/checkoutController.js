@@ -1,5 +1,5 @@
 // =================================================================
-// CHECKOUT CONTROLLER - COMPLETE MVP
+// CHECKOUT CONTROLLER - COMPLETE MVP WITH STRIPE
 // =================================================================
 // File: src/controllers/checkoutController.js
 // Handles checkout, order creation, and payment processing
@@ -9,6 +9,9 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Vendor = require('../models/Vendor');
 const { asyncHandler } = require('../middleware/errorHandler');
+
+// Initialize Stripe
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Helper to generate order number
 const generateOrderNumber = () => {
@@ -554,6 +557,238 @@ exports.getRepeatPurchaseSettings = asyncHandler(async (req, res) => {
       frequency: customer.repeatPurchaseSettings?.frequency || null,
       nextRepeatDate: customer.repeatPurchaseSettings?.nextRepeatDate || null,
       autoRenewNotificationSent: customer.repeatPurchaseSettings?.autoRenewNotificationSent || false
+    }
+  });
+});
+
+// =================================================================
+// PAYMENT INITIALIZATION - STRIPE
+// =================================================================
+
+/**
+ * @route   POST /api/checkout/payment/initialize
+ * @desc    Create order and initialize Stripe payment
+ * @access  Private (customer)
+ */
+exports.initializePayment = asyncHandler(async (req, res) => {
+  const { items, deliveryAddress, payment, pricing, repeatPurchaseFrequency } = req.body;
+
+  // Validate inputs
+  if (!items || items.length === 0) {
+    return res.status(400).json({
+      success: false,
+      message: 'Cart items are required'
+    });
+  }
+
+  if (!deliveryAddress) {
+    return res.status(400).json({
+      success: false,
+      message: 'Delivery address is required'
+    });
+  }
+
+  // Get customer
+  const customer = await User.findById(req.user.id);
+  if (!customer) {
+    return res.status(404).json({
+      success: false,
+      message: 'Customer not found'
+    });
+  }
+
+  // Validate repeat purchase frequency if provided
+  const validFrequencies = ['weekly', 'bi-weekly', 'monthly', 'quarterly'];
+  if (repeatPurchaseFrequency && !validFrequencies.includes(repeatPurchaseFrequency)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid repeat purchase frequency'
+    });
+  }
+
+  // Process items and validate stock
+  const orderItems = [];
+  let totalAmount = 0;
+
+  for (const cartItem of items) {
+    const product = await Product.findById(cartItem.product);
+
+    if (!product) {
+      return res.status(400).json({
+        success: false,
+        message: `Product not found: ${cartItem.name}`
+      });
+    }
+
+    if (product.stock < cartItem.quantity) {
+      return res.status(400).json({
+        success: false,
+        message: `Insufficient stock for ${product.name}`
+      });
+    }
+
+    orderItems.push({
+      product: product._id,
+      name: product.name,
+      quantity: cartItem.quantity,
+      price: cartItem.price,
+      unit: cartItem.unit || 'piece'
+    });
+
+    totalAmount += cartItem.price * cartItem.quantity;
+
+    // Deduct stock
+    product.stock -= cartItem.quantity;
+    await product.save();
+  }
+
+  // Calculate total with fees
+  const deliveryFee = pricing?.deliveryFee || 0;
+  const finalTotal = totalAmount + deliveryFee;
+
+  // Build repeat purchase data if frequency provided
+  const repeatPurchaseData = repeatPurchaseFrequency ? {
+    enabled: true,
+    frequency: repeatPurchaseFrequency,
+    nextRepeatDate: calculateNextRepeatDate(repeatPurchaseFrequency),
+    active: true
+  } : undefined;
+
+  // Create order
+  const order = await Order.create({
+    orderNumber: generateOrderNumber(),
+    customer: customer._id,
+    items: orderItems,
+    totalAmount: finalTotal,
+    subtotal: totalAmount,
+    deliveryFee,
+    status: 'pending',
+    paymentStatus: 'pending',
+    paymentMethod: payment?.method || 'card',
+    deliveryAddress: `${deliveryAddress.street}, ${deliveryAddress.city}, ${deliveryAddress.postcode}`,
+    deliveryAddressDetails: {
+      fullName: deliveryAddress.fullName,
+      phone: deliveryAddress.phone,
+      street: deliveryAddress.street,
+      city: deliveryAddress.city,
+      postcode: deliveryAddress.postcode,
+      instructions: deliveryAddress.instructions
+    },
+    ...(repeatPurchaseData && { repeatPurchase: repeatPurchaseData })
+  });
+
+  // If payment method is card, create Stripe Checkout Session
+  if (payment?.method === 'card') {
+    try {
+      // Create line items for Stripe
+      const lineItems = orderItems.map(item => ({
+        price_data: {
+          currency: 'gbp',
+          product_data: {
+            name: item.name
+          },
+          unit_amount: Math.round(item.price * 100) // Convert to pence
+        },
+        quantity: item.quantity
+      }));
+
+      // Add delivery fee if applicable
+      if (deliveryFee > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'gbp',
+            product_data: {
+              name: 'Delivery Fee'
+            },
+            unit_amount: Math.round(deliveryFee * 100)
+          },
+          quantity: 1
+        });
+      }
+
+      // Create Stripe Checkout Session
+      const session = await stripe.checkout.sessions.create({
+        payment_method_types: ['card'],
+        mode: 'payment',
+        customer_email: customer.email,
+        line_items: lineItems,
+        metadata: {
+          orderId: order._id.toString(),
+          orderNumber: order.orderNumber,
+          customerId: customer._id.toString()
+        },
+        success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
+        cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/cancel?order_id=${order._id}`
+      });
+
+      // Update order with Stripe session ID
+      order.transactionRef = session.id;
+      await order.save();
+
+      return res.status(201).json({
+        success: true,
+        message: 'Order created and payment initialized',
+        data: {
+          order: {
+            _id: order._id,
+            orderNumber: order.orderNumber,
+            totalAmount: finalTotal,
+            status: order.status
+          },
+          payment: {
+            sessionId: session.id,
+            url: session.url
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Stripe error:', error);
+      // Restore stock on failure
+      for (const item of orderItems) {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.stock += item.quantity;
+          await product.save();
+        }
+      }
+      await Order.findByIdAndDelete(order._id);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to initialize payment. Please try again.'
+      });
+    }
+  }
+
+  // For cash on delivery
+  if (payment?.method === 'cash') {
+    order.status = 'confirmed';
+    await order.save();
+  }
+
+  // Update customer repeat purchase settings if frequency provided
+  if (repeatPurchaseFrequency) {
+    await User.findByIdAndUpdate(customer._id, {
+      repeatPurchaseFrequency,
+      repeatPurchaseSettings: {
+        enabled: true,
+        frequency: repeatPurchaseFrequency,
+        nextRepeatDate: calculateNextRepeatDate(repeatPurchaseFrequency),
+        autoRenewNotificationSent: false
+      }
+    });
+  }
+
+  res.status(201).json({
+    success: true,
+    message: 'Order created successfully',
+    data: {
+      order: {
+        _id: order._id,
+        orderNumber: order.orderNumber,
+        totalAmount: finalTotal,
+        status: order.status
+      }
     }
   });
 });

@@ -48,6 +48,7 @@ const trackingRoutes = require('./src/routes/trackingRoutes');
 const seedRoutes = require('./src/routes/seedRoutes');
 const adminRiderRoutes = require('./src/routes/adminRiderRoutes');
 const adminPickerRoutes = require('./src/routes/adminPickerRoutes');
+const reviewRoutes = require('./src/routes/reviewRoutes');
 
 // App init
 const app = express();
@@ -69,6 +70,10 @@ app.use(
 // ======================= CORS =======================
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  // Production domains
+  'https://afrimercato.com',
+  'https://www.afrimercato.com',
+  // Legacy/development domains
   'https://arbythecoder.github.io/afrimercato-frontend',
   'https://arbythecoder.github.io',
   'http://localhost:3000',
@@ -77,7 +82,7 @@ const allowedOrigins = [
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
   'https://afrimercato-frontend.fly.dev',
-  // Cloudflare Pages domains (update with your actual project name)
+  // Cloudflare Pages domains
   'https://afrimercato.pages.dev',
   'https://afrimercato-frontend.pages.dev'
 ].filter(Boolean); // Remove undefined values
@@ -86,6 +91,16 @@ const corsOptions = {
   origin: (origin, callback) => {
     // Allow requests with no origin (mobile apps, curl, Postman)
     if (!origin) return callback(null, true);
+
+    // PRODUCTION: Allow afrimercato.com and ALL vendor subdomains (*.afrimercato.com)
+    if (/^https:\/\/([\w-]+\.)?afrimercato\.com$/.test(origin)) {
+      return callback(null, true);
+    }
+
+    // Allow Vercel deployments (all preview and production URLs)
+    if (/^https:\/\/.*\.vercel\.app$/.test(origin)) {
+      return callback(null, true);
+    }
 
     // Allow Cloudflare previews
     if (/^https:\/\/[a-z0-9-]+\.afrimercato\.pages\.dev$/.test(origin)) {
@@ -209,6 +224,7 @@ app.use('/api/support', ticketRoutes);
 app.use('/api/payouts', payoutRoutes);
 app.use('/api/privacy', gdprRoutes);
 app.use('/api/seed', seedRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // ======================= ERRORS =======================
 app.use(notFound);
@@ -216,14 +232,19 @@ app.use(errorHandler);
 
 // ======================= SERVER =======================
 const PORT = process.env.PORT || 5000;
+const HOST = '0.0.0.0'; // Listen on all network interfaces (required for Fly.io)
 
-const server = app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`🚀 Server running on ${HOST}:${PORT}`);
 });
 
 // Socket.io
 const io = initSocket(server);
 global.io = io;
+
+// Initialize cron jobs for repeat orders
+const { initializeCronJobs } = require('./src/services/repeatOrderService');
+initializeCronJobs();
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {

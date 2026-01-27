@@ -15,6 +15,13 @@ const Vendor = require('../models/Vendor');
 const attachVendor = async (req, res, next) => {
   try {
     // req.user is set by protect middleware (contains JWT payload: id, roles)
+    if (!req.user || !req.user.id) {
+      console.error('attachVendor: req.user or req.user.id is undefined');
+      return res.status(401).json({
+        success: false,
+        message: 'Authentication required. Please log in again.'
+      });
+    }
     const userId = req.user.id;
 
     const vendor = await Vendor.findOne({ user: userId });

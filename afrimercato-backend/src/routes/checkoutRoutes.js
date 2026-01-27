@@ -13,7 +13,8 @@ const {
   getOrderDetails,
   handlePaymentWebhook,
   setRepeatPurchase,
-  getRepeatPurchaseSettings
+  getRepeatPurchaseSettings,
+  initializePayment
 } = require('../controllers/checkoutController');
 
 // All checkout routes require customer authentication
@@ -24,6 +25,9 @@ router.post('/process', processCheckout);
 router.get('/orders', getOrders);
 router.get('/orders/:orderId', getOrderDetails);
 router.post('/webhook/payment', handlePaymentWebhook);
+
+// Payment initialization (creates order + initializes Paystack)
+router.post('/payment/initialize', initializePayment);
 
 // Repeat purchase endpoints
 router.post('/repeat-purchase/set', setRepeatPurchase);

@@ -18,7 +18,7 @@ const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerSto
 
 // Multer-Cloudinary storage for product images
 const productStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary: { v2: cloudinary },
   params: {
     folder: 'afrimercato/products',
     allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
@@ -30,7 +30,7 @@ const productStorage = new CloudinaryStorage({
 
 // Storage for vendor logos
 const logoStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary: { v2: cloudinary },
   params: {
     folder: 'afrimercato/logos',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
@@ -42,7 +42,7 @@ const logoStorage = new CloudinaryStorage({
 
 // Storage for user avatars
 const avatarStorage = new CloudinaryStorage({
-  cloudinary: cloudinary,
+  cloudinary: { v2: cloudinary },
   params: {
     folder: 'afrimercato/avatars',
     allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],

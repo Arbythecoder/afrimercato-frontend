@@ -61,7 +61,7 @@ exports.registerVendor = asyncHandler(async (req, res) => {
   });
 
   // Generate unique store ID
-  const storeId = await generateStoreId(category);
+  const storeId = await generateUniqueStoreId(category);
 
   // Create vendor profile with PENDING status (not auto-verified)
   const vendor = await Vendor.create({
@@ -77,30 +77,16 @@ exports.registerVendor = asyncHandler(async (req, res) => {
     verificationStep: 'email_pending'
   });
 
-  // Generate email verification token
-  const verificationToken = user.generateEmailVerificationToken();
-  await user.save();
-
-  // Send WELCOME email with onboarding steps
-  const verificationUrl = `${process.env.CLIENT_URL}/verify-email/${verificationToken}`;
-  await sendEmail({
-    to: email,
-    subject: 'Welcome to Afrimercato! Verify Your Email',
-    template: 'vendor-welcome', // Create this template
-    context: {
-      name: fullName,
-      storeName,
-      storeId,
-      verificationUrl,
-      steps: [
-        '1. Verify your email (click link above)',
-        '2. Complete your store profile',
-        '3. We\'ll verify your business (24-48 hours)',
-        '4. Start adding products!'
-      ],
-      supportEmail: 'vendors@afrimercato.com'
+  // Generate email verification token (if method exists)
+  try {
+    if (typeof user.generateEmailVerificationToken === 'function') {
+      const verificationToken = user.generateEmailVerificationToken();
+      await user.save();
+      console.log(`📧 Email verification token generated for: ${email}`);
     }
-  });
+  } catch (emailError) {
+    console.log('Email verification token generation skipped:', emailError.message);
+  }
 
   // USER-FRIENDLY RESPONSE (no technical errors!)
   res.status(201).json({
@@ -262,6 +248,15 @@ const generateUniqueStoreId = async (category) => {
  * @access  Private (Vendor)
  */
 exports.getVendorProfile = asyncHandler(async (req, res) => {
+  // Safety check - req.vendor should be set by attachVendor middleware
+  if (!req.vendor || !req.vendor._id) {
+    return res.status(403).json({
+      success: false,
+      message: 'Vendor profile not found. Please complete vendor registration first.',
+      errorCode: 'VENDOR_NOT_ATTACHED'
+    });
+  }
+
   const vendor = await Vendor.findById(req.vendor._id).populate(
     'user',
     'name email phone approvalStatus approvedAt'
@@ -276,7 +271,7 @@ exports.getVendorProfile = asyncHandler(async (req, res) => {
   }
 
   // Include user account approval status for frontend
-  const userApprovalStatus = req.user.approvalStatus;
+  const userApprovalStatus = req.user?.approvalStatus || 'pending';
   const isPendingApproval = req.vendorPendingApproval || false;
 
   res.json({

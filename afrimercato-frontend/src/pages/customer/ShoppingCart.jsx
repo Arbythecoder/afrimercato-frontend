@@ -1,49 +1,145 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProductImage } from '../../utils/defaultImages'
+import { useAuth } from '../../context/AuthContext'
+import { cartAPI } from '../../services/api'
 
 function ShoppingCart() {
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
   const [repeatPurchaseFrequency, setRepeatPurchaseFrequency] = useState(null)
 
   useEffect(() => {
     loadCart()
     window.addEventListener('cartUpdated', loadCart)
     return () => window.removeEventListener('cartUpdated', loadCart)
-  }, [])
+  }, [isAuthenticated])
 
-  const loadCart = () => {
-    const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-    setCart(savedCart)
-    setLoading(false)
+  // Sync localStorage cart to backend when user logs in
+  useEffect(() => {
+    if (isAuthenticated) {
+      syncLocalCartToBackend()
+    }
+  }, [isAuthenticated])
+
+  const syncLocalCartToBackend = async () => {
+    const localCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+    if (localCart.length === 0) return
+
+    try {
+      setSyncing(true)
+      // Add each local item to backend cart
+      for (const item of localCart) {
+        await cartAPI.add(item._id, item.quantity)
+      }
+      // Clear localStorage after successful sync
+      localStorage.removeItem('afrimercato_cart')
+      // Reload cart from backend
+      await loadCart()
+    } catch (error) {
+      console.error('Failed to sync cart:', error)
+    } finally {
+      setSyncing(false)
+    }
   }
 
-  const updateQuantity = (productId, newQuantity) => {
+  const loadCart = async () => {
+    try {
+      setLoading(true)
+
+      if (isAuthenticated) {
+        // Load from backend
+        const response = await cartAPI.get()
+        if (response.success) {
+          // Transform backend cart format to frontend format
+          const backendCart = response.data.map(item => ({
+            _id: item.productId?.toString() || item.productId,
+            name: item.name || 'Product',
+            price: item.price,
+            quantity: item.quantity,
+            unit: item.unit || 'piece',
+            images: item.images,
+            vendor: item.vendor
+          }))
+          setCart(backendCart)
+        }
+      } else {
+        // Load from localStorage for guests
+        const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        setCart(savedCart)
+      }
+    } catch (error) {
+      console.error('Failed to load cart:', error)
+      // Fallback to localStorage
+      const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+      setCart(savedCart)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const updateQuantity = async (productId, newQuantity) => {
     if (newQuantity < 1) {
       removeItem(productId)
       return
     }
 
+    // Optimistic update
     const updatedCart = cart.map(item =>
       item._id === productId ? { ...item, quantity: newQuantity } : item
     )
     setCart(updatedCart)
-    localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+
+    if (isAuthenticated) {
+      try {
+        await cartAPI.update(productId, newQuantity)
+      } catch (error) {
+        console.error('Failed to update cart:', error)
+        // Reload on error
+        loadCart()
+      }
+    } else {
+      localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+    }
+
     window.dispatchEvent(new Event('cartUpdated'))
   }
 
-  const removeItem = (productId) => {
+  const removeItem = async (productId) => {
+    // Optimistic update
     const updatedCart = cart.filter(item => item._id !== productId)
     setCart(updatedCart)
-    localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+
+    if (isAuthenticated) {
+      try {
+        await cartAPI.remove(productId)
+      } catch (error) {
+        console.error('Failed to remove item:', error)
+        loadCart()
+      }
+    } else {
+      localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+    }
+
     window.dispatchEvent(new Event('cartUpdated'))
   }
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([])
-    localStorage.removeItem('afrimercato_cart')
+
+    if (isAuthenticated) {
+      try {
+        await cartAPI.clear()
+      } catch (error) {
+        console.error('Failed to clear cart:', error)
+      }
+    } else {
+      localStorage.removeItem('afrimercato_cart')
+    }
+
     window.dispatchEvent(new Event('cartUpdated'))
   }
 
@@ -65,7 +161,10 @@ function ShoppingCart() {
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
         <div className="max-w-7xl mx-auto px-4">
           <h1 className="text-3xl font-bold">Shopping Cart</h1>
-          <p className="text-afri-green-light mt-1">{cart.length} items in your cart</p>
+          <p className="text-afri-green-light mt-1">
+            {cart.length} items in your cart
+            {syncing && <span className="ml-2 text-sm">(Syncing...)</span>}
+          </p>
         </div>
       </div>
 
@@ -159,7 +258,7 @@ function ShoppingCart() {
               <div className="bg-gradient-to-br from-afri-green-light/10 to-afri-green/10 rounded-xl p-6 border border-afri-green-light">
                 <h3 className="text-lg font-bold text-gray-900 mb-4">🔄 Set item(s) for repurchase</h3>
                 <p className="text-sm text-gray-600 mb-4">Never run out of your favorites! Select how often you'd like this order to repeat automatically.</p>
-                
+
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                   {['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'].map((frequency) => (
                     <button
