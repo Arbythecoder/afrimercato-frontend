@@ -33,3 +33,5 @@ dist-ssr
 .env.development
 # Ignore all markdown files with potential secrets
 *.md
+.vercel
+.env*.local

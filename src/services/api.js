@@ -807,6 +807,126 @@ export const orderAPI = {
   cancel: cancelOrder
 };
 
+// =================================================================
+// CART ENDPOINTS (Backend Sync)
+// =================================================================
+
+export const getBackendCart = async () => {
+  return apiCall('/cart');
+};
+
+export const addToBackendCart = async (productId, quantity = 1) => {
+  return apiCall('/cart/add', {
+    method: 'POST',
+    body: JSON.stringify({ productId, quantity })
+  });
+};
+
+export const updateBackendCartItem = async (itemId, quantity) => {
+  return apiCall(`/cart/update/${itemId}`, {
+    method: 'PUT',
+    body: JSON.stringify({ quantity })
+  });
+};
+
+export const removeFromBackendCart = async (itemId) => {
+  return apiCall(`/cart/remove/${itemId}`, {
+    method: 'DELETE'
+  });
+};
+
+export const clearBackendCart = async () => {
+  return apiCall('/cart/clear', {
+    method: 'POST'
+  });
+};
+
+export const syncCartToBackend = async (cartItems) => {
+  // Clear backend cart first, then add all items
+  await clearBackendCart();
+  for (const item of cartItems) {
+    await addToBackendCart(item._id, item.quantity);
+  }
+};
+
+export const cartAPI = {
+  get: getBackendCart,
+  add: addToBackendCart,
+  update: updateBackendCartItem,
+  remove: removeFromBackendCart,
+  clear: clearBackendCart,
+  sync: syncCartToBackend
+};
+
+// =================================================================
+// REVIEW ENDPOINTS
+// =================================================================
+
+export const submitReview = async (reviewData) => {
+  return apiCall('/reviews', {
+    method: 'POST',
+    body: JSON.stringify(reviewData)
+  });
+};
+
+export const getProductReviews = async (productId, params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return apiCall(`/reviews/product/${productId}?${queryString}`);
+};
+
+export const getMyReviews = async (params = {}) => {
+  const queryString = new URLSearchParams(params).toString();
+  return apiCall(`/reviews/my-reviews?${queryString}`);
+};
+
+export const updateReview = async (reviewId, reviewData) => {
+  return apiCall(`/reviews/${reviewId}`, {
+    method: 'PUT',
+    body: JSON.stringify(reviewData)
+  });
+};
+
+export const deleteReview = async (reviewId) => {
+  return apiCall(`/reviews/${reviewId}`, {
+    method: 'DELETE'
+  });
+};
+
+export const markReviewHelpful = async (reviewId) => {
+  return apiCall(`/reviews/${reviewId}/helpful`, {
+    method: 'POST'
+  });
+};
+
+export const canReviewProduct = async (productId) => {
+  return apiCall(`/reviews/can-review/${productId}`);
+};
+
+export const reviewAPI = {
+  submit: submitReview,
+  getForProduct: getProductReviews,
+  getMine: getMyReviews,
+  update: updateReview,
+  delete: deleteReview,
+  markHelpful: markReviewHelpful,
+  canReview: canReviewProduct
+};
+
+// =================================================================
+// REFUND ENDPOINTS
+// =================================================================
+
+export const requestRefund = async (orderId, data) => {
+  return apiCall(`/payments/refund/${orderId}`, {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
+export const refundAPI = {
+  request: requestRefund
+};
+
 export const userAPI = {
   getProfile: getUserProfile,
   updateProfile: updateUserProfile,
