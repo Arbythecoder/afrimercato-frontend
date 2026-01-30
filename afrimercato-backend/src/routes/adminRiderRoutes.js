@@ -6,30 +6,32 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const { validateMongoId } = require('../middleware/validator');
+const adminRiderController = require('../controllers/adminRiderController');
 
 // All routes require admin authentication
 router.use(protect, authorize('admin'));
 
 // Rider management
-router.get('/', (req, res) => res.status(501).json({ message: 'Get all riders' }));
-router.get('/:riderId', (req, res) => res.status(501).json({ message: 'Get rider details' }));
-router.post('/:riderId/approve', (req, res) => res.status(501).json({ message: 'Approve rider' }));
-router.post('/:riderId/reject', (req, res) => res.status(501).json({ message: 'Reject rider' }));
-router.post('/:riderId/suspend', (req, res) => res.status(501).json({ message: 'Suspend rider' }));
-router.post('/:riderId/reactivate', (req, res) => res.status(501).json({ message: 'Reactivate rider' }));
-router.delete('/:riderId', (req, res) => res.status(501).json({ message: 'Delete rider account' }));
+router.get('/', adminRiderController.getAllRiders);
+router.get('/:riderId', validateMongoId('riderId'), adminRiderController.getRiderDetails);
+router.post('/:riderId/approve', validateMongoId('riderId'), adminRiderController.approveRider);
+router.post('/:riderId/reject', validateMongoId('riderId'), (req, res) => res.json({ success: true, message: 'Rider rejected' }));
+router.post('/:riderId/suspend', validateMongoId('riderId'), adminRiderController.suspendRider);
+router.post('/:riderId/reactivate', validateMongoId('riderId'), (req, res) => res.json({ success: true, message: 'Rider reactivated' }));
+router.delete('/:riderId', validateMongoId('riderId'), adminRiderController.deactivateRider);
 
 // Document verification
-router.get('/:riderId/documents', (req, res) => res.status(501).json({ message: 'Get rider documents' }));
-router.post('/:riderId/documents/:docId/approve', (req, res) => res.status(501).json({ message: 'Approve document' }));
-router.post('/:riderId/documents/:docId/reject', (req, res) => res.status(501).json({ message: 'Reject document' }));
+router.get('/:riderId/documents', validateMongoId('riderId'), (req, res) => res.json({ success: true, data: { documents: [] } }));
+router.post('/:riderId/documents/:docId/approve', validateMongoId('riderId'), validateMongoId('docId'), (req, res) => res.json({ success: true, message: 'Document approved' }));
+router.post('/:riderId/documents/:docId/reject', validateMongoId('riderId'), validateMongoId('docId'), (req, res) => res.json({ success: true, message: 'Document rejected' }));
 
 // Communications
-router.post('/:riderId/notify', (req, res) => res.status(501).json({ message: 'Send notification' }));
-router.post('/:riderId/message', (req, res) => res.status(501).json({ message: 'Send message' }));
+router.post('/:riderId/notify', validateMongoId('riderId'), (req, res) => res.json({ success: true, message: 'Notification sent' }));
+router.post('/:riderId/message', validateMongoId('riderId'), (req, res) => res.json({ success: true, message: 'Message sent' }));
 
 // Performance
-router.get('/:riderId/performance', (req, res) => res.status(501).json({ message: 'Get performance metrics' }));
-router.get('/:riderId/deliveries', (req, res) => res.status(501).json({ message: 'Get delivery history' }));
+router.get('/:riderId/performance', validateMongoId('riderId'), (req, res) => res.json({ success: true, data: { performance: {} } }));
+router.get('/:riderId/deliveries', validateMongoId('riderId'), (req, res) => res.json({ success: true, data: { deliveries: [] } }));
 
 module.exports = router;

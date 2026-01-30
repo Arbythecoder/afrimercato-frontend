@@ -6,18 +6,19 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const pickerController = require('../controllers/pickerController');
 
 // Public routes
-router.post('/register', (req, res) => res.status(501).json({ message: 'Picker registration' }));
-router.post('/login', (req, res) => res.status(501).json({ message: 'Picker login' }));
+router.post('/register', pickerController.register);
+router.post('/login', pickerController.login);
 
 // Protected routes
-router.get('/profile', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Get picker profile' }));
-router.put('/profile', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Update picker profile' }));
-router.post('/documents/upload', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Upload verification documents' }));
-router.post('/connect-store/:storeId', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Connect with store' }));
-router.get('/connected-stores', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Get connected stores' }));
-router.post('/check-in/:storeId', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Check in at store' }));
-router.post('/check-out/:storeId', protect, authorize('picker'), (req, res) => res.status(501).json({ message: 'Check out from store' }));
+router.get('/profile', protect, authorize('picker'), pickerController.getProfile);
+router.put('/profile', protect, authorize('picker'), pickerController.updateProfile);
+router.post('/documents/upload', protect, authorize('picker'), pickerController.uploadDocuments);
+router.post('/connect-store/:storeId', protect, authorize('picker'), pickerController.requestStoreConnection);
+router.get('/connected-stores', protect, authorize('picker'), pickerController.getConnectedStores);
+router.post('/check-in/:storeId', protect, authorize('picker'), pickerController.checkIn);
+router.post('/check-out/:storeId', protect, authorize('picker'), pickerController.checkOut);
 
 module.exports = router;

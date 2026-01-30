@@ -50,17 +50,16 @@ router.post(
 			return res.status(400).json({ success: false, message: 'First name required' });
 		}
 
-		// Create user object
+		// Create user object (password will be hashed automatically by pre-save hook)
 		user = new User({
 			name: `${firstName} ${lastName || ''}`.trim(),
+			firstName,
+			lastName: lastName || '',
 			email,
+			password, // Will be hashed by User model middleware
 			phone,
 			roles: ['rider']
 		});
-
-		// Hash password
-		const salt = await bcrypt.genSalt(10);
-		user.password = await bcrypt.hash(password, salt);
 
 		// Generate email verification token if model supports it
 		if (typeof user.generateEmailVerificationToken === 'function') {
@@ -96,14 +95,16 @@ router.post(
 	})
 );
 
-// Keep login as placeholder for now (can be implemented similarly)
-router.post('/login', (req, res) => res.status(501).json({ message: 'Rider login' }));
+const riderController = require('../controllers/riderController');
+
+// Public routes
+router.post('/login', riderController.login);
 
 // Protected routes
-router.get('/profile', protect, authorize('rider'), (req, res) => res.status(501).json({ message: 'Get rider profile' }));
-router.put('/profile', protect, authorize('rider'), (req, res) => res.status(501).json({ message: 'Update rider profile' }));
-router.post('/documents/upload', protect, authorize('rider'), (req, res) => res.status(501).json({ message: 'Upload verification documents' }));
-router.post('/connect-store/:storeId', protect, authorize('rider'), (req, res) => res.status(501).json({ message: 'Connect with store' }));
-router.get('/connected-stores', protect, authorize('rider'), (req, res) => res.status(501).json({ message: 'Get connected stores' }));
+router.get('/profile', protect, authorize('rider'), riderController.getProfile);
+router.put('/profile', protect, authorize('rider'), riderController.updateProfile);
+router.post('/documents/upload', protect, authorize('rider'), riderController.uploadDocuments);
+router.post('/connect-store/:storeId', protect, authorize('rider'), riderController.requestStoreConnection);
+router.get('/connected-stores', protect, authorize('rider'), riderController.getConnectedStores);
 
 module.exports = router;

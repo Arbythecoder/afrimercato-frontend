@@ -6,31 +6,32 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const pickerOrderController = require('../controllers/pickerOrderController');
 
 // All routes require picker authentication
 router.use(protect, authorize('picker'));
 
 // Order management
-router.get('/available', (req, res) => res.status(501).json({ message: 'Get available orders' }));
-router.get('/my-orders', (req, res) => res.status(501).json({ message: 'Get my orders' }));
-router.post('/:orderId/claim', (req, res) => res.status(501).json({ message: 'Claim order for picking' }));
-router.post('/:orderId/start', (req, res) => res.status(501).json({ message: 'Start picking order' }));
+router.get('/available', pickerOrderController.getAvailableOrders);
+router.get('/my-orders', pickerOrderController.getMyOrders);
+router.post('/:orderId/claim', pickerOrderController.claimOrder);
+router.post('/:orderId/start', pickerOrderController.startPicking);
 
 // Item picking workflow
-router.get('/:orderId/items', (req, res) => res.status(501).json({ message: 'Get order items to pick' }));
-router.post('/:orderId/items/:itemId/pick', (req, res) => res.status(501).json({ message: 'Mark item as picked' }));
-router.post('/:orderId/items/:itemId/issue', (req, res) => res.status(501).json({ message: 'Report item issue' }));
-router.post('/:orderId/substitute', (req, res) => res.status(501).json({ message: 'Suggest substitute product' }));
+router.get('/:orderId/items', pickerOrderController.getOrderItems);
+router.post('/:orderId/items/:itemId/pick', pickerOrderController.pickItem);
+router.post('/:orderId/items/:itemId/issue', pickerOrderController.reportItemIssue);
+router.post('/:orderId/substitute', pickerOrderController.suggestSubstitute);
 
 // Packing workflow
-router.post('/:orderId/ready-for-packing', (req, res) => res.status(501).json({ message: 'Mark all items picked' }));
-router.post('/:orderId/start-packing', (req, res) => res.status(501).json({ message: 'Start packing order' }));
-router.post('/:orderId/upload-photos', (req, res) => res.status(501).json({ message: 'Upload packing photos' }));
-router.post('/:orderId/complete-packing', (req, res) => res.status(501).json({ message: 'Complete packing for rider' }));
+router.post('/:orderId/ready-for-packing', pickerOrderController.readyForPacking);
+router.post('/:orderId/start-packing', pickerOrderController.startPacking);
+router.post('/:orderId/upload-photos', pickerOrderController.uploadPackingPhotos);
+router.post('/:orderId/complete-packing', pickerOrderController.completePacking);
 
 // History and earnings
-router.get('/history', (req, res) => res.status(501).json({ message: 'Get picking history' }));
-router.get('/earnings', (req, res) => res.status(501).json({ message: 'Get earnings' }));
-router.get('/stats', (req, res) => res.status(501).json({ message: 'Get performance stats' }));
+router.get('/history', pickerOrderController.getHistory);
+router.get('/earnings', pickerOrderController.getEarnings);
+router.get('/stats', pickerOrderController.getStats);
 
 module.exports = router;

@@ -50,13 +50,15 @@ exports.registerVendor = asyncHandler(async (req, res) => {
     });
   }
 
-  // Create user account with roles array
+  // Create user account (password will be hashed automatically by User model pre-save hook)
   const user = await User.create({
     name: fullName,
+    firstName: fullName ? fullName.split(' ')[0] : '',
+    lastName: fullName ? fullName.split(' ').slice(1).join(' ') : '',
     email,
-    password,
+    password, // Will be hashed by User model middleware
     phone,
-    roles: ['vendor'], // FIX: Use array for roles
+    roles: ['vendor'],
     primaryRole: 'vendor'
   });
 
@@ -204,14 +206,14 @@ exports.createVendorProfile = asyncHandler(async (req, res) => {
 
   res.status(201).json({
     success: true,
-    message: 'Vendor profile created successfully! Your store will be reviewed within 24-48 hours.',
+    message: 'Vendor profile created successfully! Your store is now live.',
     data: {
       vendor,
-      approvalStatus: 'pending',
-      estimatedApprovalTime: '24-48 hours',
-      canAddProducts: true, // Can add products while waiting
-      canReceiveOrders: false, // Can't receive orders until approved
-      isPublic: false // Not visible to customers yet
+      approvalStatus: vendor.approvalStatus,
+      isVerified: vendor.isVerified,
+      canAddProducts: true,
+      canReceiveOrders: vendor.isVerified && vendor.approvalStatus === 'approved',
+      isPublic: vendor.isPublic
     }
   });
 });
@@ -882,12 +884,10 @@ exports.createProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // Convert uploaded files to image objects
-  const images = req.files.map((file) => ({
-    url: getFileUrl(file.path),
-    publicId: file.filename,
-    isPrimary: req.files.indexOf(file) === 0 // First image is primary
-  }));
+  // Convert uploaded files to image URLs (schema expects string[])
+  const images = req.files
+    .map((file) => getFileUrl(file.path))
+    .filter(url => typeof url === 'string' && url.length > 0);
 
   // Create product data
   const productData = {
@@ -940,7 +940,15 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  product = await Product.findByIdAndUpdate(req.params.id, req.body, {
+  // Safety guard: sanitize images to string[] if provided
+  const updateData = { ...req.body };
+  if (updateData.images && Array.isArray(updateData.images)) {
+    updateData.images = updateData.images
+      .map(img => (typeof img === 'string' ? img : img?.url))
+      .filter(url => typeof url === 'string' && url.length > 0);
+  }
+
+  product = await Product.findByIdAndUpdate(req.params.id, updateData, {
     new: true,
     runValidators: true
   });
@@ -1571,14 +1579,12 @@ exports.uploadProductImages = asyncHandler(async (req, res) => {
     });
   }
 
-  // Convert file paths to URLs (works with both Cloudinary and local storage)
-  const imageUrls = req.files.map((file) => ({
-    url: getFileUrl(file), // Pass full file object for Cloudinary compatibility
-    filename: file.filename || file.originalname,
-    size: file.size
-  }));
+  // Convert file paths to URLs - returns string[] for Product.images compatibility
+  const imageUrls = req.files
+    .map((file) => getFileUrl(file))
+    .filter(url => typeof url === 'string' && url.length > 0);
 
-  console.log(`📸 Uploaded ${req.files.length} images:`, imageUrls.map(i => i.url));
+  console.log(`📸 Uploaded ${req.files.length} images:`, imageUrls);
 
   res.status(200).json({
     success: true,

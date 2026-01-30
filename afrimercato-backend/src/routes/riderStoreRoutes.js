@@ -6,30 +6,32 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const riderController = require('../controllers/riderController');
+const riderDeliveryController = require('../controllers/riderDeliveryController');
 
 // All routes require rider authentication
 router.use(protect, authorize('rider'));
 
 // Connection management
-router.post('/request/:storeId', (req, res) => res.status(501).json({ message: 'Request connection with store' }));
-router.get('/my-stores', (req, res) => res.status(501).json({ message: 'Get connected stores' }));
-router.get('/requests', (req, res) => res.status(501).json({ message: 'Get connection requests' }));
+router.post('/request/:storeId', riderController.requestStoreConnection);
+router.get('/my-stores', riderController.getConnectedStores);
+router.get('/requests', riderController.getConnectionRequests);
 
 // Delivery management
-router.get('/deliveries', (req, res) => res.status(501).json({ message: 'Get available deliveries' }));
-router.get('/deliveries/active', (req, res) => res.status(501).json({ message: 'Get active deliveries' }));
-router.post('/deliveries/:deliveryId/accept', (req, res) => res.status(501).json({ message: 'Accept delivery' }));
-router.post('/deliveries/:deliveryId/reject', (req, res) => res.status(501).json({ message: 'Reject delivery' }));
-router.post('/deliveries/:deliveryId/start', (req, res) => res.status(501).json({ message: 'Start delivery' }));
-router.post('/deliveries/:deliveryId/complete', (req, res) => res.status(501).json({ message: 'Complete delivery' }));
+router.get('/deliveries', riderDeliveryController.getAvailableDeliveries);
+router.get('/deliveries/active', riderDeliveryController.getActiveDeliveries);
+router.post('/deliveries/:deliveryId/accept', riderDeliveryController.acceptDelivery);
+router.post('/deliveries/:deliveryId/reject', riderDeliveryController.rejectDelivery);
+router.post('/deliveries/:deliveryId/start', riderDeliveryController.startDelivery);
+router.post('/deliveries/:deliveryId/complete', riderDeliveryController.completeDelivery);
 
 // Location tracking
-router.post('/location/update', (req, res) => res.status(501).json({ message: 'Update current location' }));
-router.get('/deliveries/:deliveryId/track', (req, res) => res.status(501).json({ message: 'Get delivery tracking' }));
+router.post('/location/update', riderDeliveryController.updateLocation);
+router.get('/deliveries/:deliveryId/track', riderDeliveryController.getDeliveryTracking);
 
 // Earnings and ratings
-router.get('/earnings', (req, res) => res.status(501).json({ message: 'Get earnings' }));
-router.get('/ratings', (req, res) => res.status(501).json({ message: 'Get rider ratings' }));
-router.post('/store/:storeId/rate', (req, res) => res.status(501).json({ message: 'Rate store' }));
+router.get('/earnings', riderController.getEarnings);
+router.get('/ratings', riderController.getRatings);
+router.post('/store/:storeId/rate', riderController.rateStore);
 
 module.exports = router;

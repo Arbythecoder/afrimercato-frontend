@@ -1,6 +1,10 @@
 // Load env variables
 require('dotenv').config();
 
+// Validate environment variables BEFORE starting server
+const { checkEnvironment } = require('./src/config/validateEnv');
+checkEnvironment();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -73,15 +77,12 @@ const allowedOrigins = [
   // Production domains
   'https://afrimercato.com',
   'https://www.afrimercato.com',
-  // Legacy/development domains
-  'https://arbythecoder.github.io/afrimercato-frontend',
-  'https://arbythecoder.github.io',
+  // Development domains
   'http://localhost:3000',
   'http://localhost:5173',
   'http://localhost:5174',
   'http://127.0.0.1:3000',
   'http://127.0.0.1:5173',
-  'https://afrimercato-frontend.fly.dev',
   // Cloudflare Pages domains
   'https://afrimercato.pages.dev',
   'https://afrimercato-frontend.pages.dev'
@@ -89,34 +90,45 @@ const allowedOrigins = [
 
 const corsOptions = {
   origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman)
-    if (!origin) return callback(null, true);
+    // Allow requests with no origin (mobile apps, curl, Postman) - only in development
+    if (!origin) {
+      if (process.env.NODE_ENV === 'development') {
+        return callback(null, true);
+      }
+      // In production, reject requests without origin (except for webhooks handled separately)
+      console.warn('⚠️ CORS rejected: no origin header');
+      return callback(null, false);
+    }
 
-    // PRODUCTION: Allow afrimercato.com and ALL vendor subdomains (*.afrimercato.com)
+    // PRODUCTION: Allow afrimercato.com and vendor subdomains (*.afrimercato.com)
+    // Pattern: https://afrimercato.com or https://<subdomain>.afrimercato.com
     if (/^https:\/\/([\w-]+\.)?afrimercato\.com$/.test(origin)) {
       return callback(null, true);
     }
 
-    // Allow Vercel deployments (all preview and production URLs)
-    if (/^https:\/\/.*\.vercel\.app$/.test(origin)) {
+    // Allow Vercel deployments - ONLY afrimercato project previews (tightened)
+    // Pattern: https://afrimercato-<hash>.vercel.app or https://afrimercato-frontend-<hash>.vercel.app
+    if (/^https:\/\/afrimercato(-frontend)?(-[a-z0-9]+)?\.vercel\.app$/.test(origin)) {
       return callback(null, true);
     }
 
-    // Allow Cloudflare previews
-    if (/^https:\/\/[a-z0-9-]+\.afrimercato\.pages\.dev$/.test(origin)) {
+    // Allow Cloudflare Pages previews - ONLY afrimercato project
+    // Pattern: https://<hash>.afrimercato.pages.dev or https://<hash>.afrimercato-frontend.pages.dev
+    if (/^https:\/\/[a-z0-9-]+\.afrimercato(-frontend)?\.pages\.dev$/.test(origin)) {
       return callback(null, true);
     }
 
-    // Allow GitHub Pages with any path
-    if (origin.startsWith('https://arbythecoder.github.io')) {
+    // Allow GitHub Pages - ONLY arbythecoder's afrimercato-frontend
+    if (origin === 'https://arbythecoder.github.io') {
       return callback(null, true);
     }
 
+    // Check explicit allowlist
     if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
 
-    // Log rejected origins for debugging (don't throw error, just reject)
+    // Log rejected origins for debugging
     console.warn(`⚠️ CORS rejected origin: ${origin}`);
     return callback(null, false);
   },
@@ -133,8 +145,14 @@ app.use(cors(corsOptions));
 // Explicit preflight handler for all routes
 app.options('*', cors(corsOptions));
 
-// Body parsers
-app.use(express.json({ limit: '10mb' }));
+// Body parsers - exclude Stripe webhook route (needs raw body for signature verification)
+app.use((req, res, next) => {
+  if (req.originalUrl === '/api/payments/webhook') {
+    next();
+  } else {
+    express.json({ limit: '10mb' })(req, res, next);
+  }
+});
 app.use(express.urlencoded({ extended: true }));
 
 // Passport (OAuth)

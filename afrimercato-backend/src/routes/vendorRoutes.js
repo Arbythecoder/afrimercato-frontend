@@ -154,13 +154,13 @@ router.delete('/products/:id', protect, authorize('vendor'), attachVendor, valid
 // @route   PATCH /api/vendor/products/:id/stock
 // @desc    Update product stock quantity
 // @access  Private (Verified Vendor)
-router.patch('/products/:id/stock', protect, authorize('vendor'), validateMongoId('id'), updateStock);
+router.patch('/products/:id/stock', protect, authorize('vendor'), attachVendor, validateMongoId('id'), updateStock);
 
 // Bulk operation routes
-router.post('/products/bulk-delete', protect, authorize('vendor'), validateBulkDelete, bulkDeleteProducts);
-router.post('/products/bulk-status', protect, authorize('vendor'), validateBulkStatus, bulkUpdateStatus);
-router.post('/products/bulk-price', protect, authorize('vendor'), validateBulkPrice, bulkUpdatePrices);
-router.post('/products/bulk-stock', protect, authorize('vendor'), validateBulkStock, bulkUpdateStock);
+router.post('/products/bulk-delete', protect, authorize('vendor'), attachVendor, validateBulkDelete, bulkDeleteProducts);
+router.post('/products/bulk-status', protect, authorize('vendor'), attachVendor, validateBulkStatus, bulkUpdateStatus);
+router.post('/products/bulk-price', protect, authorize('vendor'), attachVendor, validateBulkPrice, bulkUpdatePrices);
+router.post('/products/bulk-stock', protect, authorize('vendor'), attachVendor, validateBulkStock, bulkUpdateStock);
 
 // @route   POST /api/vendor/upload/images
 // @desc    Upload product images (up to 5)
@@ -174,22 +174,22 @@ router.post('/upload/images', protect, authorize('vendor'), uploadMultiple('prod
 // @route   GET /api/vendor/orders
 // @desc    Get all vendor orders (with pagination & filters)
 // @access  Private (Verified Vendor)
-router.get('/orders', protect, authorize('vendor'), validatePagination, getOrders);
+router.get('/orders', protect, authorize('vendor'), attachVendor, validatePagination, getOrders);
 
 // @route   GET /api/vendor/orders/:id
 // @desc    Get single order details
 // @access  Private (Verified Vendor)
-router.get('/orders/:id', protect, authorize('vendor'), validateMongoId('id'), getOrder);
+router.get('/orders/:id', protect, authorize('vendor'), attachVendor, validateMongoId('id'), getOrder);
 
 // @route   PUT /api/vendor/orders/:id/status
 // @desc    Update order status
 // @access  Private (Verified Vendor)
-router.put('/orders/:id/status', protect, authorize('vendor'), validateMongoId('id'), updateOrderStatus);
+router.put('/orders/:id/status', protect, authorize('vendor'), attachVendor, validateMongoId('id'), updateOrderStatus);
 
 // @route   POST /api/vendor/orders/:id/rate-rider
 // @desc    Rate delivery rider for an order
 // @access  Private (Verified Vendor)
-router.post('/orders/:id/rate-rider', protect, authorize('vendor'), validateMongoId('id'), rateRider);
+router.post('/orders/:id/rate-rider', protect, authorize('vendor'), attachVendor, validateMongoId('id'), rateRider);
 
 // =================================================================
 // ANALYTICS ROUTES
@@ -198,7 +198,7 @@ router.post('/orders/:id/rate-rider', protect, authorize('vendor'), validateMong
 // @route   GET /api/vendor/analytics/revenue
 // @desc    Get revenue analytics
 // @access  Private (Verified Vendor)
-router.get('/analytics/revenue', protect, authorize('vendor'), getRevenueAnalytics);
+router.get('/analytics/revenue', protect, authorize('vendor'), attachVendor, getRevenueAnalytics);
 
 // =================================================================
 // REPORTS ROUTES
@@ -207,21 +207,21 @@ router.get('/analytics/revenue', protect, authorize('vendor'), getRevenueAnalyti
 // @route   GET /api/vendor/reports/sales
 // @desc    Get sales report
 // @access  Private (Verified Vendor)
-router.get('/reports/sales', protect, authorize('vendor'), getSalesReport);
+router.get('/reports/sales', protect, authorize('vendor'), attachVendor, getSalesReport);
 
 // @route   GET /api/vendor/reports/inventory
 // @desc    Get inventory report
 // @access  Private (Verified Vendor)
-router.get('/reports/inventory', protect, authorize('vendor'), getInventoryReport);
+router.get('/reports/inventory', protect, authorize('vendor'), attachVendor, getInventoryReport);
 
 // @route   GET /api/vendor/reports/orders
 // @desc    Get orders report
 // @access  Private (Verified Vendor)
-router.get('/reports/orders', protect, authorize('vendor'), getOrdersReport);
+router.get('/reports/orders', protect, authorize('vendor'), attachVendor, getOrdersReport);
 
 // @route   GET /api/vendor/reports/revenue
 // @desc    Get revenue report
 // @access  Private (Verified Vendor)
-router.get('/reports/revenue', protect, authorize('vendor'), getRevenueReport);
+router.get('/reports/revenue', protect, authorize('vendor'), attachVendor, getRevenueReport);
 
 module.exports = router;

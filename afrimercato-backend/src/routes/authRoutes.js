@@ -60,18 +60,15 @@ router.post(
     const allowedRoles = ['customer', 'vendor', 'rider', 'picker', 'admin'];
     const assignedRole = role && allowedRoles.includes(role) ? role : 'customer';
 
-    // Create new user
+    // Create new user (password will be hashed automatically by pre-save hook)
     user = new User({
       email,
+      password, // Will be hashed by User model pre-save middleware
       firstName,
       lastName,
       phone,
       roles: [assignedRole]
     });
-
-    // Hash password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(password, salt);
 
     // Generate email verification token
     user.generateEmailVerificationToken();
@@ -267,11 +264,12 @@ router.post(
       return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
     }
 
-    // Hash new password
-    const salt = await bcrypt.genSalt(10);
-    user.password = await bcrypt.hash(req.body.password, salt);
+    // Set new password (will be hashed automatically by pre-save hook)
+    user.password = req.body.password;
     user.resetPasswordToken = undefined;
     user.resetPasswordExpires = undefined;
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
     await user.save();
 
     res.json({

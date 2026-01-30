@@ -6,28 +6,37 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const adminController = require('../controllers/adminController');
+const adminStatsController = require('../controllers/adminStatsController');
 
-// All routes require admin authentication
+// Public routes (no authentication)
+router.post('/login', adminController.login);
+
+// All other routes require admin authentication
 router.use(protect, authorize('admin'));
 
 // Admin profile
-router.get('/profile', (req, res) => res.status(501).json({ message: 'Get admin profile' }));
-router.put('/profile', (req, res) => res.status(501).json({ message: 'Update admin profile' }));
-router.post('/password/change', (req, res) => res.status(501).json({ message: 'Change password' }));
+router.get('/profile', adminController.getProfile);
+router.put('/profile', adminController.updateProfile);
+router.post('/password/change', adminController.changePassword);
 
 // Admin audit and logs
-router.get('/audit-logs', (req, res) => res.status(501).json({ message: 'Get audit logs' }));
-router.get('/login-history', (req, res) => res.status(501).json({ message: 'Get login history' }));
-router.get('/activity-logs', (req, res) => res.status(501).json({ message: 'Get system activity logs' }));
+router.get('/audit-logs', adminController.getAuditLogs);
+router.get('/login-history', adminController.getLoginHistory);
+router.get('/activity-logs', adminController.getActivityLogs);
 
 // Notification preferences
-router.get('/notifications/settings', (req, res) => res.status(501).json({ message: 'Get notification settings' }));
-router.put('/notifications/settings', (req, res) => res.status(501).json({ message: 'Update notification settings' }));
-router.get('/notifications', (req, res) => res.status(501).json({ message: 'Get notifications' }));
+router.get('/notifications/settings', adminController.getNotificationSettings);
+router.put('/notifications/settings', adminController.updateNotificationSettings);
+router.get('/notifications', adminController.getNotifications);
 
 // Two-factor authentication
-router.post('/2fa/enable', (req, res) => res.status(501).json({ message: 'Enable 2FA' }));
-router.post('/2fa/disable', (req, res) => res.status(501).json({ message: 'Disable 2FA' }));
-router.post('/2fa/verify', (req, res) => res.status(501).json({ message: 'Verify 2FA code' }));
+router.post('/2fa/enable', adminController.enable2FA);
+router.post('/2fa/disable', adminController.disable2FA);
+router.post('/2fa/verify', adminController.verify2FA);
+
+// Platform statistics
+router.get('/stats', adminStatsController.getPlatformStats);
+router.get('/revenue', adminStatsController.getRevenueAnalytics);
 
 module.exports = router;
