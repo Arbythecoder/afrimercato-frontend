@@ -62,7 +62,7 @@ exports.register = async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { id: user._id, roles: user.roles, email: user.email },
-      process.env.JWT_SECRET || 'dev_jwt_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 
@@ -131,7 +131,7 @@ exports.login = async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { id: user._id, roles: user.roles, email: user.email },
-      process.env.JWT_SECRET || 'dev_jwt_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '7d' }
     );
 

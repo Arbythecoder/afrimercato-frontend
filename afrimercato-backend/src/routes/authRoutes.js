@@ -56,9 +56,9 @@ router.post(
       return res.status(400).json({ success: false, message: 'First name required' });
     }
 
-    // Determine role assignment (allow only known roles)
-    const allowedRoles = ['customer', 'vendor', 'rider', 'picker', 'admin'];
-    const assignedRole = role && allowedRoles.includes(role) ? role : 'customer';
+    // SECURITY: Public registration always creates customers only
+    // Vendors use /api/vendor/register, Riders use /api/rider-auth/register, etc.
+    const assignedRole = 'customer';
 
     // Create new user (password will be hashed automatically by pre-save hook)
     user = new User({
@@ -331,9 +331,10 @@ router.post(
     }
 
     try {
-      // Decode token (will throw if expired)
-      const decoded = jwt.verify(token, process.env.JWT_SECRET, { ignoreExpiration: true });
-      
+      // SECURITY: Verify token is still valid (not expired)
+      // Users must re-authenticate if token is truly expired
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
       // Create new token
       const newToken = jwt.sign(
         { id: decoded.id, roles: decoded.roles },

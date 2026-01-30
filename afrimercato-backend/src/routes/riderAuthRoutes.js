@@ -71,10 +71,10 @@ router.post(
 			await user.save();
 		}
 
-		// Create JWT token
+		// Create JWT token (no fallback - JWT_SECRET required)
 		const token = jwt.sign(
 			{ id: user._id || null, roles: user.roles },
-			process.env.JWT_SECRET || 'dev_jwt_secret',
+			process.env.JWT_SECRET,
 			{ expiresIn: '7d' }
 		);
 
