@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { productAPI } from '../../services/api'
 
+// API base URL - use environment variable or production default
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev/api'
+
 function ProductModal({ product, isEdit, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
     name: product?.name || '',
@@ -9,13 +12,14 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
     price: product?.price || '',
     unit: product?.unit || 'kg',
     stock: product?.stock || '',
-    imageUrl: product?.images?.[0]?.url || '',
+    imageUrl: product?.images?.[0] || '', // images is now string[], not object[]
     imageUploadMethod: 'url', // 'file' or 'url'
     imageFiles: [],
     lowStockThreshold: product?.lowStockThreshold || 10,
     isActive: product?.isActive !== false,
   })
   const [loading, setLoading] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const [error, setError] = useState('')
 
   const handleChange = (e) => {
@@ -29,17 +33,19 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
     setError('')
 
     try {
-      let imageUrls = []
+      let imageUrls = [] // Will store string URLs only
 
       // Handle file upload
       if (formData.imageUploadMethod === 'file' && formData.imageFiles && formData.imageFiles.length > 0) {
+        setUploading(true)
+
         const uploadFormData = new FormData()
         formData.imageFiles.forEach(file => {
           uploadFormData.append('productImages', file)
         })
 
-        // Upload images to server
-        const uploadResponse = await fetch('http://localhost:5000/api/vendor/upload/images', {
+        // Upload images to server (use production URL, not localhost)
+        const uploadResponse = await fetch(`${API_BASE_URL}/vendor/upload/images`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
@@ -48,21 +54,29 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
         })
 
         const uploadResult = await uploadResponse.json()
+        setUploading(false)
+
         if (!uploadResult.success) {
           throw new Error(uploadResult.message || 'Image upload failed')
         }
 
-        imageUrls = uploadResult.data.images.map((img, index) => ({
-          url: img.url,
-          isPrimary: index === 0
-        }))
+        // Extract URLs only - backend expects string[]
+        imageUrls = uploadResult.data.images
+          .map(img => img?.url)
+          .filter(url => typeof url === 'string' && url.length > 0)
+
+        // Block if upload didn't return valid URLs
+        if (imageUrls.length === 0) {
+          throw new Error('Image upload completed but no valid URLs returned. Please try again.')
+        }
       }
       // Handle URL input
       else if (formData.imageUploadMethod === 'url' && formData.imageUrl && formData.imageUrl.trim() !== '') {
-        imageUrls = [{
-          url: formData.imageUrl.trim(),
-          isPrimary: true
-        }]
+        const url = formData.imageUrl.trim()
+        // Validate it's a proper URL string
+        if (typeof url === 'string' && url.startsWith('http')) {
+          imageUrls = [url]
+        }
       }
 
       // Prepare product data
@@ -77,9 +91,13 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
         isActive: formData.isActive
       }
 
-      // Add images if available - extract URLs only (backend expects string[])
-      if (imageUrls.length > 0) {
-        submitData.images = imageUrls.map(img => img.url).filter(Boolean)
+      // STRICT SANITIZATION: Ensure images is always string[] with valid URLs only
+      const cleanImages = imageUrls
+        .map(url => (typeof url === 'string' ? url : url?.url))
+        .filter(url => typeof url === 'string' && url.length > 0 && url.startsWith('http'))
+
+      if (cleanImages.length > 0) {
+        submitData.images = cleanImages
       }
 
       // Save product
@@ -96,6 +114,7 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
       setError(err.message || err.response?.data?.message || 'Failed to save product')
     } finally {
       setLoading(false)
+      setUploading(false)
     }
   }
 
@@ -301,10 +320,10 @@ function ProductModal({ product, isEdit, onClose, onSuccess }) {
           <div className="flex items-center space-x-3 pt-4">
             <button
               type="submit"
-              disabled={loading}
+              disabled={loading || uploading}
               className="flex-1 px-4 py-2 bg-afri-green text-white rounded-lg hover:bg-afri-green-dark transition font-medium disabled:opacity-50"
             >
-              {loading ? 'Saving...' : isEdit ? 'Update Product' : 'Add Product'}
+              {uploading ? 'Uploading images...' : loading ? 'Saving...' : isEdit ? 'Update Product' : 'Add Product'}
             </button>
             <button
               type="button"
