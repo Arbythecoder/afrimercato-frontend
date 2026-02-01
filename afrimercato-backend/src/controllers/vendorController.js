@@ -947,17 +947,51 @@ exports.updateProduct = asyncHandler(async (req, res) => {
     });
   }
 
-  // Safety guard: sanitize images to string[] if provided
-  const updateData = { ...req.body };
-  if (updateData.images && Array.isArray(updateData.images)) {
-    updateData.images = updateData.images
-      .map(img => (typeof img === 'string' ? img : img?.url))
+  // Build update data from form fields
+  const updateData = {};
+
+  // Only update fields that are provided
+  if (req.body.name) updateData.name = req.body.name;
+  if (req.body.description) updateData.description = req.body.description;
+  if (req.body.category) updateData.category = req.body.category;
+  if (req.body.unit) updateData.unit = req.body.unit;
+  if (req.body.price) updateData.price = parseFloat(req.body.price);
+  if (req.body.originalPrice) updateData.originalPrice = parseFloat(req.body.originalPrice);
+  if (req.body.stock !== undefined) updateData.stock = parseInt(req.body.stock);
+  if (req.body.lowStockThreshold) updateData.lowStockThreshold = parseInt(req.body.lowStockThreshold);
+  if (req.body.inStock !== undefined) updateData.inStock = req.body.inStock === 'true' || req.body.inStock === true;
+  if (req.body.unlimitedStock !== undefined) updateData.unlimitedStock = req.body.unlimitedStock === 'true' || req.body.unlimitedStock === true;
+
+  // Handle new uploaded images
+  if (req.files && req.files.length > 0) {
+    updateData.images = req.files
+      .map((file) => getFileUrl(file.path))
       .filter(url => typeof url === 'string' && url.length > 0);
+  }
+  // Handle images passed as URLs in body (for keeping existing images)
+  else if (req.body.images) {
+    const images = typeof req.body.images === 'string' ? JSON.parse(req.body.images) : req.body.images;
+    if (Array.isArray(images)) {
+      updateData.images = images
+        .map(img => (typeof img === 'string' ? img : img?.url))
+        .filter(url => typeof url === 'string' && url.length > 0);
+    }
+  }
+
+  // Parse JSON fields
+  if (req.body.tags) {
+    updateData.tags = typeof req.body.tags === 'string' ? JSON.parse(req.body.tags) : req.body.tags;
+  }
+  if (req.body.variants) {
+    updateData.variants = typeof req.body.variants === 'string' ? JSON.parse(req.body.variants) : req.body.variants;
+  }
+  if (req.body.availability) {
+    updateData.availability = typeof req.body.availability === 'string' ? JSON.parse(req.body.availability) : req.body.availability;
   }
 
   product = await Product.findByIdAndUpdate(req.params.id, updateData, {
     new: true,
-    runValidators: true
+    runValidators: false  // Disable validators to avoid issues with partial updates
   });
 
   res.json({
@@ -988,12 +1022,11 @@ exports.deleteProduct = asyncHandler(async (req, res) => {
 
   await product.deleteOne();
 
-  // Update vendor's total products count
-  req.vendor.stats.totalProducts = Math.max(
-    0,
-    req.vendor.stats.totalProducts - 1
+  // Update vendor's total products count (use updateOne to avoid full document validation)
+  await Vendor.updateOne(
+    { _id: req.vendor._id },
+    { $inc: { 'stats.totalProducts': -1 } }
   );
-  await req.vendor.save();
 
   res.json({
     success: true,

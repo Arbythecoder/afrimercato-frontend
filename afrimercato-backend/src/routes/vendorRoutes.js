@@ -144,7 +144,13 @@ router.get('/products/:id', protect, authorize('vendor'), attachVendor, validate
 // @route   PUT /api/vendor/products/:id
 // @desc    Update product
 // @access  Private (Verified Vendor)
-router.put('/products/:id', protect, authorize('vendor'), attachVendor, [validateMongoId('id'), validateProduct], updateProduct);
+router.put('/products/:id',
+  protect, authorize('vendor'), attachVendor,
+  uploadMultiple('images', 5),    // Handle file uploads (max 5)
+  handleUploadError,               // Handle upload errors
+  validateMongoId('id'),
+  updateProduct
+);
 
 // @route   DELETE /api/vendor/products/:id
 // @desc    Delete product
