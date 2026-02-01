@@ -51,8 +51,8 @@ const vendorSchema = new mongoose.Schema({
     maxlength: [1000, 'Description cannot exceed 1000 characters']
   },
   address: {
-    type: String,
-    trim: true
+    type: mongoose.Schema.Types.Mixed,
+    default: null
   },
   phone: {
     type: String,

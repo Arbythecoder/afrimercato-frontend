@@ -161,7 +161,9 @@
       "Bash(node:*)",
       "Bash(cmd /c \"taskkill /PID 121280 /F\")",
       "Bash(powershell -ExecutionPolicy Bypass -File update-fly-secrets.ps1:*)",
-      "Bash(where.exe:*)"
+      "Bash(where.exe:*)",
+      "Bash(vercel project:*)",
+      "Bash(vercel --prod --force:*)"
     ],
     "deny": [],
     "ask": []

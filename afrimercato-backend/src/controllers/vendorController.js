@@ -915,9 +915,11 @@ exports.createProduct = asyncHandler(async (req, res) => {
 
   const product = await Product.create(productData);
 
-  // Update vendor's total products count
-  req.vendor.stats.totalProducts += 1;
-  await req.vendor.save();
+  // Update vendor's total products count (use updateOne to avoid full document validation)
+  await Vendor.updateOne(
+    { _id: req.vendor._id },
+    { $inc: { 'stats.totalProducts': 1 } }
+  );
 
   res.status(201).json({
     success: true,
