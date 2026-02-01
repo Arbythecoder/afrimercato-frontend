@@ -111,9 +111,22 @@ function checkEnvironment() {
   console.log('\nConfigured Features:');
   console.log(`  - Database: ${process.env.MONGODB_URI ? '✓' : '✗'}`);
   console.log(`  - JWT Auth: ${process.env.JWT_SECRET ? '✓' : '✗'}`);
-  console.log(`  - Stripe Payments: ${process.env.STRIPE_SECRET_KEY ? '✓' : '✗'}`);
   console.log(`  - Email Service: ${process.env.EMAIL_USER && process.env.EMAIL_PASS ? '✓' : '✗'}`);
   console.log(`  - Frontend URL: ${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'localhost:3000'}`);
+
+  // Stripe readiness summary
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  const stripeWebhook = process.env.STRIPE_WEBHOOK_SECRET;
+  const stripeReady = stripeKey && stripeWebhook;
+  console.log(`  - Stripe Payments: ${stripeKey ? '✓' : '✗'}`);
+  console.log(`  - Stripe Webhook: ${stripeWebhook ? '✓' : '✗'}`);
+
+  if (stripeReady) {
+    console.log('\n✅ STRIPE READY: Payments and webhooks configured');
+    console.log('   Webhook URL: https://afrimercato-backend.fly.dev/api/payments/webhook');
+  } else if (stripeKey && !stripeWebhook) {
+    console.log('\n⚠️  STRIPE PARTIAL: Payments enabled, but webhook secret missing');
+  }
 
   console.log('\n========================================\n');
 }

@@ -3,10 +3,10 @@
 // =================================================================
 
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 const Delivery = require('../models/Delivery');
+const { generateAccessToken, generateRefreshToken, setAuthCookies, formatUserResponse } = require('../utils/authHelpers');
 
 // Login rider
 exports.login = async (req, res) => {
@@ -47,25 +47,19 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate JWT (no fallback - JWT_SECRET required)
-    const token = jwt.sign(
-      { id: user._id, roles: user.roles, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Generate JWT and refresh token
+    const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+    const refreshToken = generateRefreshToken();
+
+    // Set secure HTTP-only cookies
+    setAuthCookies(res, token, refreshToken);
 
     res.json({
       success: true,
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          phone: user.phone,
-          roles: user.roles,
-          avatar: user.avatar
-        }
+        refreshToken,
+        user: formatUserResponse(user, 'rider')
       }
     });
   } catch (error) {

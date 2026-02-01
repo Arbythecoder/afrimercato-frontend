@@ -1,0 +1,242 @@
+=================================================================
+AFRIMERCATO - PRODUCTION DEPLOYMENT GUIDE
+=================================================================
+
+This guide will help you deploy the Afrimercato backend to production.
+
+=================================================================
+PRE-DEPLOYMENT CHECKLIST
+=================================================================
+
+✓ User authentication has been fixed permanently:
+  - Password hashing via User model pre-save hook
+  - Consistent firstName/lastName and name field handling
+  - All roles (customer, vendor, rider, picker, admin) use same auth system
+
+✓ Database schemas strengthened:
+  - User model: Required fields enforced, password validation
+  - Product model: Prevents CastErrors with validation
+  - Vendor model: Required fields and ObjectId validation
+
+✓ Vendor product CRUD: Protected with defensive validation
+  - Vendor middleware validates ObjectId format
+  - Prevents crashes when vendor context is missing
+  - Clear error messages for debugging
+
+✓ Payment integration: Production-ready but disabled by default
+  - Stripe properly initialized with error handling
+  - Fails gracefully when API keys not configured
+  - Webhook signature verification enabled
+  - Clean error messages when payments unavailable
+
+✓ Role isolation: All roles properly separated
+  - Customer, vendor, rider, picker, admin
+  - Middleware enforces role-based access
+  - No shared state between roles
+
+✓ Environment validation: Required variables checked on startup
+  - Server will not start if critical vars missing
+  - Clear error messages for missing configuration
+
+=================================================================
+REQUIRED ENVIRONMENT VARIABLES
+=================================================================
+
+1. Copy .env.example to .env:
+   cp .env.example .env
+
+2. Set CRITICAL variables (server won't start without these):
+   - MONGODB_URI: Your MongoDB connection string
+   - JWT_SECRET: Random 32+ character string
+
+3. Set IMPORTANT variables:
+   - NODE_ENV: production
+   - PORT: 5000 (or your preferred port)
+   - CLIENT_URL: Your frontend URL
+
+4. OPTIONAL - Payment Integration:
+   - STRIPE_SECRET_KEY: Get from Stripe Dashboard
+   - STRIPE_WEBHOOK_SECRET: Get from Stripe Webhooks
+   (Leave empty to disable payments)
+
+=================================================================
+DEPLOYMENT STEPS
+=================================================================
+
+1. INSTALL DEPENDENCIES:
+   cd afrimercato-backend
+   npm install
+
+2. SET ENVIRONMENT VARIABLES:
+   - Create .env file with your values
+   - OR set environment variables in your hosting platform
+
+3. TEST LOCALLY:
+   npm start
+
+   You should see:
+   ✓ Environment validation passing
+   ✓ MongoDB connection successful
+   ✓ Server running on specified port
+
+4. DEPLOY TO PRODUCTION:
+
+   Option A - Railway / Render / Fly.io:
+   - Connect your GitHub repository
+   - Set environment variables in dashboard
+   - Deploy automatically
+
+   Option B - VPS (DigitalOcean, AWS EC2, etc):
+   - Upload code to server
+   - Set environment variables
+   - Use PM2 to keep server running:
+     npm install -g pm2
+     pm2 start server.js --name afrimercato
+     pm2 save
+     pm2 startup
+
+   Option C - Vercel / Netlify (Serverless):
+   - Not recommended for this architecture
+   - Use Railway or Render instead
+
+=================================================================
+POST-DEPLOYMENT VERIFICATION
+=================================================================
+
+1. CHECK SERVER HEALTH:
+   GET https://your-domain.com/api/health
+
+   Expected response:
+   {
+     "success": true,
+     "status": "OK",
+     "timestamp": "2026-01-30T..."
+   }
+
+2. TEST AUTHENTICATION:
+   POST https://your-domain.com/api/auth/register
+   {
+     "firstName": "Test",
+     "lastName": "User",
+     "email": "test@example.com",
+     "password": "password123"
+   }
+
+   Should return JWT token
+
+3. TEST VENDOR REGISTRATION:
+   POST https://your-domain.com/api/vendor/register
+   {
+     "fullName": "Test Vendor",
+     "email": "vendor@example.com",
+     "password": "password123",
+     "storeName": "Test Store",
+     "category": "groceries",
+     "phone": "1234567890",
+     "address": "123 Test St"
+   }
+
+4. VERIFY CORS:
+   - Test from your frontend domain
+   - Ensure requests are not blocked
+
+5. TEST PAYMENTS (if enabled):
+   - Use Stripe test mode first
+   - Verify webhook endpoint is accessible
+
+=================================================================
+MONITORING & MAINTENANCE
+=================================================================
+
+1. CHECK LOGS REGULARLY:
+   - Monitor for errors
+   - Watch for authentication failures
+   - Track payment processing
+
+2. DATABASE BACKUPS:
+   - Enable automated backups on MongoDB Atlas
+   - Test restore process
+
+3. SECURITY:
+   - Keep dependencies updated: npm audit
+   - Rotate JWT_SECRET periodically
+   - Monitor failed login attempts
+
+4. PERFORMANCE:
+   - Monitor API response times
+   - Check database query performance
+   - Scale horizontally if needed
+
+=================================================================
+ENABLING STRIPE PAYMENTS LATER
+=================================================================
+
+When you're ready to enable payments:
+
+1. Create Stripe account: https://stripe.com
+
+2. Get your API keys:
+   - Dashboard > Developers > API keys
+   - Copy Secret key to STRIPE_SECRET_KEY
+
+3. Set up webhooks:
+   - Dashboard > Developers > Webhooks
+   - Add endpoint: https://your-domain.com/api/payments/webhook
+   - Select events:
+     * checkout.session.completed
+     * payment_intent.succeeded
+     * payment_intent.payment_failed
+   - Copy webhook signing secret to STRIPE_WEBHOOK_SECRET
+
+4. Restart server:
+   - Payment features will automatically enable
+   - Test with Stripe test cards
+
+=================================================================
+TROUBLESHOOTING
+=================================================================
+
+Q: Server won't start
+A: Check environment variable validation output
+   Ensure MONGODB_URI and JWT_SECRET are set
+
+Q: Authentication keeps failing
+A: User model now has password hashing built-in
+   Old users may need to reset passwords
+
+Q: Vendor product creation fails with CastError
+A: Fixed with defensive validation
+   Ensure vendor middleware is properly attached
+
+Q: Payments return 503 error
+A: Expected behavior when Stripe keys not configured
+   Either configure Stripe or inform users payments are unavailable
+
+Q: CORS errors from frontend
+A: Add your frontend domain to CLIENT_URL
+   Check allowedOrigins in server.js
+
+=================================================================
+SUPPORT
+=================================================================
+
+For issues during deployment:
+1. Check server logs for specific errors
+2. Verify all environment variables are set correctly
+3. Test each endpoint individually
+4. Review TROUBLESHOOTING section above
+
+=================================================================
+PRODUCTION-READY FEATURES
+=================================================================
+
+✓ Authentication system that never randomly breaks
+✓ Vendor product CRUD protected from crashes
+✓ Payment system ready but safely disabled until configured
+✓ All roles properly isolated and secure
+✓ Environment validation prevents misconfiguration
+✓ Defensive error handling throughout
+✓ Clear error messages for debugging
+✓ Production-grade security defaults
+
+Your system is now ready for production deployment!

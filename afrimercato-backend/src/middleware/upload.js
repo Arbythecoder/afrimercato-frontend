@@ -84,58 +84,92 @@ if (!cloudinaryConfigured || !isCloudinary) {
 }
 
 // =================================================================
-// FILE FILTER (VALIDATION)
+// FILE FILTER (VALIDATION) - PRODUCTION-GRADE
 // =================================================================
+// Supports ALL common image formats from phones/cameras:
+// - JFIF: Windows saves JPEGs as .jfif
+// - HEIC/HEIF: iPhone default format (iOS 11+)
+// - AVIF: Modern efficient format (Chrome, Firefox)
+// - BMP/TIFF: Legacy camera formats
+// Cloudinary auto-converts all formats to web-optimized output.
+
+// ALLOWED EXTENSIONS: All formats that Cloudinary can process
+// Note: Cloudinary converts these server-side, so we accept broadly
+const ALLOWED_IMAGE_EXTENSIONS = /\.(jpe?g|jfif|png|gif|webp|heic|heif|avif|bmp|tiff?|svg)$/i;
+
+// ALLOWED MIME TYPES: Accept all valid image MIME types
+// Some phones send non-standard MIME types, so we're permissive here
+const ALLOWED_IMAGE_MIMES = [
+  'image/jpeg',
+  'image/jpg',
+  'image/jfif',        // Windows JFIF
+  'image/png',
+  'image/gif',
+  'image/webp',
+  'image/heic',        // iPhone
+  'image/heif',        // iPhone
+  'image/avif',        // Modern format
+  'image/bmp',
+  'image/tiff',
+  'image/svg+xml'
+];
+
+const ALLOWED_DOC_EXTENSIONS = /\.(pdf|docx?)$/i;
+
 const fileFilter = (req, file, cb) => {
-  const allowedImageTypes = /jpeg|jpg|png|gif|webp/;
-  const allowedDocTypes = /pdf|doc|docx/;
-
   const extname = path.extname(file.originalname).toLowerCase();
-  const mimetype = file.mimetype;
+  const mimetype = file.mimetype.toLowerCase();
 
-  // Check if it's an image upload
+  // IMAGE UPLOAD VALIDATION
   if (
     file.fieldname === 'productImages' ||
-    file.fieldname === 'images' || // Support both 'images' and 'productImages'
+    file.fieldname === 'images' ||
     file.fieldname === 'logo' ||
     file.fieldname === 'avatar'
   ) {
-    const isValidImage =
-      allowedImageTypes.test(extname) && mimetype.startsWith('image/');
+    // Strategy: Accept if EITHER extension OR mimetype is valid
+    // This handles phones that send weird MIME types but correct extensions
+    const hasValidExtension = ALLOWED_IMAGE_EXTENSIONS.test(file.originalname);
+    const hasValidMime = ALLOWED_IMAGE_MIMES.includes(mimetype) || mimetype.startsWith('image/');
 
-    if (isValidImage) {
+    if (hasValidExtension || hasValidMime) {
       return cb(null, true);
-    } else {
-      return cb(
-        new Error('Invalid file type. Only JPEG, PNG, GIF, and WebP images are allowed.')
-      );
     }
+
+    // Detailed error for debugging (logged server-side, clean message to user)
+    console.warn(`[Upload] Rejected file: ext="${extname}", mime="${mimetype}", name="${file.originalname}"`);
+    return cb(new Error(
+      `Unsupported image format "${extname || mimetype}". ` +
+      'Supported: JPEG, PNG, GIF, WebP, HEIC (iPhone), JFIF, AVIF, BMP, TIFF.'
+    ));
   }
 
-  // Check if it's a document upload
+  // DOCUMENT UPLOAD VALIDATION
   if (file.fieldname === 'documents') {
-    const isValidDoc = allowedDocTypes.test(extname);
-
-    if (isValidDoc) {
+    if (ALLOWED_DOC_EXTENSIONS.test(file.originalname)) {
       return cb(null, true);
-    } else {
-      return cb(new Error('Invalid file type. Only PDF, DOC, and DOCX files are allowed.'));
     }
+    return cb(new Error('Invalid document. Only PDF, DOC, DOCX allowed.'));
   }
 
-  console.error(`⚠️ Unexpected file field received: ${file.fieldname}`);
+  console.error(`[Upload] Unexpected field: "${file.fieldname}"`);
   return cb(new Error(`Unexpected file field: "${file.fieldname}"`));
 };
 
 // =================================================================
 // MULTER CONFIGURATION
 // =================================================================
+// File size: 10MB default (modern phone cameras produce 3-8MB images)
+// Configurable via MAX_FILE_SIZE env var (in bytes)
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10MB
+const MAX_FILES_PER_REQUEST = 10;
+
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024, // 5MB
-    files: 10 // Maximum 10 files per request (increased for multiple products)
+    fileSize: MAX_FILE_SIZE,
+    files: MAX_FILES_PER_REQUEST
   }
 });
 
@@ -148,35 +182,50 @@ exports.uploadMultiple = (fieldName, maxCount = 5) => upload.array(fieldName, ma
 exports.uploadFields = (fields) => upload.fields(fields);
 
 // =================================================================
-// ERROR HANDLER FOR MULTER
+// ERROR HANDLER FOR MULTER - PRODUCTION-GRADE
 // =================================================================
+// Returns clear, actionable error messages to users
 exports.handleUploadError = (err, req, res, next) => {
   if (err instanceof multer.MulterError) {
+    const maxSizeMB = Math.round(MAX_FILE_SIZE / (1024 * 1024));
+
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: 'File too large. Maximum size is 5MB',
-        errorCode: 'FILE_TOO_LARGE'
+        message: `File too large. Maximum size is ${maxSizeMB}MB. Try compressing the image or using a smaller resolution.`,
+        errorCode: 'FILE_TOO_LARGE',
+        maxSizeBytes: MAX_FILE_SIZE
       });
     }
 
     if (err.code === 'LIMIT_FILE_COUNT') {
       return res.status(400).json({
         success: false,
-        message: 'Too many files. Maximum is 10 files per upload',
-        errorCode: 'TOO_MANY_FILES'
+        message: `Too many files. Maximum is ${MAX_FILES_PER_REQUEST} files per upload.`,
+        errorCode: 'TOO_MANY_FILES',
+        maxFiles: MAX_FILES_PER_REQUEST
       });
     }
 
     if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+      console.warn(`[Upload] Unexpected field: ${err.field}`);
       return res.status(400).json({
         success: false,
-        message: 'Unexpected file field',
+        message: 'Unexpected file field in upload',
         errorCode: 'UNEXPECTED_FILE_FIELD'
       });
     }
+
+    // Catch-all for other Multer errors
+    console.error('[Upload] Multer error:', err.code, err.message);
+    return res.status(400).json({
+      success: false,
+      message: 'File upload failed. Please try again.',
+      errorCode: err.code || 'MULTER_ERROR'
+    });
   }
 
+  // Custom errors from fileFilter
   if (err) {
     return res.status(400).json({
       success: false,

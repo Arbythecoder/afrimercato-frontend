@@ -16,14 +16,35 @@ cloudinary.config({
 // Get CloudinaryStorage - handle both v2.x and v4.x export formats
 const CloudinaryStorage = multerStorageCloudinary.CloudinaryStorage || multerStorageCloudinary;
 
+// =================================================================
+// STORAGE CONFIGURATIONS - PRODUCTION-GRADE
+// =================================================================
+// Cloudinary auto-converts ALL input formats to optimized web formats.
+// We accept all common phone/camera formats and let Cloudinary handle conversion.
+// Output is always web-optimized (usually WebP or JPEG depending on browser).
+
+// ALL formats Cloudinary can process (input formats)
+// Cloudinary handles conversion server-side - no client-side processing needed
+const CLOUDINARY_ALLOWED_FORMATS = [
+  'jpg', 'jpeg', 'jfif',        // Standard JPEG variants
+  'png',                         // PNG
+  'gif',                         // GIF (animated supported)
+  'webp',                        // WebP
+  'heic', 'heif',               // iPhone (iOS 11+) - auto-converted to JPEG
+  'avif',                        // Modern format
+  'bmp',                         // Bitmap
+  'tiff', 'tif',                // TIFF
+  'svg'                          // SVG (vector)
+];
+
 // Multer-Cloudinary storage for product images
 const productStorage = new CloudinaryStorage({
   cloudinary: { v2: cloudinary },
   params: {
     folder: 'afrimercato/products',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'gif', 'webp'],
+    allowed_formats: CLOUDINARY_ALLOWED_FORMATS,
     transformation: [
-      { width: 1200, height: 1200, crop: 'limit', quality: 'auto' }
+      { width: 1200, height: 1200, crop: 'limit', quality: 'auto', fetch_format: 'auto' }
     ]
   }
 });
@@ -33,9 +54,9 @@ const logoStorage = new CloudinaryStorage({
   cloudinary: { v2: cloudinary },
   params: {
     folder: 'afrimercato/logos',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    allowed_formats: CLOUDINARY_ALLOWED_FORMATS,
     transformation: [
-      { width: 500, height: 500, crop: 'limit', quality: 'auto' }
+      { width: 500, height: 500, crop: 'limit', quality: 'auto', fetch_format: 'auto' }
     ]
   }
 });
@@ -45,9 +66,9 @@ const avatarStorage = new CloudinaryStorage({
   cloudinary: { v2: cloudinary },
   params: {
     folder: 'afrimercato/avatars',
-    allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+    allowed_formats: CLOUDINARY_ALLOWED_FORMATS,
     transformation: [
-      { width: 300, height: 300, crop: 'fill', gravity: 'face', quality: 'auto' }
+      { width: 300, height: 300, crop: 'fill', gravity: 'face', quality: 'auto', fetch_format: 'auto' }
     ]
   }
 });

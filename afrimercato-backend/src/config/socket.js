@@ -2,23 +2,21 @@
 // SOCKET.IO CONFIGURATION
 // =================================================================
 // Real-time communication setup
+// Uses centralized CORS configuration from cors.js for consistency.
 
 const socketIO = require('socket.io');
+const { getSocketOrigins } = require('./cors');
 
 /**
  * Initialize Socket.IO
+ * CORS is configured via FRONTEND_ORIGINS env var - same as Express routes.
  */
 const initSocket = (server) => {
   const io = socketIO(server, {
     cors: {
-      origin: [
-        process.env.CLIENT_URL,
-        'https://arbythecoder.github.io/afrimercato-frontend',
-        'https://arbythecoder.github.io',
-        'http://localhost:3000',
-        'http://localhost:5173'
-      ],
-      credentials: true
+      origin: getSocketOrigins(),
+      credentials: true,
+      methods: ['GET', 'POST']
     }
   });
 

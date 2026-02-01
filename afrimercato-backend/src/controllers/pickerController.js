@@ -3,10 +3,10 @@
 // =================================================================
 
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Vendor = require('../models/Vendor');
 const PickingSession = require('../models/PickingSession');
+const { generateAccessToken, generateRefreshToken, setAuthCookies, formatUserResponse } = require('../utils/authHelpers');
 
 // Register picker
 exports.register = async (req, res) => {
@@ -59,25 +59,20 @@ exports.register = async (req, res) => {
 
     await user.save();
 
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user._id, roles: user.roles, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Generate JWT and refresh token
+    const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+    const refreshToken = generateRefreshToken();
+
+    // Set secure HTTP-only cookies
+    setAuthCookies(res, token, refreshToken);
 
     res.status(201).json({
       success: true,
       message: 'Picker registration successful',
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          phone: user.phone,
-          roles: user.roles
-        }
+        refreshToken,
+        user: formatUserResponse(user, 'picker')
       }
     });
   } catch (error) {
@@ -128,25 +123,19 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Generate JWT
-    const token = jwt.sign(
-      { id: user._id, roles: user.roles, email: user.email },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Generate JWT and refresh token
+    const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+    const refreshToken = generateRefreshToken();
+
+    // Set secure HTTP-only cookies
+    setAuthCookies(res, token, refreshToken);
 
     res.json({
       success: true,
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          phone: user.phone,
-          roles: user.roles,
-          avatar: user.avatar
-        }
+        refreshToken,
+        user: formatUserResponse(user, 'picker')
       }
     });
   } catch (error) {

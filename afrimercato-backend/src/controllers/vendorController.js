@@ -12,6 +12,7 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { getFileUrl } = require('../middleware/upload');
 const { processVendorVerification } = require('../services/autoApprovalService');
 const { sendStoreProfileCreatedEmail } = require('../emails/vendorEmails');
+const { generateAccessToken, generateRefreshToken, setAuthCookies, formatUserResponse } = require('../utils/authHelpers');
 
 // =================================================================
 // VENDOR PROFILE OPERATIONS
@@ -90,17 +91,21 @@ exports.registerVendor = asyncHandler(async (req, res) => {
     console.log('Email verification token generation skipped:', emailError.message);
   }
 
-  // USER-FRIENDLY RESPONSE (no technical errors!)
+  // Generate JWT and refresh token for immediate login
+  const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+  const refreshToken = generateRefreshToken();
+
+  // Set secure HTTP-only cookies
+  setAuthCookies(res, token, refreshToken);
+
+  // USER-FRIENDLY RESPONSE with token for SPA login
   res.status(201).json({
     success: true,
     message: 'Registration successful! 🎉',
     data: {
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.roles[0],
-      },
+      token,
+      refreshToken,
+      user: formatUserResponse(user, 'vendor'),
       vendor: {
         id: vendor._id,
         storeId: vendor.storeId,
@@ -109,7 +114,7 @@ exports.registerVendor = asyncHandler(async (req, res) => {
         approvalStatus: vendor.approvalStatus
       },
       onboarding: {
-        currentStep: 1, // Email verification
+        currentStep: 1,
         totalSteps: 4,
         nextAction: 'verify_email',
         message: 'Please check your email to verify your account.',

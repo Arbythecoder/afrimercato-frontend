@@ -10,12 +10,16 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const passport = require('passport');
 
 // DB & socket
 const { connectDB, closeDB } = require('./src/config/database');
 const { initSocket } = require('./src/config/socket');
+
+// CORS configuration (centralized, supports FRONTEND_ORIGINS env var)
+const { getCorsOptions, getCorsConfigSummary } = require('./src/config/cors');
 
 // Error handlers
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
@@ -72,78 +76,27 @@ app.use(
 );
 
 // ======================= CORS =======================
-const allowedOrigins = [
-  process.env.CLIENT_URL,
-  // Production domains
-  'https://afrimercato.com',
-  'https://www.afrimercato.com',
-  // Development domains
-  'http://localhost:3000',
-  'http://localhost:5173',
-  'http://localhost:5174',
-  'http://127.0.0.1:3000',
-  'http://127.0.0.1:5173',
-  // Cloudflare Pages domains
-  'https://afrimercato.pages.dev',
-  'https://afrimercato-frontend.pages.dev'
-].filter(Boolean); // Remove undefined values
+// Production-grade dynamic CORS using centralized configuration.
+// Add new frontend domains via FRONTEND_ORIGINS env var - no code changes needed.
+// Supports: exact domains, wildcard patterns (*.vercel.app), comma-separated lists.
+// See src/config/cors.js for full documentation.
+const corsOptions = getCorsOptions();
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow requests with no origin (mobile apps, curl, Postman) - only in development
-    if (!origin) {
-      if (process.env.NODE_ENV === 'development') {
-        return callback(null, true);
-      }
-      // In production, reject requests without origin (except for webhooks handled separately)
-      console.warn('⚠️ CORS rejected: no origin header');
-      return callback(null, false);
-    }
+// Log CORS configuration at startup (helpful for debugging deployments)
+if (process.env.NODE_ENV !== 'test') {
+  const corsConfig = getCorsConfigSummary();
+  console.log('✓ CORS configured with', corsConfig.explicitOrigins.length, 'explicit origins,',
+              corsConfig.wildcardPatterns.length, 'wildcard patterns');
+}
 
-    // PRODUCTION: Allow afrimercato.com and vendor subdomains (*.afrimercato.com)
-    // Pattern: https://afrimercato.com or https://<subdomain>.afrimercato.com
-    if (/^https:\/\/([\w-]+\.)?afrimercato\.com$/.test(origin)) {
-      return callback(null, true);
-    }
-
-    // Allow Vercel deployments - ONLY afrimercato project previews (tightened)
-    // Pattern: https://afrimercato-<hash>.vercel.app or https://afrimercato-frontend-<hash>.vercel.app
-    if (/^https:\/\/afrimercato(-frontend)?(-[a-z0-9]+)?\.vercel\.app$/.test(origin)) {
-      return callback(null, true);
-    }
-
-    // Allow Cloudflare Pages previews - ONLY afrimercato project
-    // Pattern: https://<hash>.afrimercato.pages.dev or https://<hash>.afrimercato-frontend.pages.dev
-    if (/^https:\/\/[a-z0-9-]+\.afrimercato(-frontend)?\.pages\.dev$/.test(origin)) {
-      return callback(null, true);
-    }
-
-    // Allow GitHub Pages - ONLY arbythecoder's afrimercato-frontend
-    if (origin === 'https://arbythecoder.github.io') {
-      return callback(null, true);
-    }
-
-    // Check explicit allowlist
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-
-    // Log rejected origins for debugging
-    console.warn(`⚠️ CORS rejected origin: ${origin}`);
-    return callback(null, false);
-  },
-  credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
-  exposedHeaders: ['Content-Length', 'X-Request-Id'],
-  maxAge: 86400 // 24 hours - cache preflight requests
-};
-
-// Apply CORS middleware
+// Apply CORS middleware BEFORE all routes
 app.use(cors(corsOptions));
 
-// Explicit preflight handler for all routes
+// Explicit preflight handler for all routes (required for complex requests with credentials)
 app.options('*', cors(corsOptions));
+
+// Cookie parser - required for reading cookies in auth routes
+app.use(cookieParser());
 
 // Body parsers - exclude Stripe webhook route (needs raw body for signature verification)
 app.use((req, res, next) => {

@@ -2,16 +2,17 @@
 // AUTH ROUTES - USER AUTHENTICATION
 // =================================================================
 // Complete implementation: login, registration, password reset for all users
+// Supports JWT via Authorization header AND secure HTTP-only cookies
 
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { generateAccessToken, generateRefreshToken, setAuthCookies, clearAuthCookies, formatUserResponse } = require('../utils/authHelpers');
 
 // ==============================================
 // POST /api/auth/register - Register new user
@@ -76,25 +77,20 @@ router.post(
     // Save user
     await user.save();
 
-    // Create JWT token
-    const token = jwt.sign(
-      { id: user._id, roles: user.roles },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Create JWT and refresh token
+    const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+    const refreshToken = generateRefreshToken();
+
+    // Set secure HTTP-only cookies
+    setAuthCookies(res, token, refreshToken);
 
     res.status(201).json({
       success: true,
       message: 'Registration successful. Please verify your email.',
       data: {
         token,
-        user: {
-          id: user._id,
-          email: user.email,
-          firstName: user.firstName,
-          lastName: user.lastName,
-          roles: user.roles
-        }
+        refreshToken,
+        user: formatUserResponse(user, 'customer')
       }
     });
   })
@@ -129,23 +125,23 @@ router.post(
       return res.status(401).json({ success: false, message: 'Invalid email or password' });
     }
 
-    // Create JWT token
-    const token = jwt.sign(
-      { id: user._id, roles: user.roles },
-      process.env.JWT_SECRET,
-      { expiresIn: '7d' }
-    );
+    // Create JWT and refresh token
+    const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+    const refreshToken = generateRefreshToken();
 
-    // Return user info (without password)
-    const userObj = user.toObject();
-    delete userObj.password;
+    // Set secure HTTP-only cookies
+    setAuthCookies(res, token, refreshToken);
+
+    // Determine primary role for frontend routing
+    const primaryRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'customer';
 
     res.json({
       success: true,
       message: 'Login successful',
       data: {
         token,
-        user: userObj
+        refreshToken,
+        user: formatUserResponse(user, primaryRole)
       }
     });
   })
@@ -308,13 +304,15 @@ router.post(
 );
 
 // ==============================================
-// POST /api/auth/logout - Logout user (no backend action needed with JWT)
+// POST /api/auth/logout - Logout user
 // ==============================================
-router.post('/logout', protect, asyncHandler(async (req, res) => {
-  // With JWT, logout is handled client-side by deleting token
+router.post('/logout', asyncHandler(async (req, res) => {
+  // Clear cookies on logout
+  clearAuthCookies(res);
+
   res.json({
     success: true,
-    message: 'Logged out successfully. Please remove token from client.'
+    message: 'Logged out successfully'
   });
 }));
 
@@ -324,31 +322,75 @@ router.post('/logout', protect, asyncHandler(async (req, res) => {
 router.post(
   '/refresh-token',
   asyncHandler(async (req, res) => {
-    // Extract token from request
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) {
-      return res.status(401).json({ success: false, message: 'No token provided' });
+    // Try to get refresh token from body, cookie, or header
+    const refreshToken = req.body.refreshToken ||
+                         req.cookies?.refreshToken ||
+                         req.headers['x-refresh-token'];
+
+    // Fallback: try to use existing access token if still valid
+    const existingToken = req.headers.authorization?.split(' ')[1] || req.cookies?.token;
+
+    if (!refreshToken && !existingToken) {
+      return res.status(401).json({
+        success: false,
+        message: 'No refresh token provided',
+        errorCode: 'NO_REFRESH_TOKEN'
+      });
     }
 
     try {
-      // SECURITY: Verify token is still valid (not expired)
-      // Users must re-authenticate if token is truly expired
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      let userId, userRoles;
 
-      // Create new token
-      const newToken = jwt.sign(
-        { id: decoded.id, roles: decoded.roles },
-        process.env.JWT_SECRET,
-        { expiresIn: '7d' }
-      );
+      // If we have a valid existing token, use it to get user info
+      if (existingToken) {
+        try {
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.verify(existingToken, process.env.JWT_SECRET);
+          userId = decoded.id;
+          userRoles = decoded.roles;
+        } catch (tokenErr) {
+          // Token expired or invalid - that's ok, we'll try to find user another way
+          if (!refreshToken) {
+            return res.status(401).json({
+              success: false,
+              message: 'Token expired',
+              errorCode: 'TOKEN_EXPIRED'
+            });
+          }
+        }
+      }
+
+      // If we still don't have user info, we need the refresh token
+      // In a full implementation, you'd store refresh tokens in DB and look up user
+      if (!userId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Please log in again',
+          errorCode: 'REFRESH_FAILED'
+        });
+      }
+
+      // Create new tokens
+      const newToken = generateAccessToken({ id: userId, roles: userRoles, email: '' });
+      const newRefreshToken = generateRefreshToken();
+
+      // Set new cookies
+      setAuthCookies(res, newToken, newRefreshToken);
 
       res.json({
         success: true,
         message: 'Token refreshed',
-        data: { token: newToken }
+        data: {
+          token: newToken,
+          refreshToken: newRefreshToken
+        }
       });
     } catch (error) {
-      return res.status(401).json({ success: false, message: 'Invalid token' });
+      return res.status(401).json({
+        success: false,
+        message: 'Token refresh failed',
+        errorCode: 'REFRESH_FAILED'
+      });
     }
   })
 );

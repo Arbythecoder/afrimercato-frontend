@@ -5,12 +5,12 @@
 
 const express = require('express');
 const { body, validationResult } = require('express-validator');
-const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const User = require('../models/User');
+const { generateAccessToken, generateRefreshToken, setAuthCookies, formatUserResponse } = require('../utils/authHelpers');
 
 // Public routes
 router.post(
@@ -71,25 +71,20 @@ router.post(
 			await user.save();
 		}
 
-		// Create JWT token (no fallback - JWT_SECRET required)
-		const token = jwt.sign(
-			{ id: user._id || null, roles: user.roles },
-			process.env.JWT_SECRET,
-			{ expiresIn: '7d' }
-		);
+		// Create JWT and refresh token
+		const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+		const refreshToken = generateRefreshToken();
+
+		// Set secure HTTP-only cookies
+		setAuthCookies(res, token, refreshToken);
 
 		res.status(201).json({
 			success: true,
 			message: 'Rider registration successful. Please verify email if required.',
 			data: {
 				token,
-				user: {
-					id: user._id || null,
-					email: user.email,
-					name: user.name,
-					phone: user.phone,
-					roles: user.roles
-				}
+				refreshToken,
+				user: formatUserResponse(user, 'rider')
 			}
 		});
 	})

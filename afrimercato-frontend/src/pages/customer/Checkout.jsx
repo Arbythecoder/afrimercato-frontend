@@ -305,7 +305,7 @@ function Checkout() {
                         />
                         <div>
                           <div className="font-semibold text-gray-900">💳 Card Payment</div>
-                          <div className="text-sm text-gray-600">Pay securely with Paystack</div>
+                          <div className="text-sm text-gray-600">Pay securely with Stripe</div>
                         </div>
                       </div>
                     </div>
@@ -382,7 +382,7 @@ function Checkout() {
                 <div className="mb-6 pb-6 border-b">
                   <h3 className="font-semibold text-gray-900 mb-3">Payment Method</h3>
                   <p className="text-gray-700">
-                    {payment.method === 'card' ? '💳 Card Payment (Paystack)' : '💵 Cash on Delivery'}
+                    {payment.method === 'card' ? '💳 Card Payment (Stripe)' : '💵 Cash on Delivery'}
                   </p>
                   <button
                     onClick={() => setStep(2)}
@@ -474,7 +474,7 @@ function Checkout() {
               {/* Security Badge */}
               <div className="mt-6 bg-green-50 rounded-lg p-3 text-center">
                 <p className="text-xs text-green-800">
-                  🔒 Secure checkout powered by Paystack
+                  🔒 Secure checkout powered by Stripe
                 </p>
               </div>
             </div>
