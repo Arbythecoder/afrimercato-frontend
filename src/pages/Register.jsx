@@ -83,8 +83,12 @@ function Register() {
         return
       }
 
-      // Route based on user role
-      switch (formData.role) {
+      // Route based on actual user role from server response
+      const userRole = result.user?.role || result.user?.primaryRole || formData.role
+      switch (userRole) {
+        case 'admin':
+          navigate('/admin')
+          break
         case 'vendor':
           navigate('/dashboard')
           break
@@ -332,7 +336,7 @@ function Register() {
             </div>
           )}
 
-          <div className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {/* Role Selection - MVP only (Customer/Vendor) */}
             <div>
               <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
@@ -366,7 +370,6 @@ function Register() {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="John Doe"
               />
@@ -383,7 +386,6 @@ function Register() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="your.email@example.com"
               />
@@ -400,7 +402,6 @@ function Register() {
                 required
                 value={formData.phone}
                 onChange={handleChange}
-                onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="+44 7700 900000 or +353 85 123 4567"
               />
@@ -419,7 +420,6 @@ function Register() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                   placeholder="••••••••"
                 />
@@ -455,7 +455,6 @@ function Register() {
                   required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(e); } }}
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                   placeholder="••••••••"
                 />
@@ -499,8 +498,7 @@ function Register() {
             </div>
 
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-gradient-to-r from-afri-green to-afri-green-dark hover:from-afri-green-dark hover:to-afri-green focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-afri-green font-semibold text-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -513,7 +511,7 @@ function Register() {
                 'Create Account'
               )}
             </button>
-          </div>
+          </form>
 
           <div className="mt-6">
             <div className="relative">

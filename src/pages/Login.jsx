@@ -56,6 +56,9 @@ function Login() {
 
       // Route based on user role
       switch (userRole) {
+        case 'admin':
+          navigate('/admin')
+          break
         case 'vendor':
           navigate('/dashboard')
           break
@@ -159,7 +162,7 @@ function Login() {
             </motion.div>
           )}
 
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
@@ -177,7 +180,6 @@ function Login() {
                 required
                 value={formData.email}
                 onChange={handleChange}
-                onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(e); } }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                 placeholder="your.email@example.com"
               />
@@ -201,7 +203,6 @@ function Login() {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleSubmit(e); } }}
                   className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
                   placeholder="••••••••"
                 />
@@ -250,8 +251,7 @@ function Login() {
             </motion.div>
 
             <motion.button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={loading}
               className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-white bg-gradient-to-r from-afri-green to-afri-green-dark hover:from-afri-green-dark hover:to-afri-green focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-afri-green font-semibold text-lg transition disabled:opacity-50 disabled:cursor-not-allowed"
               whileHover={{ scale: 1.02 }}
@@ -269,7 +269,7 @@ function Login() {
                 'Sign In'
               )}
             </motion.button>
-          </div>
+          </form>
 
           {/* Social Login Buttons */}
           <motion.div

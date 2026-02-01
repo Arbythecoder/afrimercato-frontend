@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { authAPI, getUserProfile } from '../services/api'
+import { authAPI, getUserProfile, registerVendor as registerVendorAPI } from '../services/api'
 
 const AuthContext = createContext()
 
@@ -108,7 +108,25 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (userData) => {
     try {
-      const response = await authAPI.register(userData)
+      let response
+
+      // Use vendor registration endpoint for vendors
+      if (userData.role === 'vendor') {
+        // Map form fields to vendor registration format
+        const vendorData = {
+          fullName: userData.name,
+          email: userData.email,
+          phone: userData.phone,
+          password: userData.password,
+          storeName: `${userData.name}'s Store`, // Default store name
+          storeDescription: 'Welcome to my store',
+          category: 'general',
+          address: ''
+        }
+        response = await registerVendorAPI(vendorData)
+      } else {
+        response = await authAPI.register(userData)
+      }
 
       if (response && response.success) {
         const { token, user } = response.data

@@ -1,5 +1,5 @@
-// API Base URL - uses environment variable or auto-detects
-const API_BASE_URL = "https://afrimercato-backend.fly.dev/api";
+// API Base URL - uses environment variable with fallback
+const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://afrimercato-backend.fly.dev") + "/api";
 
 console.log('🔗 API Base URL:', API_BASE_URL);
 
@@ -192,6 +192,24 @@ export const registerUser = async (userData) => {
   const response = await apiCall('/auth/register', {
     method: 'POST',
     body: JSON.stringify(userData)
+  });
+
+  if (response.success && response.data?.token) {
+    localStorage.setItem('afrimercato_token', response.data.token);
+
+    // Store refresh token if provided
+    if (response.data.refreshToken) {
+      localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
+    }
+  }
+
+  return response;
+};
+
+export const registerVendor = async (vendorData) => {
+  const response = await apiCall('/vendor/register', {
+    method: 'POST',
+    body: JSON.stringify(vendorData)
   });
 
   if (response.success && response.data?.token) {
@@ -702,6 +720,7 @@ export const clearAuthToken = () => {
 export const authAPI = {
   login: loginUser,
   register: registerUser,
+  registerVendor,
   logout: logoutUser,
   refreshToken,
   isAuthenticated,
