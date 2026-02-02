@@ -37,13 +37,16 @@ function VendorLayout({ children }) {
   const fetchVendorStatus = async () => {
     try {
       const response = await vendorAPI.getProfile()
-      if (response.data.success) {
-        setVendorStatus(response.data.data)
+      // API returns { success: true, data: { vendor, ... } }
+      if (response.success && response.data) {
+        // Extract vendor from response.data (could be response.data.vendor or response.data directly)
+        const vendorData = response.data.vendor || response.data
+        setVendorStatus(vendorData)
       }
     } catch (err) {
       console.error('Failed to load vendor status:', err)
       // If vendor profile doesn't exist, they need to create one
-      if (err.response?.status === 404 || err.response?.status === 403) {
+      if (err.status === 404 || err.status === 403 || err.response?.status === 404 || err.response?.status === 403) {
         setVendorStatus({ approvalStatus: 'no_profile' })
       }
     } finally {

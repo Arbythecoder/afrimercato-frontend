@@ -6,7 +6,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getVendorById, getVendorProductsByVendorId } from '../../services/api'
+import { getVendorById, getVendorProductsByVendorId, cartAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 // Sample categories with images - African focused
 const CATEGORIES = [
@@ -35,15 +36,31 @@ const SAMPLE_PRODUCTS = [
 export default function ClientVendorStorefront() {
   const { vendorId } = useParams()
   const navigate = useNavigate()
+  const { isAuthenticated, user } = useAuth()
 
   const [vendor, setVendor] = useState(null)
   const [products, setProducts] = useState(SAMPLE_PRODUCTS)
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [searchQuery, setSearchQuery] = useState('')
-  const [cart, setCart] = useState([])
+  // Initialize cart from localStorage
+  const [cart, setCart] = useState(() => {
+    try {
+      const savedCart = localStorage.getItem('afrimercato_cart')
+      return savedCart ? JSON.parse(savedCart) : []
+    } catch {
+      return []
+    }
+  })
   const [showCart, setShowCart] = useState(false)
   const [countdown, setCountdown] = useState({ hours: 10, minutes: 56, seconds: 21 })
+
+  // Persist cart to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
+    // Dispatch event so other components (like header) can update
+    window.dispatchEvent(new Event('cartUpdated'))
+  }, [cart])
 
   // Category tabs - African focused
   const categoryTabs = ['All', 'Fresh Produce', 'Spices & Seasonings', 'Grains & Flour', 'Dried Fish & Meat', 'Cooking Oils']
@@ -120,31 +137,75 @@ export default function ClientVendorStorefront() {
     }
   }
 
-  const addToCart = (product) => {
-    const existingItem = cart.find(item => item.id === product.id || item._id === product._id)
+  const addToCart = async (product) => {
+    const productId = product._id || product.id
+    const existingItem = cart.find(item => (item._id || item.id) === productId)
+
+    let updatedCart
     if (existingItem) {
-      setCart(cart.map(item =>
-        (item.id === product.id || item._id === product._id)
+      updatedCart = cart.map(item =>
+        (item._id || item.id) === productId
           ? { ...item, quantity: item.quantity + 1 }
           : item
-      ))
+      )
     } else {
-      setCart([...cart, { ...product, quantity: 1 }])
+      // Ensure we have the right structure for cart items
+      updatedCart = [...cart, {
+        _id: productId,
+        id: productId,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        unit: product.unit || 'piece',
+        images: product.images || product.image ? [product.image] : [],
+        vendor: product.vendor
+      }]
+    }
+
+    setCart(updatedCart)
+
+    // Also sync with backend if authenticated as customer
+    if (isAuthenticated && user?.roles?.includes('customer')) {
+      try {
+        await cartAPI.add(productId, 1)
+      } catch (error) {
+        console.log('Backend cart sync deferred:', error.message)
+        // Cart is already saved to localStorage, backend sync can happen later
+      }
     }
   }
 
-  const updateCartQuantity = (productId, newQuantity) => {
+  const updateCartQuantity = async (productId, newQuantity) => {
     if (newQuantity <= 0) {
-      setCart(cart.filter(item => item.id !== productId && item._id !== productId))
-    } else {
-      setCart(cart.map(item =>
-        (item.id === productId || item._id === productId) ? { ...item, quantity: newQuantity } : item
-      ))
+      removeFromCart(productId)
+      return
+    }
+
+    setCart(cart.map(item =>
+      (item.id === productId || item._id === productId) ? { ...item, quantity: newQuantity } : item
+    ))
+
+    // Sync with backend if authenticated
+    if (isAuthenticated && user?.roles?.includes('customer')) {
+      try {
+        await cartAPI.update(productId, newQuantity)
+      } catch (error) {
+        console.log('Backend cart update deferred:', error.message)
+      }
     }
   }
 
-  const removeFromCart = (productId) => {
+  const removeFromCart = async (productId) => {
     setCart(cart.filter(item => item.id !== productId && item._id !== productId))
+
+    // Sync with backend if authenticated
+    if (isAuthenticated && user?.roles?.includes('customer')) {
+      try {
+        await cartAPI.remove(productId)
+      } catch (error) {
+        console.log('Backend cart remove deferred:', error.message)
+      }
+    }
   }
 
   const cartTotal = cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)

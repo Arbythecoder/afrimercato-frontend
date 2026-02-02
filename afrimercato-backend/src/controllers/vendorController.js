@@ -66,7 +66,8 @@ exports.registerVendor = asyncHandler(async (req, res) => {
   // Generate unique store ID
   const storeId = await generateUniqueStoreId(category);
 
-  // Create vendor profile with PENDING status (not auto-verified)
+  // Create vendor profile with AUTO-APPROVED status (production-ready)
+  // Vendors can immediately start selling - no admin approval required
   const vendor = await Vendor.create({
     user: user._id,
     storeId,
@@ -75,9 +76,12 @@ exports.registerVendor = asyncHandler(async (req, res) => {
     category,
     address,
     phone,
-    approvalStatus: 'pending', // NOT auto-verified!
-    isVerified: false,
-    verificationStep: 'email_pending'
+    approvalStatus: 'approved',  // Auto-approve for immediate selling
+    isVerified: true,            // Auto-verify for production
+    isPublic: true,              // Visible to customers immediately
+    isActive: true,              // Active by default
+    approvedAt: new Date(),      // Record approval time
+    submittedForReviewAt: new Date()
   });
 
   // Generate email verification token (if method exists)
@@ -101,7 +105,7 @@ exports.registerVendor = asyncHandler(async (req, res) => {
   // USER-FRIENDLY RESPONSE with token for SPA login
   res.status(201).json({
     success: true,
-    message: 'Registration successful! 🎉',
+    message: 'Registration successful! Your store is now live. 🎉',
     data: {
       token,
       refreshToken,
@@ -111,14 +115,17 @@ exports.registerVendor = asyncHandler(async (req, res) => {
         storeId: vendor.storeId,
         storeName: vendor.storeName,
         isVerified: vendor.isVerified,
-        approvalStatus: vendor.approvalStatus
+        approvalStatus: vendor.approvalStatus,
+        isPublic: vendor.isPublic,
+        isActive: vendor.isActive
       },
       onboarding: {
         currentStep: 1,
-        totalSteps: 4,
-        nextAction: 'verify_email',
-        message: 'Please check your email to verify your account.',
-        estimatedTime: '24-48 hours for business verification'
+        totalSteps: 2,
+        nextAction: 'add_products',
+        message: 'Your store is live! Start adding products to begin selling.',
+        canAddProducts: true,
+        canReceiveOrders: true
       }
     }
   });

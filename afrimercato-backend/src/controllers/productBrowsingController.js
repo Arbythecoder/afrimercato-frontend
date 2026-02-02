@@ -225,10 +225,18 @@ exports.getCategories = asyncHandler(async (req, res) => {
 exports.getFeaturedVendors = asyncHandler(async (req, res) => {
   const { limit = 10 } = req.query;
 
-  const vendors = await Vendor.find({ isVerified: true, isActive: true })
-    .sort({ rating: -1, totalOrders: -1 })
+  // Show all approved, verified, and active vendors
+  // New vendors are auto-approved, so they appear immediately
+  const vendors = await Vendor.find({
+    isActive: true,
+    $or: [
+      { isVerified: true },
+      { approvalStatus: 'approved' }
+    ]
+  })
+    .sort({ createdAt: -1, rating: -1, totalOrders: -1 }) // Show newest first
     .limit(parseInt(limit))
-    .select('storeName logo location.city rating reviews totalOrders storeDescription');
+    .select('storeName logo location.city rating reviews totalOrders storeDescription category createdAt');
 
   res.status(200).json({
     success: true,
