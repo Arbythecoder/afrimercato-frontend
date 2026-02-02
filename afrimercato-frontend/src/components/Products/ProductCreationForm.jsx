@@ -6,12 +6,86 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { vendorAPI } from '../../services/api';
-import {
-  FiUpload, FiX, FiImage, FiPlus, FiTrash2, FiCheck,
-  FiPackage, FiTag, FiClock, FiCalendar
-} from 'react-icons/fi';
+import { FiUpload, FiX, FiPlus, FiTrash2, FiCheck } from 'react-icons/fi';
+
+// =================================================================
+// IMAGE COMPRESSION UTILITY (Mobile-Optimized)
+// =================================================================
+// Compresses images to reduce upload time on mobile networks
+const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) => {
+  return new Promise((resolve) => {
+    // Skip compression for small files (< 500KB)
+    if (file.size < 500 * 1024) {
+      console.log(`📷 Image ${file.name} is small (${(file.size / 1024).toFixed(1)}KB), skipping compression`);
+      resolve(file);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const img = new Image();
+      img.onload = () => {
+        // Calculate new dimensions
+        let { width, height } = img;
+
+        if (width > maxWidth || height > maxHeight) {
+          const ratio = Math.min(maxWidth / width, maxHeight / height);
+          width = Math.round(width * ratio);
+          height = Math.round(height * ratio);
+        }
+
+        // Create canvas and compress
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        // Convert to blob
+        canvas.toBlob(
+          (blob) => {
+            if (blob) {
+              // Create new File from blob with original name
+              const compressedFile = new File([blob], file.name, {
+                type: 'image/jpeg',
+                lastModified: Date.now()
+              });
+
+              const originalSize = (file.size / 1024).toFixed(1);
+              const newSize = (compressedFile.size / 1024).toFixed(1);
+              console.log(`📷 Compressed ${file.name}: ${originalSize}KB → ${newSize}KB (${Math.round((1 - compressedFile.size / file.size) * 100)}% reduction)`);
+
+              resolve(compressedFile);
+            } else {
+              // Fallback to original if compression fails
+              console.warn(`⚠️ Compression failed for ${file.name}, using original`);
+              resolve(file);
+            }
+          },
+          'image/jpeg',
+          quality
+        );
+      };
+
+      img.onerror = () => {
+        console.warn(`⚠️ Failed to load image ${file.name}, using original`);
+        resolve(file);
+      };
+
+      img.src = event.target.result;
+    };
+
+    reader.onerror = () => {
+      console.warn(`⚠️ Failed to read ${file.name}, using original`);
+      resolve(file);
+    };
+
+    reader.readAsDataURL(file);
+  });
+};
 
 // UK Standard Categories Suggestions
 const CATEGORY_SUGGESTIONS = [
@@ -106,6 +180,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
   // Images
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
+  const [compressingImages, setCompressingImages] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState('');
 
   // Variants
   const [variants, setVariants] = useState([]);
@@ -155,7 +231,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
     }
   };
 
-  const handleImageUpload = (e) => {
+  const handleImageUpload = async (e) => {
     const files = Array.from(e.target.files);
     const totalImages = images.length + files.length;
 
@@ -164,33 +240,59 @@ function ProductCreationForm({ product, onClose, onSave }) {
       return;
     }
 
-    // Validate file sizes
+    // Validate file sizes (allow up to 10MB, we'll compress)
     for (const file of files) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Each image must be less than 5MB');
+      if (file.size > 10 * 1024 * 1024) {
+        alert('Each image must be less than 10MB');
         return;
       }
     }
 
-    setImages(prev => [...prev, ...files]);
+    // Show compression progress for mobile users
+    setCompressingImages(true);
+    setUploadProgress(`Optimizing ${files.length} image(s) for upload...`);
 
-    // Clear image error if it exists
-    if (errors.images) {
-      setErrors(prev => {
-        const newErrors = { ...prev };
-        delete newErrors.images;
-        return newErrors;
+    try {
+      // Compress all images for faster upload (especially on mobile)
+      const compressedFiles = await Promise.all(
+        files.map(file => compressImage(file, 1200, 1200, 0.8))
+      );
+
+      setImages(prev => [...prev, ...compressedFiles]);
+
+      // Clear image error if it exists
+      if (errors.images) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          delete newErrors.images;
+          return newErrors;
+        });
+      }
+
+      // Create previews from compressed files
+      compressedFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result]);
+        };
+        reader.readAsDataURL(file);
       });
-    }
 
-    // Create previews
-    files.forEach(file => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setImagePreviews(prev => [...prev, reader.result]);
-      };
-      reader.readAsDataURL(file);
-    });
+      setUploadProgress('');
+    } catch (error) {
+      console.error('Image compression error:', error);
+      // Fallback to original files if compression fails
+      setImages(prev => [...prev, ...files]);
+      files.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result]);
+        };
+        reader.readAsDataURL(file);
+      });
+    } finally {
+      setCompressingImages(false);
+    }
   };
 
   const removeImage = (index) => {
@@ -295,13 +397,21 @@ function ProductCreationForm({ product, onClose, onSave }) {
       return;
     }
 
+    // Check network connectivity
+    if (!navigator.onLine) {
+      alert('❌ No internet connection. Please check your network and try again.');
+      return;
+    }
+
     try {
       setSaving(true);
+      setUploadProgress('Preparing upload...');
 
       // Validate images before sending
       if (!images || images.length === 0) {
         alert('❌ At least one product image is required');
         setSaving(false);
+        setUploadProgress('');
         return;
       }
 
@@ -320,44 +430,95 @@ function ProductCreationForm({ product, onClose, onSave }) {
       submitData.append('tags', JSON.stringify(formData.tags));
       submitData.append('variants', JSON.stringify(variants));
 
+      // Calculate total image size for progress
+      const totalSize = images.reduce((sum, img) => sum + img.size, 0);
+      const totalSizeKB = (totalSize / 1024).toFixed(1);
+      console.log(`📸 Sending ${images.length} image(s), total: ${totalSizeKB}KB`);
+
       // Add images with debug logging
-      console.log(`📸 Sending ${images.length} image(s)`);
       images.forEach((image, index) => {
-        console.log(`  Image ${index + 1}: ${image.name} (${image.size} bytes)`);
+        console.log(`  Image ${index + 1}: ${image.name} (${(image.size / 1024).toFixed(1)}KB)`);
         submitData.append('images', image);
       });
 
+      setUploadProgress(`Uploading ${images.length} image(s) (${totalSizeKB}KB)...`);
+
+      // Retry logic for mobile network instability
       let response;
-      if (product) {
-        response = await vendorAPI.updateProduct(product._id, submitData);
-      } else {
-        response = await vendorAPI.createProduct(submitData);
+      let lastError;
+      const maxRetries = 3;
+
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          if (attempt > 1) {
+            setUploadProgress(`Retrying upload (attempt ${attempt}/${maxRetries})...`);
+            // Wait before retry with exponential backoff
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+          }
+
+          if (product) {
+            response = await vendorAPI.updateProduct(product._id, submitData);
+          } else {
+            response = await vendorAPI.createProduct(submitData);
+          }
+
+          // If we get here, upload succeeded
+          break;
+        } catch (err) {
+          lastError = err;
+          console.warn(`Upload attempt ${attempt} failed:`, err.message);
+
+          // Don't retry auth errors or validation errors
+          if (err.message?.includes('401') || err.message?.includes('Session expired') ||
+              err.code === 'AUTH_EXPIRED' || err.status === 400 || err.status === 401) {
+            throw err;
+          }
+
+          // On last attempt, throw the error
+          if (attempt === maxRetries) {
+            throw err;
+          }
+        }
       }
 
-      if (response.success) {
-        alert(product ? 'Product updated successfully!' : 'Product created successfully!');
+      if (response?.success) {
+        setUploadProgress('');
+        alert(product ? '✅ Product updated successfully!' : '✅ Product created successfully!');
         // Pass full response to parent so it can decide what to do (refresh, close modal, etc.)
         onSave(response);
       } else {
         // Handle non-success response
-        alert(`❌ ${response.message || 'Failed to save product'}`);
+        alert(`❌ ${response?.message || 'Failed to save product'}`);
       }
     } catch (error) {
       console.error('Product save error:', error);
+      setUploadProgress('');
+
       // apiCall throws Error with message directly
       const errorMessage = error.message || 'Failed to save product';
-      
+
       // Check for specific error types
       if (errorMessage.includes('401') || errorMessage.includes('Session expired') || error.code === 'AUTH_EXPIRED') {
         alert('❌ Your session has expired. Please log in again.');
         navigate('/login');
       } else if (errorMessage.includes('501')) {
         alert('❌ This feature is not yet available. Coming soon!');
+      } else if (errorMessage.includes('timed out') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
+        // Mobile-specific error handling
+        alert(
+          '❌ Upload failed - Network issue detected.\n\n' +
+          'Tips for mobile users:\n' +
+          '• Make sure you have a stable internet connection\n' +
+          '• Try connecting to WiFi instead of mobile data\n' +
+          '• The images have been optimized, but your connection may be slow\n' +
+          '• Try again in a moment'
+        );
       } else {
         alert(`❌ ${errorMessage}`);
       }
     } finally {
       setSaving(false);
+      setUploadProgress('');
     }
   };
 
@@ -904,20 +1065,21 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     setErrors({});
                     setCurrentStep(prev => Math.min(5, prev + 1));
                   }}
-                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600"
+                  disabled={compressingImages}
+                  className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50"
                 >
                   Next
                 </button>
               ) : (
                 <button
                   type="submit"
-                  disabled={saving}
+                  disabled={saving || compressingImages}
                   className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  {saving ? (
+                  {saving || compressingImages ? (
                     <>
                       <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                      Saving...
+                      {uploadProgress || 'Processing...'}
                     </>
                   ) : (
                     <>

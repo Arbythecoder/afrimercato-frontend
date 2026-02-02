@@ -274,8 +274,9 @@ export const createProduct = async (productData) => {
   return apiCall('/vendor/products', {
     method: 'POST',
     body: isFormData ? productData : JSON.stringify(productData),
-    // Longer timeout for file uploads (60 seconds)
-    timeout: isFormData ? 60000 : 10000
+    // Longer timeout for file uploads (180 seconds for mobile networks)
+    // Mobile users on 3G/4G may need extra time for image uploads
+    timeout: isFormData ? 180000 : 10000
   });
 };
 
@@ -286,8 +287,9 @@ export const updateProduct = async (productId, productData) => {
   return apiCall(`/vendor/products/${productId}`, {
     method: 'PUT',
     body: isFormData ? productData : JSON.stringify(productData),
-    // Longer timeout for file uploads (60 seconds)
-    timeout: isFormData ? 60000 : 10000
+    // Longer timeout for file uploads (180 seconds for mobile networks)
+    // Mobile users on 3G/4G may need extra time for image uploads
+    timeout: isFormData ? 180000 : 10000
   });
 };
 
