@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { productAPI, customerAPI } from '../../services/api'
+import { productAPI, customerAPI, cartAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { useAuth } from '../../context/AuthContext'
 
 const categories = [
   { id: 'all', name: 'All Products', icon: '🛒' },
@@ -26,6 +27,7 @@ const sortOptions = [
 function ProductBrowsing() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const { isAuthenticated } = useAuth()
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -119,19 +121,30 @@ function ProductBrowsing() {
     }
   }
 
-  const addToCart = (product) => {
-    const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-    const existingIndex = cart.findIndex(item => item._id === product._id)
+  const addToCart = async (product) => {
+    try {
+      if (isAuthenticated) {
+        // Use backend cart API for authenticated users
+        await cartAPI.add(product._id, 1)
+      } else {
+        // Use localStorage for guests
+        const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        const existingIndex = cart.findIndex(item => item._id === product._id)
 
-    if (existingIndex >= 0) {
-      cart[existingIndex].quantity += 1
-    } else {
-      cart.push({ ...product, quantity: 1 })
+        if (existingIndex >= 0) {
+          cart[existingIndex].quantity += 1
+        } else {
+          cart.push({ ...product, quantity: 1 })
+        }
+
+        localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
+      }
+      window.dispatchEvent(new Event('cartUpdated'))
+      alert(`${product.name} added to cart!`)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      alert('Failed to add to cart. Please try again.')
     }
-
-    localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
-    window.dispatchEvent(new Event('cartUpdated'))
-    alert(`${product.name} added to cart!`)
   }
 
   return (

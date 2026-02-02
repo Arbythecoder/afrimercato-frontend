@@ -31,10 +31,11 @@ exports.getCart = asyncHandler(async (req, res) => {
 
   // Validate all items still exist and have current pricing
   const validItems = [];
+  const responseItems = [];
   let totalPrice = 0;
 
   for (const item of cart) {
-    const product = await Product.findById(item.productId);
+    const product = await Product.findById(item.productId).populate('vendor', 'storeName');
 
     if (!product) {
       // Product no longer exists, skip it
@@ -49,25 +50,44 @@ exports.getCart = asyncHandler(async (req, res) => {
     if (item.quantity > 0) {
       // Update price in case it changed
       const itemTotal = product.price * item.quantity;
+
+      // Store minimal data in user cart
       validItems.push({
-        ...item,
+        productId: item.productId,
+        quantity: item.quantity,
+        price: product.price,
+        vendorId: item.vendorId,
+        addedAt: item.addedAt
+      });
+
+      // Include full product details in response for frontend
+      responseItems.push({
+        productId: item.productId,
+        quantity: item.quantity,
         price: product.price,
         total: itemTotal,
-        available: product.stock > 0
+        available: product.stock > 0,
+        // Include product details for frontend display
+        name: product.name,
+        images: product.images,
+        unit: product.unit,
+        vendor: product.vendor,
+        stock: product.stock
       });
+
       totalPrice += itemTotal;
     }
   }
 
-  // Update cart with valid items
+  // Update cart with valid items (minimal data)
   customer.cart = validItems;
   await customer.save();
 
   res.status(200).json({
     success: true,
-    count: validItems.length,
+    count: responseItems.length,
     subtotal: Math.round(totalPrice * 100) / 100,
-    data: validItems
+    data: responseItems
   });
 });
 

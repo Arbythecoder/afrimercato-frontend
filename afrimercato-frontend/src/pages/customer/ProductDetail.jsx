@@ -1,17 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { productAPI, customerAPI } from '../../services/api'
+import { productAPI, customerAPI, cartAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { useAuth } from '../../context/AuthContext'
 
 function ProductDetail() {
   const { productId } = useParams()
   const navigate = useNavigate()
+  const { isAuthenticated } = useAuth()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState([])
+  const [addingToCart, setAddingToCart] = useState(false)
 
   useEffect(() => {
     fetchProduct()
@@ -43,19 +46,33 @@ function ProductDetail() {
     }
   }
 
-  const addToCart = () => {
-    const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-    const existingIndex = cart.findIndex(item => item._id === product._id)
+  const addToCart = async () => {
+    setAddingToCart(true)
+    try {
+      if (isAuthenticated) {
+        // Use backend cart API for authenticated users
+        await cartAPI.add(product._id, quantity)
+      } else {
+        // Use localStorage for guests
+        const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        const existingIndex = cart.findIndex(item => item._id === product._id)
 
-    if (existingIndex >= 0) {
-      cart[existingIndex].quantity += quantity
-    } else {
-      cart.push({ ...product, quantity })
+        if (existingIndex >= 0) {
+          cart[existingIndex].quantity += quantity
+        } else {
+          cart.push({ ...product, quantity })
+        }
+
+        localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
+      }
+      window.dispatchEvent(new Event('cartUpdated'))
+      alert(`${product.name} added to cart!`)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      alert('Failed to add to cart. Please try again.')
+    } finally {
+      setAddingToCart(false)
     }
-
-    localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
-    window.dispatchEvent(new Event('cartUpdated'))
-    alert(`${product.name} added to cart!`)
   }
 
   const buyNow = () => {
@@ -246,10 +263,10 @@ function ProductDetail() {
               <div className="flex gap-3 mb-6">
                 <button
                   onClick={addToCart}
-                  disabled={!product.inStock}
+                  disabled={!product.inStock || addingToCart}
                   className="flex-1 py-4 bg-afri-green text-white rounded-xl font-semibold hover:bg-afri-green-dark disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Add to Cart
+                  {addingToCart ? 'Adding...' : 'Add to Cart'}
                 </button>
                 <button
                   onClick={buyNow}
