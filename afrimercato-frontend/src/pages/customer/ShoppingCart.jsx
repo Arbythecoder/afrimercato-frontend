@@ -87,6 +87,9 @@ function ShoppingCart() {
       return
     }
 
+    // Store previous cart for rollback
+    const previousCart = [...cart]
+
     // Optimistic update
     const updatedCart = cart.map(item =>
       item._id === productId ? { ...item, quantity: newQuantity } : item
@@ -95,10 +98,17 @@ function ShoppingCart() {
 
     if (isAuthenticated) {
       try {
-        await cartAPI.update(productId, newQuantity)
+        const response = await cartAPI.update(productId, newQuantity)
+        if (!response.success) {
+          // Rollback on failure
+          console.error('Cart update failed:', response.message)
+          setCart(previousCart)
+        }
       } catch (error) {
         console.error('Failed to update cart:', error)
-        // Reload on error
+        // Rollback on error
+        setCart(previousCart)
+        // Reload to ensure sync with backend
         loadCart()
       }
     } else {
@@ -109,15 +119,23 @@ function ShoppingCart() {
   }
 
   const removeItem = async (productId) => {
+    // Store previous cart for rollback
+    const previousCart = [...cart]
+
     // Optimistic update
     const updatedCart = cart.filter(item => item._id !== productId)
     setCart(updatedCart)
 
     if (isAuthenticated) {
       try {
-        await cartAPI.remove(productId)
+        const response = await cartAPI.remove(productId)
+        if (!response.success) {
+          console.error('Failed to remove item:', response.message)
+          setCart(previousCart)
+        }
       } catch (error) {
         console.error('Failed to remove item:', error)
+        setCart(previousCart)
         loadCart()
       }
     } else {

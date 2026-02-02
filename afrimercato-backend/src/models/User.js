@@ -69,6 +69,40 @@ const userSchema = new mongoose.Schema({
   resetPasswordToken: String,
   resetPasswordExpires: Date,
 
+  // SHOPPING CART
+  cart: [{
+    productId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Product',
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1,
+      default: 1
+    },
+    price: {
+      type: Number,
+      required: true
+    },
+    vendorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    addedAt: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
+  // PENDING REPURCHASE (set in cart before checkout)
+  pendingRepurchaseFrequency: {
+    type: String,
+    enum: ['weekly', 'bi-weekly', 'monthly', 'quarterly', null],
+    default: null
+  },
+
   // REPEAT PURCHASE
   repeatPurchaseFrequency: {
     type: String,
