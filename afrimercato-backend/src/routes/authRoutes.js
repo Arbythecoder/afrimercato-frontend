@@ -157,9 +157,12 @@ router.get('/me', protect, asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'User not found' });
   }
 
+  // Use formatUserResponse for consistency with login endpoint
+  const primaryRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'customer';
+
   res.json({
     success: true,
-    data: { user }
+    data: formatUserResponse(user, primaryRole)
   });
 }));
 
@@ -173,9 +176,12 @@ router.get('/profile', protect, asyncHandler(async (req, res) => {
     return res.status(404).json({ success: false, message: 'User not found' });
   }
 
+  // Use formatUserResponse for consistency with login endpoint
+  const primaryRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'customer';
+
   res.json({
     success: true,
-    data: { user }
+    data: formatUserResponse(user, primaryRole)
   });
 }));
 
