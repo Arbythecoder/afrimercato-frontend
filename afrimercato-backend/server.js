@@ -13,6 +13,7 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const passport = require('passport');
+require('./src/config/passport'); // Register OAuth strategies (Google)
 
 // DB & socket
 const { connectDB, closeDB } = require('./src/config/database');

@@ -401,4 +401,40 @@ router.post(
   })
 );
 
+// ==============================================
+// GET /api/auth/google - Initiate Google OAuth
+// ==============================================
+router.get('/google', (req, res, next) => {
+  // Fail fast if Google OAuth is not configured
+  if (!process.env.GOOGLE_CLIENT_ID) {
+    return res.status(501).json({ success: false, message: 'Google OAuth is not configured' });
+  }
+
+  const passport = require('passport');
+  passport.authenticate('google', { scope: ['profile', 'email'], session: false })(req, res, next);
+});
+
+// ==============================================
+// GET /api/auth/google/callback - Google OAuth callback
+// ==============================================
+router.get('/google/callback', (req, res) => {
+  const passport = require('passport');
+  const frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
+
+  passport.authenticate('google', { session: false }, (err, user) => {
+    if (err || !user) {
+      return res.redirect(`${frontendUrl}/oauth/callback?error=google_auth_failed`);
+    }
+
+    try {
+      const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+      const refreshToken = generateRefreshToken();
+
+      res.redirect(`${frontendUrl}/oauth/callback?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}&provider=google`);
+    } catch (tokenErr) {
+      res.redirect(`${frontendUrl}/oauth/callback?error=server_error`);
+    }
+  })(req, res);
+});
+
 module.exports = router;
