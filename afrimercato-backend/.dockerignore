@@ -1,0 +1,62 @@
+# Dependencies (will be installed during build)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Uploads (user-generated files not needed in build)
+uploads/
+*.log
+server-output.log
+server.log
+
+# Documentation (not needed in production)
+*.md
+DEPLOYMENT.md
+DEPLOYMENT.txt
+QUICKSTART.md
+REDEPLOY.md
+API_ENDPOINTS_GUIDE.md
+API_IMPLEMENTATION_SUMMARY.md
+API-TESTING-GUIDE.md
+CLOUDFLARE_SETUP.md
+DNS_RECORDS_FOR_CLOUDFLARE.md
+HOW_TO_ADD_DNS_IN_CLOUDFLARE.md
+FEATURE_COMPLETION_PLAN.md
+MVP_IMPLEMENTATION.md
+COMPLETE.md
+PHASE-*.md
+PICKERS-PROGRESS-REPORT.md
+RIDER-PHASE-2-COMPLETE.md
+
+# Test files (not needed in production)
+test-*.js
+**/test/
+**/*.test.js
+**/*.spec.js
+
+# Git
+.git/
+.gitignore
+.github/
+
+# Environment files (managed by Fly secrets)
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+tmp/
+temp/
+*.tmp
