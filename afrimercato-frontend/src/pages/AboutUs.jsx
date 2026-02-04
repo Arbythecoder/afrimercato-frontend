@@ -11,19 +11,19 @@ export default function AboutUs() {
     {
       name: 'Sarah Adeyemi',
       role: 'Founder & CEO',
-      image: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=300',
+      initials: 'SA',
       bio: 'Passionate about connecting African communities with authentic products across the UK.'
     },
     {
       name: 'David Okonkwo',
       role: 'Head of Operations',
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300',
+      initials: 'DO',
       bio: 'Ensuring seamless delivery experiences for thousands of customers daily.'
     },
     {
       name: 'Amara Johnson',
       role: 'Head of Vendor Relations',
-      image: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=300',
+      initials: 'AJ',
       bio: 'Building strong partnerships with vendors across the United Kingdom.'
     }
   ]
@@ -241,11 +241,12 @@ export default function AboutUs() {
                 transition={{ delay: index * 0.1 }}
                 className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
               >
-                <img
-                  src={member.image}
-                  alt={member.name}
-                  className="w-full h-64 object-cover"
-                />
+                {/* Avatar with initials */}
+                <div className="w-full h-64 bg-gradient-to-br from-[#00897B] to-[#00695C] flex items-center justify-center">
+                  <span className="text-6xl font-bold text-white">
+                    {member.initials}
+                  </span>
+                </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
                   <p className="text-[#00897B] font-medium mb-3">{member.role}</p>
