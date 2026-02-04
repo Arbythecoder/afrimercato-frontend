@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
 import CookieConsent from './components/CookieConsent'
+import FeedbackButton from './components/FeedbackButton'
 import ComingSoon from './components/ComingSoon'
 
 // Lazy load pages for code splitting - ⚡ Improves initial load time
@@ -359,6 +360,7 @@ function App() {
       <ComingSoon>
         <AppContent />
         <CookieConsent />
+        <FeedbackButton />
       </ComingSoon>
     </AuthProvider>
   )
