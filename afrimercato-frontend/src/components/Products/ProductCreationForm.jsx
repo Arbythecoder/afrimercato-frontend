@@ -694,7 +694,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
                         <span className="text-sm text-gray-500">Upload</span>
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
                           multiple
                           onChange={handleImageUpload}
                           className="hidden"

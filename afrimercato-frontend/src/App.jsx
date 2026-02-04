@@ -2,6 +2,7 @@ import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
 import CookieConsent from './components/CookieConsent'
+import ComingSoon from './components/ComingSoon'
 
 // Lazy load pages for code splitting - ⚡ Improves initial load time
 const Login = lazy(() => import('./pages/Login'))
@@ -355,8 +356,10 @@ function VendorBanner() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
-      <CookieConsent />
+      <ComingSoon>
+        <AppContent />
+        <CookieConsent />
+      </ComingSoon>
     </AuthProvider>
   )
 }

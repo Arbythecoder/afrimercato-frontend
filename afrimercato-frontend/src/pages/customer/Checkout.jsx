@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { cartAPI } from '../../services/api'
 
 // Get API Base URL
 const API_BASE_URL = (() => {
@@ -11,11 +12,12 @@ const API_BASE_URL = (() => {
 
 function Checkout() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
 
   const [cart, setCart] = useState([])
   const [step, setStep] = useState(1) // 1: Address, 2: Payment, 3: Confirm
   const [loading, setLoading] = useState(false)
+  const [cartLoading, setCartLoading] = useState(true)
 
   // Address form
   const [address, setAddress] = useState({
@@ -34,19 +36,61 @@ function Checkout() {
   })
 
   useEffect(() => {
-    // Load cart from localStorage
-    const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-    setCart(savedCart)
+    const loadCart = async () => {
+      setCartLoading(true)
 
-    if (savedCart.length === 0) {
-      navigate('/stores')
+      // If not logged in, redirect to login
+      if (!isAuthenticated) {
+        localStorage.setItem('checkout_redirect', 'true')
+        navigate('/login')
+        return
+      }
+
+      // Cart/checkout is customer-only — skip API call for other roles
+      if (!user?.roles?.includes('customer')) {
+        setCartLoading(false)
+        return
+      }
+
+      try {
+        // Load from backend when authenticated
+        const response = await cartAPI.get()
+        if (response.success && response.data && response.data.length > 0) {
+          // Transform backend cart format to checkout format
+          const backendCart = response.data.map(item => ({
+            _id: item.productId?.toString() || item.productId,
+            name: item.name || 'Product',
+            price: item.price,
+            quantity: item.quantity,
+            unit: item.unit || 'piece',
+            images: item.images,
+            vendor: item.vendor
+          }))
+          setCart(backendCart)
+        } else {
+          // Fallback to localStorage if backend cart is empty
+          const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+          if (savedCart.length > 0) {
+            setCart(savedCart)
+          } else {
+            navigate('/stores')
+          }
+        }
+      } catch (error) {
+        console.error('Failed to load cart:', error)
+        // Fallback to localStorage
+        const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        if (savedCart.length > 0) {
+          setCart(savedCart)
+        } else {
+          navigate('/stores')
+        }
+      } finally {
+        setCartLoading(false)
+      }
     }
 
-    // If not logged in, redirect to login
-    if (!isAuthenticated) {
-      localStorage.setItem('checkout_redirect', 'true')
-      navigate('/login')
-    }
+    loadCart()
   }, [isAuthenticated, navigate])
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
@@ -125,6 +169,60 @@ function Checkout() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Role mismatch — vendor/rider/picker trying to shop
+  if (isAuthenticated && !user?.roles?.includes('customer')) {
+    const currentRole = user?.roles?.includes('vendor') ? 'Vendor'
+      : user?.roles?.includes('rider') ? 'Rider'
+      : user?.roles?.includes('picker') ? 'Picker'
+      : user?.roles?.includes('admin') ? 'Admin'
+      : 'Non-Customer'
+    const roleIcon = user?.roles?.includes('vendor') ? '🏪'
+      : user?.roles?.includes('rider') ? '🏍️'
+      : user?.roles?.includes('picker') ? '📦' : '⚠️'
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-[#E0F2F1] flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">{roleIcon}</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Wrong Account Type</h1>
+            <p className="text-gray-600 mb-1">You're currently signed in as a</p>
+            <p className="text-lg font-bold text-[#00897B] mb-4">{currentRole}</p>
+            <p className="text-gray-500 text-sm mb-6">
+              Shopping and checkout are only available for <strong>Customer</strong> accounts.
+              Please sign in with a Customer account to continue.
+            </p>
+            <button
+              onClick={() => {
+                localStorage.removeItem('afrimercato_token')
+                navigate('/login')
+              }}
+              className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-3 px-6 rounded-xl font-bold text-lg transition-all mb-3"
+            >
+              Sign in as Customer
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full text-gray-500 hover:text-gray-700 py-2 font-medium transition-colors"
+            >
+              ← Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (cartLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    )
   }
 
   if (cart.length === 0) {
@@ -432,10 +530,15 @@ function Checkout() {
 
               {/* Items */}
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {cart.map((item) => (
+                {cart.map((item) => {
+                  // Handle both string array and object array formats for images
+                  const imageUrl = item.images?.[0]
+                    ? (typeof item.images[0] === 'string' ? item.images[0] : item.images[0]?.url)
+                    : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80';
+                  return (
                   <div key={item._id} className="flex gap-3">
                     <img
-                      src={item.images?.[0]?.url || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'}
+                      src={imageUrl}
                       alt={item.name}
                       loading="lazy"
                       className="w-16 h-16 object-cover rounded"
@@ -449,7 +552,8 @@ function Checkout() {
                       <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
                     </div>
                   </div>
-                ))}
+                  )
+                })}
               </div>
 
               {/* Pricing */}

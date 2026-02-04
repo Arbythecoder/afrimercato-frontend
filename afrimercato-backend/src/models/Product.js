@@ -48,12 +48,20 @@ const productSchema = new mongoose.Schema({
     default: 0
   },
   images: {
-    type: [String],
+    type: mongoose.Schema.Types.Mixed,
     validate: {
       validator: function(v) {
-        return Array.isArray(v) && v.every(img => typeof img === 'string');
+        // Accept array of strings (URLs) OR array of objects ({url, publicId, isPrimary})
+        if (!Array.isArray(v)) return false;
+        return v.every(img => {
+          // Allow string URLs
+          if (typeof img === 'string') return true;
+          // Allow object format {url: string, publicId?: string, isPrimary?: boolean}
+          if (typeof img === 'object' && img !== null && typeof img.url === 'string') return true;
+          return false;
+        });
       },
-      message: 'Images must be an array of strings'
+      message: 'Images must be an array of URLs (strings) or objects with url property'
     },
     default: []
   },

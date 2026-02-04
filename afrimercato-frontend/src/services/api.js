@@ -408,17 +408,17 @@ export const getEvents = async () => {
 // LOCATION SEARCH
 export const searchVendorsByLocation = async (location, radius = 50) => {
   const params = new URLSearchParams({ location, radius });
-  return apiCall(`/location/search-vendors?${params}`);
+  return apiCall(`/locations/search-vendors?${params}`);
 };
 
 export const geocodeLocation = async (query) => {
   const params = new URLSearchParams({ query });
-  return apiCall(`/location/geocode?${params}`);
+  return apiCall(`/locations/geocode?${params}`);
 };
 
 // VENDORS (Customer)
 export const getVendorById = async (id) => {
-  return apiCall(`/location/vendor/${id}`);
+  return apiCall(`/locations/vendor/${id}`);
 };
 
 export const getVendorProductsByVendorId = async (vendorId) => {

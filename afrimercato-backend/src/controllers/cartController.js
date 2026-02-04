@@ -4,9 +4,16 @@
 // File: src/controllers/cartController.js
 // Handles shopping cart operations
 
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const { asyncHandler } = require('../middleware/errorHandler');
+
+// Helper function to validate MongoDB ObjectId
+const isValidObjectId = (id) => {
+  return mongoose.Types.ObjectId.isValid(id) &&
+         (String(new mongoose.Types.ObjectId(id)) === String(id));
+};
 
 // =================================================================
 // CART OPERATIONS
@@ -107,6 +114,14 @@ exports.addToCart = asyncHandler(async (req, res) => {
     });
   }
 
+  // Validate ObjectId format
+  if (!isValidObjectId(productId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid product ID format. Please use a valid product ID.'
+    });
+  }
+
   // Verify product exists
   const product = await Product.findById(productId);
 
@@ -192,6 +207,14 @@ exports.updateCartItem = asyncHandler(async (req, res) => {
     });
   }
 
+  // Validate ObjectId format (itemId can be either cart item _id or productId)
+  if (!isValidObjectId(itemId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid item ID format'
+    });
+  }
+
   const customer = await User.findById(req.user.id);
 
   if (!customer || !customer.cart) {
@@ -250,6 +273,14 @@ exports.updateCartItem = asyncHandler(async (req, res) => {
  */
 exports.removeFromCart = asyncHandler(async (req, res) => {
   const { itemId } = req.params;
+
+  // Validate ObjectId format
+  if (!isValidObjectId(itemId)) {
+    return res.status(400).json({
+      success: false,
+      message: 'Invalid item ID format'
+    });
+  }
 
   const customer = await User.findById(req.user.id);
 

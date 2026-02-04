@@ -4,9 +4,16 @@ import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
 import { cartAPI } from '../../services/api'
 
+// Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
+const isValidMongoId = (id) => {
+  if (!id) return false
+  const stringId = String(id)
+  return /^[0-9a-fA-F]{24}$/.test(stringId)
+}
+
 function ShoppingCart() {
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [cart, setCart] = useState([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
@@ -26,16 +33,20 @@ function ShoppingCart() {
   }, [isAuthenticated])
 
   const syncLocalCartToBackend = async () => {
+    if (!user?.roles?.includes('customer')) return
     const localCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
     if (localCart.length === 0) return
 
     try {
       setSyncing(true)
-      // Add each local item to backend cart
+      // Add each local item to backend cart (only if valid MongoDB ObjectId)
       for (const item of localCart) {
-        await cartAPI.add(item._id, item.quantity)
+        const itemId = item._id || item.id
+        if (isValidMongoId(itemId)) {
+          await cartAPI.add(itemId, item.quantity)
+        }
       }
-      // Clear localStorage after successful sync
+      // Clear localStorage after sync attempt
       localStorage.removeItem('afrimercato_cart')
       // Reload cart from backend
       await loadCart()
@@ -49,6 +60,11 @@ function ShoppingCart() {
   const loadCart = async () => {
     try {
       setLoading(true)
+
+      if (isAuthenticated && !user?.roles?.includes('customer')) {
+        setLoading(false)
+        return
+      }
 
       if (isAuthenticated) {
         // Load from backend
@@ -96,7 +112,7 @@ function ShoppingCart() {
     )
     setCart(updatedCart)
 
-    if (isAuthenticated) {
+    if (isAuthenticated && isValidMongoId(productId)) {
       try {
         const response = await cartAPI.update(productId, newQuantity)
         if (!response.success) {
@@ -111,7 +127,7 @@ function ShoppingCart() {
         // Reload to ensure sync with backend
         loadCart()
       }
-    } else {
+    } else if (!isAuthenticated) {
       localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
     }
 
@@ -126,7 +142,7 @@ function ShoppingCart() {
     const updatedCart = cart.filter(item => item._id !== productId)
     setCart(updatedCart)
 
-    if (isAuthenticated) {
+    if (isAuthenticated && isValidMongoId(productId)) {
       try {
         const response = await cartAPI.remove(productId)
         if (!response.success) {
@@ -138,7 +154,7 @@ function ShoppingCart() {
         setCart(previousCart)
         loadCart()
       }
-    } else {
+    } else if (!isAuthenticated) {
       localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
     }
 
@@ -164,6 +180,52 @@ function ShoppingCart() {
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const deliveryFee = subtotal > 30 ? 0 : 3.99
   const total = subtotal + deliveryFee
+
+  // Role mismatch — vendor/rider/picker trying to shop
+  if (isAuthenticated && !user?.roles?.includes('customer')) {
+    const currentRole = user?.roles?.includes('vendor') ? 'Vendor'
+      : user?.roles?.includes('rider') ? 'Rider'
+      : user?.roles?.includes('picker') ? 'Picker'
+      : user?.roles?.includes('admin') ? 'Admin'
+      : 'Non-Customer'
+    const roleIcon = user?.roles?.includes('vendor') ? '🏪'
+      : user?.roles?.includes('rider') ? '🏍️'
+      : user?.roles?.includes('picker') ? '📦' : '⚠️'
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+            <div className="w-20 h-20 rounded-full bg-[#E0F2F1] flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">{roleIcon}</span>
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-3">Wrong Account Type</h1>
+            <p className="text-gray-600 mb-1">You're currently signed in as a</p>
+            <p className="text-lg font-bold text-[#00897B] mb-4">{currentRole}</p>
+            <p className="text-gray-500 text-sm mb-6">
+              Shopping and checkout are only available for <strong>Customer</strong> accounts.
+              Please sign in with a Customer account to continue.
+            </p>
+            <button
+              onClick={() => {
+                localStorage.removeItem('afrimercato_token')
+                navigate('/login')
+              }}
+              className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-3 px-6 rounded-xl font-bold text-lg transition-all mb-3"
+            >
+              Sign in as Customer
+            </button>
+            <button
+              onClick={() => navigate(-1)}
+              className="w-full text-gray-500 hover:text-gray-700 py-2 font-medium transition-colors"
+            >
+              ← Go Back
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (

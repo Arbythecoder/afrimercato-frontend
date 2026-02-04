@@ -72,9 +72,14 @@ export const getDefaultStoreLogo = (storeType) => {
 export const getProductImage = (product) => {
   // Try product images array first
   if (product?.images && product.images.length > 0) {
-    const primaryImage = product.images.find(img => img.isPrimary)
+    // Handle object array format (with url property)
+    const primaryImage = product.images.find(img => img?.isPrimary)
     if (primaryImage?.url) return primaryImage.url
-    if (product.images[0]?.url) return product.images[0].url
+
+    // Handle both string array and object array formats
+    const firstImage = product.images[0]
+    if (typeof firstImage === 'string') return firstImage
+    if (firstImage?.url) return firstImage.url
   }
 
   // Fallback to category default
@@ -87,7 +92,12 @@ export const getProductImage = (product) => {
  * @returns {string} Image URL
  */
 export const getStoreBanner = (vendor) => {
+  // Handle string format
+  if (typeof vendor?.banner === 'string') return vendor.banner
   if (vendor?.banner?.url) return vendor.banner.url
+
+  // Handle string format for logo as fallback
+  if (typeof vendor?.logo === 'string') return vendor.logo
   if (vendor?.logo?.url) return vendor.logo.url
 
   return getDefaultStoreLogo(vendor?.businessType || vendor?.category)
@@ -99,6 +109,8 @@ export const getStoreBanner = (vendor) => {
  * @returns {string} Image URL
  */
 export const getStoreLogo = (vendor) => {
+  // Handle string format (Cloudinary URL directly)
+  if (typeof vendor?.logo === 'string') return vendor.logo
   if (vendor?.logo?.url) return vendor.logo.url
 
   return getDefaultStoreLogo(vendor?.businessType || vendor?.category)

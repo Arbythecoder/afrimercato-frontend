@@ -665,7 +665,7 @@ const VendorOnboarding = ({ onComplete }) => {
                     <input
                       ref={logoInputRef}
                       type="file"
-                      accept="image/*"
+                      accept="image/jpeg,image/jpg,image/png,image/webp,image/heic,image/heif,.jpg,.jpeg,.png,.webp,.heic,.heif"
                       onChange={handleLogoUpload}
                       className="hidden"
                     />

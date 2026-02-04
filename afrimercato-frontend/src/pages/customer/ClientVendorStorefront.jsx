@@ -8,6 +8,14 @@ import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getVendorById, getVendorProductsByVendorId, cartAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
+import { getProductImage } from '../../utils/defaultImages'
+
+// Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
+const isValidMongoId = (id) => {
+  if (!id) return false
+  const stringId = String(id)
+  return /^[0-9a-fA-F]{24}$/.test(stringId)
+}
 
 // Sample categories with images - African focused
 const CATEGORIES = [
@@ -157,15 +165,16 @@ export default function ClientVendorStorefront() {
         price: product.price,
         quantity: 1,
         unit: product.unit || 'piece',
-        images: product.images || product.image ? [product.image] : [],
+        images: product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []),
         vendor: product.vendor
       }]
     }
 
     setCart(updatedCart)
 
-    // Also sync with backend if authenticated as customer
-    if (isAuthenticated && user?.roles?.includes('customer')) {
+    // Only sync with backend if authenticated AND productId is a valid MongoDB ObjectId
+    // Sample products have numeric IDs (1, 2, 3...) which are invalid for backend
+    if (isAuthenticated && user?.roles?.includes('customer') && isValidMongoId(productId)) {
       try {
         await cartAPI.add(productId, 1)
       } catch (error) {
@@ -185,8 +194,8 @@ export default function ClientVendorStorefront() {
       (item.id === productId || item._id === productId) ? { ...item, quantity: newQuantity } : item
     ))
 
-    // Sync with backend if authenticated
-    if (isAuthenticated && user?.roles?.includes('customer')) {
+    // Only sync with backend if productId is a valid MongoDB ObjectId
+    if (isAuthenticated && user?.roles?.includes('customer') && isValidMongoId(productId)) {
       try {
         await cartAPI.update(productId, newQuantity)
       } catch (error) {
@@ -198,8 +207,8 @@ export default function ClientVendorStorefront() {
   const removeFromCart = async (productId) => {
     setCart(cart.filter(item => item.id !== productId && item._id !== productId))
 
-    // Sync with backend if authenticated
-    if (isAuthenticated && user?.roles?.includes('customer')) {
+    // Only sync with backend if productId is a valid MongoDB ObjectId
+    if (isAuthenticated && user?.roles?.includes('customer') && isValidMongoId(productId)) {
       try {
         await cartAPI.remove(productId)
       } catch (error) {
@@ -619,9 +628,12 @@ export default function ClientVendorStorefront() {
                       {cart.map((item) => (
                         <div key={item.id || item._id} className="flex gap-4 border-b pb-4">
                           <img
-                            src={item.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=100'}
+                            src={getProductImage(item)}
                             alt={item.name}
                             className="w-20 h-20 object-cover rounded-lg"
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=100'
+                            }}
                           />
                           <div className="flex-1">
                             <h3 className="font-semibold text-gray-900">{item.name}</h3>
@@ -697,6 +709,10 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
     setTimeout(() => setAdded(false), 1000)
   }
 
+  // Use the utility function to get the correct image URL
+  // This handles both string arrays and object arrays from Cloudinary
+  const imageUrl = getProductImage(product)
+
   return (
     <motion.div
       whileHover={{ y: -5 }}
@@ -704,7 +720,7 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
     >
       <div className="relative h-32 bg-gray-100">
         <img
-          src={product.image || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200'}
+          src={imageUrl}
           alt={product.name}
           className="w-full h-full object-cover"
           onError={(e) => {
