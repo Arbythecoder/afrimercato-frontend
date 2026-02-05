@@ -32,11 +32,50 @@ export default function ClientStoresPage() {
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        setStores(getSampleStores(location))
+        // No stores found - show empty state
+        setStores([])
       }
     } catch (error) {
-      console.log('Using sample stores:', error.message)
-      setStores(getSampleStores(location))
+      console.error('[STORE_SEARCH_FAIL]', location, error.message)
+      setStores([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const expandSearchRadius = async (newRadius = 100) => {
+    try {
+      setLoading(true)
+      const response = await searchVendorsByLocation(location, newRadius)
+      
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
+      } else {
+        setStores([])
+      }
+    } catch (error) {
+      console.error('[EXPAND_SEARCH_FAIL]', error.message)
+      setStores([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const browseAllStores = async () => {
+    try {
+      setLoading(true)
+      // Search without location filter to get all stores
+      const response = await searchVendorsByLocation('', 500)
+      
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
+        setSearchLocation('')
+      } else {
+        setStores([])
+      }
+    } catch (error) {
+      console.error('[BROWSE_ALL_FAIL]', error.message)
+      setStores([])
     } finally {
       setLoading(false)
     }
@@ -421,7 +460,7 @@ export default function ClientStoresPage() {
           )}
 
           {/* Store Cards Grid */}
-          {!loading && activeTab === 'stores' && (
+          {!loading && activeTab === 'stores' && stores.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {stores.map((store, index) => (
                 <motion.div
@@ -528,6 +567,92 @@ export default function ClientStoresPage() {
                 </motion.div>
               ))}
             </div>
+          )}
+
+          {/* Empty State - No Stores Found (Like Uber Eats/Just Eat) */}
+          {!loading && activeTab === 'stores' && stores.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16 bg-white rounded-2xl shadow-lg"
+            >
+              <div className="max-w-md mx-auto px-6">
+                {/* Icon */}
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+
+                {/* Message */}
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {searchLocation ? `No stores in ${searchLocation}` : 'No stores found'}
+                </h3>
+                <p className="text-gray-600 mb-8">
+                  {searchLocation 
+                    ? `We haven't reached ${searchLocation} yet, but we're expanding! Try one of these options:`
+                    : 'Try searching for a specific location or browse all available stores.'}
+                </p>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {/* Expand Search */}
+                  {searchLocation && (
+                    <button
+                      onClick={() => expandSearchRadius(100)}
+                      className="w-full flex items-center justify-center gap-2 bg-[#00897B] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#00695C] transition-all shadow-md hover:shadow-lg"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                      Expand search area
+                    </button>
+                  )}
+
+                  {/* Browse All Stores */}
+                  <button
+                    onClick={browseAllStores}
+                    className="w-full flex items-center justify-center gap-2 bg-white border-2 border-[#00897B] text-[#00897B] px-6 py-3 rounded-xl font-semibold hover:bg-[#E0F2F1] transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Browse all stores
+                  </button>
+
+                  {/* Try Different Location */}
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-gray-500 mb-3">Try a different location:</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {['London', 'Manchester', 'Birmingham', 'Dublin', 'Liverpool', 'Bristol'].map(city => (
+                        <button
+                          key={city}
+                          onClick={() => {
+                            setSearchLocation(city)
+                            navigate(`/stores?location=${city}`)
+                          }}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notify Me Option */}
+                {searchLocation && (
+                  <div className="mt-8 pt-6 border-t">
+                    <p className="text-sm text-gray-600 mb-3">
+                      Want to know when we launch in {searchLocation}?
+                    </p>
+                    <button className="text-[#00897B] font-semibold hover:underline text-sm">
+                      Notify me when available →
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
           )}
         </div>
       </section>

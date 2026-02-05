@@ -339,7 +339,7 @@ export default function ClientLandingPage() {
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="relative hidden lg:block"
+              className="relative mt-8 lg:mt-0"
             >
               <div className="relative">
                 {/* Main Image */}
@@ -347,9 +347,12 @@ export default function ClientLandingPage() {
                   <img
                     src={HERO_IMAGE}
                     alt="Happy customer with fresh groceries"
-                    className="w-full h-[500px] xl:h-[600px] object-cover object-top rounded-3xl"
+                    className="w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[600px] object-cover object-center rounded-3xl shadow-2xl"
+                    loading="eager"
+                    fetchpriority="high"
                     onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&q=80'
+                      e.target.src = 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=90'
+                      e.target.onerror = null
                     }}
                   />
                 </div>
@@ -819,18 +822,6 @@ export default function ClientLandingPage() {
                 <li><button onClick={() => selectLocation('Liverpool')} className="hover:text-yellow-500 transition-colors">Liverpool</button></li>
                 <li><button onClick={() => selectLocation('Beckham')} className="hover:text-yellow-500 transition-colors">Beckham</button></li>
                 <li><button onClick={() => selectLocation('Birmingham')} className="hover:text-yellow-500 transition-colors">Birmingham</button></li>
-              </ul>
-            </div>
-
-            {/* Quick Stores */}
-            <div>
-              <h4 className="font-bold mb-4">Quick stores</h4>
-              <ul className="space-y-2 text-gray-400">
-                <li><Link to="#" className="hover:text-yellow-500 transition-colors">Supermart</Link></li>
-                <li><Link to="#" className="hover:text-yellow-500 transition-colors">Justeat</Link></li>
-                <li><Link to="#" className="hover:text-yellow-500 transition-colors">Shoprite</Link></li>
-                <li><Link to="#" className="hover:text-yellow-500 transition-colors">Jendol</Link></li>
-                <li><Link to="#" className="hover:text-yellow-500 transition-colors">Buka</Link></li>
               </ul>
             </div>
           </div>

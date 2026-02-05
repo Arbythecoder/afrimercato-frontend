@@ -13,6 +13,8 @@ const rateLimit = require('express-rate-limit');
 const cookieParser = require('cookie-parser');
 const path = require('path');
 const passport = require('passport');
+const mongoSanitize = require('express-mongo-sanitize');
+const xss = require('xss-clean');
 require('./src/config/passport'); // Register OAuth strategies (Google)
 
 // DB & socket
@@ -58,6 +60,7 @@ const seedRoutes = require('./src/routes/seedRoutes');
 const adminRiderRoutes = require('./src/routes/adminRiderRoutes');
 const adminPickerRoutes = require('./src/routes/adminPickerRoutes');
 const reviewRoutes = require('./src/routes/reviewRoutes');
+const chatRoutes = require('./src/routes/chatRoutes');
 
 // App init
 const app = express();
@@ -109,6 +112,12 @@ app.use((req, res, next) => {
 });
 app.use(express.urlencoded({ extended: true }));
 
+// Security: Sanitize data to prevent NoSQL injection
+app.use(mongoSanitize());
+
+// Security: Prevent XSS attacks
+app.use(xss());
+
 // Passport (OAuth)
 app.use(passport.initialize());
 
@@ -120,13 +129,21 @@ if (process.env.NODE_ENV === 'development') {
 // Trust proxy (Railway/Fly)
 app.set('trust proxy', 1);
 
-// Rate limiting (increased + exclude auth endpoints)
+// Strict rate limiting for authentication endpoints (prevent brute force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts
+  message: 'Too many login attempts, please try again later',
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
+// General API rate limiting
 app.use(
   '/api',
   rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 500, // Increased from 100 to 500
-    skip: (req) => req.path.includes('/auth/') || req.path.includes('/login'),
+    max: 500,
     message: 'Too many requests, please try again later'
   })
 );
@@ -168,6 +185,7 @@ app.use('/api/products', productBrowsingRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/chats', chatRoutes);
 
 // ======================= RIDER ROUTES =======================
 app.use('/api/riders', riderStoreRoutes);

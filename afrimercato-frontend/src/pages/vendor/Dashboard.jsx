@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { vendorAPI } from '../../services/api'
 import VendorOnboarding from '../../components/VendorOnboarding'
@@ -40,15 +40,38 @@ function Dashboard() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showConfetti, setShowConfetti] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const notificationRef = useRef(null)
 
   useEffect(() => {
     fetchDashboardData()
+    fetchNotifications()
     setTimeout(() => setAnimateCards(true), 100)
 
     // Update time every minute
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
-    return () => clearInterval(timer)
+    
+    // Refresh notifications every 30 seconds
+    const notifTimer = setInterval(() => fetchNotifications(), 30000)
+    
+    return () => {
+      clearInterval(timer)
+      clearInterval(notifTimer)
+    }
   }, [timeRange])
+
+  // Close notifications when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (notificationRef.current && !notificationRef.current.contains(event.target)) {
+        setShowNotifications(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
 
   const fetchDashboardData = async () => {
     try {
@@ -80,9 +103,69 @@ function Dashboard() {
     }
   }
 
+  const fetchNotifications = async () => {
+    try {
+      // Generate notifications from current stats
+      const notifs = []
+      
+      if (stats?.orders?.pending > 0) {
+        notifs.push({
+          id: 'pending-orders',
+          type: 'order',
+          title: 'New Orders',
+          message: `You have ${stats.orders.pending} pending order${stats.orders.pending > 1 ? 's' : ''} to process`,
+          time: new Date().toISOString(),
+          read: false,
+          link: '/vendor/orders'
+        })
+      }
+      
+      if (stats?.products?.lowStock > 0) {
+        notifs.push({
+          id: 'low-stock',
+          type: 'warning',
+          title: 'Low Stock Alert',
+          message: `${stats.products.lowStock} product${stats.products.lowStock > 1 ? 's' : ''} running low on stock`,
+          time: new Date().toISOString(),
+          read: false,
+          link: '/vendor/products'
+        })
+      }
+      
+      if (stats?.revenue?.trend > 15) {
+        notifs.push({
+          id: 'revenue-up',
+          type: 'success',
+          title: 'Great Performance! 🎉',
+          message: `Your revenue is up ${stats.revenue.trend}% compared to last period`,
+          time: new Date().toISOString(),
+          read: false,
+          link: '/vendor/dashboard'
+        })
+      }
+      
+      setNotifications(notifs)
+      setUnreadCount(notifs.filter(n => !n.read).length)
+    } catch (error) {
+      console.error('Error fetching notifications:', error)
+    }
+  }
+
   const handleOnboardingComplete = () => {
     setNeedsOnboarding(false)
     fetchDashboardData()
+  }
+
+  const markNotificationAsRead = (notificationId) => {
+    setNotifications(prev => 
+      prev.map(n => n.id === notificationId ? { ...n, read: true } : n)
+    )
+    setUnreadCount(prev => Math.max(0, prev - 1))
+  }
+
+  const markAllAsRead = () => {
+    setNotifications(prev => prev.map(n => ({ ...n, read: true })))
+    setUnreadCount(0)
   }
 
   // Get greeting based on time of day
@@ -292,6 +375,113 @@ function Dashboard() {
           ))}
         </div>
       )}
+
+      {/* Notification Bell */}
+      <div className="fixed top-4 right-4 z-40" ref={notificationRef}>
+        <button
+          onClick={() => setShowNotifications(!showNotifications)}
+          className="relative p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110"
+        >
+          <svg className="w-6 h-6 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+          </svg>
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center animate-pulse">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
+        </button>
+
+        {/* Notifications Dropdown */}
+        {showNotifications && (
+          <div className="absolute top-full right-0 mt-2 w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 border-b border-gray-200 flex items-center justify-between">
+              <h3 className="font-bold text-gray-900 text-lg">Notifications</h3>
+              {unreadCount > 0 && (
+                <button
+                  onClick={markAllAsRead}
+                  className="text-sm text-green-600 hover:text-green-700 font-medium"
+                >
+                  Mark all read
+                </button>
+              )}
+            </div>
+
+            {/* Notification List */}
+            <div className="max-h-96 overflow-y-auto">
+              {notifications.length === 0 ? (
+                <div className="p-8 text-center text-gray-500">
+                  <svg className="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                  </svg>
+                  <p className="font-medium">No notifications</p>
+                  <p className="text-sm mt-1">You're all caught up!</p>
+                </div>
+              ) : (
+                notifications.map((notif) => (
+                  <Link
+                    key={notif.id}
+                    to={notif.link}
+                    onClick={() => {
+                      markNotificationAsRead(notif.id)
+                      setShowNotifications(false)
+                    }}
+                    className={`block p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${
+                      !notif.read ? 'bg-blue-50' : ''
+                    }`}
+                  >
+                    <div className="flex items-start gap-3">
+                      {/* Icon */}
+                      <div className={`flex-shrink-0 w-10 h-10 rounded-full flex items-center justify-center ${
+                        notif.type === 'order' ? 'bg-blue-100' :
+                        notif.type === 'warning' ? 'bg-yellow-100' :
+                        notif.type === 'success' ? 'bg-green-100' :
+                        'bg-gray-100'
+                      }`}>
+                        {notif.type === 'order' && (
+                          <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
+                        )}
+                        {notif.type === 'warning' && (
+                          <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                          </svg>
+                        )}
+                        {notif.type === 'success' && (
+                          <svg className="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                        )}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between mb-1">
+                          <p className="font-semibold text-gray-900 text-sm">{notif.title}</p>
+                          {!notif.read && (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">{notif.message}</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          {new Date(notif.time).toLocaleString('en-GB', { 
+                            hour: '2-digit', 
+                            minute: '2-digit',
+                            day: 'numeric',
+                            month: 'short'
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                ))
+              )}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Welcome Header */}
       <div className="bg-gradient-to-r from-green-600 via-green-500 to-emerald-500 rounded-3xl p-8 text-white shadow-2xl relative overflow-hidden">

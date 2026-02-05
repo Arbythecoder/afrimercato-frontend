@@ -20,19 +20,47 @@ export default function StoresPage() {
   const fetchStores = async () => {
     try {
       setLoading(true)
-      // Try to fetch from API first
       const response = await searchVendorsByLocation(location, 50)
 
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        // If no vendors found, show sample stores
-        setStores(getSampleStores(location))
+        setStores([])
       }
     } catch (error) {
-      console.log('Using sample stores:', error.message)
-      // Fallback to sample stores
-      setStores(getSampleStores(location))
+      console.error('[STORE_SEARCH_FAIL]', location, error.message)
+      setStores([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const expandSearchRadius = async () => {
+    try {
+      setLoading(true)
+      const response = await searchVendorsByLocation(location, 100)
+      
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
+      }
+    } catch (error) {
+      console.error('[EXPAND_SEARCH_FAIL]', error.message)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const browseAllStores = async () => {
+    try {
+      setLoading(true)
+      const response = await searchVendorsByLocation('', 500)
+      
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
+        setSearchLocation('')
+      }
+    } catch (error) {
+      console.error('[BROWSE_ALL_FAIL]', error.message)
     } finally {
       setLoading(false)
     }
@@ -161,15 +189,65 @@ export default function StoresPage() {
             </div>
           )}
 
-          {/* No Results */}
+          {/* Empty State - Production Ready (Like Uber Eats) */}
           {!loading && stores.length === 0 && (
-            <div className="text-center py-12">
-              <div className="text-6xl mb-4">😔</div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">No stores found in this area</h3>
-              <p className="text-gray-600 mb-6">Try searching for London, Manchester, or Birmingham</p>
-              <Link to="/" className="text-green-600 hover:text-green-700 font-semibold">
-                ← Back to Home
-              </Link>
+            <div className="text-center py-16 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto">
+              <div className="px-6">
+                {/* Icon */}
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+
+                {/* Message */}
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {searchLocation ? `No stores in ${searchLocation}` : 'No stores available'}
+                </h3>
+                <p className="text-gray-600 mb-8">
+                  {searchLocation 
+                    ? `We're working to bring Afrimercato to ${searchLocation}. Meanwhile, try these options:`
+                    : 'Try searching for a specific location or explore our available stores.'}
+                </p>
+
+                {/* Actions */}
+                <div className="space-y-3 max-w-sm mx-auto">
+                  {searchLocation && (
+                    <button
+                      onClick={expandSearchRadius}
+                      className="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md"
+                    >
+                      Search wider area
+                    </button>
+                  )}
+                  
+                  <button
+                    onClick={browseAllStores}
+                    className="w-full border-2 border-green-600 text-green-600 px-6 py-3 rounded-xl font-semibold hover:bg-green-50 transition-all"
+                  >
+                    Browse all stores
+                  </button>
+
+                  {/* Suggested Locations */}
+                  <div className="pt-4">
+                    <p className="text-sm text-gray-500 mb-3">Try these locations:</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {['London', 'Manchester', 'Birmingham', 'Dublin', 'Liverpool'].map(city => (
+                        <button
+                          key={city}
+                          onClick={() => {
+                            setSearchLocation(city)
+                            navigate(`/stores?location=${city}`)
+                          }}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

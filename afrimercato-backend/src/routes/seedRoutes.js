@@ -7,8 +7,12 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const { seedVendors, seedProducts, clearVendors, clearProducts, getSeedStatus } = require('../controllers/seedController');
+const { seedDemoStores, removeDemoStores } = require('../controllers/demoStoreController');
 
-// All routes require admin authentication
+// Public access for demo stores during testing phase
+router.post('/demo-stores', seedDemoStores);
+
+// All other routes require admin authentication
 router.use(protect, authorize('admin'));
 
 // Seed operations
@@ -23,6 +27,7 @@ router.post('/pickers', (req, res) => res.status(501).json({ message: 'Seed pick
 router.post('/clear', clearVendors);
 router.post('/clear/vendors', clearVendors);
 router.post('/clear/products', clearProducts);
+router.delete('/demo-stores', removeDemoStores);
 
 // Status
 router.get('/status', getSeedStatus);

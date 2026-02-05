@@ -6,6 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const { validateAddress } = require('../middleware/locationValidator');
 const {
   previewOrder,
   processCheckout,
@@ -20,14 +21,14 @@ const {
 // All checkout routes require customer authentication
 router.use(protect, authorize('customer'));
 
-router.post('/preview', previewOrder);
-router.post('/process', processCheckout);
+router.post('/preview', validateAddress, previewOrder);
+router.post('/process', validateAddress, processCheckout);
 router.get('/orders', getOrders);
 router.get('/orders/:orderId', getOrderDetails);
 router.post('/webhook/payment', handlePaymentWebhook);
 
 // Payment initialization (creates order + initializes Paystack)
-router.post('/payment/initialize', initializePayment);
+router.post('/payment/initialize', validateAddress, initializePayment);
 
 // Repeat purchase endpoints
 router.post('/repeat-purchase/set', setRepeatPurchase);

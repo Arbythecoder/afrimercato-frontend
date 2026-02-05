@@ -7,12 +7,22 @@
 const express = require('express');
 const { body, validationResult } = require('express-validator');
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const router = express.Router();
 
 const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { generateAccessToken, generateRefreshToken, setAuthCookies, clearAuthCookies, formatUserResponse } = require('../utils/authHelpers');
+
+// Strict rate limiting for login endpoint
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // 5 attempts
+  message: 'Too many login attempts from this IP, please try again after 15 minutes',
+  standardHeaders: true,
+  legacyHeaders: false
+});
 
 // ==============================================
 // POST /api/auth/register - Register new user
@@ -101,6 +111,7 @@ router.post(
 // ==============================================
 router.post(
   '/login',
+  loginLimiter, // Apply rate limiting
   [
     body('email').isEmail().normalizeEmail(),
     body('password').notEmpty().withMessage('Password required')
@@ -417,13 +428,19 @@ router.get('/google', (req, res, next) => {
 // ==============================================
 // GET /api/auth/google/callback - Google OAuth callback
 // ==============================================
-router.get('/google/callback', (req, res) => {
+router.get('/google/callback', (req, res, next) => {
   const passport = require('passport');
   const frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
 
-  passport.authenticate('google', { session: false }, (err, user) => {
-    if (err || !user) {
-      return res.redirect(`${frontendUrl}/oauth/callback?error=google_auth_failed`);
+  passport.authenticate('google', { session: false }, (err, user, info) => {
+    // LOG FAILURE FOR PRODUCTION DEBUGGING
+    if (err) {
+      console.error(`[OAUTH_FAIL] ${new Date().toISOString()} | Error: ${err.message || err}`);
+      return res.redirect(`${frontendUrl}/oauth/callback?error=google_auth_failed&details=server_error`);
+    }
+    if (!user) {
+      console.error(`[OAUTH_FAIL] ${new Date().toISOString()} | No user | Info: ${JSON.stringify(info)}`);
+      return res.redirect(`${frontendUrl}/oauth/callback?error=google_auth_failed&details=no_user`);
     }
 
     try {
@@ -432,9 +449,10 @@ router.get('/google/callback', (req, res) => {
 
       res.redirect(`${frontendUrl}/oauth/callback?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}&provider=google`);
     } catch (tokenErr) {
+      console.error(`[OAUTH_TOKEN_FAIL] ${new Date().toISOString()} | User: ${user.email} | Error: ${tokenErr.message}`);
       res.redirect(`${frontendUrl}/oauth/callback?error=server_error`);
     }
-  })(req, res);
+  })(req, res, next);
 });
 
 module.exports = router;

@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { lazy, Suspense } from 'react'
 import CookieConsent from './components/CookieConsent'
 import FeedbackButton from './components/FeedbackButton'
+import BetaBanner from './components/BetaBanner'
+import BetaFeedbackButton from './components/BetaFeedbackButton'
 import ComingSoon from './components/ComingSoon'
 
 // Lazy load pages for code splitting - ⚡ Improves initial load time
@@ -106,6 +108,7 @@ function AppContent() {
 
   return (
     <>
+      <BetaBanner />
       <VendorBanner />
       <Suspense fallback={<LazyLoadingFallback />}>
       <Routes>
@@ -359,6 +362,7 @@ function App() {
     <AuthProvider>
       <ComingSoon>
         <AppContent />
+        <BetaFeedbackButton />
         <CookieConsent />
         <FeedbackButton />
       </ComingSoon>

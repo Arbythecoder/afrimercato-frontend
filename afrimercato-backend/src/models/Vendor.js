@@ -83,8 +83,32 @@ const vendorSchema = new mongoose.Schema({
   location: {
     address: String,
     postcode: String,
+    city: String,
+    country: String,
     latitude: Number,
-    longitude: Number
+    longitude: Number,
+    // GeoJSON for MongoDB geospatial queries
+    coordinates: {
+      type: {
+        type: String,
+        enum: ['Point'],
+        default: 'Point'
+      },
+      coordinates: {
+        type: [Number], // [longitude, latitude]
+        index: '2dsphere'
+      }
+    }
+  },
+  currency: {
+    type: String,
+    enum: ['GBP', 'EUR'],
+    default: 'GBP'
+  },
+  isSeeded: {
+    type: Boolean,
+    default: false,
+    select: false
   },
 
   // BUSINESS DETAILS
@@ -164,6 +188,11 @@ const vendorSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  isDemo: {
+    type: Boolean,
+    default: false,
+    select: false // Don't include in queries by default
+  },
   closureReason: String,
   socialMedia: Object,
 
@@ -188,5 +217,6 @@ vendorSchema.index({ storeId: 1 });
 vendorSchema.index({ category: 1, isActive: 1 });
 vendorSchema.index({ approvalStatus: 1 });
 vendorSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
+vendorSchema.index({ 'location.coordinates.coordinates': '2dsphere' }); // Geospatial index
 
 module.exports = mongoose.model('Vendor', vendorSchema);
