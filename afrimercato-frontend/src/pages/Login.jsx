@@ -89,15 +89,15 @@ function Login() {
       }}
     >
       {/* Animated background particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute inset-0" style={{ 
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute inset-0 pointer-events-none" style={{ 
           background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 60%)',
           animation: 'pulse 4s ease-in-out infinite',
          }} />
       </div>
 
       <motion.div 
-        className="max-w-md w-full relative"
+        className="max-w-md w-full relative z-10"
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -290,8 +290,8 @@ function Login() {
             <div className="mt-6 grid grid-cols-2 gap-3">
               {/* Google Sign-In Button */}
               <motion.a
-                href={`${import.meta.env.VITE_API_URL}/api/auth/google`}
-                className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                href={`${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'}/api/auth/google`}
+                className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
@@ -318,8 +318,8 @@ function Login() {
 
               {/* Facebook Sign-In Button */}
               <motion.a
-                href={`${import.meta.env.VITE_API_URL}/api/auth/facebook`}
-                className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition"
+                href={`${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'}/api/auth/facebook`}
+                className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >

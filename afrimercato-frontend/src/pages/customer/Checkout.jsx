@@ -109,6 +109,9 @@ function Checkout() {
     try {
       // Get repeat purchase frequency from localStorage
       const repeatPurchaseFrequency = localStorage.getItem('repeatPurchaseFrequency')
+      if (process.env.NODE_ENV === 'development') {
+        console.log('[Checkout] Placing order with repeat frequency:', repeatPurchaseFrequency);
+      }
 
       // Prepare order data
       const orderData = {
@@ -232,7 +235,7 @@ function Checkout() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-40 shadow-sm">
+      <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -500,6 +503,57 @@ function Checkout() {
                     </div>
                   ))}
                 </div>
+
+                {/* Repurchase Options Display */}
+                {(() => {
+                  const savedFrequency = localStorage.getItem('repeatPurchaseFrequency');
+                  if (process.env.NODE_ENV === 'development') {
+                    console.log('[Checkout] Repurchase frequency from localStorage:', savedFrequency);
+                  }
+                  return savedFrequency ? (
+                    <div className="mb-6 pb-6 border-b">
+                      <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span>🔄</span>
+                        Auto-Reorder Selected
+                      </h3>
+                      <div className="bg-gradient-to-r from-green-50 to-green-100 border-2 border-green-200 rounded-lg p-4">
+                        <p className="text-gray-700">
+                          This order will repeat <span className="font-bold capitalize">{savedFrequency}</span>
+                        </p>
+                        <p className="text-sm text-gray-600 mt-1">
+                          You can cancel anytime from your order history
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          localStorage.removeItem('repeatPurchaseFrequency');
+                          window.location.reload();
+                        }}
+                        className="text-green-600 text-sm font-semibold mt-2 hover:underline"
+                      >
+                        Remove auto-reorder
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="mb-6 pb-6 border-b">
+                      <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                        <span>🔄</span>
+                        Auto-Reorder
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-3">
+                        Want this order to repeat automatically? Go back to cart to set a schedule.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/cart')}
+                        className="text-green-600 text-sm font-semibold hover:underline"
+                      >
+                        ← Back to cart to set up
+                      </button>
+                    </div>
+                  );
+                })()}
 
                 <form onSubmit={handlePlaceOrder}>
                   <div className="flex gap-4">
