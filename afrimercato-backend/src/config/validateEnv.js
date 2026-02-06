@@ -13,14 +13,11 @@ function validateEnvironment() {
   const warnings = [];
 
   // =================================================================
-  // CRITICAL VARIABLES - Server will not start without these
+  // REQUIRED AT STARTUP - Keep minimal to avoid crashing on boot
   // =================================================================
-  const critical = [
-    'MONGODB_URI',
-    'JWT_SECRET'
-  ];
+  const requiredAtStartup = [];
 
-  critical.forEach(varName => {
+  requiredAtStartup.forEach(varName => {
     if (!process.env[varName] || process.env[varName].trim() === '') {
       missing.push(varName);
     }
@@ -32,7 +29,9 @@ function validateEnvironment() {
   const important = [
     'NODE_ENV',
     'PORT',
-    'CLIENT_URL'
+    'FRONTEND_ORIGINS',
+    'JWT_SECRET',
+    'MONGODB_URI'
   ];
 
   important.forEach(varName => {
@@ -78,21 +77,18 @@ function checkEnvironment() {
 
   const { valid, missing, warnings } = validateEnvironment();
 
-  // Print environment info
+  // Print environment info (safe)
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`Port: ${process.env.PORT || '5000'}`);
+  console.log(`Port: ${process.env.PORT || '8080'}`);
   console.log('');
 
-  // Check critical variables
-  if (!valid) {
-    console.error('✗ CRITICAL: Missing required environment variables:\n');
+  // Warn on missing startup requirements (do not crash)
+  if (!valid && missing.length > 0) {
+    console.warn('⚠️  Missing startup environment variables (server will still start):');
     missing.forEach(varName => {
-      console.error(`  - ${varName}`);
+      console.warn(`  - ${varName}`);
     });
-    console.error('\n⚠️  Server cannot start without these variables.');
-    console.error('   Please check your .env file or environment configuration.\n');
-    console.error('========================================\n');
-    process.exit(1);
+    console.log('');
   }
 
   // Print warnings
@@ -104,29 +100,24 @@ function checkEnvironment() {
     console.log('');
   }
 
-  // Success
-  console.log('✓ All critical environment variables are set');
+  // Safe presence summary (no values printed)
+  const presenceKeys = [
+    'MONGODB_URI',
+    'JWT_SECRET',
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+    'FRONTEND_ORIGINS',
+    'STATUS_KEY'
+  ];
 
-  // Print configured features
-  console.log('\nConfigured Features:');
-  console.log(`  - Database: ${process.env.MONGODB_URI ? '✓' : '✗'}`);
-  console.log(`  - JWT Auth: ${process.env.JWT_SECRET ? '✓' : '✗'}`);
-  console.log(`  - Email Service: ${process.env.EMAIL_USER && process.env.EMAIL_PASS ? '✓' : '✗'}`);
-  console.log(`  - Frontend URL: ${process.env.CLIENT_URL || process.env.FRONTEND_URL || 'localhost:3000'}`);
-
-  // Stripe readiness summary
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  const stripeWebhook = process.env.STRIPE_WEBHOOK_SECRET;
-  const stripeReady = stripeKey && stripeWebhook;
-  console.log(`  - Stripe Payments: ${stripeKey ? '✓' : '✗'}`);
-  console.log(`  - Stripe Webhook: ${stripeWebhook ? '✓' : '✗'}`);
-
-  if (stripeReady) {
-    console.log('\n✅ STRIPE READY: Payments and webhooks configured');
-    console.log('   Webhook URL: https://afrimercato-backend.fly.dev/api/payments/webhook');
-  } else if (stripeKey && !stripeWebhook) {
-    console.log('\n⚠️  STRIPE PARTIAL: Payments enabled, but webhook secret missing');
-  }
+  console.log('Environment Presence:');
+  presenceKeys.forEach(key => {
+    const present = !!(process.env[key] && process.env[key].trim() !== '');
+    console.log(`  - ${key}: ${present ? 'true' : 'false'}`);
+  });
 
   console.log('\n========================================\n');
 }

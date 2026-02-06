@@ -18,7 +18,7 @@ const xss = require('xss-clean');
 require('./src/config/passport'); // Register OAuth strategies (Google)
 
 // DB & socket
-const { connectDB, closeDB } = require('./src/config/database');
+const { connectDB, closeDB, isDBConnected } = require('./src/config/database');
 const { initSocket } = require('./src/config/socket');
 
 // CORS configuration (centralized, supports FRONTEND_ORIGINS env var)
@@ -65,10 +65,9 @@ const chatRoutes = require('./src/routes/chatRoutes');
 // App init
 const app = express();
 
-// Connect DB - BLOCKING (must connect before starting)
+// Connect DB - Non-blocking (server should still start if DB is down)
 connectDB().catch(err => {
   console.error('✗ MongoDB connection failed:', err.message);
-  process.exit(1);
 });
 
 // Security headers
@@ -158,12 +157,73 @@ app.get('/', (_req, res) => {
   res.json({ success: true, message: 'Afrimercato API running 🚀' });
 });
 
-// Health check
+// Health check (always 200)
 app.get('/api/health', (_req, res) => {
+  const dbUp = isDBConnected();
   res.status(200).json({
-    success: true,
-    status: 'OK',
+    ok: true,
+    uptime: Math.floor(process.uptime()),
+    db: dbUp ? 'up' : 'down',
     timestamp: new Date().toISOString()
+  });
+});
+
+// Status endpoint (protected by STATUS_KEY)
+app.get('/api/status', (req, res) => {
+  const statusKey = process.env.STATUS_KEY;
+  if (!statusKey) {
+    return res.status(503).json({
+      ok: false,
+      error: 'STATUS_KEY not set'
+    });
+  }
+
+  const providedKey = req.header('x-status-key') || req.query.status_key;
+  if (providedKey !== statusKey) {
+    return res.status(401).json({
+      ok: false,
+      error: 'Unauthorized'
+    });
+  }
+
+  const envKeys = [
+    'MONGODB_URI',
+    'JWT_SECRET',
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+    'FRONTEND_ORIGINS',
+    'STATUS_KEY'
+  ];
+
+  const envFlags = envKeys.reduce((acc, key) => {
+    acc[key] = !!(process.env[key] && process.env[key].trim() !== '');
+    return acc;
+  }, {});
+
+  const commitHash =
+    process.env.FLY_COMMIT ||
+    process.env.GIT_COMMIT ||
+    process.env.VERCEL_GIT_COMMIT_SHA ||
+    process.env.COMMIT_SHA ||
+    null;
+
+  const dbUp = isDBConnected();
+
+  return res.status(200).json({
+    ok: true,
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime()),
+    node: process.version,
+    memory: process.memoryUsage(),
+    db: dbUp ? 'up' : 'down',
+    env: {
+      present: Object.keys(envFlags).filter(key => envFlags[key]),
+      missing: Object.keys(envFlags).filter(key => !envFlags[key])
+    },
+    commit: commitHash
   });
 });
 
@@ -221,7 +281,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ======================= SERVER =======================
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 8080;
 const HOST = '0.0.0.0'; // Listen on all network interfaces (required for Fly.io)
 
 const server = app.listen(PORT, HOST, () => {

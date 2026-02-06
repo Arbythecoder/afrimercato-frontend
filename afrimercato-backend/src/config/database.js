@@ -20,6 +20,19 @@ const mongooseOptions = {
 // Store connection state
 let isConnected = false;
 
+// Track connection state changes
+mongoose.connection.on('connected', () => {
+  isConnected = true;
+});
+
+mongoose.connection.on('disconnected', () => {
+  isConnected = false;
+});
+
+mongoose.connection.on('error', () => {
+  isConnected = false;
+});
+
 /**
  * Connect to MongoDB
  */

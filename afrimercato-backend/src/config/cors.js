@@ -41,25 +41,7 @@ const parseOrigins = () => {
     });
   }
 
-  // Priority 2: Legacy support - CLIENT_URL (single origin for backward compatibility)
-  if (process.env.CLIENT_URL) {
-    const clientUrl = process.env.CLIENT_URL.trim();
-    if (clientUrl && !origins.includes(clientUrl)) {
-      origins.push(clientUrl);
-    }
-  }
-
-  // Priority 3: Legacy support - ALLOWED_ORIGINS (comma-separated, no wildcards)
-  if (process.env.ALLOWED_ORIGINS) {
-    process.env.ALLOWED_ORIGINS.split(',').forEach(origin => {
-      const trimmed = origin.trim();
-      if (trimmed && !origins.includes(trimmed)) {
-        origins.push(trimmed);
-      }
-    });
-  }
-
-  // Priority 4: Development fallbacks (always include in dev mode)
+  // Priority 2: Development fallbacks (always include in dev mode)
   if (process.env.NODE_ENV === 'development') {
     const devOrigins = [
       'http://localhost:3000',
