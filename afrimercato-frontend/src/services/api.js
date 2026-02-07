@@ -173,7 +173,8 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
 export const loginUser = async (credentials) => {
   const response = await apiCall('/auth/login', {
     method: 'POST',
-    body: JSON.stringify(credentials)
+    body: JSON.stringify(credentials),
+    timeout: 30000 // 30s – backend may cold-start + bcrypt is CPU-heavy
   });
 
   if (response.success && response.data?.token) {
@@ -191,7 +192,8 @@ export const loginUser = async (credentials) => {
 export const registerUser = async (userData) => {
   const response = await apiCall('/auth/register', {
     method: 'POST',
-    body: JSON.stringify(userData)
+    body: JSON.stringify(userData),
+    timeout: 30000 // 30s – backend may cold-start + bcrypt hashing
   });
 
   if (response.success && response.data?.token) {
@@ -209,7 +211,8 @@ export const registerUser = async (userData) => {
 export const registerVendor = async (vendorData) => {
   const response = await apiCall('/vendor/register', {
     method: 'POST',
-    body: JSON.stringify(vendorData)
+    body: JSON.stringify(vendorData),
+    timeout: 30000 // 30s – backend may cold-start + bcrypt hashing
   });
 
   if (response.success && response.data?.token) {
@@ -870,13 +873,26 @@ export const syncCartToBackend = async (cartItems) => {
   }
 };
 
+export const setRepurchaseSchedule = async (frequency) => {
+  return apiCall('/cart/repurchase-schedule', {
+    method: 'POST',
+    body: JSON.stringify({ frequency })
+  });
+};
+
+export const getRepurchaseSchedule = async () => {
+  return apiCall('/cart/repurchase-schedule');
+};
+
 export const cartAPI = {
   get: getBackendCart,
   add: addToBackendCart,
   update: updateBackendCartItem,
   remove: removeFromBackendCart,
   clear: clearBackendCart,
-  sync: syncCartToBackend
+  sync: syncCartToBackend,
+  setRepurchaseSchedule,
+  getRepurchaseSchedule
 };
 
 // =================================================================

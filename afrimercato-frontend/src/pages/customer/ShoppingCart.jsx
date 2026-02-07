@@ -21,9 +21,22 @@ function ShoppingCart() {
 
   useEffect(() => {
     loadCart()
+    loadRepurchaseSchedule()
     window.addEventListener('cartUpdated', loadCart)
     return () => window.removeEventListener('cartUpdated', loadCart)
   }, [isAuthenticated])
+
+  const loadRepurchaseSchedule = async () => {
+    if (!isAuthenticated) return
+    try {
+      const response = await cartAPI.getRepurchaseSchedule()
+      if (response.success && response.data?.pending?.frequency) {
+        setRepeatPurchaseFrequency(response.data.pending.frequency)
+      }
+    } catch (err) {
+      // Non-critical — just use local state
+    }
+  }
 
   // Sync localStorage cart to backend when user logs in
   useEffect(() => {
@@ -334,37 +347,7 @@ function ShoppingCart() {
                 </div>
               ))}
 
-              {/* Repeat Purchase Section */}
-              <div className="bg-gradient-to-br from-afri-green-light/10 to-afri-green/10 rounded-xl p-6 border border-afri-green-light">
-                <h3 className="text-lg font-bold text-gray-900 mb-4">🔄 Set item(s) for repurchase</h3>
-                <p className="text-sm text-gray-600 mb-4">Never run out of your favorites! Select how often you'd like this order to repeat automatically.</p>
-
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'].map((frequency) => (
-                    <button
-                      key={frequency}
-                      onClick={() => setRepeatPurchaseFrequency(
-                        repeatPurchaseFrequency === frequency.toLowerCase().replace('-', '-') ? null : frequency.toLowerCase().replace('-', '-')
-                      )}
-                      className={`py-3 px-4 rounded-lg font-semibold transition-all transform hover:scale-105 ${
-                        repeatPurchaseFrequency === frequency.toLowerCase().replace('-', '-')
-                          ? 'bg-afri-green text-white shadow-lg'
-                          : 'bg-white text-gray-700 border-2 border-afri-green-light hover:border-afri-green hover:bg-afri-green-light/5'
-                      }`}
-                    >
-                      <span className="block text-sm">{frequency}</span>
-                    </button>
-                  ))}
-                </div>
-
-                {repeatPurchaseFrequency && (
-                  <div className="mt-4 p-3 bg-afri-green-light/10 rounded-lg border-l-4 border-afri-green">
-                    <p className="text-sm text-gray-700">
-                      ✓ This order will repeat <span className="font-bold capitalize">{repeatPurchaseFrequency}</span> until you cancel.
-                    </p>
-                  </div>
-                )}
-              </div>
+              {/* Repeat Purchase Section moved to Order Summary */}
             </div>
 
             {/* Order Summary */}
@@ -395,6 +378,48 @@ function ShoppingCart() {
                   <span className="text-afri-green text-2xl">£{total.toFixed(2)}</span>
                 </div>
 
+                {/* Repeat Purchase Section - ABOVE checkout for visibility */}
+                <div className="mb-4 p-4 bg-gradient-to-br from-afri-green-light/10 to-afri-green/10 rounded-xl border-2 border-afri-green-light">
+                  <div className="flex items-start gap-2 mb-3">
+                    <span className="text-2xl">🔄</span>
+                    <div className="flex-1">
+                      <h3 className="text-base font-bold text-gray-900 mb-1">Auto-Reorder (Optional)</h3>
+                      <p className="text-xs text-gray-600">Set how often you want to reorder these items automatically</p>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    {['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'].map((frequency) => (
+                      <button
+                        key={frequency}
+                        onClick={async () => {
+                          const value = frequency.toLowerCase()
+                          const newFreq = repeatPurchaseFrequency === value ? null : value
+                          setRepeatPurchaseFrequency(newFreq)
+                          if (isAuthenticated) {
+                            try { await cartAPI.setRepurchaseSchedule(newFreq) } catch (e) { /* non-critical */ }
+                          }
+                        }}
+                        className={`py-2.5 px-3 rounded-lg font-semibold text-sm transition-all min-h-[44px] ${
+                          repeatPurchaseFrequency === frequency.toLowerCase()
+                            ? 'bg-afri-green text-white shadow-md'
+                            : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-afri-green hover:bg-afri-green-light/5'
+                        }`}
+                      >
+                        {frequency}
+                      </button>
+                    ))}
+                  </div>
+
+                  {repeatPurchaseFrequency && (
+                    <div className="mt-3 p-2.5 bg-white rounded-lg border-l-4 border-afri-green">
+                      <p className="text-xs text-gray-700">
+                        ✓ Will repeat <span className="font-bold capitalize">{repeatPurchaseFrequency}</span> until you cancel
+                      </p>
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={() => {
                     // Store repeat purchase preference before checkout
@@ -405,7 +430,7 @@ function ShoppingCart() {
                     }
                     navigate('/checkout')
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:scale-105"
+                  className="w-full py-4 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:scale-105 min-h-[52px]"
                 >
                   Proceed to Checkout
                 </button>
