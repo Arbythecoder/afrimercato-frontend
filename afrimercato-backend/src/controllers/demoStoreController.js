@@ -333,8 +333,3 @@ exports.removeDemoStores = asyncHandler(async (req, res) => {
     }
   });
 });
-
-module.exports = {
-  seedDemoStores,
-  removeDemoStores
-};
