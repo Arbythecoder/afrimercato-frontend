@@ -389,15 +389,7 @@ router.post(
           verificationToken
         })
       });
-    }TODO: Send verification email here
-    // For now, return token in response (DEVELOPMENT ONLY)
-    res.json({
-      success: true,
-      message: 'Verification email sent',
-      ...(process.env.NODE_ENV === 'development' && {
-        verificationToken: user.emailVerificationToken
-      })
-    });
+    }
   })
 );
 
