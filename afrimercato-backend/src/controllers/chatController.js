@@ -246,11 +246,3 @@ exports.getUnreadCount = asyncHandler(async (req, res) => {
     }
   });
 });
-
-module.exports = {
-  startChat,
-  getChats,
-  getChat,
-  sendMessage,
-  getUnreadCount
-};
