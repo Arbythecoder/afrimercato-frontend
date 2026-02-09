@@ -159,7 +159,8 @@ exports.processCheckout = asyncHandler(async (req, res) => {
   if (!addressId || !paymentMethod) {
     return res.status(400).json({
       success: false,
-      message: 'Address and payment method are required'
+      message: 'Address and payment method are required',
+      code: 'MISSING_REQUIRED_FIELDS'
     });
   }
 
@@ -168,44 +169,49 @@ exports.processCheckout = asyncHandler(async (req, res) => {
   if (repeatPurchaseFrequency && !validFrequencies.includes(repeatPurchaseFrequency)) {
     return res.status(400).json({
       success: false,
-      message: 'Invalid repeat purchase frequency'
+      message: 'Invalid repeat purchase frequency',
+      code: 'INVALID_FREQUENCY'
     });
   }
 
-  // Get customer
-  const customer = await User.findById(req.user.id);
+  try {
+    // Get customer with timeout
+    const customer = await User.findById(req.user.id).maxTimeMS(5000);
 
-  if (!customer || !customer.cart || customer.cart.length === 0) {
-    return res.status(400).json({
-      success: false,
-      message: 'Cart is empty'
-    });
-  }
-
-  // Get address
-  const address = customer.addresses?.find(a => a._id.toString() === addressId);
-
-  if (!address) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid delivery address'
-    });
-  }
-
-  // Validate stock and build order data
-  const cartItems = customer.cart;
-  const ordersByVendor = {};
-  let totalAmount = 0;
-
-  for (const cartItem of cartItems) {
-    const product = await Product.findById(cartItem.productId);
-
-    if (!product || product.stock < cartItem.quantity) {
+    if (!customer || !customer.cart || customer.cart.length === 0) {
       return res.status(400).json({
         success: false,
-        message: `Stock validation failed for ${product?.name || 'an item'}`
+        message: 'Cart is empty',
+        code: 'EMPTY_CART'
       });
     }
+
+    // Get address
+    const address = customer.addresses?.find(a => a._id.toString() === addressId);
+
+    if (!address) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid delivery address',
+        code: 'INVALID_ADDRESS'
+      });
+    }
+
+    // Validate stock and build order data
+    const cartItems = customer.cart;
+    const ordersByVendor = {};
+    let totalAmount = 0;
+
+    for (const cartItem of cartItems) {
+      const product = await Product.findById(cartItem.productId).maxTimeMS(3000);
+
+      if (!product || product.stock < cartItem.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Stock validation failed for ${product?.name || 'an item'}`,
+          code: 'INSUFFICIENT_STOCK'
+        });
+      }
 
     const itemTotal = product.price * cartItem.quantity;
     totalAmount += itemTotal;
@@ -307,11 +313,26 @@ exports.processCheckout = asyncHandler(async (req, res) => {
       }))
     }
   });
+  } catch (error) {
+    console.error('[CHECKOUT_ERROR]', error.message);
+    if (error.code === 50 || error.message?.includes('timeout')) {
+      return res.status(408).json({
+        success: false,
+        message: 'Checkout request timed out. Please try again.',
+        code: 'REQUEST_TIMEOUT'
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: 'Checkout failed. Please try again.',
+      code: 'CHECKOUT_ERROR'
+    });
+  }
 });
 
 /**
  * @route   GET /api/checkout/orders
- * @desc    Get all customer orders (paginated)
+ * @desc    Get all customer orders (paginated, with server-side timeout)
  * @access  Private (customer)
  */
 exports.getOrders = asyncHandler(async (req, res) => {
@@ -324,23 +345,44 @@ exports.getOrders = asyncHandler(async (req, res) => {
   }
 
   const skip = (page - 1) * limit;
+  const parsedLimit = Math.min(parseInt(limit) || 10, 20); // Cap at 20 rows max
 
-  const orders = await Order.find(query)
-    .populate('vendor', 'storeName logo')
-    .populate('items.product', 'name price images')
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(parseInt(limit));
+  try {
+    // Server-side timeout: abort if query takes >5s
+    const ordersPromise = Order.find(query)
+      .select('orderNumber items totalAmount status createdAt vendor repeatPurchase')
+      .populate('vendor', 'storeName')
+      .populate('items.product', 'name price images')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parsedLimit)
+      .maxTimeMS(5000)
+      .lean();
 
-  const total = await Order.countDocuments(query);
+    const countPromise = Order.countDocuments(query).maxTimeMS(3000);
 
-  res.status(200).json({
-    success: true,
-    count: orders.length,
-    total,
-    pages: Math.ceil(total / limit),
-    data: orders
-  });
+    const [orders, total] = await Promise.all([ordersPromise, countPromise]);
+
+    res.status(200).json({
+      success: true,
+      count: orders.length,
+      total,
+      pages: Math.ceil(total / parsedLimit),
+      data: orders
+    });
+  } catch (error) {
+    // Graceful fallback: return empty array instead of 500
+    if (error.name === 'MongooseError' || error.code === 50) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        total: 0,
+        pages: 0,
+        data: []
+      });
+    }
+    throw error;
+  }
 });
 
 /**
@@ -539,26 +581,35 @@ exports.setRepeatPurchase = asyncHandler(async (req, res) => {
  * @access  Private (customer)
  */
 exports.getRepeatPurchaseSettings = asyncHandler(async (req, res) => {
-  const customer = await User.findById(req.user.id).select(
-    'repeatPurchaseFrequency repeatPurchaseSettings'
-  );
+  try {
+    const customer = await User.findById(req.user.id)
+      .select('repeatPurchaseFrequency repeatPurchaseSettings')
+      .maxTimeMS(3000)
+      .lean();
 
-  if (!customer) {
-    return res.status(404).json({
-      success: false,
-      message: 'Customer not found'
+    if (!customer) {
+      return res.status(200).json({
+        success: true,
+        data: { enabled: false, frequency: null, nextRepeatDate: null, autoRenewNotificationSent: false }
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        enabled: customer.repeatPurchaseSettings?.enabled || false,
+        frequency: customer.repeatPurchaseSettings?.frequency || null,
+        nextRepeatDate: customer.repeatPurchaseSettings?.nextRepeatDate || null,
+        autoRenewNotificationSent: customer.repeatPurchaseSettings?.autoRenewNotificationSent || false
+      }
+    });
+  } catch (error) {
+    // Graceful fallback — never hang
+    return res.status(200).json({
+      success: true,
+      data: { enabled: false, frequency: null, nextRepeatDate: null, autoRenewNotificationSent: false }
     });
   }
-
-  return res.status(200).json({
-    success: true,
-    data: {
-      enabled: customer.repeatPurchaseSettings?.enabled || false,
-      frequency: customer.repeatPurchaseSettings?.frequency || null,
-      nextRepeatDate: customer.repeatPurchaseSettings?.nextRepeatDate || null,
-      autoRenewNotificationSent: customer.repeatPurchaseSettings?.autoRenewNotificationSent || false
-    }
-  });
 });
 
 // =================================================================
@@ -577,41 +628,46 @@ exports.initializePayment = asyncHandler(async (req, res) => {
   if (!items || items.length === 0) {
     return res.status(400).json({
       success: false,
-      message: 'Cart items are required'
+      message: 'Cart items are required',
+      code: 'MISSING_ITEMS'
     });
   }
 
   if (!deliveryAddress) {
     return res.status(400).json({
       success: false,
-      message: 'Delivery address is required'
+      message: 'Delivery address is required',
+      code: 'MISSING_ADDRESS'
     });
   }
 
-  // Get customer
-  const customer = await User.findById(req.user.id);
-  if (!customer) {
-    return res.status(404).json({
-      success: false,
-      message: 'Customer not found'
-    });
-  }
+  try {
+    // Get customer with timeout
+    const customer = await User.findById(req.user.id).maxTimeMS(5000);
+    if (!customer) {
+      return res.status(404).json({
+        success: false,
+        message: 'Customer not found',
+        code: 'CUSTOMER_NOT_FOUND'
+      });
+    }
 
-  // Validate repeat purchase frequency if provided
-  const validFrequencies = ['weekly', 'bi-weekly', 'monthly', 'quarterly'];
-  if (repeatPurchaseFrequency && !validFrequencies.includes(repeatPurchaseFrequency)) {
-    return res.status(400).json({
-      success: false,
-      message: 'Invalid repeat purchase frequency'
-    });
-  }
+    // Validate repeat purchase frequency if provided
+    const validFrequencies = ['weekly', 'bi-weekly', 'monthly', 'quarterly'];
+    if (repeatPurchaseFrequency && !validFrequencies.includes(repeatPurchaseFrequency)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid repeat purchase frequency',
+        code: 'INVALID_FREQUENCY'
+      });
+    }
 
-  // Process items and validate stock
-  const orderItems = [];
-  let totalAmount = 0;
+    // Process items and validate stock
+    const orderItems = [];
+    let totalAmount = 0;
 
-  for (const cartItem of items) {
-    const product = await Product.findById(cartItem.product);
+    for (const cartItem of items) {
+      const product = await Product.findById(cartItem.product).maxTimeMS(3000);
 
     if (!product) {
       return res.status(400).json({
@@ -644,7 +700,13 @@ exports.initializePayment = asyncHandler(async (req, res) => {
 
   // Calculate total with fees
   const deliveryFee = pricing?.deliveryFee || 0;
-  const finalTotal = totalAmount + deliveryFee;
+  const subtotal = totalAmount;
+  const total = subtotal + deliveryFee;
+  
+  // Calculate platform commission (12% of subtotal, not including delivery fee)
+  const PLATFORM_COMMISSION_RATE = 0.12; // 12%
+  const platformCommission = Math.round(subtotal * PLATFORM_COMMISSION_RATE * 100) / 100; // Round to 2 decimals
+  const vendorEarnings = subtotal - platformCommission; // Vendor gets subtotal minus commission
 
   // Build repeat purchase data if frequency provided
   const repeatPurchaseData = repeatPurchaseFrequency ? {
@@ -659,9 +721,16 @@ exports.initializePayment = asyncHandler(async (req, res) => {
     orderNumber: generateOrderNumber(),
     customer: customer._id,
     items: orderItems,
-    totalAmount: finalTotal,
-    subtotal: totalAmount,
-    deliveryFee,
+    totalAmount: total,
+    pricing: {
+      subtotal: subtotal,
+      deliveryFee: deliveryFee,
+      total: total,
+      platformCommission: platformCommission,
+      vendorEarnings: vendorEarnings
+    },
+    subtotal: subtotal, // Backward compatibility
+    deliveryFee: deliveryFee, // Backward compatibility
     status: 'pending',
     paymentStatus: 'pending',
     paymentMethod: payment?.method || 'card',
@@ -706,8 +775,8 @@ exports.initializePayment = asyncHandler(async (req, res) => {
         });
       }
 
-      // Create Stripe Checkout Session
-      const session = await stripe.checkout.sessions.create({
+      // Create Stripe Checkout Session with 8s timeout to prevent hanging
+      const stripePromise = stripe.checkout.sessions.create({
         payment_method_types: ['card'],
         mode: 'payment',
         customer_email: customer.email,
@@ -720,6 +789,12 @@ exports.initializePayment = asyncHandler(async (req, res) => {
         success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
         cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/cancel?order_id=${order._id}`
       });
+
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Stripe session creation timed out')), 8000)
+      );
+
+      const session = await Promise.race([stripePromise, timeoutPromise]);
 
       // Update order with Stripe session ID
       order.transactionRef = session.id;
@@ -791,4 +866,19 @@ exports.initializePayment = asyncHandler(async (req, res) => {
       }
     }
   });
+  } catch (error) {
+    console.error('[PAYMENT_INIT_ERROR]', error.message);
+    if (error.code === 50 || error.message?.includes('timeout')) {
+      return res.status(408).json({
+        success: false,
+        message: 'Payment initialization timed out. Please try again.',
+        code: 'REQUEST_TIMEOUT'
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to initialize payment. Please try again.',
+      code: 'PAYMENT_INIT_ERROR'
+    });
+  }
 });

@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI } from '../../services/api'
+import { cartAPI, getVendorById } from '../../services/api'
+import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
 // Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
 const isValidMongoId = (id) => {
@@ -18,6 +19,7 @@ function ShoppingCart() {
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
   const [repeatPurchaseFrequency, setRepeatPurchaseFrequency] = useState(null)
+  const [vendor, setVendor] = useState(null)
 
   useEffect(() => {
     loadCart()
@@ -25,6 +27,32 @@ function ShoppingCart() {
     window.addEventListener('cartUpdated', loadCart)
     return () => window.removeEventListener('cartUpdated', loadCart)
   }, [isAuthenticated])
+
+  // Fetch vendor data when cart changes
+  useEffect(() => {
+    const fetchVendorData = async () => {
+      if (cart.length === 0) {
+        setVendor(null)
+        return
+      }
+
+      const vendorInfo = getCartVendorInfo(cart)
+      if (!vendorInfo || !vendorInfo.vendorId) return
+
+      try {
+        const response = await getVendorById(vendorInfo.vendorId)
+        if (response.success && response.data) {
+          setVendor(response.data)
+        } else if (response.storeName) {
+          setVendor(response)
+        }
+      } catch (error) {
+        console.log('Vendor fetch failed:', error.message)
+      }
+    }
+
+    fetchVendorData()
+  }, [cart])
 
   const loadRepurchaseSchedule = async () => {
     if (!isAuthenticated) return
@@ -258,6 +286,18 @@ function ShoppingCart() {
             {cart.length} items in your cart
             {syncing && <span className="ml-2 text-sm">(Syncing...)</span>}
           </p>
+          {/* Store Indicator */}
+          {cart.length > 0 && (() => {
+            const vendorInfo = getCartVendorInfo(cart)
+            return vendorInfo ? (
+              <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <span className="text-xl">🏪</span>
+                <span className="text-sm font-medium">
+                  Shopping from: <strong>{vendorInfo.vendorName}</strong>
+                </span>
+              </div>
+            ) : null
+          })()}
         </div>
       </div>
 
@@ -371,6 +411,34 @@ function ShoppingCart() {
                       Add £{(30 - subtotal).toFixed(2)} more for FREE delivery!
                     </p>
                   )}
+                  
+                  {/* Minimum Order Warning */}
+                  {(() => {
+                    const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                    const minCheck = checkMinimumOrder(subtotal, minimumOrderValue)
+                    
+                    if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                      return (
+                        <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                          <p className="text-sm text-red-800 font-semibold">
+                            ⚠️ Minimum order: £{minCheck.minimumOrder.toFixed(2)}
+                          </p>
+                          <p className="text-xs text-red-700 mt-1">
+                            Add £{minCheck.shortfall.toFixed(2)} more to checkout
+                          </p>
+                        </div>
+                      )
+                    } else if (minCheck.minimumOrder > 0) {
+                      return (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+                          <p className="text-xs text-green-700">
+                            ✓ Minimum order met (£{minCheck.minimumOrder.toFixed(2)})
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
                 </div>
 
                 <div className="flex justify-between items-center py-4 text-lg font-bold">
@@ -422,6 +490,14 @@ function ShoppingCart() {
 
                 <button
                   onClick={() => {
+                    const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                    const minCheck = checkMinimumOrder(subtotal, minimumOrderValue)
+                    
+                    if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                      alert(`Minimum order is £${minCheck.minimumOrder.toFixed(2)}. Please add £${minCheck.shortfall.toFixed(2)} more to your cart.`)
+                      return
+                    }
+                    
                     // Store repeat purchase preference before checkout
                     if (repeatPurchaseFrequency) {
                       localStorage.setItem('repeatPurchaseFrequency', repeatPurchaseFrequency)
@@ -430,7 +506,20 @@ function ShoppingCart() {
                     }
                     navigate('/checkout')
                   }}
-                  className="w-full py-4 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-xl font-bold text-lg hover:shadow-lg transition-all transform hover:scale-105 min-h-[52px]"
+                  disabled={(() => {
+                    const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                    const minCheck = checkMinimumOrder(subtotal, minimumOrderValue)
+                    return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
+                  })()}
+                  className={`w-full py-4 rounded-xl font-bold text-lg transition-all transform min-h-[52px] ${
+                    (() => {
+                      const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                      const minCheck = checkMinimumOrder(subtotal, minimumOrderValue)
+                      return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
+                        ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-afri-green to-afri-green-dark text-white hover:shadow-lg hover:scale-105'
+                    })()
+                  }`}
                 >
                   Proceed to Checkout
                 </button>

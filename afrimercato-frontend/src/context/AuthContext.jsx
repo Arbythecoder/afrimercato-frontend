@@ -24,9 +24,19 @@ const decodeToken = (token) => {
     )
     return JSON.parse(jsonPayload)
   } catch (error) {
-    console.error('Error decoding token:', error)
+    if (import.meta.env.DEV) console.error('Error decoding token:', error)
     return null
   }
+}
+
+// Normalize user object so both `role` (string) and `roles` (array) are always present
+const normalizeUserRoles = (user) => {
+  if (!user) return user
+  const roles = Array.isArray(user.roles) && user.roles.length > 0
+    ? user.roles
+    : user.role ? [user.role] : ['customer']
+  const role = user.role || user.primaryRole || roles[0] || 'customer'
+  return { ...user, roles, role }
 }
 
 export const AuthProvider = ({ children }) => {
@@ -56,7 +66,7 @@ export const AuthProvider = ({ children }) => {
           const response = await Promise.race([profilePromise, timeoutPromise])
 
           if (response && response.success) {
-            setUser(response.data)
+            setUser(normalizeUserRoles(response.data))
             setIsAuthenticated(true)
           } else {
             // Token invalid or server returned error - clear tokens
@@ -88,10 +98,11 @@ export const AuthProvider = ({ children }) => {
       if (response && response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
-        // DO NOT store user data in localStorage - security risk
-        setUser(user)
+        // Normalize: ensure both roles array and role string are present
+        const normalizedUser = normalizeUserRoles(user)
+        setUser(normalizedUser)
         setIsAuthenticated(true)
-        return { success: true, user }
+        return { success: true, user: normalizedUser }
       } else {
         return {
           success: false,
@@ -131,10 +142,10 @@ export const AuthProvider = ({ children }) => {
       if (response && response.success) {
         const { token, user } = response.data
         localStorage.setItem('afrimercato_token', token)
-        // DO NOT store user data in localStorage - security risk
-        setUser(user)
+        const normalizedUser = normalizeUserRoles(user)
+        setUser(normalizedUser)
         setIsAuthenticated(true)
-        return { success: true, user }
+        return { success: true, user: normalizedUser }
       } else {
         return {
           success: false,
@@ -156,6 +167,15 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false)
   }
 
+  // Used by OAuthCallback to set auth state after social login
+  const setAuth = ({ user: userData, token, isAuthenticated: authStatus }) => {
+    if (token) {
+      localStorage.setItem('afrimercato_token', token)
+    }
+    setUser(normalizeUserRoles(userData))
+    setIsAuthenticated(authStatus)
+  }
+
   const value = {
     user,
     isAuthenticated,
@@ -163,7 +183,8 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
-    checkAuth
+    checkAuth,
+    setAuth
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

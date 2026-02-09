@@ -15,6 +15,15 @@ const orderSchema = new mongoose.Schema({
   }],
   totalAmount: Number,
 
+  // Pricing breakdown for transparency
+  pricing: {
+    subtotal: { type: Number, default: 0 },
+    deliveryFee: { type: Number, default: 0 },
+    total: { type: Number, default: 0 },
+    platformCommission: { type: Number, default: 0 }, // Platform fee (10-15%)
+    vendorEarnings: { type: Number, default: 0 }      // What vendor receives
+  },
+
   // Extended status with backward compatibility
   status: {
     type: String,

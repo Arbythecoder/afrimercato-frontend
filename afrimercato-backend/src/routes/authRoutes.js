@@ -14,6 +14,7 @@ const User = require('../models/User');
 const { protect } = require('../middleware/auth');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { generateAccessToken, generateRefreshToken, setAuthCookies, clearAuthCookies, formatUserResponse } = require('../utils/authHelpers');
+const { sendVerificationEmail } = require('../utils/emailService');
 
 // Strict rate limiting for login endpoint
 const loginLimiter = rateLimit({
@@ -82,10 +83,18 @@ router.post(
     });
 
     // Generate email verification token
-    user.generateEmailVerificationToken();
+    const verificationToken = user.generateEmailVerificationToken();
 
     // Save user
     await user.save();
+
+    // Send verification email
+    try {
+      await sendVerificationEmail(user.email, verificationToken, user.firstName);
+    } catch (emailError) {
+      console.error('[EMAIL_SEND_ERROR]', emailError.message);
+      // Don't fail registration if email fails
+    }
 
     // Create JWT and refresh token
     const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
@@ -119,42 +128,65 @@ router.post(
   asyncHandler(async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      return res.status(400).json({ success: false, errors: errors.array() });
+      return res.status(400).json({ success: false, errors: errors.array(), code: 'VALIDATION_ERROR' });
     }
 
     const { email, password } = req.body;
 
-    // Find user and select password
-    const user = await User.findOne({ email }).select('+password');
-    if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
-    // Check password
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid email or password' });
-    }
-
-    // Create JWT and refresh token
-    const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
-    const refreshToken = generateRefreshToken();
-
-    // Set secure HTTP-only cookies
-    setAuthCookies(res, token, refreshToken);
-
-    // Determine primary role for frontend routing
-    const primaryRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'customer';
-
-    res.json({
-      success: true,
-      message: 'Login successful',
-      data: {
-        token,
-        refreshToken,
-        user: formatUserResponse(user, primaryRole)
+    try {
+      // Find user with 5s timeout to prevent hanging
+      const userPromise = User.findOne({ email }).select('+password').maxTimeMS(5000);
+      const user = await userPromise;
+      
+      if (!user) {
+        return res.status(401).json({ success: false, message: 'Invalid email or password', code: 'INVALID_CREDENTIALS' });
       }
-    });
+
+      // Check password with timeout protection
+      const comparePromise = bcrypt.compare(password, user.password);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Password comparison timeout')), 3000)
+      );
+      
+      const isMatch = await Promise.race([comparePromise, timeoutPromise]);
+      if (!isMatch) {
+        return res.status(401).json({ success: false, message: 'Invalid email or password', code: 'INVALID_CREDENTIALS' });
+      }
+
+      // Create JWT and refresh token
+      const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+      const refreshToken = generateRefreshToken();
+
+      // Set secure HTTP-only cookies
+      setAuthCookies(res, token, refreshToken);
+
+      // Determine primary role for frontend routing
+      const primaryRole = user.roles && user.roles.length > 0 ? user.roles[0] : 'customer';
+
+      return res.json({
+          success: true,
+        message: 'Login successful',
+        data: {
+          token,
+          refreshToken,
+          user: formatUserResponse(user, primaryRole)
+        }
+      });
+    } catch (error) {
+      console.error('[LOGIN_ERROR]', error.message);
+      if (error.message?.includes('timeout') || error.code === 50) {
+        return res.status(408).json({ 
+          success: false, 
+          message: 'Login request timed out. Please try again.', 
+          code: 'REQUEST_TIMEOUT' 
+        });
+      }
+      return res.status(500).json({ 
+        success: false, 
+        message: 'Login failed. Please try again.', 
+        code: 'SERVER_ERROR' 
+      });
+    }
   })
 );
 
@@ -316,6 +348,55 @@ router.post(
     res.json({
       success: true,
       message: 'Email verified successfully'
+    });
+  })
+);
+
+// ==============================================
+// POST /api/auth/resend-verification - Resend verification email
+// ==============================================
+router.post(
+  '/resend-verification',
+  protect,
+  asyncHandler(async (req, res) => {
+    const user = await User.findById(req.user.id);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Already verified
+    const verificationToken = user.generateEmailVerificationToken();
+    await user.save();
+
+    // Send verification email
+    try {
+      const emailResult = await sendVerificationEmail(user.email, verificationToken, user.firstName);
+      res.json({
+        success: true,
+        message: 'Verification email sent',
+        ...(process.env.NODE_ENV === 'development' && {
+          verificationToken,
+          verificationLink: emailResult.verificationLink
+        })
+      });
+    } catch (emailError) {
+      console.error('[EMAIL_SEND_ERROR]', emailError.message);
+      res.json({
+        success: true,
+        message: 'Verification email sent (email service unavailable - check server logs)',
+        ...(process.env.NODE_ENV === 'development' && {
+          verificationToken
+        })
+      });
+    }TODO: Send verification email here
+    // For now, return token in response (DEVELOPMENT ONLY)
+    res.json({
+      success: true,
+      message: 'Verification email sent',
+      ...(process.env.NODE_ENV === 'development' && {
+        verificationToken: user.emailVerificationToken
+      })
     });
   })
 );

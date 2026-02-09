@@ -66,7 +66,56 @@ const authorize = (...roles) => {
   };
 };
 
+/**
+ * Verify email is verified before allowing access
+ * Use this middleware on routes that require email verification
+ */
+const requireEmailVerified = async (req, res, next) => {
+  if (!req.user || !req.user.id) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required',
+      errorCode: 'NOT_AUTHENTICATED'
+    });
+  }
+
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user.id).select('emailVerified email');
+    
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found',
+        errorCode: 'USER_NOT_FOUND'
+      });
+    }
+
+    // Allow access if email is verified
+    if (user.emailVerified) {
+      return next();
+    }
+
+    // Block access and return clear message
+    return res.status(403).json({
+      success: false,
+      message: 'Please verify your email to continue',
+      errorCode: 'EMAIL_NOT_VERIFIED',
+      userMessage: 'Please check your email and click the verification link to continue using this feature.',
+      email: user.email
+    });
+  } catch (error) {
+    console.error('Email verification check error:', error);
+    return res.status(500).json({
+      success: false,
+      message: 'Error checking email verification status',
+      errorCode: 'VERIFICATION_CHECK_ERROR'
+    });
+  }
+};
+
 module.exports = {
   protect,
-  authorize
+  authorize,
+  requireEmailVerified
 };

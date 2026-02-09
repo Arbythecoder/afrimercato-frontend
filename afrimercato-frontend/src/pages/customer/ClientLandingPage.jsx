@@ -98,7 +98,7 @@ export default function ClientLandingPage() {
   ]
 
   return (
-    <div className="min-h-screen bg-[#F5A623]">
+    <div className="min-h-screen bg-[#F5A623] dark:bg-gray-900">
       {/* ============================================
           NAVIGATION - Afrimercato branding
           ============================================ */}
@@ -106,7 +106,7 @@ export default function ClientLandingPage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
+          isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -212,9 +212,9 @@ export default function ClientLandingPage() {
       {/* ============================================
           HERO SECTION - Exact client design
           ============================================ */}
-      <section className="relative min-h-screen pt-20 sm:pt-24 pb-8 overflow-hidden">
+      <section className="relative pt-20 sm:pt-24 pb-12 overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[calc(100vh-180px)]">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
             {/* Left Side - Hero Content */}
             <motion.div
@@ -226,7 +226,7 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 leading-[1.1] tracking-tight"
+                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight"
               >
                 We Help With the Shopping and Bring it to your{' '}
                 <span className="text-[#00897B] relative inline-block">
@@ -254,7 +254,7 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="mt-6 text-lg sm:text-xl text-gray-700 max-w-xl leading-relaxed"
+                className="mt-6 text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-xl leading-relaxed"
               >
                 Experience the convenience of African and international groceries
                 delivered right to your door. Fresh produce, authentic flavors,
@@ -357,11 +357,11 @@ export default function ClientLandingPage() {
                   />
                 </div>
 
-                {/* Floating Elements */}
+                {/* Floating Elements — hidden on mobile to prevent overflow */}
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="absolute top-10 -left-8 bg-white rounded-2xl p-4 shadow-xl z-20"
+                  className="hidden md:block absolute top-10 left-0 lg:-left-4 bg-white rounded-2xl p-4 shadow-xl z-20"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
@@ -379,7 +379,7 @@ export default function ClientLandingPage() {
                 <motion.div
                   animate={{ y: [0, 10, 0] }}
                   transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="absolute bottom-20 -right-4 bg-white rounded-2xl p-4 shadow-xl z-20"
+                  className="hidden md:block absolute bottom-20 right-0 lg:-right-4 bg-white rounded-2xl p-4 shadow-xl z-20"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">
@@ -534,17 +534,17 @@ export default function ClientLandingPage() {
           </motion.div>
         </div>
 
-        {/* Background Decorations */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute top-1/4 right-0 w-96 h-96 bg-yellow-300/30 rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-1/4 w-64 h-64 bg-orange-300/20 rounded-full blur-2xl"></div>
+        {/* Background Decorations — contained to prevent horizontal scroll */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="absolute top-1/4 right-0 w-64 md:w-96 h-64 md:h-96 bg-yellow-300/30 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-0 left-1/4 w-48 md:w-64 h-48 md:h-64 bg-orange-300/20 rounded-full blur-2xl"></div>
         </div>
       </section>
 
       {/* ============================================
           STORE MARKETPLACE SECTION - From three.jpg
           ============================================ */}
-      <section className="bg-white py-16 sm:py-20">
+      <section className="bg-white dark:bg-gray-800 py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {/* Section Header */}
           <div className="text-center mb-8">
@@ -552,7 +552,7 @@ export default function ClientLandingPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3"
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3"
             >
               African Online Store In the United Kingdom
             </motion.h2>
@@ -619,7 +619,7 @@ export default function ClientLandingPage() {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
                 onClick={() => navigate(`/store/${store.id}`)}
-                className="bg-white rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
+                className="bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
               >
                 {/* Store Image */}
                 <div className="relative h-48">
@@ -779,6 +779,160 @@ export default function ClientLandingPage() {
       </section>
 
       {/* ============================================
+          WHY AFRIMERCATO EXISTS
+          ============================================ */}
+      <section className="py-16 sm:py-20 bg-white dark:bg-gray-800">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6"
+          >
+            Why Afrimercato Exists
+          </motion.h2>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-gray-600 text-lg leading-relaxed space-y-4"
+          >
+            <p>
+              Afrimercato was born from a simple but powerful observation. A Nigerian living abroad
+              noticed how difficult it was for people outside Africa — and even within Africa — to
+              reliably access authentic African goods.
+            </p>
+            <p>
+              Local stores struggled with visibility. Customers struggled with trust and convenience.
+              Delivery systems were fragmented, expensive, or unfair. Yet the demand was clear.
+              And the businesses were ready — they just lacked the right digital bridge.
+            </p>
+            <p className="text-[#00897B] font-semibold text-xl">
+              Afrimercato is that bridge.
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="mt-8"
+          >
+            <Link
+              to="/about"
+              className="inline-flex items-center gap-2 text-[#00897B] font-semibold hover:underline"
+            >
+              Read our full story
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================
+          WHO IT'S FOR — Audience Cards
+          ============================================ */}
+      <section className="py-16 sm:py-20 bg-gray-50 dark:bg-gray-900">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-12"
+          >
+            Who It's For
+          </motion.h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                icon: '🏪',
+                title: 'Stores',
+                message: 'You control your business, your delivery, your costs.',
+                color: 'from-[#00897B] to-[#00695C]'
+              },
+              {
+                icon: '🚴',
+                title: 'Riders & Pickers',
+                message: 'Work independently. Choose your stores. Pay only when you earn.',
+                color: 'from-[#F5A623] to-[#FF9800]'
+              },
+              {
+                icon: '🛒',
+                title: 'Customers',
+                message: 'Discover authentic African goods from trusted local stores, delivered to your door.',
+                color: 'from-[#4285F4] to-[#1a73e8]'
+              }
+            ].map((card, index) => (
+              <motion.div
+                key={card.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.15 }}
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+              >
+                <div className={`bg-gradient-to-r ${card.color} p-6`}>
+                  <span className="text-4xl">{card.icon}</span>
+                </div>
+                <div className="p-6">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
+                  <p className="text-gray-600 leading-relaxed">{card.message}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ============================================
+          VISION & MISSION
+          ============================================ */}
+      <section className="py-16 sm:py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-2 gap-12">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+            >
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
+              <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
+                To be the digital home where African and local businesses thrive — connecting stores,
+                customers, and communities worldwide.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+            >
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
+              <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
+                Afrimercato empowers local and international merchants to sell, fulfil, and grow
+                through a fair, flexible, and trusted marketplace.
+              </p>
+            </motion.div>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.3 }}
+            className="mt-10 pt-8 border-t border-white/20 text-center"
+          >
+            <p className="text-white/80 text-sm">
+              We are currently in a guided testing phase to ensure speed, reliability, and strong
+              foundations before scaling to new regions.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================
           FOOTER - From client design (six.jpg)
           ============================================ */}
       <footer id="contact" className="bg-[#1a1a1a] text-white py-12">
@@ -787,7 +941,14 @@ export default function ClientLandingPage() {
             {/* Contact Info */}
             <div className="lg:col-span-2">
               <h3 className="text-xl font-bold mb-4">You've Got Questions?<br />Do Reach Out!</h3>
+              <p className="text-gray-400 text-sm mb-4">
+                A fair, flexible marketplace connecting African stores, customers, and communities worldwide.
+              </p>
               <div className="space-y-3 text-gray-400">
+                <p className="flex items-center gap-2">
+                  <span className="text-yellow-500">📞</span>
+                  +44 7778 285855
+                </p>
                 <p className="flex items-center gap-2">
                   <span className="text-yellow-500">📧</span>
                   Email: info@afrimercato.co.uk
@@ -828,7 +989,7 @@ export default function ClientLandingPage() {
 
           {/* Bottom Footer */}
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-            <p>© 2024 Afrimercato</p>
+            <p>© 2026 Afrimercato</p>
             <p>Designed By thedesignpygi</p>
             <p>All Right Reserved.</p>
           </div>

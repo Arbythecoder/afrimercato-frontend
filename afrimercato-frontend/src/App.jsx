@@ -1,8 +1,7 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState, useEffect } from 'react'
 import CookieConsent from './components/CookieConsent'
-import FeedbackButton from './components/FeedbackButton'
 import BetaBanner from './components/BetaBanner'
 import BetaFeedbackButton from './components/BetaFeedbackButton'
 import ComingSoon from './components/ComingSoon'
@@ -14,6 +13,7 @@ const OAuthCallback = lazy(() => import('./pages/OAuthCallback'))
 const VendorPendingApproval = lazy(() => import('./pages/VendorPendingApproval'))
 const Dashboard = lazy(() => import('./pages/vendor/Dashboard'))
 const Products = lazy(() => import('./pages/vendor/Products'))
+const Earnings = lazy(() => import('./pages/vendor/Earnings'))
 const Orders = lazy(() => import('./pages/vendor/Orders'))
 const Reports = lazy(() => import('./pages/vendor/Reports'))
 const Settings = lazy(() => import('./pages/vendor/Settings'))
@@ -54,6 +54,7 @@ const PickerPerformance = lazy(() => import('./pages/picker/PickerPerformance'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
 const VendorOnboarding = lazy(() => import('./components/VendorOnboarding'))
+const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 
 // Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
@@ -176,6 +177,7 @@ function AppContent() {
         path="/register"
         element={isAuthenticated ? <RoleBasedRedirect /> : <Register />}
       />
+      <Route path="/verify-email" element={<VerifyEmail />} />
 
       {/* OAuth Callback Route */}
       <Route path="/oauth/callback" element={<OAuthCallback />} />
@@ -226,6 +228,22 @@ function AppContent() {
             user?.role === 'vendor' ? (
               <VendorLayout>
                 <Products />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/vendor/earnings"
+        element={
+          isAuthenticated ? (
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Earnings />
               </VendorLayout>
             ) : (
               <RoleBasedRedirect />
@@ -357,14 +375,48 @@ function VendorBanner() {
   )
 }
 
+// Persistent dark/light mode toggle
+function ThemeToggle() {
+  const [dark, setDark] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('theme') === 'dark'
+  })
+
+  useEffect(() => {
+    const root = document.documentElement
+    if (dark) {
+      root.classList.add('dark')
+      localStorage.setItem('theme', 'dark')
+    } else {
+      root.classList.remove('dark')
+      localStorage.setItem('theme', 'light')
+    }
+  }, [dark])
+
+  return (
+    <button
+      onClick={() => setDark(d => !d)}
+      className="fixed bottom-4 left-4 z-50 w-10 h-10 rounded-full bg-gray-800 dark:bg-yellow-400 text-white dark:text-gray-900 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+      aria-label="Toggle dark mode"
+      title={dark ? 'Switch to light mode' : 'Switch to dark mode'}
+    >
+      {dark ? (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clipRule="evenodd"/></svg>
+      ) : (
+        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z"/></svg>
+      )}
+    </button>
+  )
+}
+
 function App() {
   return (
     <AuthProvider>
       <ComingSoon>
         <AppContent />
+        <ThemeToggle />
         <BetaFeedbackButton />
         <CookieConsent />
-        <FeedbackButton />
       </ComingSoon>
     </AuthProvider>
   )

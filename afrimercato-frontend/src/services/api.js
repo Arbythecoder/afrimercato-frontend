@@ -1,7 +1,9 @@
 // API Base URL - uses environment variable with fallback
 const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://afrimercato-backend.fly.dev") + "/api";
 
-console.log('🔗 API Base URL:', API_BASE_URL);
+if (import.meta.env.DEV) {
+  console.log('API Base URL:', API_BASE_URL);
+}
 
 // Token refresh in progress flag to prevent multiple simultaneous refresh attempts
 let isRefreshing = false;
@@ -91,7 +93,9 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
-    console.log('🌐 Fetching:', url);
+    if (import.meta.env.DEV) {
+      console.log('Fetching:', url);
+    }
 
     const response = await fetch(url, config);
     clearTimeout(timeoutId);
@@ -162,7 +166,9 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
     if (error.name === 'AbortError') {
       throw new Error('Request timed out');
     }
-    console.error(`❌ API Error (${endpoint}):`, error);
+    if (import.meta.env.DEV) {
+      console.error(`API Error (${endpoint}):`, error);
+    }
     throw error;
   } finally {
     clearTimeout(timeoutId);
@@ -523,7 +529,7 @@ export const getUserProfile = async () => {
     const result = await apiCall('/auth/me', { timeout: 3000 });
     if (result?.success) return result;
   } catch (error) {
-    console.warn('Auth /me endpoint failed, trying /auth/profile...');
+    if (import.meta.env.DEV) console.warn('Auth /me endpoint failed, trying /auth/profile...');
   }
 
   // Fallback: Try standard profile endpoint
@@ -531,7 +537,7 @@ export const getUserProfile = async () => {
     const result = await apiCall('/auth/profile', { timeout: 3000 });
     if (result?.success) return result;
   } catch (error) {
-    console.warn('Auth /profile endpoint failed:', error.message);
+    if (import.meta.env.DEV) console.warn('Auth /profile endpoint failed:', error.message);
   }
 
   // Silent fail - don't block UI, let AuthContext handle fallback
@@ -770,7 +776,8 @@ export const vendorAPI = {
   bulkUpdatePrices,
   bulkUpdateStock,
   getDeliverySettings,
-  updateDeliverySettings
+  updateDeliverySettings,
+  getEarnings: async () => apiCall('/vendor/dashboard/earnings')
 };
 
 // =================================================================
@@ -962,6 +969,29 @@ export const requestRefund = async (orderId, data) => {
 
 export const refundAPI = {
   request: requestRefund
+};
+
+// =================================================================
+// CHECKOUT ENDPOINTS (with resilient timeouts)
+// =================================================================
+
+export const initializeCheckoutPayment = async (orderData) => {
+  return apiCall('/checkout/payment/initialize', {
+    method: 'POST',
+    body: JSON.stringify(orderData),
+    timeout: 8000 // 8s max — Stripe may cold-start but checkout must not hang
+  });
+};
+
+export const getRepurchaseItems = async () => {
+  return apiCall('/checkout/orders', {
+    timeout: 6000 // 6s — repurchase is optional, must never block checkout
+  });
+};
+
+export const checkoutAPI = {
+  initializePayment: initializeCheckoutPayment,
+  getRepurchaseItems
 };
 
 export const userAPI = {

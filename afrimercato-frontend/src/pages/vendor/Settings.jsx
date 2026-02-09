@@ -306,8 +306,34 @@ function Settings() {
     }
   }
 
+  const handleDeliveryChange = (field, value) => {
+    setVendorProfile((prev) => ({
+      ...prev,
+      deliverySettings: { ...prev.deliverySettings, [field]: value },
+    }))
+  }
+
+  const toggleStoreClosed = async () => {
+    const newValue = !vendorProfile.isClosed
+    setVendorProfile((prev) => ({ ...prev, isClosed: newValue }))
+    try {
+      setSaving(true)
+      const response = await vendorAPI.updateProfile({ isClosed: newValue })
+      if (response.success) {
+        success(newValue ? 'Store paused — customers will not see your store' : 'Store is now live!')
+      }
+    } catch (err) {
+      // Revert on failure
+      setVendorProfile((prev) => ({ ...prev, isClosed: !newValue }))
+      error('Failed to update store status')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const tabs = [
     { id: 'profile', name: 'Store Profile', icon: '🏪' },
+    { id: 'delivery', name: 'Delivery', icon: '🚚' },
     { id: 'account', name: 'Account', icon: '👤' },
     { id: 'hours', name: 'Business Hours', icon: '🕐' },
     { id: 'security', name: 'Security', icon: '🔒' },
@@ -367,6 +393,41 @@ function Settings() {
       {/* Store Profile Tab */}
       {activeTab === 'profile' && (
         <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
+          {/* Store Open/Close Toggle */}
+          <div className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all ${vendorProfile.isClosed ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}`}>
+            <div className="flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${vendorProfile.isClosed ? 'bg-red-100' : 'bg-green-100'}`}>
+                {vendorProfile.isClosed ? '🔴' : '🟢'}
+              </div>
+              <div>
+                <h3 className="font-bold text-gray-900 text-lg">
+                  {vendorProfile.isClosed ? 'Store is Paused' : 'Store is Live'}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {vendorProfile.isClosed
+                    ? 'Your store is hidden from customers. Toggle to go live.'
+                    : 'Customers can find and order from your store.'}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={toggleStoreClosed}
+              disabled={saving}
+              className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
+                vendorProfile.isClosed
+                  ? 'bg-red-400 focus:ring-red-500'
+                  : 'bg-green-500 focus:ring-green-500'
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  vendorProfile.isClosed ? 'translate-x-0' : 'translate-x-6'
+                }`}
+              />
+            </button>
+          </div>
+
           <div>
             <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Store Information</h2>
 
@@ -574,6 +635,156 @@ function Settings() {
                 </>
               ) : (
                 'Save Changes'
+              )}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Delivery Tab */}
+      {activeTab === 'delivery' && (
+        <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
+          <div>
+            <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Delivery Settings</h2>
+            <p className="text-gray-600 mb-6">Control how delivery works for your store</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Delivery Fee (£)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.50"
+                  value={vendorProfile.deliveryFee ?? vendorProfile.deliverySettings?.deliveryFee ?? 0}
+                  onChange={(e) => {
+                    const val = parseFloat(e.target.value) || 0
+                    handleVendorChange('deliveryFee', val)
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder="e.g., 3.99"
+                />
+                <p className="mt-1 text-xs text-gray-500">Set to 0 for free delivery</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Free Delivery Above (£)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={vendorProfile.freeDeliveryAbove ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value === '' ? undefined : parseFloat(e.target.value)
+                    handleVendorChange('freeDeliveryAbove', val)
+                  }}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder="e.g., 50"
+                />
+                <p className="mt-1 text-xs text-gray-500">Orders above this amount get free delivery. Leave empty to disable.</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Minimum Order Value (£)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={vendorProfile.deliverySettings?.minimumOrderValue ?? 0}
+                  onChange={(e) => handleDeliveryChange('minimumOrderValue', parseFloat(e.target.value) || 0)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder="e.g., 10"
+                />
+                <p className="mt-1 text-xs text-gray-500">Customers must order at least this amount</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Estimated Prep Time (mins)</label>
+                <input
+                  type="number"
+                  min="5"
+                  max="120"
+                  step="5"
+                  value={vendorProfile.deliverySettings?.estimatedPrepTime ?? 30}
+                  onChange={(e) => handleDeliveryChange('estimatedPrepTime', parseInt(e.target.value) || 30)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder="e.g., 30"
+                />
+                <p className="mt-1 text-xs text-gray-500">Average time to prepare an order</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Delivery Radius (km)</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="50"
+                  step="1"
+                  value={vendorProfile.deliveryRadius ?? 5}
+                  onChange={(e) => handleVendorChange('deliveryRadius', parseInt(e.target.value) || 5)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder="e.g., 5"
+                />
+                <p className="mt-1 text-xs text-gray-500">Maximum distance you deliver to</p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Max Orders Per Hour</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="100"
+                  step="1"
+                  value={vendorProfile.deliverySettings?.maxOrdersPerHour ?? 20}
+                  onChange={(e) => handleDeliveryChange('maxOrdersPerHour', parseInt(e.target.value) || 20)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  placeholder="e.g., 20"
+                />
+                <p className="mt-1 text-xs text-gray-500">Limit incoming orders to avoid overload</p>
+              </div>
+            </div>
+
+            {/* Accepting Orders Toggle */}
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mt-6">
+              <div>
+                <p className="font-semibold text-gray-900">Accepting Orders</p>
+                <p className="text-sm text-gray-600">Temporarily stop accepting new orders without pausing your store</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleDeliveryChange('acceptingOrders', !(vendorProfile.deliverySettings?.acceptingOrders ?? true))}
+                className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                  (vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'bg-green-500' : 'bg-gray-300'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                    (vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'translate-x-5' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+            </div>
+          </div>
+
+          <div className="flex justify-end pt-6 border-t">
+            <button
+              onClick={saveVendorProfile}
+              disabled={saving}
+              className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
+            >
+              {saving ? (
+                <>
+                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    />
+                  </svg>
+                  Saving...
+                </>
+              ) : (
+                'Save Delivery Settings'
               )}
             </button>
           </div>

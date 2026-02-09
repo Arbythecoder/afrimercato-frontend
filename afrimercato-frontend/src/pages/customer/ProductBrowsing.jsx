@@ -3,6 +3,8 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { productAPI, customerAPI, cartAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
+import { checkVendorLock } from '../../utils/cartVendorLock'
+import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
 
 const categories = [
   { id: 'all', name: 'All Products', icon: '🛒' },
@@ -33,6 +35,12 @@ function ProductBrowsing() {
   const [loading, setLoading] = useState(true)
   const [viewMode, setViewMode] = useState('grid')
   const [wishlist, setWishlist] = useState([])
+  const [vendorSwitchModal, setVendorSwitchModal] = useState({
+    isOpen: false,
+    currentStoreName: '',
+    newStoreName: '',
+    pendingProduct: null
+  })
 
   const [filters, setFilters] = useState({
     search: searchParams.get('search') || '',
@@ -123,6 +131,33 @@ function ProductBrowsing() {
 
   const addToCart = async (product) => {
     try {
+      // Get current cart
+      const currentCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+      
+      // Check vendor lock
+      const lockCheck = checkVendorLock(product, currentCart)
+      
+      if (lockCheck.needsConfirmation) {
+        // Show modal
+        setVendorSwitchModal({
+          isOpen: true,
+          currentStoreName: lockCheck.currentVendorName,
+          newStoreName: lockCheck.newVendorName,
+          pendingProduct: product
+        })
+        return
+      }
+
+      // Proceed with adding
+      await performAddToCart(product)
+    } catch (error) {
+      console.error('Error adding to cart:', error)
+      alert('Failed to add to cart. Please try again.')
+    }
+  }
+
+  const performAddToCart = async (product) => {
+    try {
       if (isAuthenticated) {
         // Use backend cart API for authenticated users
         await cartAPI.add(product._id, 1)
@@ -142,8 +177,24 @@ function ProductBrowsing() {
       window.dispatchEvent(new Event('cartUpdated'))
       alert(`${product.name} added to cart!`)
     } catch (error) {
-      console.error('Error adding to cart:', error)
-      alert('Failed to add to cart. Please try again.')
+      throw error
+    }
+  }
+
+  const handleVendorSwitch = async () => {
+    // Clear cart
+    localStorage.setItem('afrimercato_cart', JSON.stringify([]))
+    if (isAuthenticated) {
+      try {
+        await cartAPI.clear()
+      } catch (error) {
+        console.log('Backend cart clear deferred:', error.message)
+      }
+    }
+    
+    // Add new product
+    if (vendorSwitchModal.pendingProduct) {
+      await performAddToCart(vendorSwitchModal.pendingProduct)
     }
   }
 
@@ -374,6 +425,15 @@ function ProductBrowsing() {
           </div>
         </div>
       </div>
+
+      {/* Vendor Switch Modal */}
+      <VendorSwitchModal
+        isOpen={vendorSwitchModal.isOpen}
+        onClose={() => setVendorSwitchModal({ ...vendorSwitchModal, isOpen: false })}
+        currentStoreName={vendorSwitchModal.currentStoreName}
+        newStoreName={vendorSwitchModal.newStoreName}
+        onConfirmSwitch={handleVendorSwitch}
+      />
     </div>
   )
 }

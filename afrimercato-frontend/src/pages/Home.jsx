@@ -236,6 +236,88 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Why Afrimercato Exists */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="max-w-3xl">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
+              Why Afrimercato Exists
+            </h2>
+            <p className="text-lg text-gray-600 leading-relaxed">
+              Afrimercato was built to make authentic African groceries easy to find, trust, and receive —
+              while giving local stores the tools to sell and deliver on their own terms.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Who It's For */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-3">Who It’s For</h2>
+            <p className="text-gray-600">Built for every side of the marketplace.</p>
+          </div>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                title: 'Stores',
+                desc: 'You control your business, your delivery, your costs.'
+              },
+              {
+                title: 'Riders/Pickers',
+                desc: 'Work independently. Choose your stores. Pay only when you earn.'
+              },
+              {
+                title: 'Investors',
+                desc: 'Asset-light, multi-sided marketplace with global expansion potential.'
+              }
+            ].map((card) => (
+              <div key={card.title} className="bg-white rounded-2xl p-6 shadow-lg border border-gray-100">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">{card.title}</h3>
+                <p className="text-gray-600">{card.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Vision & Mission */}
+      <section className="py-16 bg-gradient-to-br from-green-600 to-green-700 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <h2 className="text-3xl sm:text-4xl font-bold text-center mb-10">Vision & Mission</h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80 mb-2">Our Vision</h3>
+              <p className="text-lg leading-relaxed">
+                To be the digital home where African and local businesses thrive — connecting stores,
+                customers, and communities worldwide.
+              </p>
+            </div>
+            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/80 mb-2">Our Mission</h3>
+              <p className="text-lg leading-relaxed">
+                Afrimercato empowers local and international merchants to sell, fulfil, and grow
+                through a fair, flexible, and trusted marketplace.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section className="py-12 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-gray-50 rounded-2xl p-6 border border-gray-100">
+            <div>
+              <h3 className="text-xl font-bold text-gray-900">Contact</h3>
+              <p className="text-gray-600">+44 7778 285855</p>
+            </div>
+            <Link to="/contact" className="text-green-700 font-semibold hover:underline">Contact us →</Link>
+          </div>
+        </div>
+      </section>
+
       {/* Quick Categories */}
       <section className="py-8 bg-gray-50 border-b">
         <div className="max-w-7xl mx-auto px-4">
@@ -315,6 +397,8 @@ export default function Home() {
                       src={store.logo || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600'}
                       alt={store.storeName}
                       className="w-full h-full object-cover"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600'
                       }}
@@ -427,6 +511,8 @@ export default function Home() {
             <div>
               <h4 className="text-white font-bold mb-4">AfriMercato</h4>
               <p className="text-sm">African groceries delivered to your door across the UK.</p>
+              <p className="text-sm mt-2">A fair, flexible marketplace for African commerce.</p>
+              <p className="text-sm mt-2">+44 7778 285855</p>
             </div>
             <div>
               <h4 className="text-white font-bold mb-4">For Customers</h4>

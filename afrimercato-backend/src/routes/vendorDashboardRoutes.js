@@ -8,7 +8,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
 const {
   getDashboard,
   getAnalytics,
@@ -19,8 +19,8 @@ const {
   getPerformanceMetrics
 } = require('../controllers/vendorDashboardController');
 
-// All dashboard routes require vendor authentication
-router.use(protect, authorize('vendor'));
+// All dashboard routes require vendor authentication AND email verification
+router.use(protect, authorize('vendor'), requireEmailVerified);
 
 // =================================================================
 // MAIN DASHBOARD
@@ -74,6 +74,65 @@ router.get('/performance', getPerformanceMetrics);
  * @query   page, limit
  */
 router.get('/payouts', getPayoutHistory);
+
+/**
+ * @route   GET /api/vendor/dashboard/earnings
+ * @desc    Get vendor earnings breakdown with commission tracking
+ * @access  Private (Vendor)
+ */
+router.get('/earnings', async (req, res) => {
+  try {
+    const vendorId = req.vendor._id;
+    const Order = require('../models/Order');
+    
+    // Get all completed orders
+    const completedOrders = await Order.find({
+      vendor: vendorId,
+      status: 'delivered',
+      paymentStatus: 'paid'
+    }).select('pricing totalAmount createdAt');
+    
+    // Get pending orders (not yet delivered)
+    const pendingOrders = await Order.find({
+      vendor: vendorId,
+      status: { $in: ['pending', 'confirmed', 'preparing', 'out_for_delivery'] },
+      paymentStatus: 'paid'
+    }).select('pricing totalAmount createdAt');
+    
+    // Calculate totals
+    const totalEarnings = completedOrders.reduce((sum, order) => 
+      sum + (order.pricing?.vendorEarnings || (order.totalAmount * 0.88)), 0); // 88% if no pricing field
+    
+    const totalCommission = completedOrders.reduce((sum, order) => 
+      sum + (order.pricing?.platformCommission || (order.totalAmount * 0.12)), 0);
+    
+    const pendingEarnings = pendingOrders.reduce((sum, order) => 
+      sum + (order.pricing?.vendorEarnings || (order.totalAmount * 0.88)), 0);
+    
+    const totalRevenue = completedOrders.reduce((sum, order) => 
+      sum + order.totalAmount, 0);
+    
+    res.json({
+      success: true,
+      data: {
+        totalEarnings: parseFloat(totalEarnings.toFixed(2)),
+        totalCommission: parseFloat(totalCommission.toFixed(2)),
+        totalRevenue: parseFloat(totalRevenue.toFixed(2)),
+        pendingEarnings: parseFloat(pendingEarnings.toFixed(2)),
+        completedOrdersCount: completedOrders.length,
+        pendingOrdersCount: pendingOrders.length,
+        commissionRate: 12, // 12%
+        payoutNotice: 'Payouts are processed weekly via bank transfer during beta. Ensure your bank details are updated in Settings.'
+      }
+    });
+  } catch (error) {
+    console.error('Get earnings error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get earnings data'
+    });
+  }
+});
 
 // =================================================================
 // ORDER MANAGEMENT BY STATUS

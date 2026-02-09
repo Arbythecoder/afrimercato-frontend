@@ -2,6 +2,8 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
+const API_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
+
 /**
  * OAuth Callback Handler
  * Handles Google and Facebook OAuth redirects
@@ -15,55 +17,82 @@ function OAuthCallback() {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        // Extract tokens and provider from URL
         const token = searchParams.get('token')
         const refreshToken = searchParams.get('refreshToken')
         const provider = searchParams.get('provider')
         const error = searchParams.get('error')
 
-        // Handle OAuth error
         if (error) {
-          console.error('OAuth error:', error)
-          navigate(`/login?error=${error}`)
+          navigate(`/login?error=${encodeURIComponent(error)}`)
           return
         }
 
-        // Validate tokens
-        if (!token || !refreshToken) {
-          console.error('No tokens received from OAuth')
+        if (!token) {
           navigate('/login?error=no_token')
           return
         }
 
-        // Store tokens with correct key names to match the rest of the app
+        // Store tokens immediately so auth state persists even if profile fetch fails
         localStorage.setItem('afrimercato_token', token)
-        localStorage.setItem('afrimercato_refresh_token', refreshToken)
-
-        // Fetch user data
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch user data')
+        if (refreshToken) {
+          localStorage.setItem('afrimercato_refresh_token', refreshToken)
         }
 
-        const data = await response.json()
+        // Fetch user profile with 8s timeout — OAuth should never block
+        let userData = null
+        try {
+          const controller = new AbortController()
+          const timeoutId = setTimeout(() => controller.abort(), 8000)
+
+          const response = await fetch(`${API_URL}/api/auth/me`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            signal: controller.signal
+          })
+          clearTimeout(timeoutId)
+
+          if (response.ok) {
+            const data = await response.json()
+            userData = data.data || data.user
+          }
+        } catch (fetchErr) {
+          // Profile fetch failed — fall back to JWT decode for routing
+          if (import.meta.env.DEV) {
+            console.warn('OAuth profile fetch failed, using JWT fallback:', fetchErr.message)
+          }
+        }
+
+        // Fallback: decode JWT for minimal user info (role routing only)
+        if (!userData) {
+          try {
+            const base64Url = token.split('.')[1]
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+            const payload = JSON.parse(atob(base64))
+            const roles = payload.roles || []
+            userData = {
+              _id: payload.id,
+              email: payload.email,
+              roles,
+              role: roles[0] || 'customer'
+            }
+          } catch {
+            // JWT decode failed — redirect as customer
+            userData = { role: 'customer' }
+          }
+        }
 
         // Update auth context
         setAuth({
-          user: data.user,
+          user: userData,
           token,
           isAuthenticated: true
         })
 
-        // Show success message
-        console.log(`✅ Logged in via ${provider}:`, data.user.email)
+        if (import.meta.env.DEV) {
+          console.log(`Logged in via ${provider}:`, userData.email)
+        }
 
         // Redirect based on role
-        const role = data.user.role || data.user.primaryRole
+        const role = userData.role || userData.primaryRole || (userData.roles && userData.roles[0]) || 'customer'
 
         switch (role) {
           case 'vendor':
@@ -77,12 +106,19 @@ function OAuthCallback() {
             break
           case 'customer':
           default:
-            navigate('/')
+            // Check if user was trying to checkout
+            if (localStorage.getItem('checkout_redirect') === 'true') {
+              localStorage.removeItem('checkout_redirect')
+              navigate('/checkout')
+            } else {
+              navigate('/')
+            }
             break
         }
-
       } catch (error) {
-        console.error('OAuth callback error:', error)
+        if (import.meta.env.DEV) {
+          console.error('OAuth callback error:', error)
+        }
         navigate('/login?error=callback_failed')
       }
     }
@@ -93,10 +129,9 @@ function OAuthCallback() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="text-center">
-        {/* Loading Spinner */}
         <div className="inline-block">
           <svg
-            className="animate-spin h-12 w-12 text-afri-green"
+            className="animate-spin h-12 w-12 text-green-600"
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
@@ -116,8 +151,6 @@ function OAuthCallback() {
             ></path>
           </svg>
         </div>
-
-        {/* Loading Text */}
         <h2 className="mt-6 text-xl font-semibold text-gray-900">
           Completing sign in...
         </h2>

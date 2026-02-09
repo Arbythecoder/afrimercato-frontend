@@ -8,14 +8,34 @@ const mongoose = require('mongoose');
 // Connection URI from environment
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/afrimercato';
 
-// Connection options
+// Connection options with pooling for production
 const mongooseOptions = {
   useNewUrlParser: true,
   useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 5000,
+  serverSelectionTimeoutMS: 8000,  // Increased from 5s to allow for slower connections
   socketTimeoutMS: 45000,
-  family: 4 // Use IPv4, skip trying IPv6
+  family: 4, // Use IPv4, skip trying IPv6
+  maxPoolSize: 20, // Increased pool size for production load
+  minPoolSize: 5,  // Keep more warm connections ready
+  maxIdleTimeMS: 30000, // Close idle connections after 30s
+  connectTimeoutMS: 10000, // Connection timeout
+  retryWrites: true, // Retry writes on transient errors
+  retryReads: true,  // Retry reads on transient errors
+  maxConnecting: 3   // Limit concurrent connection attempts
 };
+
+// Monitor slow queries (log queries taking > 100ms)
+if (process.env.NODE_ENV === 'production') {
+  mongoose.set('debug', (collectionName, method, query, doc) => {
+    const start = Date.now();
+    return () => {
+      const duration = Date.now() - start;
+      if (duration > 100) {
+        console.warn(`[SLOW_QUERY] ${collectionName}.${method} took ${duration}ms`);
+      }
+    };
+  });
+}
 
 // Store connection state
 let isConnected = false;

@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getVendorById, getVendorProductsByVendorId, cartAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { getProductImage } from '../../utils/defaultImages'
+import { checkVendorLock, checkMinimumOrder } from '../../utils/cartVendorLock'
+import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
 
 // Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
 const isValidMongoId = (id) => {
@@ -62,6 +64,12 @@ export default function ClientVendorStorefront() {
   })
   const [showCart, setShowCart] = useState(false)
   const [countdown, setCountdown] = useState({ hours: 10, minutes: 56, seconds: 21 })
+  const [vendorSwitchModal, setVendorSwitchModal] = useState({
+    isOpen: false,
+    currentStoreName: '',
+    newStoreName: '',
+    pendingProduct: null
+  })
 
   // Persist cart to localStorage whenever it changes
   useEffect(() => {
@@ -146,6 +154,33 @@ export default function ClientVendorStorefront() {
   }
 
   const addToCart = async (product) => {
+    // Ensure product has vendor info
+    const productWithVendor = {
+      ...product,
+      vendor: product.vendor || vendor,
+      vendorId: product.vendorId || vendorId,
+      storeName: product.storeName || vendor?.storeName
+    }
+
+    // Check if we need vendor switch confirmation
+    const lockCheck = checkVendorLock(productWithVendor, cart)
+    
+    if (lockCheck.needsConfirmation) {
+      // Show modal to confirm switching vendors
+      setVendorSwitchModal({
+        isOpen: true,
+        currentStoreName: lockCheck.currentVendorName,
+        newStoreName: lockCheck.newVendorName,
+        pendingProduct: productWithVendor
+      })
+      return
+    }
+
+    // Proceed with adding to cart
+    await performAddToCart(productWithVendor)
+  }
+
+  const performAddToCart = async (product) => {
     const productId = product._id || product.id
     const existingItem = cart.find(item => (item._id || item.id) === productId)
 
@@ -166,7 +201,9 @@ export default function ClientVendorStorefront() {
         quantity: 1,
         unit: product.unit || 'piece',
         images: product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []),
-        vendor: product.vendor
+        vendor: product.vendor,
+        vendorId: product.vendorId,
+        storeName: product.storeName
       }]
     }
 
@@ -181,6 +218,26 @@ export default function ClientVendorStorefront() {
         console.log('Backend cart sync deferred:', error.message)
         // Cart is already saved to localStorage, backend sync can happen later
       }
+    }
+  }
+
+  const handleVendorSwitch = async () => {
+    // Clear current cart
+    setCart([])
+    localStorage.setItem('afrimercato_cart', JSON.stringify([]))
+    
+    // Clear backend cart if authenticated
+    if (isAuthenticated && user?.roles?.includes('customer')) {
+      try {
+        await cartAPI.clear()
+      } catch (error) {
+        console.log('Backend cart clear deferred:', error.message)
+      }
+    }
+
+    // Add the new product
+    if (vendorSwitchModal.pendingProduct) {
+      await performAddToCart(vendorSwitchModal.pendingProduct)
     }
   }
 
@@ -335,6 +392,20 @@ export default function ClientVendorStorefront() {
               >
                 Save up to 60% off on your first order
               </motion.p>
+
+              {/* Minimum Order Display */}
+              {vendor?.deliverySettings?.minimumOrderValue > 0 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3 }}
+                  className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg mb-4"
+                >
+                  <span className="text-blue-600 font-semibold text-sm">
+                    📦 Minimum order: £{vendor.deliverySettings.minimumOrderValue.toFixed(2)}
+                  </span>
+                </motion.div>
+              )}
 
               <div className="flex gap-2">
                 <input
@@ -617,6 +688,18 @@ export default function ClientVendorStorefront() {
                   </button>
                 </div>
 
+                {/* Store Indicator in Cart */}
+                {cart.length > 0 && vendor && (
+                  <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-lg">🏪</span>
+                      <span className="text-gray-700">
+                        Cart Store: <strong className="text-gray-900">{vendor.storeName || vendor.businessName}</strong>
+                      </span>
+                    </div>
+                  </div>
+                )}
+
                 {cart.length === 0 ? (
                   <div className="text-center py-12">
                     <p className="text-4xl mb-2">🛒</p>
@@ -677,14 +760,52 @@ export default function ClientVendorStorefront() {
                         <span>Total:</span>
                         <span>£{(cartTotal + (cartTotal >= 50 ? 0 : 5)).toFixed(2)}</span>
                       </div>
+
+                      {/* Minimum Order Check */}
+                      {(() => {
+                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                        
+                        if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                          return (
+                            <div className="mt-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                              <p className="text-sm text-yellow-800 font-medium">
+                                ⚠️ Add £{minCheck.shortfall.toFixed(2)} more to reach the minimum order of £{minCheck.minimumOrder.toFixed(2)}
+                              </p>
+                            </div>
+                          )
+                        }
+                        return null
+                      })()}
                     </div>
 
                     <button
                       onClick={() => {
+                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                        
+                        if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                          alert(`Minimum order is £${minCheck.minimumOrder.toFixed(2)}. Please add £${minCheck.shortfall.toFixed(2)} more to your cart.`)
+                          return
+                        }
+                        
                         localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
                         navigate('/checkout')
                       }}
-                      className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-4 rounded-lg font-bold text-lg transition-all"
+                      disabled={(() => {
+                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                        return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
+                      })()}
+                      className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${
+                        (() => {
+                          const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                          const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                          return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
+                            ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                            : 'bg-[#00897B] hover:bg-[#00695C] text-white'
+                        })()
+                      }`}
                     >
                       Proceed to Checkout
                     </button>
@@ -695,6 +816,15 @@ export default function ClientVendorStorefront() {
           </>
         )}
       </AnimatePresence>
+
+      {/* Vendor Switch Modal */}
+      <VendorSwitchModal
+        isOpen={vendorSwitchModal.isOpen}
+        onClose={() => setVendorSwitchModal({ ...vendorSwitchModal, isOpen: false })}
+        currentStoreName={vendorSwitchModal.currentStoreName}
+        newStoreName={vendorSwitchModal.newStoreName}
+        onConfirmSwitch={handleVendorSwitch}
+      />
     </div>
   )
 }

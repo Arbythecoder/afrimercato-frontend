@@ -152,9 +152,19 @@ function RiderEarnings() {
                   <p className="text-3xl font-bold text-green-600">£64.50</p>
                   <p className="text-sm text-gray-500">8 deliveries since last payout</p>
                 </div>
-                <button className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700">
-                  Request Early Payout
+                <button 
+                  disabled
+                  className="px-6 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed"
+                  title="Payouts are processed automatically every Friday"
+                >
+                  Auto-Payout Enabled
                 </button>
+              </div>
+              {/* Manual Payout Notice */}
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>📅 Automatic Weekly Payouts:</strong> Your earnings are paid out automatically every Friday via bank transfer. Ensure your bank details are up to date in Settings.
+                </p>
               </div>
             </div>
 

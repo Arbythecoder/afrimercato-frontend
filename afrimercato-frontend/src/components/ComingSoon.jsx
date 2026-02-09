@@ -2,37 +2,21 @@ import { useState, useEffect } from 'react'
 
 // Storage keys
 const BYPASS_KEY = 'afrimercato_coming_soon_bypassed'
-const LAUNCH_DATE_KEY = 'afrimercato_launch_date'
 
 /**
- * Get or set the launch date (7 days from first visit)
- * This ensures the countdown is consistent across page refreshes
- * and across all users who visit during the same deployment period.
- *
- * To reset the countdown: Clear localStorage or set a new date here.
- * To disable countdown: Set DISABLE_COUNTDOWN to true.
+ * Launch date — reads from VITE_LAUNCH_DATE env var first, falls back to hardcoded.
+ * Set VITE_LAUNCH_DATE in .env to override (ISO 8601 string, e.g. "2026-03-01T00:00:00Z").
+ * To disable countdown entirely: Set DISABLE_COUNTDOWN to true.
  */
 const DISABLE_COUNTDOWN = false // Set to true to skip countdown entirely
-
-const getLaunchDate = () => {
-  // Check if we have a stored launch date
-  const storedDate = localStorage.getItem(LAUNCH_DATE_KEY)
-
-  if (storedDate) {
-    const parsed = new Date(storedDate)
-    // Validate it's a valid date
-    if (!isNaN(parsed.getTime())) {
-      return parsed
-    }
+const LAUNCH_DATE = (() => {
+  const envDate = import.meta.env.VITE_LAUNCH_DATE
+  if (envDate) {
+    const parsed = new Date(envDate)
+    if (!isNaN(parsed.getTime())) return parsed
   }
-
-  // First visit: Set launch date to 7 days from now
-  const newLaunchDate = new Date()
-  newLaunchDate.setDate(newLaunchDate.getDate() + 7)
-  localStorage.setItem(LAUNCH_DATE_KEY, newLaunchDate.toISOString())
-
-  return newLaunchDate
-}
+  return new Date('2026-02-22T00:00:00Z') // fallback: 14 days from Feb 8 2026
+})()
 
 function ComingSoon({ children }) {
   const [timeLeft, setTimeLeft] = useState({
@@ -43,7 +27,6 @@ function ComingSoon({ children }) {
   })
   const [bypassed, setBypassed] = useState(false)
   const [isClient, setIsClient] = useState(false)
-  const [launchDate, setLaunchDate] = useState(null)
 
   // Check if bypassed on mount (client-side only to avoid SSR issues)
   useEffect(() => {
@@ -57,19 +40,15 @@ function ComingSoon({ children }) {
 
     const isBypassed = localStorage.getItem(BYPASS_KEY) === 'true'
     setBypassed(isBypassed)
-
-    // Get the persistent launch date
-    const date = getLaunchDate()
-    setLaunchDate(date)
   }, [])
 
-  // Countdown timer
+  // Countdown timer — ticks every second against fixed LAUNCH_DATE
   useEffect(() => {
-    if (bypassed || !launchDate) return
+    if (bypassed) return
 
     const calculateTimeLeft = () => {
       const now = new Date()
-      const difference = launchDate.getTime() - now.getTime()
+      const difference = LAUNCH_DATE.getTime() - now.getTime()
 
       if (difference <= 0) {
         // Countdown complete - auto-unlock the app
@@ -90,7 +69,7 @@ function ComingSoon({ children }) {
     const timer = setInterval(calculateTimeLeft, 1000)
 
     return () => clearInterval(timer)
-  }, [bypassed, launchDate])
+  }, [bypassed])
 
   // Handle bypass for testers
   const handleBypass = () => {
@@ -106,14 +85,14 @@ function ComingSoon({ children }) {
   // Avoid hydration mismatch - show loading until client-side
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#004d40] via-[#00695C] to-[#00897B] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-[#004d40] via-[#00695C] to-[#F5A623] flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white"></div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#004d40] via-[#00695C] to-[#00897B] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-[#004d40] via-[#00695C] to-[#F5A623] flex items-center justify-center px-4">
       <div className="max-w-4xl mx-auto text-center">
         {/* Logo */}
         <div className="mb-8">
@@ -181,7 +160,7 @@ function ComingSoon({ children }) {
         <div className="space-y-4">
           <button
             onClick={handleBypass}
-            className="bg-white text-[#00695C] px-8 py-3 rounded-xl font-bold text-lg hover:bg-[#E0F2F1] transition-all transform hover:scale-105 shadow-lg"
+            className="bg-white text-[#004d40] px-8 py-3 rounded-xl font-bold text-lg hover:bg-[#FFE0B2] transition-all transform hover:scale-105 shadow-lg"
           >
             Enter Site (Testers & Clients)
           </button>

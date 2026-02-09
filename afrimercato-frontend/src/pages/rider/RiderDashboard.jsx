@@ -250,11 +250,12 @@ function RiderDashboard() {
             <p className="font-semibold text-gray-900 mt-2">Profile</p>
           </button>
           <button
-            onClick={() => navigate('/rider/support')}
-            className="bg-white rounded-xl shadow-lg p-4 text-center hover:shadow-xl transition-shadow"
+            disabled
+            title="Support feature coming soon"
+            className="bg-gray-100 rounded-xl shadow-lg p-4 text-center cursor-not-allowed opacity-60"
           >
             <span className="text-3xl">🆘</span>
-            <p className="font-semibold text-gray-900 mt-2">Support</p>
+            <p className="font-semibold text-gray-600 mt-2">Support (Coming Soon)</p>
           </button>
         </div>
 

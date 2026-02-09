@@ -1,23 +1,37 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById } from '../../services/api'
+import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
-// Get API Base URL
-const API_BASE_URL = (() => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  return isLocalhost ? 'http://localhost:5000' : 'https://afrimercato-backend.fly.dev'
-})()
+// Helper: check if user has customer role (supports both roles array and role string)
+const isCustomerRole = (user) => {
+  if (!user) return false
+  if (Array.isArray(user.roles) && user.roles.includes('customer')) return true
+  if (user.role === 'customer') return true
+  if (user.primaryRole === 'customer') return true
+  return false
+}
 
 function Checkout() {
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
 
+  // Stable reference to avoid re-triggering effects when user object ref changes
+  const isCustomer = useMemo(() => isCustomerRole(user), [user?.role, user?.roles, user?.primaryRole])
+
   const [cart, setCart] = useState([])
   const [step, setStep] = useState(1) // 1: Address, 2: Payment, 3: Confirm
   const [loading, setLoading] = useState(false)
   const [cartLoading, setCartLoading] = useState(true)
+  const [vendor, setVendor] = useState(null)
+
+  // Repurchase state — non-blocking, optional UX
+  const [repurchaseItems, setRepurchaseItems] = useState([])
+  const [repurchaseLoading, setRepurchaseLoading] = useState(false)
+  const [repurchaseError, setRepurchaseError] = useState(false)
+  const [emailVerificationError, setEmailVerificationError] = useState(false)
+  const [resendingEmail, setResendingEmail] = useState(false)
 
   // Address form
   const [address, setAddress] = useState({
@@ -35,28 +49,25 @@ function Checkout() {
     saveCard: false
   })
 
+  // Load cart — critical path, has fallback to localStorage
   useEffect(() => {
     const loadCart = async () => {
       setCartLoading(true)
 
-      // If not logged in, redirect to login
       if (!isAuthenticated) {
         localStorage.setItem('checkout_redirect', 'true')
         navigate('/login')
         return
       }
 
-      // Cart/checkout is customer-only — skip API call for other roles
-      if (!user?.roles?.includes('customer')) {
+      if (!isCustomer) {
         setCartLoading(false)
         return
       }
 
       try {
-        // Load from backend when authenticated
         const response = await cartAPI.get()
         if (response.success && response.data && response.data.length > 0) {
-          // Transform backend cart format to checkout format
           const backendCart = response.data.map(item => ({
             _id: item.productId?.toString() || item.productId,
             name: item.name || 'Product',
@@ -68,7 +79,6 @@ function Checkout() {
           }))
           setCart(backendCart)
         } else {
-          // Fallback to localStorage if backend cart is empty
           const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
           if (savedCart.length > 0) {
             setCart(savedCart)
@@ -77,8 +87,9 @@ function Checkout() {
           }
         }
       } catch (error) {
-        console.error('Failed to load cart:', error)
-        // Fallback to localStorage
+        if (import.meta.env.DEV) {
+          console.warn('Cart load failed, using localStorage fallback:', error.message)
+        }
         const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
         if (savedCart.length > 0) {
           setCart(savedCart)
@@ -91,7 +102,89 @@ function Checkout() {
     }
 
     loadCart()
-  }, [isAuthenticated, navigate])
+  }, [isAuthenticated, isCustomer])
+
+  // Load repurchase items — NON-BLOCKING, never delays checkout
+  useEffect(() => {
+    if (!isAuthenticated || !isCustomer) return
+
+    const loadRepurchaseItems = async () => {
+      setRepurchaseLoading(true)
+      setRepurchaseError(false)
+
+      try {
+        const response = await checkoutAPI.getRepurchaseItems()
+        if (response.success && response.data && response.data.length > 0) {
+          // Extract unique items from last 3 orders, limit to 5 items
+          const itemMap = new Map()
+          for (const order of response.data.slice(0, 3)) {
+            for (const item of (order.items || [])) {
+              const key = item.product?._id || item.product
+              if (!itemMap.has(key) && itemMap.size < 5) {
+                itemMap.set(key, {
+                  _id: key,
+                  name: item.name || item.product?.name || 'Product',
+                  price: item.price,
+                  quantity: 1,
+                  unit: item.unit || 'piece',
+                  images: item.product?.images
+                })
+              }
+            }
+          }
+          const items = Array.from(itemMap.values())
+          setRepurchaseItems(items)
+          // Cache to localStorage for fallback
+          try {
+            localStorage.setItem('afrimercato_last_order_items', JSON.stringify(items))
+          } catch { /* localStorage full — ignore */ }
+        }
+      } catch (error) {
+        // Backend failed — try localStorage fallback
+        setRepurchaseError(true)
+        try {
+          const cached = JSON.parse(localStorage.getItem('afrimercato_last_order_items') || '[]')
+          if (cached.length > 0) {
+            setRepurchaseItems(cached.slice(0, 5))
+          }
+        } catch { /* corrupt cache — ignore */ }
+
+        if (import.meta.env.DEV) {
+          console.warn('Repurchase load failed (non-blocking):', error.message)
+        }
+      } finally {
+        setRepurchaseLoading(false)
+      }
+    }
+
+    loadRepurchaseItems()
+  }, [isAuthenticated, isCustomer])
+
+  // Fetch vendor data when cart loads
+  useEffect(() => {
+    const fetchVendorData = async () => {
+      if (cart.length === 0) {
+        setVendor(null)
+        return
+      }
+
+      const vendorInfo = getCartVendorInfo(cart)
+      if (!vendorInfo || !vendorInfo.vendorId) return
+
+      try {
+        const response = await getVendorById(vendorInfo.vendorId)
+        if (response.success && response.data) {
+          setVendor(response.data)
+        } else if (response.storeName) {
+          setVendor(response)
+        }
+      } catch (error) {
+        console.log('Vendor fetch failed:', error.message)
+      }
+    }
+
+    fetchVendorData()
+  }, [cart])
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const deliveryFee = cartTotal >= 50 ? 0 : 5
@@ -107,13 +200,8 @@ function Checkout() {
     setLoading(true)
 
     try {
-      // Get repeat purchase frequency from localStorage
       const repeatPurchaseFrequency = localStorage.getItem('repeatPurchaseFrequency')
-      if (process.env.NODE_ENV === 'development') {
-        console.log('[Checkout] Placing order with repeat frequency:', repeatPurchaseFrequency);
-      }
 
-      // Prepare order data
       const orderData = {
         items: cart.map(item => ({
           product: item._id,
@@ -132,58 +220,108 @@ function Checkout() {
           deliveryFee,
           total
         },
-        // Include repeat purchase frequency if selected
         ...(repeatPurchaseFrequency && { repeatPurchaseFrequency })
       }
 
-      // Call checkout API
-      const response = await fetch(`${API_BASE_URL}/api/checkout/payment/initialize`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
-        },
-        body: JSON.stringify(orderData)
-      })
-
-      const data = await response.json()
+      // Use centralized API with 8s timeout + token refresh
+      const data = await checkoutAPI.initializePayment(orderData)
 
       if (data.success) {
-        // Clear cart and repeat purchase preference
+        // Cache current order items for future repurchase
+        try {
+          localStorage.setItem('afrimercato_last_order_items', JSON.stringify(
+            cart.slice(0, 5).map(item => ({
+              _id: item._id,
+              name: item.name,
+              price: item.price,
+              quantity: item.quantity,
+              unit: item.unit,
+              images: item.images
+            }))
+          ))
+        } catch { /* localStorage full — ignore */ }
+
         localStorage.removeItem('afrimercato_cart')
         localStorage.removeItem('repeatPurchaseFrequency')
 
-        // If card payment, redirect to Stripe Checkout
         if (payment.method === 'card' && data.data.payment?.url) {
-          // Store order ID for verification callback
           localStorage.setItem('pending_order_id', data.data.order._id)
-          // Redirect to Stripe Checkout page
           window.location.href = data.data.payment.url
         } else {
-          // For cash on delivery, redirect to order confirmation
           navigate(`/order-confirmation/${data.data.order._id}`)
         }
       } else {
-        alert('Order failed: ' + data.message)
+        alert('Order failed: ' + (data.message || 'Unknown error'))
       }
     } catch (error) {
-      console.error('Order error:', error)
-      alert('Failed to place order. Please try again.')
+      const msg = error.message || 'Failed to place order'
+      
+      // Check for email verification error
+      if (error.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
+        setEmailVerificationError(true)
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+      
+      if (msg.includes('timed out')) {
+        alert('The server is taking longer than expected. Please try again.')
+      } else {
+        alert('Failed to place order. Please try again.')
+      }
+      if (import.meta.env.DEV) {
+        console.error('Order error:', error)
+      }
     } finally {
       setLoading(false)
     }
   }
 
+  const handleResendVerification = async () => {
+    setResendingEmail(true)
+    try {
+      const token = localStorage.getItem('token')
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      })
+      const data = await response.json()
+      
+      if (data.success) {
+        alert('Verification email sent! Please check your inbox.')
+      } else {
+        alert(data.message || 'Failed to send verification email')
+      }
+    } catch (error) {
+      alert('Failed to resend verification email. Please try again.')
+    } finally {
+      setResendingEmail(false)
+    }
+  }
+
+  const handleAddRepurchaseItem = (item) => {
+    setCart(prev => {
+      const exists = prev.find(c => c._id === item._id)
+      if (exists) {
+        return prev.map(c => c._id === item._id ? { ...c, quantity: c.quantity + 1 } : c)
+      }
+      return [...prev, { ...item, quantity: 1 }]
+    })
+  }
+
   // Role mismatch — vendor/rider/picker trying to shop
-  if (isAuthenticated && !user?.roles?.includes('customer')) {
-    const currentRole = user?.roles?.includes('vendor') ? 'Vendor'
-      : user?.roles?.includes('rider') ? 'Rider'
-      : user?.roles?.includes('picker') ? 'Picker'
-      : user?.roles?.includes('admin') ? 'Admin'
+  if (isAuthenticated && !isCustomer) {
+    const effectiveRole = user?.role || (Array.isArray(user?.roles) && user.roles[0]) || 'unknown'
+    const currentRole = effectiveRole === 'vendor' ? 'Vendor'
+      : effectiveRole === 'rider' ? 'Rider'
+      : effectiveRole === 'picker' ? 'Picker'
+      : effectiveRole === 'admin' ? 'Admin'
       : 'Non-Customer'
-    const roleIcon = user?.roles?.includes('vendor') ? '🏪'
-      : user?.roles?.includes('rider') ? '🏍️'
-      : user?.roles?.includes('picker') ? '📦' : '⚠️'
+    const roleIcon = effectiveRole === 'vendor' ? '🏪'
+      : effectiveRole === 'rider' ? '🏍️'
+      : effectiveRole === 'picker' ? '📦' : '⚠️'
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
@@ -200,6 +338,7 @@ function Checkout() {
               Please sign in with a Customer account to continue.
             </p>
             <button
+              type="button"
               onClick={() => {
                 localStorage.removeItem('afrimercato_token')
                 navigate('/login')
@@ -209,6 +348,7 @@ function Checkout() {
               Sign in as Customer
             </button>
             <button
+              type="button"
               onClick={() => navigate(-1)}
               className="w-full text-gray-500 hover:text-gray-700 py-2 font-medium transition-colors"
             >
@@ -235,7 +375,7 @@ function Checkout() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white border-b sticky top-0 z-50 shadow-sm">
+      <header className="bg-white border-b sticky top-0 z-40 shadow-sm">
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -243,6 +383,7 @@ function Checkout() {
               <span className="text-base sm:text-xl font-bold text-gray-900">Afrimercato Checkout</span>
             </div>
             <button
+              type="button"
               onClick={() => navigate(-1)}
               className="text-gray-600 hover:text-gray-900 min-h-[44px] min-w-[44px] flex items-center justify-center"
             >
@@ -252,11 +393,45 @@ function Checkout() {
         </div>
       </header>
 
+      {/* Email Verification Error Banner */}
+      {emailVerificationError && (
+        <div className="bg-red-50 border-b-4 border-red-500">
+          <div className="container mx-auto px-4 sm:px-6 py-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg className="w-6 h-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-bold text-red-900 mb-1">Email Verification Required</h3>
+                <p className="text-red-800 mb-3">Please verify your email address before placing an order. Check your inbox for the verification link.</p>
+                <div className="flex flex-wrap gap-3">
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={resendingEmail}
+                    className="bg-red-600 hover:bg-red-700 disabled:bg-red-300 text-white px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    {resendingEmail ? 'Sending...' : 'Resend Verification Email'}
+                  </button>
+                  <button
+                    onClick={() => setEmailVerificationError(false)}
+                    className="bg-white border border-red-300 hover:bg-red-50 text-red-800 px-4 py-2 rounded-lg font-semibold text-sm transition-colors"
+                  >
+                    Dismiss
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-3 sm:px-6 py-4 sm:py-8">
         <div className="grid lg:grid-cols-3 gap-4 sm:gap-8">
           {/* Left: Checkout Form */}
           <div className="lg:col-span-2">
-            {/* Progress Steps - Hidden on mobile for single-page experience */}
+            {/* Progress Steps */}
             <div className="hidden sm:flex items-center justify-between mb-8">
               <div className={`flex items-center ${step >= 1 ? 'text-green-600' : 'text-gray-400'}`}>
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${step >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200'}`}>
@@ -389,66 +564,64 @@ function Checkout() {
             {step === 2 && (
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Method</h2>
-                <form onSubmit={() => setStep(3)}>
-                  <div className="space-y-4 mb-6">
-                    <div
-                      onClick={() => setPayment({ ...payment, method: 'card' })}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                        payment.method === 'card' ? 'border-green-600 bg-green-50' : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={payment.method === 'card'}
-                          onChange={() => setPayment({ ...payment, method: 'card' })}
-                          className="mr-3"
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-900">💳 Card Payment</div>
-                          <div className="text-sm text-gray-600">Pay securely with Stripe</div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div
-                      onClick={() => setPayment({ ...payment, method: 'cash' })}
-                      className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                        payment.method === 'cash' ? 'border-green-600 bg-green-50' : 'border-gray-200'
-                      }`}
-                    >
-                      <div className="flex items-center">
-                        <input
-                          type="radio"
-                          checked={payment.method === 'cash'}
-                          onChange={() => setPayment({ ...payment, method: 'cash' })}
-                          className="mr-3"
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-900">💵 Cash on Delivery</div>
-                          <div className="text-sm text-gray-600">Pay when you receive your order</div>
-                        </div>
+                <div className="space-y-4 mb-6">
+                  <div
+                    onClick={() => setPayment({ ...payment, method: 'card' })}
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+                      payment.method === 'card' ? 'border-green-600 bg-green-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        checked={payment.method === 'card'}
+                        onChange={() => setPayment({ ...payment, method: 'card' })}
+                        className="mr-3"
+                      />
+                      <div>
+                        <div className="font-semibold text-gray-900">💳 Card Payment</div>
+                        <div className="text-sm text-gray-600">Pay securely with Stripe</div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex gap-4">
-                    <button
-                      type="button"
-                      onClick={() => setStep(1)}
-                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
-                    >
-                      ← Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setStep(3)}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px]"
-                    >
-                      Review Order →
-                    </button>
+                  <div
+                    onClick={() => setPayment({ ...payment, method: 'cash' })}
+                    className={`border-2 rounded-lg p-4 cursor-pointer transition ${
+                      payment.method === 'cash' ? 'border-green-600 bg-green-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <input
+                        type="radio"
+                        checked={payment.method === 'cash'}
+                        onChange={() => setPayment({ ...payment, method: 'cash' })}
+                        className="mr-3"
+                      />
+                      <div>
+                        <div className="font-semibold text-gray-900">💵 Cash on Delivery</div>
+                        <div className="text-sm text-gray-600">Pay when you receive your order</div>
+                      </div>
+                    </div>
                   </div>
-                </form>
+                </div>
+
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
+                  >
+                    ← Back
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setStep(3)}
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px]"
+                  >
+                    Review Order →
+                  </button>
+                </div>
               </div>
             )}
 
@@ -472,6 +645,7 @@ function Checkout() {
                     </p>
                   )}
                   <button
+                    type="button"
                     onClick={() => setStep(1)}
                     className="text-green-600 text-sm font-semibold mt-2 hover:underline"
                   >
@@ -486,6 +660,7 @@ function Checkout() {
                     {payment.method === 'card' ? '💳 Card Payment (Stripe)' : '💵 Cash on Delivery'}
                   </p>
                   <button
+                    type="button"
                     onClick={() => setStep(2)}
                     className="text-green-600 text-sm font-semibold mt-2 hover:underline"
                   >
@@ -507,9 +682,6 @@ function Checkout() {
                 {/* Repurchase Options Display */}
                 {(() => {
                   const savedFrequency = localStorage.getItem('repeatPurchaseFrequency');
-                  if (process.env.NODE_ENV === 'development') {
-                    console.log('[Checkout] Repurchase frequency from localStorage:', savedFrequency);
-                  }
                   return savedFrequency ? (
                     <div className="mb-6 pb-6 border-b">
                       <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -555,6 +727,53 @@ function Checkout() {
                   );
                 })()}
 
+                {/* Repurchase from previous orders — non-blocking */}
+                <div className="mb-6 pb-6 border-b">
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <span>🛍️</span>
+                    Buy Again
+                  </h3>
+                  {repurchaseLoading ? (
+                    <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                      Loading your previous items...
+                    </div>
+                  ) : repurchaseItems.length > 0 ? (
+                    <div className="space-y-2">
+                      {repurchaseItems.slice(0, 5).map((item) => {
+                        const alreadyInCart = cart.some(c => c._id === item._id)
+                        return (
+                          <div key={item._id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                            <div>
+                              <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                              <p className="text-xs text-gray-500">£{item.price?.toFixed(2)} / {item.unit || 'piece'}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => handleAddRepurchaseItem(item)}
+                              disabled={alreadyInCart}
+                              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                                alreadyInCart
+                                  ? 'bg-gray-200 text-gray-400 cursor-default'
+                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                              }`}
+                            >
+                              {alreadyInCart ? 'In Cart' : '+ Add'}
+                            </button>
+                          </div>
+                        )
+                      })}
+                      {repurchaseError && (
+                        <p className="text-xs text-gray-400 mt-1">Showing cached items (offline mode)</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 py-2">
+                      No previous orders yet. Your past items will appear here for quick reordering.
+                    </p>
+                  )}
+                </div>
+
                 <form onSubmit={handlePlaceOrder}>
                   <div className="flex gap-4">
                     <button
@@ -566,10 +785,32 @@ function Checkout() {
                     </button>
                     <button
                       type="submit"
-                      disabled={loading}
-                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition disabled:opacity-50 min-h-[44px]"
+                      disabled={loading || (() => {
+                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                        return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
+                      })()}
+                      className={`flex-1 py-3 rounded-lg font-bold transition min-h-[44px] ${
+                        (() => {
+                          const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                          const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                          if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                            return 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          }
+                          return loading 
+                            ? 'bg-gradient-to-r from-green-600 to-green-700 text-white opacity-50'
+                            : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg'
+                        })()
+                      }`}
                     >
-                      {loading ? 'Placing Order...' : `Place Order (£${total.toFixed(2)})`}
+                      {loading ? 'Placing Order...' : (() => {
+                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                        if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                          return `Add £${minCheck.shortfall.toFixed(2)} more`
+                        }
+                        return `Place Order (£${total.toFixed(2)})`
+                      })()}
                     </button>
                   </div>
                 </form>
@@ -579,13 +820,12 @@ function Checkout() {
 
           {/* Right: Order Summary */}
           <div className="lg:col-span-1">
-            <div className="bg-white rounded-xl shadow-md p-6 sticky top-24">
+            <div className="bg-white rounded-xl shadow-md p-6 sticky top-20">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
 
               {/* Items */}
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
                 {cart.map((item) => {
-                  // Handle both string array and object array formats for images
                   const imageUrl = item.images?.[0]
                     ? (typeof item.images[0] === 'string' ? item.images[0] : item.images[0]?.url)
                     : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80';
@@ -623,6 +863,35 @@ function Checkout() {
                 {cartTotal >= 50 && (
                   <p className="text-xs text-green-600">🎉 Free delivery on orders over £50</p>
                 )}
+                
+                {/* Minimum Order Check */}
+                {(() => {
+                  const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                  const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                  
+                  if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                    return (
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
+                        <p className="text-sm text-red-800 font-semibold">
+                          ⚠️ Minimum order: £{minCheck.minimumOrder.toFixed(2)}
+                        </p>
+                        <p className="text-xs text-red-700 mt-1">
+                          Add £{minCheck.shortfall.toFixed(2)} more items to place order
+                        </p>
+                      </div>
+                    )
+                  } else if (minCheck.minimumOrder > 0) {
+                    return (
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-2 mt-2">
+                        <p className="text-xs text-green-700">
+                          ✓ Minimum order requirement met
+                        </p>
+                      </div>
+                    )
+                  }
+                  return null
+                })()}
+                
                 <div className="flex justify-between text-xl font-bold text-gray-900 border-t pt-2">
                   <span>Total</span>
                   <span>£{total.toFixed(2)}</span>

@@ -12,6 +12,23 @@ export default function StoresPage() {
   const [stores, setStores] = useState([])
   const [loading, setLoading] = useState(true)
   const [searchLocation, setSearchLocation] = useState(location)
+  const [showSuggestions, setShowSuggestions] = useState(false)
+  const [isTyping, setIsTyping] = useState(false)
+
+  // UK cities for autocomplete
+  const ukCities = [
+    'London', 'Birmingham', 'Manchester', 'Leeds', 'Liverpool', 'Bristol',
+    'Sheffield', 'Edinburgh', 'Glasgow', 'Newcastle', 'Nottingham', 
+    'Leicester', 'Southampton', 'Cardiff', 'Belfast', 'Brighton',
+    'Hull', 'Bradford', 'Coventry', 'Wolverhampton'
+  ]
+
+  // Filter suggestions based on input
+  const suggestions = searchLocation
+    ? ukCities.filter(city => 
+        city.toLowerCase().startsWith(searchLocation.toLowerCase())
+      )
+    : []
 
   useEffect(() => {
     fetchStores()
@@ -112,9 +129,25 @@ export default function StoresPage() {
 
   const handleSearch = (e) => {
     e.preventDefault()
+    setShowSuggestions(false)
     if (searchLocation.trim()) {
       navigate(`/stores?location=${encodeURIComponent(searchLocation)}`)
     }
+  }
+
+  const handleSuggestionClick = (city) => {
+    setSearchLocation(city)
+    setShowSuggestions(false)
+    navigate(`/stores?location=${encodeURIComponent(city)}`)
+  }
+
+  const handleInputChange = (e) => {
+    setSearchLocation(e.target.value)
+    setIsTyping(true)
+    setShowSuggestions(true)
+    
+    // Debounce typing indicator
+    setTimeout(() => setIsTyping(false), 500)
   }
 
   return (
@@ -146,24 +179,49 @@ export default function StoresPage() {
           <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4 text-center">
             Find African Stores Near You
           </h1>
-          <form onSubmit={handleSearch} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-3 flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3">
-              <MapPinIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
-              <input
-                type="text"
-                value={searchLocation}
-                onChange={(e) => setSearchLocation(e.target.value)}
-                placeholder="Enter location (London, Manchester, Birmingham...)"
-                className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500"
-              />
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto bg-white rounded-2xl shadow-2xl p-3">
+            <div className="flex flex-col sm:flex-row gap-3 relative">
+              <div className="flex-1 flex items-center gap-3 bg-gray-50 rounded-xl px-4 py-3 relative">
+                <MapPinIcon className="w-6 h-6 text-green-600 flex-shrink-0" />
+                <input
+                  type="text"
+                  value={searchLocation}
+                  onChange={handleInputChange}
+                  onFocus={() => setShowSuggestions(true)}
+                  onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                  placeholder="Enter location (London, Manchester, Birmingham...)"
+                  className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500"
+                  autoComplete="off"
+                />
+                {isTyping && (
+                  <div className="animate-pulse text-gray-400 text-sm">Searching...</div>
+                )}
+              </div>
+              <button
+                type="submit"
+                className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2 transition-all"
+              >
+                <MagnifyingGlassIcon className="w-5 h-5" />
+                Search
+              </button>
+              
+              {/* Autocomplete Suggestions */}
+              {showSuggestions && suggestions.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                  {suggestions.map((city) => (
+                    <button
+                      key={city}
+                      type="button"
+                      onClick={() => handleSuggestionClick(city)}
+                      className="w-full text-left px-4 py-3 hover:bg-green-50 flex items-center gap-3 transition-colors border-b border-gray-100 last:border-0"
+                    >
+                      <MapPinIcon className="w-5 h-5 text-green-600" />
+                      <span className="text-gray-900 font-medium">{city}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
-            <button
-              type="submit"
-              className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-8 py-3 rounded-xl font-bold shadow-lg flex items-center justify-center gap-2"
-            >
-              <MagnifyingGlassIcon className="w-5 h-5" />
-              Search
-            </button>
           </form>
         </div>
       </section>

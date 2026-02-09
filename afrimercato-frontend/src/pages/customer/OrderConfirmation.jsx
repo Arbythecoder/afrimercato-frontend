@@ -1,40 +1,42 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-
-// Get API Base URL
-const API_BASE_URL = (() => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  return isLocalhost ? 'http://localhost:5000' : 'https://afrimercato-backend.fly.dev'
-})()
+import { orderAPI } from '../../services/api'
 
 function OrderConfirmation() {
   const { orderId } = useParams()
   const navigate = useNavigate()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     const fetchOrder = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
-          headers: {
-            'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
-          }
-        })
-        const data = await response.json()
-        if (data.success) {
-          setOrder(data.data)
+        setError(null)
+        const response = await orderAPI.getById(orderId)
+        if (response.success) {
+          setOrder(response.data)
+        } else {
+          setError(response.message || 'Failed to load order')
         }
       } catch (error) {
         console.error('Error fetching order:', error)
+        // Check for timeout error
+        if (error.message === 'Request timed out') {
+          setError('Request timed out. Please check your connection and try again.')
+        } else if (error.code === 'AUTH_EXPIRED') {
+          setError('Session expired. Please log in again.')
+          setTimeout(() => navigate('/login'), 2000)
+        } else {
+          setError(error.message || 'Failed to load order. Please try again.')
+        }
       } finally {
         setLoading(false)
       }
     }
 
     fetchOrder()
-  }, [orderId])
+  }, [orderId, navigate])
 
   if (loading) {
     return (
@@ -42,6 +44,32 @@ function OrderConfirmation() {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-600 mx-auto"></div>
           <p className="text-gray-600 mt-4">Loading order...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center max-w-md mx-auto px-4">
+          <p className="text-4xl mb-4">⚠️</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Order</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <div className="flex gap-4 justify-center">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+            >
+              Try Again
+            </button>
+            <Link
+              to="/my-dashboard"
+              className="bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300 transition"
+            >
+              My Orders
+            </Link>
+          </div>
         </div>
       </div>
     )

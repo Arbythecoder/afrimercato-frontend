@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
 const { validateAddress } = require('../middleware/locationValidator');
 const {
   previewOrder,
@@ -18,8 +18,8 @@ const {
   initializePayment
 } = require('../controllers/checkoutController');
 
-// All checkout routes require customer authentication
-router.use(protect, authorize('customer'));
+// All checkout routes require customer authentication AND email verification
+router.use(protect, authorize('customer'), requireEmailVerified);
 
 router.post('/preview', validateAddress, previewOrder);
 router.post('/process', validateAddress, processCheckout);

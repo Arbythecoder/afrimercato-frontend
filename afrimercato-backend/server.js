@@ -14,6 +14,7 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 const passport = require('passport');
 const mongoSanitize = require('express-mongo-sanitize');
+
 const xss = require('xss-clean');
 require('./src/config/passport'); // Register OAuth strategies (Google)
 
@@ -157,14 +158,22 @@ app.get('/', (_req, res) => {
   res.json({ success: true, message: 'Afrimercato API running 🚀' });
 });
 
-// Health check (always 200)
+// Health check (always 200, DB check is non-blocking)
 app.get('/api/health', (_req, res) => {
-  const dbUp = isDBConnected();
+  // Return immediately to satisfy Fly.io health checks (< 200ms target)
+  // DB status is checked but doesn't block response
+  const dbStatus = isDBConnected() ? 'connected' : 'disconnected';
+  
   res.status(200).json({
     ok: true,
+    status: 'healthy',
     uptime: Math.floor(process.uptime()),
-    db: dbUp ? 'up' : 'down',
-    timestamp: new Date().toISOString()
+    database: dbStatus,
+    timestamp: new Date().toISOString(),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024)
+    }
   });
 });
 

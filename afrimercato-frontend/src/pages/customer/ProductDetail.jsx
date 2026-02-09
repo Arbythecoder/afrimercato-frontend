@@ -3,6 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { productAPI, customerAPI, cartAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
+import { checkVendorLock } from '../../utils/cartVendorLock'
+import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
 
 function ProductDetail() {
   const { productId } = useParams()
@@ -15,6 +17,13 @@ function ProductDetail() {
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [relatedProducts, setRelatedProducts] = useState([])
   const [addingToCart, setAddingToCart] = useState(false)
+  const [vendorSwitchModal, setVendorSwitchModal] = useState({
+    isOpen: false,
+    currentStoreName: '',
+    newStoreName: '',
+    pendingProduct: null,
+    pendingQuantity: 1
+  })
 
   useEffect(() => {
     fetchProduct()
@@ -49,29 +58,77 @@ function ProductDetail() {
   const addToCart = async () => {
     setAddingToCart(true)
     try {
-      if (isAuthenticated) {
-        // Use backend cart API for authenticated users
-        await cartAPI.add(product._id, quantity)
-      } else {
-        // Use localStorage for guests
-        const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-        const existingIndex = cart.findIndex(item => item._id === product._id)
-
-        if (existingIndex >= 0) {
-          cart[existingIndex].quantity += quantity
-        } else {
-          cart.push({ ...product, quantity })
-        }
-
-        localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
+      // Get current cart
+      const currentCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+      
+      // Check vendor lock
+      const lockCheck = checkVendorLock(product, currentCart)
+      
+      if (lockCheck.needsConfirmation) {
+        // Show modal
+        setVendorSwitchModal({
+          isOpen: true,
+          currentStoreName: lockCheck.currentVendorName,
+          newStoreName: lockCheck.newVendorName,
+          pendingProduct: product,
+          pendingQuantity: quantity
+        })
+        setAddingToCart(false)
+        return
       }
-      window.dispatchEvent(new Event('cartUpdated'))
-      alert(`${product.name} added to cart!`)
+
+      // Proceed with adding
+      await performAddToCart(product, quantity)
     } catch (error) {
       console.error('Error adding to cart:', error)
       alert('Failed to add to cart. Please try again.')
     } finally {
       setAddingToCart(false)
+    }
+  }
+
+  const performAddToCart = async (prod, qty) => {
+    try {
+      if (isAuthenticated) {
+        // Use backend cart API for authenticated users
+        await cartAPI.add(prod._id, qty)
+      } else {
+        // Use localStorage for guests
+        const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        const existingIndex = cart.findIndex(item => item._id === prod._id)
+
+        if (existingIndex >= 0) {
+          cart[existingIndex].quantity += qty
+        } else {
+          cart.push({ ...prod, quantity: qty })
+        }
+
+        localStorage.setItem('afrimercato_cart', JSON.stringify(cart))
+      }
+      window.dispatchEvent(new Event('cartUpdated'))
+      alert(`${prod.name} added to cart!`)
+    } catch (error) {
+      throw error
+    }
+  }
+
+  const handleVendorSwitch = async () => {
+    // Clear cart
+    localStorage.setItem('afrimercato_cart', JSON.stringify([]))
+    if (isAuthenticated) {
+      try {
+        await cartAPI.clear()
+      } catch (error) {
+        console.log('Backend cart clear deferred:', error.message)
+      }
+    }
+    
+    // Add new product
+    if (vendorSwitchModal.pendingProduct) {
+      await performAddToCart(
+        vendorSwitchModal.pendingProduct,
+        vendorSwitchModal.pendingQuantity
+      )
     }
   }
 
@@ -374,6 +431,15 @@ function ProductDetail() {
           </div>
         )}
       </div>
+
+      {/* Vendor Switch Modal */}
+      <VendorSwitchModal
+        isOpen={vendorSwitchModal.isOpen}
+        onClose={() => setVendorSwitchModal({ ...vendorSwitchModal, isOpen: false })}
+        currentStoreName={vendorSwitchModal.currentStoreName}
+        newStoreName={vendorSwitchModal.newStoreName}
+        onConfirmSwitch={handleVendorSwitch}
+      />
     </div>
   )
 }

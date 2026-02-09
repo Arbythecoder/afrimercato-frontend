@@ -218,5 +218,7 @@ vendorSchema.index({ category: 1, isActive: 1 });
 vendorSchema.index({ approvalStatus: 1 });
 vendorSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
 vendorSchema.index({ 'location.coordinates.coordinates': '2dsphere' }); // Geospatial index
+vendorSchema.index({ 'location.city': 1 }); // CRITICAL: Enable fast city-based store search
+vendorSchema.index({ isActive: 1, isVerified: 1, approvalStatus: 1 }); // Compound index for common queries
 
 module.exports = mongoose.model('Vendor', vendorSchema);

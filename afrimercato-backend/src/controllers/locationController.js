@@ -26,8 +26,12 @@ exports.searchVendors = asyncHandler(async (req, res) => {
   }
 
   try {
-    // Geocode the search query to get lat/lng
-    const geocoded = await geocode(searchQuery);
+    // Geocode the search query to get lat/lng with timeout
+    const geocodePromise = geocode(searchQuery);
+    const timeoutPromise = new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Geocoding timeout')), 5000)
+    );
+    const geocoded = await Promise.race([geocodePromise, timeoutPromise]);
 
     if (!geocoded) {
       // Location is invalid or not found
@@ -48,13 +52,14 @@ exports.searchVendors = asyncHandler(async (req, res) => {
     const { lat, lng, displayName } = geocoded;
     const normalizedLabel = getNormalizedLabel(displayName);
 
-    // Build vendor query
+    // Build vendor query with case-insensitive city matching
     const vendorQuery = {
       isVerified: true,
       isActive: true,
       isPublic: true,
       approvalStatus: 'approved',
-      'location.coordinates.coordinates': { $exists: true } // Must have coordinates
+      'location.coordinates.coordinates': { $exists: true }, // Must have coordinates
+      'location.city': new RegExp(searchQuery.trim(), 'i') // CRITICAL: Case-insensitive city search
     };
 
     // Add category filter if provided
@@ -64,6 +69,8 @@ exports.searchVendors = asyncHandler(async (req, res) => {
 
     // Find vendors within radius using geospatial query
     const radiusInMeters = radiusKm * 1000;
+    const maxLimit = Math.min(parseInt(limit), 50); // Cap at 50 results
+    
     const vendors = await Vendor.find({
       ...vendorQuery,
       'location.coordinates.coordinates': {
@@ -76,8 +83,10 @@ exports.searchVendors = asyncHandler(async (req, res) => {
         }
       }
     })
-      .select('storeName description category location phone logo rating stats businessHours deliverySettings currency')
-      .limit(parseInt(limit));
+      .select('storeName description category location.city location.address phone logo rating stats.totalOrders businessHours.isOpen deliverySettings.estimatedPrepTime deliverySettings.minimumOrderValue currency')
+      .limit(maxLimit)
+      .maxTimeMS(8000) // 8s timeout
+      .lean(); // Return plain JS objects for better performance
 
     // Format vendors for frontend
     const formattedVendors = vendors.map(vendor => ({
@@ -116,6 +125,23 @@ exports.searchVendors = asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Search vendors error:', error);
 
+    // Handle timeout errors gracefully
+    if (error.code === 50 || error.message?.includes('timeout')) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        data: {
+          vendors: [],
+          location: {
+            query: searchQuery,
+            normalized: null,
+            found: false,
+            error: 'Search timed out. Please try a different location or try again.'
+          }
+        }
+      });
+    }
+
     // Return empty result with error details (graceful degradation)
     res.status(200).json({
       success: true,
@@ -151,16 +177,20 @@ exports.browseAllVendors = asyncHandler(async (req, res) => {
     query.category = new RegExp(category, 'i');
   }
 
-  const skip = (parseInt(page) - 1) * parseInt(limit);
+  const maxLimit = Math.min(parseInt(limit), 100); // Cap at 100
+  const skip = (parseInt(page) - 1) * maxLimit;
 
-  const [vendors, total] = await Promise.all([
-    Vendor.find(query)
-      .select('storeName description category location phone logo rating stats businessHours deliverySettings currency')
-      .sort({ rating: -1, 'stats.totalOrders': -1 })
-      .skip(skip)
-      .limit(parseInt(limit)),
-    Vendor.countDocuments(query)
-  ]);
+  try {
+    const [vendors, total] = await Promise.all([
+      Vendor.find(query)
+        .select('storeName description category location.city location.address phone logo rating stats.totalOrders businessHours.isOpen deliverySettings.estimatedPrepTime deliverySettings.minimumOrderValue currency')
+        .sort({ rating: -1, 'stats.totalOrders': -1 })
+        .skip(skip)
+        .limit(maxLimit)
+        .maxTimeMS(8000)
+        .lean(),
+      Vendor.countDocuments(query).maxTimeMS(3000)
+    ]);
 
   const formattedVendors = vendors.map(vendor => ({
     id: vendor._id,
@@ -180,16 +210,30 @@ exports.browseAllVendors = asyncHandler(async (req, res) => {
     currency: vendor.currency || 'GBP'
   }));
 
-  res.status(200).json({
-    success: true,
-    count: formattedVendors.length,
-    total,
-    page: parseInt(page),
-    pages: Math.ceil(total / parseInt(limit)),
-    data: {
-      vendors: formattedVendors
+    res.status(200).json({
+      success: true,
+      count: formattedVendors.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / maxLimit),
+      data: {
+        vendors: formattedVendors
+      }
+    });
+  } catch (error) {
+    console.error('[BROWSE_VENDORS_ERROR]', error.message);
+    if (error.code === 50 || error.message?.includes('timeout')) {
+      return res.status(200).json({
+        success: true,
+        count: 0,
+        total: 0,
+        page: 1,
+        pages: 0,
+        data: { vendors: [] }
+      });
     }
-  });
+    throw error;
+  }
 });
 
 /**

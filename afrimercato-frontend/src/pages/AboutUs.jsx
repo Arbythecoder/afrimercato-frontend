@@ -96,7 +96,7 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Our Story */}
+      {/* Our Story — Full Brand Story */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -107,19 +107,29 @@ export default function AboutUs() {
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">Our Story</h2>
               <p className="text-gray-600 mb-4 text-lg leading-relaxed">
-                Afrimercato was born from a simple idea: to make authentic African products
-                accessible to everyone in the UK, no matter where they live.
+                Afrimercato was born from a simple but powerful observation.
               </p>
               <p className="text-gray-600 mb-4 text-lg leading-relaxed">
-                We noticed that many African communities struggled to find the products
-                they loved from home. Supermarkets often lacked variety, and specialty
-                stores were few and far between.
+                A Nigerian living abroad noticed how difficult it was for people outside Africa — and
+                even within Africa — to reliably access authentic African goods. Local stores struggled
+                with visibility. Customers struggled with trust and convenience. Delivery systems were
+                fragmented, expensive, or unfair.
               </p>
-              <p className="text-gray-600 text-lg leading-relaxed">
-                Today, we partner with over 4,320 vendors across the UK, bringing
-                fresh produce, authentic spices, and traditional products directly
-                to your doorstep. We're more than a marketplace - we're a bridge
-                connecting cultures and communities.
+              <p className="text-gray-600 mb-4 text-lg leading-relaxed">
+                Yet the demand was clear. And the businesses were ready — they just lacked the right
+                digital bridge.
+              </p>
+              <p className="text-[#00897B] mb-4 text-xl font-semibold leading-relaxed">
+                Afrimercato is that bridge.
+              </p>
+              <p className="text-gray-600 mb-4 text-lg leading-relaxed">
+                Afrimercato is not just another delivery app. It is a fair, flexible, multi-sided
+                marketplace designed to respect how African businesses already operate — while giving
+                them modern tools to grow.
+              </p>
+              <p className="text-gray-500 text-base italic leading-relaxed">
+                We are currently in a guided testing phase to ensure speed, reliability, and strong
+                foundations before scaling to new regions.
               </p>
             </motion.div>
             <motion.div
@@ -132,6 +142,7 @@ export default function AboutUs() {
                 src="https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600"
                 alt="African marketplace"
                 className="rounded-2xl shadow-2xl w-full h-96 object-cover"
+                loading="lazy"
               />
               <div className="absolute -bottom-6 -left-6 bg-[#00897B] text-white p-6 rounded-xl shadow-xl">
                 <p className="text-3xl font-bold">4,320+</p>
@@ -142,26 +153,63 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Values */}
+      {/* Vision & Mission */}
+      <section className="py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Vision & Mission</h2>
+          <div className="grid md:grid-cols-2 gap-12">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-8"
+            >
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
+              <p className="text-xl leading-relaxed">
+                To be the digital home where African and local businesses thrive — connecting stores,
+                customers, and communities worldwide.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.15 }}
+              className="bg-white/10 backdrop-blur-sm rounded-2xl p-8"
+            >
+              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
+              <p className="text-xl leading-relaxed">
+                Afrimercato empowers local and international merchants to sell, fulfil, and grow
+                through a fair, flexible, and trusted marketplace.
+              </p>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Who It's For */}
       <section className="py-20 bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">Our Values</h2>
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">Who It's For</h2>
+          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
+            Afrimercato serves every side of the marketplace — from the stores that sell, to the people who deliver, to the customers who enjoy.
+          </p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                icon: '🌍',
-                title: 'Community First',
-                description: 'We believe in supporting local businesses and connecting communities through food.'
+                icon: '🏪',
+                title: 'Stores',
+                description: 'You control your business, your delivery, your costs.'
               },
               {
-                icon: '✨',
-                title: 'Quality Always',
-                description: 'Every product on our platform meets strict quality standards for freshness and authenticity.'
+                icon: '🚴',
+                title: 'Riders & Pickers',
+                description: 'Work independently. Choose your stores. Pay only when you earn.'
               },
               {
-                icon: '🚚',
-                title: 'Reliable Delivery',
-                description: 'Fast, reliable delivery ensures your groceries arrive fresh at your doorstep.'
+                icon: '📈',
+                title: 'Investors',
+                description: 'Asset-light, multi-sided marketplace with global expansion potential.'
               }
             ].map((value, index) => (
               <motion.div
@@ -171,6 +219,45 @@ export default function AboutUs() {
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+              >
+                <div className="text-5xl mb-4">{value.icon}</div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{value.title}</h3>
+                <p className="text-gray-600">{value.description}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Values */}
+      <section className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">Our Values</h2>
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                icon: '🤝',
+                title: 'Fairness',
+                description: 'We build systems where every participant — store, rider, picker, and customer — is treated with respect and transparency.'
+              },
+              {
+                icon: '🌍',
+                title: 'Community First',
+                description: 'We believe in supporting local businesses and connecting communities through authentic African commerce.'
+              },
+              {
+                icon: '🔧',
+                title: 'Flexibility',
+                description: 'Our platform respects how African businesses already operate — and gives them modern tools to grow on their own terms.'
+              }
+            ].map((value, index) => (
+              <motion.div
+                key={value.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-gray-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
               >
                 <div className="text-5xl mb-4">{value.icon}</div>
                 <h3 className="text-xl font-bold text-gray-900 mb-3">{value.title}</h3>
@@ -291,6 +378,7 @@ export default function AboutUs() {
             <div>
               <h4 className="font-bold mb-4">Afrimercato</h4>
               <p className="text-gray-400 text-sm">Fresh African groceries delivered across the UK.</p>
+              <p className="text-gray-400 text-sm mt-2">A fair, flexible marketplace for African commerce.</p>
             </div>
             <div>
               <h4 className="font-bold mb-4">Company</h4>
@@ -310,12 +398,13 @@ export default function AboutUs() {
             </div>
             <div>
               <h4 className="font-bold mb-4">Contact</h4>
-              <p className="text-gray-400 text-sm">info@afrimercato.co.uk</p>
+              <p className="text-gray-400 text-sm">+44 7778 285855</p>
+              <p className="text-gray-400 text-sm mt-2">info@afrimercato.co.uk</p>
               <p className="text-gray-400 text-sm mt-2">Manchester, United Kingdom</p>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; 2024 Afrimercato. All rights reserved.</p>
+            <p>&copy; 2026 Afrimercato. All rights reserved.</p>
           </div>
         </div>
       </footer>

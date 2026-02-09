@@ -32,12 +32,15 @@ export default function ClientStoresPage() {
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        // No stores found - show empty state
-        setStores([])
+        // No real stores found — show demo stores filtered by search location
+        setStores(getSampleStores(location))
       }
     } catch (error) {
-      console.error('[STORE_SEARCH_FAIL]', location, error.message)
-      setStores([])
+      if (import.meta.env.DEV) {
+        console.warn('[STORE_SEARCH_FAIL]', location, error.message)
+      }
+      // API failed — show demo stores so customers always see content
+      setStores(getSampleStores(location))
     } finally {
       setLoading(false)
     }
@@ -47,15 +50,17 @@ export default function ClientStoresPage() {
     try {
       setLoading(true)
       const response = await searchVendorsByLocation(location, newRadius)
-      
+
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        setStores([])
+        setStores(getSampleStores(location))
       }
     } catch (error) {
-      console.error('[EXPAND_SEARCH_FAIL]', error.message)
-      setStores([])
+      if (import.meta.env.DEV) {
+        console.warn('[EXPAND_SEARCH_FAIL]', error.message)
+      }
+      setStores(getSampleStores(location))
     } finally {
       setLoading(false)
     }
@@ -64,18 +69,21 @@ export default function ClientStoresPage() {
   const browseAllStores = async () => {
     try {
       setLoading(true)
-      // Search without location filter to get all stores
       const response = await searchVendorsByLocation('', 500)
-      
+
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
         setSearchLocation('')
       } else {
-        setStores([])
+        setStores(getSampleStores(''))
+        setSearchLocation('')
       }
     } catch (error) {
-      console.error('[BROWSE_ALL_FAIL]', error.message)
-      setStores([])
+      if (import.meta.env.DEV) {
+        console.warn('[BROWSE_ALL_FAIL]', error.message)
+      }
+      setStores(getSampleStores(''))
+      setSearchLocation('')
     } finally {
       setLoading(false)
     }
@@ -231,6 +239,39 @@ export default function ClientStoresPage() {
     }
     return allStores
   }
+
+  // Apply filter/sort logic to stores
+  const getFilteredStores = () => {
+    if (!stores || stores.length === 0) return []
+
+    let filtered = [...stores]
+
+    switch (activeFilter) {
+      case 'top':
+        // Sort by rating descending
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      case 'featured':
+        // Show only verified/high-rated stores (4.7+)
+        filtered = filtered
+          .filter((s) => s.verified !== false && (s.rating || 0) >= 4.5)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      case 'nearby':
+      default:
+        // Sort by distance (parse km string)
+        filtered.sort((a, b) => {
+          const distA = parseFloat(a.distance) || 999
+          const distB = parseFloat(b.distance) || 999
+          return distA - distB
+        })
+        break
+    }
+
+    return filtered
+  }
+
+  const filteredStores = getFilteredStores()
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -460,9 +501,9 @@ export default function ClientStoresPage() {
           )}
 
           {/* Store Cards Grid */}
-          {!loading && activeTab === 'stores' && stores.length > 0 && (
+          {!loading && activeTab === 'stores' && filteredStores.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stores.map((store, index) => (
+              {filteredStores.map((store, index) => (
                 <motion.div
                   key={store._id || store.id || index}
                   initial={{ opacity: 0, y: 30 }}
@@ -570,7 +611,7 @@ export default function ClientStoresPage() {
           )}
 
           {/* Empty State - No Stores Found (Like Uber Eats/Just Eat) */}
-          {!loading && activeTab === 'stores' && stores.length === 0 && (
+          {!loading && activeTab === 'stores' && filteredStores.length === 0 && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

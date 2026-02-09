@@ -17,6 +17,20 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Dark mode — body-level only; page-specific dark: classes live in components */
+html.dark {
+  color-scheme: dark;
+}
+
+html.dark body {
+  background-color: #111827;
+  color: #f3f4f6;
+}
+
+html.dark a {
+  color: #93c5fd;
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
