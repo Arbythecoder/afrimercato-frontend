@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { orderAPI } from '../services/api'
+import { vendorAPI } from '../services/api'
 
 function Orders() {
   const [orders, setOrders] = useState([])
@@ -27,9 +27,10 @@ function Orders() {
 
   const fetchOrders = async () => {
     try {
-      const response = await orderAPI.getAll()
-      if (response.data.success) {
-        setOrders(response.data.data.orders || [])
+      // Fetch from vendor-specific endpoint
+      const response = await vendorAPI.getOrders()
+      if (response.success) {
+        setOrders(response.data.orders || [])
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to load orders')
@@ -40,7 +41,7 @@ function Orders() {
 
   const handleStatusUpdate = async (orderId, newStatus) => {
     try {
-      await orderAPI.updateStatus(orderId, newStatus)
+      await vendorAPI.updateOrderStatus(orderId, { status: newStatus })
       setOrders(orders.map(o => o._id === orderId ? { ...o, status: newStatus } : o))
       setShowStatusModal(false)
       setSelectedOrder(null)

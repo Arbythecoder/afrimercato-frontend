@@ -1,16 +1,38 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import ColorThief from 'colorthief'
+import { useAuth } from '../context/AuthContext'
 import { createVendorProfile } from '../services/api'
 
 const VendorOnboarding = ({ onComplete }) => {
   const navigate = useNavigate()
+  const { user, isAuthenticated } = useAuth()
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const logoInputRef = useRef(null)
   const colorThief = useRef(new ColorThief())
+
+  // Check authentication on mount
+  useEffect(() => {
+    // If not authenticated, redirect to login with vendor intent
+    if (!isAuthenticated) {
+      navigate('/login?role=vendor&redirect=/vendor/onboarding')
+      return
+    }
+
+    // If already a vendor with a profile, redirect to dashboard
+    if (user?.role === 'vendor') {
+      // Check if they already have a store profile (will be handled in component)
+      // For now, just show the onboarding - they might not have completed it
+    }
+
+    // If user is not a vendor role, show error
+    if (user && user.role !== 'vendor') {
+      setError('Only users with vendor accounts can access vendor onboarding. Please sign up as a vendor.')
+    }
+  }, [isAuthenticated, user, navigate])
 
   const [formData, setFormData] = useState({
     // Step 1: Basic Info

@@ -7,6 +7,7 @@ const BYPASS_KEY = 'afrimercato_coming_soon_bypassed'
  * Launch date — reads from VITE_LAUNCH_DATE env var first, falls back to hardcoded.
  * Set VITE_LAUNCH_DATE in .env to override (ISO 8601 string, e.g. "2026-03-01T00:00:00Z").
  * To disable countdown entirely: Set DISABLE_COUNTDOWN to true.
+ * SINGLE SOURCE OF TRUTH for launch date across the app.
  */
 const DISABLE_COUNTDOWN = false // Set to true to skip countdown entirely
 const LAUNCH_DATE = (() => {
@@ -15,7 +16,8 @@ const LAUNCH_DATE = (() => {
     const parsed = new Date(envDate)
     if (!isNaN(parsed.getTime())) return parsed
   }
-  return new Date('2026-02-22T00:00:00Z') // fallback: 14 days from Feb 8 2026
+  // Default: 12 days from Feb 10, 2026
+  return new Date('2026-02-22T00:00:00Z')
 })()
 
 function ComingSoon({ children }) {
