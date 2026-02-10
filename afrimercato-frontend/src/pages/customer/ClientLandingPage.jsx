@@ -51,48 +51,54 @@ export default function ClientLandingPage() {
     navigate(`/stores?location=${encodeURIComponent(loc)}`)
   }
 
-  // Featured stores data
+  // Featured stores data - Realistic African grocery stores
   const featuredStores = [
     {
       id: 1,
-      name: "Yours Supermarket",
-      image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600&q=80", // Fresh produce aisle
+      name: "Mama Nkechi African Mart",
+      storeName: "Mama Nkechi African Mart",
+      image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
       hours: "06:00am - 09:00pm",
-      location: "Leicester United Kingdom",
+      location: "Peckham, London",
       distance: "0.1km",
-      deliveryTime: "50 mins",
+      deliveryTime: "25 mins",
       priceRange: "£10-£500",
-      rating: 4.5,
+      rating: 4.8,
       isOpen: true,
-      deliveryFee: "£25",
+      deliveryFee: "Free over £50",
+      category: "Nigerian & Ghanaian",
       methods: ["Shopping", "Pickup", "Delivery"]
     },
     {
       id: 2,
-      name: "TESCO Supermarket",
-      image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=600&q=80", // Modern grocery store
+      name: "Sahara Foods & Spices",
+      storeName: "Sahara Foods & Spices",
+      image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80",
       hours: "06:00am - 08:00pm",
-      location: "Leicester United Kingdom",
+      location: "Moss Side, Manchester",
       distance: "1.2km",
       deliveryTime: "30 mins",
       priceRange: "£10-£500",
-      rating: 4.8,
+      rating: 4.9,
       isOpen: true,
-      deliveryFee: "£25",
+      deliveryFee: "£3.99",
+      category: "African & Middle Eastern",
       methods: ["In-Shopping", "Delivery"]
     },
     {
       id: 3,
-      name: "Fresh Market",
-      image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=600&q=80", // Colorful vegetables display
-      hours: "06:00am - 06:00pm",
-      location: "Leicester United Kingdom",
-      distance: "2.8km",
+      name: "AfroTaste Groceries",
+      storeName: "AfroTaste Groceries",
+      image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=800&q=80",
+      hours: "06:00am - 10:00pm",
+      location: "Sparkbrook, Birmingham",
+      distance: "0.8km",
       deliveryTime: "20 mins",
-      priceRange: "£10-£500",
-      rating: 4.2,
+      priceRange: "£5-£200",
+      rating: 4.7,
       isOpen: true,
-      deliveryFee: "£25",
+      deliveryFee: "Free over £40",
+      category: "West African Specialties",
       methods: ["Shopping", "Fitted", "In-Shopping", "Delivery"]
     }
   ]
@@ -619,14 +625,18 @@ export default function ClientLandingPage() {
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
                 onClick={() => navigate(`/store/${store.id}`)}
-                className="bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
+                className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
               >
                 {/* Store Image */}
-                <div className="relative h-48">
+                <div className="relative aspect-video overflow-hidden bg-gray-100">
                   <img
                     src={store.image}
                     alt={store.name}
-                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    onError={(e) => {
+                      e.target.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80';
+                    }}
                   />
                   {/* Price Range Badge */}
                   <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
@@ -645,8 +655,8 @@ export default function ClientLandingPage() {
                 {/* Store Info */}
                 <div className="p-5">
                   <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
-                      {store.name}
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                      {store.storeName || store.name}
                       <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>

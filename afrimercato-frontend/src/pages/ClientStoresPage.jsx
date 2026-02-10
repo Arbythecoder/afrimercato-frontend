@@ -94,11 +94,12 @@ export default function ClientStoresPage() {
     // These will be replaced by real vendor data from the API
     const allStores = [
       {
-        _id: "sample-joshs-african-supermarket",
-        name: "Josh's African Supermarket",
-        image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600",
+        _id: "sample-mama-nkechi-african-mart",
+        name: "Mama Nkechi African Mart",
+        storeName: "Mama Nkechi African Mart",
+        image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80",
         hours: "07:00am - 10:00pm",
-        location: "London United Kingdom",
+        location: "London, Peckham",
         distance: "0.3km",
         deliveryTime: "25 mins",
         priceRange: "£5-£200",
@@ -108,14 +109,17 @@ export default function ClientStoresPage() {
         miles: "0.5 miles",
         methods: ["Delivery", "Pickup", "In-Store"],
         verified: true,
+        category: "African Groceries",
+        tags: ["African", "Halal", "Fresh Produce"],
         description: "Authentic Nigerian, Ghanaian & Caribbean groceries. Fresh yams, plantain, palm oil & more."
       },
       {
-        _id: "sample-mama-africa-foods",
-        name: "Mama Africa Foods",
-        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=600",
+        _id: "sample-sahara-foods-spices",
+        name: "Sahara Foods & Spices",
+        storeName: "Sahara Foods & Spices",
+        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
         hours: "08:00am - 09:00pm",
-        location: "Manchester United Kingdom",
+        location: "Manchester, Cheetham Hill",
         distance: "1.2km",
         deliveryTime: "30 mins",
         priceRange: "£3-£150",
@@ -125,14 +129,17 @@ export default function ClientStoresPage() {
         miles: "1.8 miles",
         methods: ["Delivery", "Pickup"],
         verified: true,
+        category: "African & Middle Eastern",
+        tags: ["Spices", "Halal", "Organic"],
         description: "Traditional African spices, seasonings, and fresh produce from trusted suppliers."
       },
       {
-        _id: "sample-lagos-provisions",
-        name: "Lagos Provisions",
-        image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=600",
+        _id: "sample-afrotaste-groceries",
+        name: "AfroTaste Groceries",
+        storeName: "AfroTaste Groceries",
+        image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
         hours: "06:00am - 11:00pm",
-        location: "Birmingham United Kingdom",
+        location: "Birmingham, Sparkbrook",
         distance: "0.8km",
         deliveryTime: "20 mins",
         priceRange: "£2-£100",
@@ -142,14 +149,17 @@ export default function ClientStoresPage() {
         miles: "1.2 miles",
         methods: ["Delivery", "Pickup", "In-Store"],
         verified: true,
+        category: "Nigerian Specialties",
+        tags: ["Fresh Produce", "Frozen Foods", "Authentic"],
         description: "Fresh Nigerian ingredients, frozen fish, stockfish, and authentic seasonings."
       },
       {
-        _id: "sample-accra-spice-house",
-        name: "Accra Spice House",
-        image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600",
+        _id: "sample-accra-fresh-market",
+        name: "Accra Fresh Market",
+        storeName: "Accra Fresh Market",
+        image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&q=80",
         hours: "09:00am - 08:00pm",
-        location: "Leeds United Kingdom",
+        location: "Leeds, Harehills",
         distance: "2.1km",
         deliveryTime: "35 mins",
         priceRange: "£5-£180",
@@ -159,14 +169,17 @@ export default function ClientStoresPage() {
         miles: "3.2 miles",
         methods: ["Delivery", "Pickup"],
         verified: true,
+        category: "Ghanaian Specialties",
+        tags: ["Fresh", "Authentic", "Traditional"],
         description: "Ghanaian specialty foods, kenkey, banku flour, shito, and palm soup base."
       },
       {
-        _id: "sample-ethiopian-delights",
-        name: "Ethiopian Delights",
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600",
+        _id: "sample-zobo-suya-corner",
+        name: "Zobo & Suya Corner",
+        storeName: "Zobo & Suya Corner",
+        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
         hours: "10:00am - 09:00pm",
-        location: "Bristol United Kingdom",
+        location: "Bristol, St Paul's",
         distance: "1.5km",
         deliveryTime: "40 mins",
         priceRange: "£8-£120",
@@ -176,14 +189,17 @@ export default function ClientStoresPage() {
         miles: "2.3 miles",
         methods: ["Delivery", "In-Store"],
         verified: true,
-        description: "Authentic Ethiopian & Eritrean foods. Injera, berbere spice, teff flour."
+        category: "West African Delights",
+        tags: ["Nigerian", "Grilled", "Beverages"],
+        description: "Authentic Nigerian suya spices, zobo drinks, and West African delicacies."
       },
       {
-        _id: "sample-caribbean-african-mart",
-        name: "Caribbean & African Mart",
-        image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600",
+        _id: "sample-naija-pantry-uk",
+        name: "Naija Pantry UK",
+        storeName: "Naija Pantry UK",
+        image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80",
         hours: "07:00am - 10:00pm",
-        location: "Leicester United Kingdom",
+        location: "Leicester, Highfields",
         distance: "0.6km",
         deliveryTime: "25 mins",
         priceRange: "£4-£200",
@@ -193,14 +209,17 @@ export default function ClientStoresPage() {
         miles: "0.9 miles",
         methods: ["Delivery", "Pickup", "In-Store"],
         verified: true,
-        description: "Best of Caribbean & African cuisine. Jerk seasoning, ackee, callaloo & more."
+        category: "Nigerian Essentials",
+        tags: ["Fresh Produce", "Halal", "Frozen Foods"],
+        description: "Your one-stop shop for Nigerian essentials. Fresh yams, stockfish, palm oil & more."
       },
       {
-        _id: "sample-naija-fresh-market",
-        name: "Naija Fresh Market",
-        image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600",
+        _id: "sample-afro-caribbean-delights",
+        name: "Afro Caribbean Delights",
+        storeName: "Afro Caribbean Delights",
+        image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80",
         hours: "06:00am - 10:00pm",
-        location: "Liverpool United Kingdom",
+        location: "Liverpool, Toxteth",
         distance: "1.0km",
         deliveryTime: "30 mins",
         priceRange: "£3-£150",
@@ -210,14 +229,17 @@ export default function ClientStoresPage() {
         miles: "1.5 miles",
         methods: ["Delivery", "Pickup"],
         verified: true,
-        description: "Fresh egusi, ogbono, crayfish, dried fish, and Nigerian cooking essentials."
+        category: "Caribbean & African",
+        tags: ["Caribbean", "African", "Jerk Seasoning"],
+        description: "Best of Caribbean & African cuisine. Jerk seasoning, ackee, callaloo, plantain & more."
       },
       {
-        _id: "sample-taste-of-kenya",
-        name: "Taste of Kenya",
-        image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600",
+        _id: "sample-east-african-emporium",
+        name: "East African Emporium",
+        storeName: "East African Emporium",
+        image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80",
         hours: "08:00am - 09:00pm",
-        location: "Sheffield United Kingdom",
+        location: "Sheffield, Burngreave",
         distance: "1.8km",
         deliveryTime: "35 mins",
         priceRange: "£5-£100",
@@ -227,7 +249,9 @@ export default function ClientStoresPage() {
         miles: "2.7 miles",
         methods: ["Delivery", "In-Store"],
         verified: true,
-        description: "Kenyan & East African groceries. Ugali flour, sukuma wiki, nyama choma spices."
+        category: "East African Specialties",
+        tags: ["Ethiopian", "Kenyan", "Somali"],
+        description: "East African groceries. Injera, teff flour, berbere, ugali, and nyama choma spices."
       }
     ]
 
@@ -527,12 +551,16 @@ export default function ClientStoresPage() {
                   }}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all border border-gray-100"
                 >
-                  {/* Store Image */}
-                  <div className="relative h-48">
+                  {/* Store Image - 16:9 aspect ratio */}
+                  <div className="relative w-full aspect-video bg-gray-200 overflow-hidden">
                     <img
-                      src={store.image || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=600'}
-                      alt={store.name || store.storeName}
-                      className="w-full h-full object-cover"
+                      src={store.image || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'}
+                      alt={store.name || store.storeName || 'African Grocery Store'}
+                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
+                      }}
                     />
                     {/* Price Range Badge */}
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
