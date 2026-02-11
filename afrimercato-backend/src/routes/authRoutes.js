@@ -28,6 +28,65 @@ const loginLimiter = rateLimit({
 // ==============================================
 // POST /api/auth/register - Register new user
 // ==============================================
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new customer account
+ *     description: Create a new customer account with email and password. Sends verification email.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: customer@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 example: password123
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               firstName:
+ *                 type: string
+ *                 example: John
+ *               lastName:
+ *                 type: string
+ *                 example: Doe
+ *               phone:
+ *                 type: string
+ *                 example: +1234567890
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Validation error or email already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post(
   '/register',
   [
@@ -118,11 +177,63 @@ router.post(
 // ==============================================
 // POST /api/auth/login - User login
 // ==============================================
+/**
+ * @swagger
+ * /api/auth/login:
+ *   post:
+ *     summary: Login to user account
+ *     description: Authenticate user with email and password. Returns JWT token and sets HTTP-only cookie.
+ *     tags: [Authentication]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: customer@example.com
+ *               password:
+ *                 type: string
+ *                 example: password123
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       429:
+ *         description: Too many login attempts
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 router.post(
   '/login',
   loginLimiter, // Apply rate limiting
   [
-    body('email').isEmail().normalizeEmail(),
+    body('email').isEmail().withMessage('Valid email required').normalizeEmail(),
     body('password').notEmpty().withMessage('Password required')
   ],
   asyncHandler(async (req, res) => {
@@ -134,8 +245,8 @@ router.post(
     const { email, password } = req.body;
 
     try {
-      // Find user with 5s timeout to prevent hanging
-      const userPromise = User.findOne({ email }).select('+password').maxTimeMS(5000);
+      // Find user with 25s timeout to handle slow DB connections
+      const userPromise = User.findOne({ email }).select('+password').maxTimeMS(25000);
       const user = await userPromise;
       
       if (!user) {
@@ -145,7 +256,7 @@ router.post(
       // Check password with timeout protection
       const comparePromise = bcrypt.compare(password, user.password);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Password comparison timeout')), 3000)
+        setTimeout(() => reject(new Error('Password comparison timeout')), 5000)
       );
       
       const isMatch = await Promise.race([comparePromise, timeoutPromise]);
@@ -174,13 +285,20 @@ router.post(
       });
     } catch (error) {
       console.error('[LOGIN_ERROR]', error.message);
-      if (error.message?.includes('timeout') || error.code === 50) {
-        return res.status(408).json({ 
+      
+      // Handle MongoDB timeout errors
+      if (error.name === 'MongoNetworkTimeoutError' || 
+          error.name === 'MongoServerSelectionError' ||
+          error.message?.includes('timeout') || 
+          error.message?.includes('timed out') ||
+          error.code === 50) {
+        return res.status(503).json({ 
           success: false, 
-          message: 'Login request timed out. Please try again.', 
-          code: 'REQUEST_TIMEOUT' 
+          message: 'Database connection issue. Please try again in a moment.', 
+          code: 'DATABASE_TIMEOUT' 
         });
       }
+      
       return res.status(500).json({ 
         success: false, 
         message: 'Login failed. Please try again.', 

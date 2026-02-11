@@ -10,18 +10,16 @@ const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/afrime
 
 // Connection options with pooling for production
 const mongooseOptions = {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-  serverSelectionTimeoutMS: 8000,  // Increased from 5s to allow for slower connections
-  socketTimeoutMS: 45000,
+  serverSelectionTimeoutMS: 30000,  // Increased to 30s for unstable connections
+  socketTimeoutMS: 60000, // 60s socket timeout
   family: 4, // Use IPv4, skip trying IPv6
-  maxPoolSize: 20, // Increased pool size for production load
-  minPoolSize: 5,  // Keep more warm connections ready
-  maxIdleTimeMS: 30000, // Close idle connections after 30s
-  connectTimeoutMS: 10000, // Connection timeout
+  maxPoolSize: 10, // Reduced pool size to avoid connection overhead
+  minPoolSize: 2,  // Minimal warm connections
+  maxIdleTimeMS: 60000, // Close idle connections after 60s
+  connectTimeoutMS: 30000, // 30s connection timeout
   retryWrites: true, // Retry writes on transient errors
   retryReads: true,  // Retry reads on transient errors
-  maxConnecting: 3   // Limit concurrent connection attempts
+  maxConnecting: 2   // Limit concurrent connection attempts
 };
 
 // Monitor slow queries (log queries taking > 100ms)

@@ -256,10 +256,29 @@ function Checkout() {
     } catch (error) {
       const msg = error.message || 'Failed to place order'
       
-      // Check for email verification error
+      // Check for email verification error (kept for backward compatibility, though middleware removed)
       if (error.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
         setEmailVerificationError(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
+        return
+      }
+
+      // HOTFIX: Better error messages for auth/permission issues
+      if (error.status === 401) {
+        alert('Your session has expired. Please log in again.')
+        localStorage.setItem('checkout_redirect', 'true')
+        navigate('/login')
+        return
+      }
+
+      if (error.status === 403) {
+        const errorCode = error.data?.errorCode || error.data?.code
+        if (errorCode === 'EMAIL_NOT_VERIFIED') {
+          setEmailVerificationError(true)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+        } else {
+          alert('Access denied. Please ensure you have a customer account and are logged in correctly.')
+        }
         return
       }
       
@@ -727,11 +746,11 @@ function Checkout() {
                   );
                 })()}
 
-                {/* Repurchase from previous orders — non-blocking */}
+                {/* Repurchase from previous orders — ALWAYS VISIBLE for better UX */}
                 <div className="mb-6 pb-6 border-b">
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
                     <span>🛍️</span>
-                    Buy Again
+                    Buy Again (Quick Add)
                   </h3>
                   {repurchaseLoading ? (
                     <div className="flex items-center gap-2 text-sm text-gray-500 py-2">
@@ -740,10 +759,13 @@ function Checkout() {
                     </div>
                   ) : repurchaseItems.length > 0 ? (
                     <div className="space-y-2">
+                      <p className="text-xs text-gray-600 mb-2">
+                        Items from your recent orders - click to add to this order:
+                      </p>
                       {repurchaseItems.slice(0, 5).map((item) => {
                         const alreadyInCart = cart.some(c => c._id === item._id)
                         return (
-                          <div key={item._id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                          <div key={item._id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition">
                             <div>
                               <p className="text-sm font-medium text-gray-900">{item.name}</p>
                               <p className="text-xs text-gray-500">£{item.price?.toFixed(2)} / {item.unit || 'piece'}</p>
@@ -752,24 +774,27 @@ function Checkout() {
                               type="button"
                               onClick={() => handleAddRepurchaseItem(item)}
                               disabled={alreadyInCart}
-                              className={`text-xs font-semibold px-3 py-1.5 rounded-lg transition ${
+                              className={`text-xs font-semibold px-4 py-2 rounded-lg transition ${
                                 alreadyInCart
                                   ? 'bg-gray-200 text-gray-400 cursor-default'
-                                  : 'bg-green-100 text-green-700 hover:bg-green-200'
+                                  : 'bg-green-600 text-white hover:bg-green-700'
                               }`}
                             >
-                              {alreadyInCart ? 'In Cart' : '+ Add'}
+                              {alreadyInCart ? '✓ In Cart' : '+ Add'}
                             </button>
                           </div>
                         )
                       })}
                       {repurchaseError && (
-                        <p className="text-xs text-gray-400 mt-1">Showing cached items (offline mode)</p>
+                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
+                          <span>⚠️</span>
+                          Showing cached items (working offline)
+                        </p>
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 py-2">
-                      No previous orders yet. Your past items will appear here for quick reordering.
+                    <p className="text-sm text-gray-500 py-2 bg-gray-50 rounded-lg px-3">
+                      💡 No previous orders yet. Items from past orders will appear here for quick reordering.
                     </p>
                   )}
                 </div>

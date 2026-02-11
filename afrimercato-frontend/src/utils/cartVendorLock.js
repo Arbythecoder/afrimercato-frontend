@@ -51,7 +51,7 @@ export const checkVendorLock = (product, currentCart) => {
 /**
  * Get the current cart's vendor info
  * @param {Array} cart - Current cart items
- * @returns {Object} { vendorId: string, vendorName: string } or null if cart is empty
+ * @returns {Object} { vendorId: string, vendorName: string } or null if cart is empty or no vendor info
  */
 export const getCartVendorInfo = (cart) => {
   if (!cart || cart.length === 0) {
@@ -60,6 +60,12 @@ export const getCartVendorInfo = (cart) => {
 
   const firstItem = cart[0]
   const vendorId = firstItem.vendor?._id || firstItem.vendor?.id || firstItem.vendorId || firstItem.vendor
+
+  // HOTFIX: Return null if vendorId is missing or undefined to prevent /vendor/undefined API calls
+  if (!vendorId || vendorId === 'undefined') {
+    return null
+  }
+
   const vendorName = firstItem.vendor?.storeName || firstItem.vendor?.businessName || firstItem.storeName || 'Your Store'
 
   return {

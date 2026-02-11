@@ -19,6 +19,25 @@ export default function ClientStoresPage() {
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [locationSuggestions, setLocationSuggestions] = useState([])
+
+  // HOTFIX: Real-time location suggestions to make search feel "alive"
+  const popularLocations = [
+    'London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol',
+    'Liverpool', 'Peckham', 'Brixton', 'Tottenham', 'East Ham',
+    'Hackney', 'Lewisham', 'Croydon', 'Southwark', 'Newham'
+  ]
+
+  useEffect(() => {
+    if (searchLocation.trim().length > 0) {
+      const filtered = popularLocations.filter(loc =>
+        loc.toLowerCase().includes(searchLocation.toLowerCase())
+      )
+      setLocationSuggestions(filtered.slice(0, 5))
+    } else {
+      setLocationSuggestions(popularLocations.slice(0, 5))
+    }
+  }, [searchLocation])
 
   useEffect(() => {
     fetchStores()
@@ -382,6 +401,30 @@ export default function ClientStoresPage() {
                       className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-500"
                     />
                   </div>
+                  
+                  {/* HOTFIX: Live autocomplete dropdown to make search feel interactive */}
+                  {showLocationDropdown && locationSuggestions.length > 0 && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
+                      {locationSuggestions.map((loc, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            setSearchLocation(loc)
+                            setShowLocationDropdown(false)
+                            navigate(`/stores?location=${encodeURIComponent(loc)}`)
+                          }}
+                          className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                        >
+                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                          </svg>
+                          <span className="text-gray-700">{loc}</span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <button
                   type="submit"

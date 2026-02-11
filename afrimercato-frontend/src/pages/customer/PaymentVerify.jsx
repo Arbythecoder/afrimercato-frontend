@@ -4,7 +4,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 const API_BASE_URL = (() => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
   const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  return isLocalhost ? 'http://localhost:5000' : 'https://afrimercato-backend.fly.dev'
+  return import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
 })()
 
 function PaymentVerify() {

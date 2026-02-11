@@ -18,8 +18,9 @@ const {
   initializePayment
 } = require('../controllers/checkoutController');
 
-// All checkout routes require customer authentication AND email verification
-router.use(protect, authorize('customer'), requireEmailVerified);
+// All checkout routes require customer authentication
+// REMOVED requireEmailVerified to allow new users to checkout immediately after registration
+router.use(protect, authorize('customer'));
 
 router.post('/preview', validateAddress, previewOrder);
 router.post('/process', validateAddress, processCheckout);

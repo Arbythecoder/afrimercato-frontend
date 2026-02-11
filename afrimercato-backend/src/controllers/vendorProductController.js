@@ -66,8 +66,12 @@ exports.createProduct = asyncHandler(async (req, res) => {
       if (file.path && file.path.startsWith('http')) {
         return file.path;
       }
-      // For local storage, construct URL
-      return `${process.env.API_URL || 'http://localhost:5000'}/${file.path.replace(/\\/g, '/')}`;
+      // For local storage, construct URL with production-aware base
+      const baseUrl = process.env.API_URL || 
+                      (process.env.NODE_ENV === 'production' 
+                        ? 'https://afrimercato-backend.fly.dev' 
+                        : 'http://localhost:5000');
+      return `${baseUrl}/${file.path.replace(/\\/g, '/')}`;
     });
     console.log(`📸 Processed ${imageUrls.length} uploaded image(s)`);
   } else if (req.body.images) {

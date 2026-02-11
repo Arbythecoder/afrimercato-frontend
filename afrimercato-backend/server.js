@@ -18,6 +18,10 @@ const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
 require('./src/config/passport'); // Register OAuth strategies (Google)
 
+// Swagger
+const swaggerUi = require('swagger-ui-express');
+const swaggerSpec = require('./src/config/swagger');
+
 // DB & socket
 const { connectDB, closeDB, isDBConnected } = require('./src/config/database');
 const { initSocket } = require('./src/config/socket');
@@ -153,6 +157,34 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ======================= ROUTES =======================
 
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'Afrimercato API Documentation'
+}));
+
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Root endpoint
+ *     description: Returns API status message
+ *     tags: [General]
+ *     responses:
+ *       200:
+ *         description: API is running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Afrimercato API running 🚀
+ */
 // Root
 app.get('/', (_req, res) => {
   res.json({ success: true, message: 'Afrimercato API running 🚀' });

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 
 // Storage keys
 const BYPASS_KEY = 'afrimercato_coming_soon_bypassed'
+const COUNTDOWN_VERSION = '2.0' // Increment this to reset countdown for new builds
+const VERSION_KEY = 'afrimercato_countdown_version'
 
 /**
  * Launch date — reads from VITE_LAUNCH_DATE env var first, falls back to hardcoded.
@@ -16,8 +18,8 @@ const LAUNCH_DATE = (() => {
     const parsed = new Date(envDate)
     if (!isNaN(parsed.getTime())) return parsed
   }
-  // Default: 12 days from Feb 10, 2026
-  return new Date('2026-02-22T00:00:00Z')
+  // HOTFIX: 14 days from Feb 10, 2026 = Feb 24, 2026
+  return new Date('2026-02-24T00:00:00Z')
 })()
 
 function ComingSoon({ children }) {
@@ -38,6 +40,14 @@ function ComingSoon({ children }) {
     if (DISABLE_COUNTDOWN) {
       setBypassed(true)
       return
+    }
+
+    // HOTFIX: Check version to reset countdown on new builds
+    const storedVersion = localStorage.getItem(VERSION_KEY)
+    if (storedVersion !== COUNTDOWN_VERSION) {
+      // New version - clear old bypass state
+      localStorage.removeItem(BYPASS_KEY)
+      localStorage.setItem(VERSION_KEY, COUNTDOWN_VERSION)
     }
 
     const isBypassed = localStorage.getItem(BYPASS_KEY) === 'true'

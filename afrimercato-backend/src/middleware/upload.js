@@ -244,6 +244,7 @@ exports.handleUploadError = (err, req, res, next) => {
 /**
  * GET FILE URL
  * Works for both Cloudinary and local storage
+ * PRODUCTION FIX: Uses HTTPS backend URL in production, never localhost
  */
 exports.getFileUrl = (file) => {
   if (!file) return null;
@@ -253,9 +254,13 @@ exports.getFileUrl = (file) => {
     return file.path;
   }
 
-  // Local storage - construct URL
+  // Local storage - construct URL using environment-aware base URL
   const filePath = typeof file === 'string' ? file : file.path;
-  return `${process.env.API_URL || 'http://localhost:5000'}/${filePath.replace(/\\/g, '/')}`;
+  const baseUrl = process.env.API_URL || 
+                  (process.env.NODE_ENV === 'production' 
+                    ? 'https://afrimercato-backend.fly.dev' 
+                    : 'http://localhost:5000');
+  return `${baseUrl}/${filePath.replace(/\\/g, '/')}`;
 };
 
 /**

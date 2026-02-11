@@ -71,11 +71,136 @@ const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware
 // =================================================================
 // PUBLIC ROUTES (no authentication required)
 // =================================================================
+/**
+ * @swagger
+ * /api/vendor/register:
+ *   post:
+ *     summary: Register a new vendor account
+ *     description: Create a new vendor account with store details
+ *     tags: [Vendor]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *               - storeName
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: vendor@example.com
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 example: securePassword123
+ *               storeName:
+ *                 type: string
+ *                 example: Joe's Fresh Market
+ *               firstName:
+ *                 type: string
+ *                 example: Joe
+ *               lastName:
+ *                 type: string
+ *                 example: Smith
+ *               phone:
+ *                 type: string
+ *                 example: +1234567890
+ *     responses:
+ *       201:
+ *         description: Vendor registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 token:
+ *                   type: string
+ *                 vendor:
+ *                   $ref: '#/components/schemas/Vendor'
+ *       400:
+ *         description: Validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
 // @route   POST /api/vendor/register
 // @desc    Register a new vendor (PUBLIC - no login required)
 // @access  Public
 router.post('/register', validateVendorRegistration, registerVendor);
 
+/**
+ * @swagger
+ * /api/vendor/profile:
+ *   post:
+ *     summary: Create vendor profile
+ *     description: First-time vendor profile setup (requires vendor authentication)
+ *     tags: [Vendor]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               storeName:
+ *                 type: string
+ *               storeDescription:
+ *                 type: string
+ *               address:
+ *                 type: object
+ *     responses:
+ *       201:
+ *         description: Profile created successfully
+ *       401:
+ *         description: Unauthorized
+ *   get:
+ *     summary: Get vendor profile
+ *     description: Retrieve authenticated vendor's profile
+ *     tags: [Vendor]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Profile retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 vendor:
+ *                   $ref: '#/components/schemas/Vendor'
+ *       401:
+ *         description: Unauthorized
+ *   put:
+ *     summary: Update vendor profile
+ *     description: Update authenticated vendor's profile information
+ *     tags: [Vendor]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *       401:
+ *         description: Unauthorized
+ */
 // @route   POST /api/vendor/profile
 // @desc    Create vendor profile (first-time setup)
 // @access  Private (Vendor role only)
