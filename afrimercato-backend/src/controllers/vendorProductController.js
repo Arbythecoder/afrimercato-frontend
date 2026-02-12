@@ -66,8 +66,9 @@ exports.createProduct = asyncHandler(async (req, res) => {
       if (file.path && file.path.startsWith('http')) {
         return file.path;
       }
-      // For local storage, construct URL with production-aware base
+      // FIX: Use the actual deployed URL from environment
       const baseUrl = process.env.API_URL || 
+                      process.env.BACKEND_URL ||
                       (process.env.NODE_ENV === 'production' 
                         ? 'https://afrimercato-backend.fly.dev' 
                         : 'http://localhost:5000');

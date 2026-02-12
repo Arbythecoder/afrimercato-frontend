@@ -136,6 +136,9 @@ const { uploadMultiple, handleUploadError, getFileUrl } = require('../middleware
 // @access  Public
 router.post('/register', validateVendorRegistration, registerVendor);
 
+// Note: Vendors use /api/auth/login for authentication (shared with all user types)
+// No separate vendor login endpoint needed to avoid duplicate routes
+
 /**
  * @swagger
  * /api/vendor/profile:

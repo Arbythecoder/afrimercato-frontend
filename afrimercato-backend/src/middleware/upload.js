@@ -254,9 +254,10 @@ exports.getFileUrl = (file) => {
     return file.path;
   }
 
-  // Local storage - construct URL using environment-aware base URL
+  // Local storage - FIX: Use the actual deployed URL from environment
   const filePath = typeof file === 'string' ? file : file.path;
   const baseUrl = process.env.API_URL || 
+                  process.env.BACKEND_URL ||
                   (process.env.NODE_ENV === 'production' 
                     ? 'https://afrimercato-backend.fly.dev' 
                     : 'http://localhost:5000');
