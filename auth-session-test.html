@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Session Test - AfriMercato</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .test-container { background: white; padding: 20px; border-radius: 8px; max-width: 800px; margin: 0 auto; }
+        .test-section { margin-bottom: 30px; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        .info { background-color: #d1ecf1; border-color: #bee5eb; }
+        button { background: #28a745; color: white; border: none; padding: 10px 15px; border-radius: 5px; margin: 5px; cursor: pointer; }
+        button:hover { background: #218838; }
+        button.danger { background: #dc3545; }
+        button.danger:hover { background: #c82333; }
+        .auth-info { background: #f8f9fa; padding: 10px; border-radius: 5px; font-family: monospace; }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 5px; font-size: 12px; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔐 AfriMercato Auth Session Testing</h1>
+        <p>Test the authentication session management, token validation, and role-based routing fixes.</p>
+        
+        <div class="test-section info">
+            <h3>📋 Test Requirements</h3>
+            <ol>
+                <li>Open DevTools Console to see authentication logs</li>
+                <li>Have the frontend running on <code>http://localhost:3000</code></li>
+                <li>Backend should be running (production: fly.dev or local)</li>
+                <li>Test with both vendor and customer accounts</li>
+            </ol>
+        </div>
+
+        <div class="test-section">
+            <h3>🚀 Current Auth State</h3>
+            <div id="auth-status" class="auth-info">Loading...</div>
+            <button onclick="checkAuthState()">🔄 Refresh Auth State</button>
+            <button onclick="clearAllStorage()" class="danger">🗑️ Clear All Storage</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🧪 Test Actions</h3>
+            <div>
+                <h4>Navigation Tests</h4>
+                <button onclick="testVendorRoute()">🏪 Test Vendor Dashboard</button>
+                <button onclick="testCustomerRoute()">🛒 Test Customer Store</button>
+                <button onclick="testPublicRoute()">🌐 Test Public Home</button>
+                <button onclick="testJoinVendor()">👥 Test "Join as Vendor"</button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <h4>Auth Flow Tests</h4>
+                <button onclick="testLogin()">🔑 Test Login Flow</button>
+                <button onclick="testTokenValidation()">✅ Test Token Validation</button>
+                <button onclick="testLogout()">🚪 Test Logout</button>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>📊 Test Results</h3>
+            <div id="test-results" class="log">
+                Click any test button to see results here...<br>
+            </div>
+            <button onclick="clearResults()">🧹 Clear Results</button>
+        </div>
+
+        <div class="test-section">
+            <h3>🔧 Manual Tests</h3>
+            <ul>
+                <li><strong>Token Persistence:</strong> Login → Refresh page → Should stay logged in</li>
+                <li><strong>Role Routing:</strong> Vendor user → Should redirect to /vendor-dashboard</li>
+                <li><strong>Route Protection:</strong> Logout → Visit /vendor-dashboard → Should redirect to /login</li>
+                <li><strong>Vendor Registration:</strong> Click "Become a vendor" → Should redirect to register with role=vendor</li>
+                <li><strong>Session Recovery:</strong> Clear localStorage → Refresh → Should clear auth state</li>
+                <li><strong>API URLs:</strong> Check Network tab → Should use HTTPS production URLs (not localhost)</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://afrimercato-backend.fly.dev/api';
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('test-results');
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'error' ? 'color: red' : type === 'success' ? 'color: green' : 'color: blue';
+            results.innerHTML += `<div style="${className}">[${timestamp}] ${message}</div>`;
+            results.scrollTop = results.scrollHeight;
+            console.log(`[AUTH-TEST] ${message}`);
+        }
+
+        function checkAuthState() {
+            const token = localStorage.getItem('afrimercato_token');
+            const userId = localStorage.getItem('afrimercato_user_id'); 
+            const userRole = localStorage.getItem('afrimercato_user_role');
+            
+            const status = document.getElementById('auth-status');
+            if (token && userId && userRole) {
+                status.innerHTML = `
+                    <strong>✅ Authenticated</strong><br>
+                    User ID: ${userId}<br>
+                    Role: ${userRole}<br>
+                    Token: ${token.substring(0, 30)}...
+                `;
+                log('Auth state: AUTHENTICATED', 'success');
+            } else {
+                status.innerHTML = `
+                    <strong>❌ Not Authenticated</strong><br>
+                    Token: ${token ? 'Present' : 'None'}<br>
+                    User ID: ${userId || 'None'}<br>
+                    Role: ${userRole || 'None'}
+                `;
+                log('Auth state: NOT AUTHENTICATED', 'error');
+            }
+        }
+
+        function clearAllStorage() {
+            localStorage.clear();
+            sessionStorage.clear();
+            log('Cleared all localStorage and sessionStorage', 'info');
+            checkAuthState();
+        }
+
+        function clearResults() {
+            document.getElementById('test-results').innerHTML = 'Results cleared...<br>';
+        }
+
+        function testVendorRoute() {
+            log('Testing vendor dashboard access...', 'info');
+            window.open('http://localhost:3000/vendor-dashboard', '_blank');
+            log('Opened /vendor-dashboard - Check if it redirects properly based on auth state', 'info');
+        }
+
+        function testCustomerRoute() {
+            log('Testing customer store access...', 'info');
+            window.open('http://localhost:3000/store/sample-accra-fresh-market', '_blank');
+            log('Opened customer store with slug - Check if it loads without "Invalid _id" error', 'info');
+        }
+
+        function testPublicRoute() {
+            log('Testing public home page...', 'info');
+            window.open('http://localhost:3000/', '_blank');
+            log('Opened home page - Check "Become a vendor" button visibility', 'info');
+        }
+
+        function testJoinVendor() {
+            log('Testing "Join as Vendor" flow...', 'info');
+            window.open('http://localhost:3000/register?role=vendor', '_blank');
+            log('Opened vendor registration - Should pre-select vendor role', 'info');
+        }
+
+        async function testLogin() {
+            log('Testing login token validation...', 'info');
+            const token = localStorage.getItem('afrimercato_token');
+            if (!token) {
+                log('No token found - Please login first to test validation', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    log(`Login validation SUCCESS: ${JSON.stringify(data.user?.role)}`, 'success');
+                } else {
+                    log(`Login validation FAILED: ${response.status} ${response.statusText}`, 'error');
+                }
+            } catch (error) {
+                log(`Login validation ERROR: ${error.message}`, 'error');
+            }
+        }
+
+        async function testTokenValidation() {
+            log('Testing /api/auth/me endpoint...', 'info');
+            try {
+                const response = await fetch(`${API_BASE_URL}/auth/me`);
+                if (response.ok) {
+                    log('Token validation endpoint accessible', 'success');
+                } else {
+                    log(`Token validation endpoint returned: ${response.status}`, 'error');
+                }
+            } catch (error) {
+                log(`Token validation endpoint error: ${error.message}`, 'error');
+            }
+        }
+
+        function testLogout() {
+            log('Testing logout functionality...', 'info');
+            const beforeKeys = Object.keys(localStorage).filter(key => key.includes('afrimercato')).length;
+            
+            // Simulate the hardLogout function
+            localStorage.removeItem('afrimercato_token');
+            localStorage.removeItem('afrimercato_refresh_token');
+            localStorage.removeItem('afrimercato_user_id');
+            localStorage.removeItem('afrimercato_user_role');
+            localStorage.removeItem('afrimercato_cart');
+            localStorage.removeItem('afrimercato_last_order_items');
+            
+            const afterKeys = Object.keys(localStorage).filter(key => key.includes('afrimercato')).length;
+            log(`Logout test: Cleared ${beforeKeys - afterKeys} afrimercato keys`, 'success');
+            checkAuthState();
+        }
+
+        // Auto-check auth state on page load
+        window.onload = function() {
+            checkAuthState();
+            log('Auth testing page loaded - Check console for auth logs', 'info');
+        };
+    </script>
+</body>
+</html>
