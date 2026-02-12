@@ -29,7 +29,11 @@ function Settings() {
   const [saving, setSaving] = useState(false)
   const [postcodeLoading, setPostcodeLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
-
+  
+  // Add error state for better UX
+  const [loadError, setLoadError] = useState(null)
+  
+  // Initialize vendor profile with defaults to prevent undefined errors
   const [vendorProfile, setVendorProfile] = useState({
     storeName: '',
     description: '',
@@ -73,22 +77,66 @@ function Settings() {
   const fetchSettings = async () => {
     try {
       setLoading(true)
+      setLoadError(null)
       const [vendorResponse, userResponse] = await Promise.all([
         vendorAPI.getProfile(),
         userAPI.getProfile(),
       ])
 
-      if (vendorResponse.success) {
-        setVendorProfile(vendorResponse.data.vendor)
+      if (vendorResponse.success && vendorResponse.data?.vendor) {
+        // Merge with defaults to prevent undefined errors
+        setVendorProfile(prev => ({
+          ...prev,
+          ...vendorResponse.data.vendor,
+          address: {
+            ...prev.address,
+            ...vendorResponse.data.vendor.address
+          },
+          businessHours: {
+            ...prev.businessHours,
+            ...vendorResponse.data.vendor.businessHours
+          }
+        }))
       }
-      if (userResponse.success) {
+      if (userResponse.success && userResponse.data?.user) {
         setUserProfile(userResponse.data.user)
       }
-    } catch (error) {
-      console.error('Error fetching settings:', error)
+    } catch (err) {
+      console.error('Error fetching settings:', err)
+      setLoadError(err.message || 'Failed to load settings. Please try again.')
     } finally {
       setLoading(false)
     }
+  }
+  
+  // LOADING GUARD: Show spinner while loading to prevent undefined errors
+  if (loading && !loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-afri-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading vendor settings...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  // ERROR GUARD: Show error message if loading failed
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Failed to Load Settings</h2>
+          <p className="text-gray-600 mb-4">{loadError}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="bg-afri-green text-white px-4 py-2 rounded hover:bg-green-600"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
   }
 
   const handleVendorChange = (field, value) => {
@@ -253,12 +301,15 @@ function Settings() {
     try {
       setSaving(true)
       const response = await vendorAPI.updateProfile(vendorProfile)
-      if (response.success) {
+      if (response?.success) {
         success('Vendor profile updated successfully!')
         setValidationErrors({})
+      } else {
+        error(response?.message || 'Failed to update vendor profile')
       }
     } catch (err) {
-      error(err.response?.data?.message || 'Failed to update vendor profile')
+      console.error('Save vendor profile error:', err)
+      error(err.message || err.response?.data?.message || 'Failed to update vendor profile')
     } finally {
       setSaving(false)
     }
@@ -268,11 +319,14 @@ function Settings() {
     try {
       setSaving(true)
       const response = await userAPI.updateProfile(userProfile)
-      if (response.success) {
+      if (response?.success) {
         success('Account updated successfully!')
+      } else {
+        error(response?.message || 'Failed to update account')
       }
     } catch (err) {
-      error(err.response?.data?.message || 'Failed to update account')
+      console.error('Save user profile error:', err)
+      error(err.message || err.response?.data?.message || 'Failed to update account')
     } finally {
       setSaving(false)
     }

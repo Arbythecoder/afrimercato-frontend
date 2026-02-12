@@ -618,13 +618,13 @@ export default function ClientLandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {featuredStores.map((store, index) => (
               <motion.div
-                key={store.id}
+                key={store._id || store.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                onClick={() => navigate(`/store/${store.id}`)}
+                onClick={() => navigate(`/store/${store._id || store.id}`)}
                 className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
               >
                 {/* Store Image */}

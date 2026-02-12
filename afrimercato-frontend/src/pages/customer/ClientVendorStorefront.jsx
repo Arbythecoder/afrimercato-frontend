@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getVendorById, getVendorProductsByVendorId, cartAPI } from '../../services/api'
+import { getVendorById, getVendorProductsByVendorId, getVendorBySlug, cartAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { getProductImage } from '../../utils/defaultImages'
 import { checkVendorLock, checkMinimumOrder } from '../../utils/cartVendorLock'
@@ -102,8 +102,30 @@ export default function ClientVendorStorefront() {
     try {
       setLoading(true)
 
-      // Try to fetch real vendor from API
-      const vendorResponse = await getVendorById(vendorId)
+      let actualVendorId = vendorId;
+      let vendorResponse;
+
+      // Check if vendorId is a MongoDB ObjectId (24 hex characters)
+      const isObjectId = /^[0-9a-fA-F]{24}$/.test(vendorId);
+
+      if (isObjectId) {
+        // Direct ObjectId lookup
+        vendorResponse = await getVendorById(vendorId);
+      } else {
+        // Assume it's a slug, resolve to ObjectId first
+        try {
+          const slugResponse = await getVendorBySlug(vendorId);
+          if (slugResponse.success && slugResponse.data) {
+            actualVendorId = slugResponse.data._id;
+            vendorResponse = slugResponse;
+          } else {
+            throw new Error('Slug not found');
+          }
+        } catch (slugError) {
+          // If slug resolution fails, try direct lookup anyway (backward compatibility)
+          vendorResponse = await getVendorById(vendorId);
+        }
+      }
 
       if (vendorResponse.success && vendorResponse.data) {
         setVendor(vendorResponse.data)
@@ -126,8 +148,8 @@ export default function ClientVendorStorefront() {
         }
       }
 
-      // Try to fetch real products
-      const productsResponse = await getVendorProductsByVendorId(vendorId)
+      // Try to fetch real products using the actual vendor ID
+      const productsResponse = await getVendorProductsByVendorId(actualVendorId)
       if (productsResponse.data?.products?.length > 0) {
         setProducts(productsResponse.data.products)
       } else if (productsResponse.products?.length > 0) {

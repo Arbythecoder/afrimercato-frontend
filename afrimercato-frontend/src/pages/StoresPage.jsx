@@ -32,6 +32,7 @@ export default function StoresPage() {
 
   useEffect(() => {
     fetchStores()
+
   }, [location])
 
   const fetchStores = async () => {
@@ -314,10 +315,10 @@ export default function StoresPage() {
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {stores.map((store) => (
                 <motion.div
-                  key={store.id}
+                  key={store._id || store.id}
                   whileHover={{ y: -5 }}
                   className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
-                  onClick={() => navigate(`/store/${store.id}`)}
+                  onClick={() => navigate(`/store/${store._id || store.id}`)}
                 >
                   {/* Store Image */}
                   <div className="relative h-48">

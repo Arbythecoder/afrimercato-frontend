@@ -108,15 +108,17 @@ export const AuthProvider = ({ children }) => {
         const normalizedUser = normalizeUserRoles(user)
         
         // Store in localStorage
-        localStorage.setItem('afrimercato_token', token)
-        localStorage.setItem('afrimercato_user_id', normalizedUser._id)
-        localStorage.setItem('afrimercato_user_role', normalizedUser.role)
-        if (refreshToken) {
-          localStorage.setItem('afrimercato_refresh_token', refreshToken)
-        }
-        
-        setUser(normalizedUser)
-        setIsAuthenticated(true)
+       const setAuth = (user, token) => {
+  if (token) {
+    localStorage.setItem('afrimercato_token', token);
+  }
+  if (user) {
+    localStorage.setItem('afrimercato_role', user.role);
+    localStorage.setItem('afrimercato_user', JSON.stringify(user));
+    setUser(user);
+    setRole(user.role);
+  }
+};
         
         if (import.meta.env.DEV) {
           console.log('🔑 Login success:', normalizedUser.role)

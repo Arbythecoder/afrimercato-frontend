@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, checkoutAPI, getVendorById } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
 // Helper: check if user has customer role (supports both roles array and role string)
@@ -172,7 +172,25 @@ function Checkout() {
       if (!vendorInfo || !vendorInfo.vendorId) return
 
       try {
-        const response = await getVendorById(vendorInfo.vendorId)
+        let response;
+        const vendorId = vendorInfo.vendorId;
+
+        // Check if vendorId is a MongoDB ObjectId (24 hex characters)
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(vendorId);
+
+        if (isObjectId) {
+          // Direct ObjectId lookup
+          response = await getVendorById(vendorId);
+        } else {
+          // Try slug resolution first
+          try {
+            response = await getVendorBySlug(vendorId);
+          } catch (slugError) {
+            // Fallback to direct lookup for backward compatibility
+            response = await getVendorById(vendorId);
+          }
+        }
+
         if (response.success && response.data) {
           setVendor(response.data)
         } else if (response.storeName) {

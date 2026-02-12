@@ -74,16 +74,35 @@ export const getProductImage = (product) => {
   if (product?.images && product.images.length > 0) {
     // Handle object array format (with url property)
     const primaryImage = product.images.find(img => img?.isPrimary)
-    if (primaryImage?.url) return primaryImage.url
+    if (primaryImage?.url) return fixImageUrl(primaryImage.url)
 
     // Handle both string array and object array formats
     const firstImage = product.images[0]
-    if (typeof firstImage === 'string') return firstImage
-    if (firstImage?.url) return firstImage.url
+    if (typeof firstImage === 'string') return fixImageUrl(firstImage)
+    if (firstImage?.url) return fixImageUrl(firstImage.url)
   }
 
   // Fallback to category default
   return getDefaultProductImage(product?.category)
+}
+
+/**
+ * Fix legacy localhost URLs to use production URL
+ * @param {string} url - Image URL
+ * @returns {string} Fixed URL
+ */
+const fixImageUrl = (url) => {
+  if (!url) return url
+  
+  // Fix localhost URLs to use production backend
+  if (url.includes('localhost:5000')) {
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
+    // Remove /api from the API_URL if present
+    const baseUrl = apiUrl.replace('/api', '')
+    return url.replace('http://localhost:5000', baseUrl)
+  }
+  
+  return url
 }
 
 /**
