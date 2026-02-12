@@ -91,6 +91,33 @@ function RoleBasedRedirect() {
   }
 }
 
+// Protected Route component with role-based access control
+function ProtectedRoute({ children, allowedRoles }) {
+  const { user, loading } = useAuth()
+  const role = user?.role || user?.primaryRole
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-afri-green to-afri-green-dark">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white mx-auto"></div>
+          <p className="text-white mt-4 text-lg font-semibold">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+  
+  if (!user) return <Navigate to="/login" replace />
+  
+  if (allowedRoles && !allowedRoles.includes(role)) {
+    // Redirect to appropriate dashboard based on actual role
+    const redirectPath = role === 'vendor' ? '/dashboard' : '/'
+    return <Navigate to={redirectPath} replace />
+  }
+  
+  return children
+}
+
 function AppContent() {
   const { isAuthenticated, user, loading } = useAuth()
 
@@ -129,7 +156,11 @@ function AppContent() {
       <Route path="/terms-of-service" element={<TermsOfService />} />
 
       <Route path="/products" element={<ProductBrowsing />} />
-      <Route path="/cart" element={<ShoppingCart />} />
+      <Route path="/cart" element={
+        <ProtectedRoute allowedRoles={['customer']}>
+          <ShoppingCart />
+        </ProtectedRoute>
+      } />
       <Route path="/orders" element={<OrderHistory />} />
       <Route path="/profile" element={<CustomerProfile />} />
       <Route path="/wishlist" element={<Wishlist />} />
@@ -153,7 +184,11 @@ function AppContent() {
       />
 
       {/* Checkout & Order Routes */}
-      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/checkout" element={
+        <ProtectedRoute allowedRoles={['customer']}>
+          <Checkout />
+        </ProtectedRoute>
+      } />
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
 
