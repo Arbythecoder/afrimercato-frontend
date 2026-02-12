@@ -1,5 +1,7 @@
 // API Base URL - uses environment variable with fallback
-const API_BASE_URL = (import.meta.env.VITE_API_URL || "https://afrimercato-backend.fly.dev") + "/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL 
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : 'http://localhost:5000/api';
 
 if (import.meta.env.DEV) {
   console.log('API Base URL:', API_BASE_URL);
@@ -94,11 +96,24 @@ const apiCall = async (endpoint, options = {}, isRetry = false) => {
     }
 
     if (import.meta.env.DEV) {
-      console.log('Fetching:', url);
+      console.log('[API_DEBUG] request:', {
+        url,
+        method: config.method || 'GET',
+        hasToken: !!token,
+        tokenPreview: token ? token.substring(0, 20) + '...' : null
+      });
     }
 
     const response = await fetch(url, config);
     clearTimeout(timeoutId);
+
+    if (import.meta.env.DEV) {
+      console.log('[API_DEBUG] response:', {
+        url,
+        status: response.status,
+        ok: response.ok
+      });
+    }
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -218,13 +233,15 @@ export const registerVendor = async (vendorData) => {
   const response = await apiCall('/vendor/register', {
     method: 'POST',
     body: JSON.stringify(vendorData),
-    timeout: 30000 // 30s – backend may cold-start + bcrypt hashing
+    timeout: 30000
   });
 
   if (response.success && response.data?.token) {
+    // FIX: Use STANDARD token keys (same as customer registration)
     localStorage.setItem('afrimercato_token', response.data.token);
-
-    // Store refresh token if provided
+    localStorage.setItem('afrimercato_role', response.data.user.role || 'vendor');
+    localStorage.setItem('afrimercato_user', JSON.stringify(response.data.user));
+    
     if (response.data.refreshToken) {
       localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
     }
@@ -239,10 +256,14 @@ export const logoutUser = async () => {
       method: 'POST'
     });
   } finally {
-    // Clear both tokens - navigation is handled by AuthContext
+    // Clear ALL tokens and user data
     localStorage.removeItem('afrimercato_token');
     localStorage.removeItem('afrimercato_refresh_token');
-    // DO NOT redirect here - let React components handle navigation
+    localStorage.removeItem('afrimercato_role');
+    localStorage.removeItem('afrimercato_user');
+    localStorage.removeItem('afrimercato_cart');
+    sessionStorage.clear();
+    // Navigation handled by AuthContext
   }
 };
 
@@ -416,7 +437,11 @@ export const getEvents = async () => {
 
 // LOCATION SEARCH
 export const searchVendorsByLocation = async (location, radius = 50) => {
-  const params = new URLSearchParams({ location, radius });
+  // FIX: Backend expects 'postcode' or 'locationText', not 'location'
+  const params = new URLSearchParams({ 
+    locationText: location,
+    radiusKm: radius 
+  });
   return apiCall(`/locations/search-vendors?${params}`);
 };
 
@@ -427,7 +452,11 @@ export const geocodeLocation = async (query) => {
 
 // VENDORS (Customer)
 export const getVendorById = async (id) => {
-  return apiCall(`/locations/vendor/${id}`);
+  return apiCall(`/products/vendor/${id}`);
+};
+
+export const getVendorBySlug = async (slug) => {
+  return apiCall(`/products/vendors/slug/${slug}`);
 };
 
 export const getVendorProductsByVendorId = async (vendorId) => {
@@ -714,19 +743,6 @@ export const isAuthenticated = () => {
   return !!localStorage.getItem('afrimercato_token');
 };
 
-export const getAuthToken = () => {
-  return localStorage.getItem('afrimercato_token');
-};
-
-export const setAuthToken = (token) => {
-  localStorage.setItem('afrimercato_token', token);
-};
-
-export const clearAuthToken = () => {
-  localStorage.removeItem('afrimercato_token');
-  localStorage.removeItem('afrimercato_refresh_token');
-};
-
 // GROUPED EXPORTS FOR CONVENIENCE
 export const authAPI = {
   login: loginUser,
@@ -735,9 +751,8 @@ export const authAPI = {
   logout: logoutUser,
   refreshToken,
   isAuthenticated,
-  getAuthToken,
-  setAuthToken,
-  clearAuthToken
+  me: getUserProfile,
+  verifyEmail: (token) => apiCall(`/auth/verify-email?token=${token}`, 'GET')
 };
 
 // Delivery Settings
@@ -1014,6 +1029,7 @@ export const locationAPI = {
 
 export const vendorsAPI = {
   getById: getVendorById,
+  getBySlug: getVendorBySlug,
   getProducts: getVendorProductsByVendorId
 };
 

@@ -306,13 +306,6 @@ function ShoppingCart() {
               Clear Cart & Sign In as Customer
             </button>
             <button
-              onClick={() => navigate('/login')
-              }}
-              className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-3 px-6 rounded-xl font-bold text-lg transition-all mb-3"
-            >
-              Sign in as Customer
-            </button>
-            <button
               onClick={() => navigate(-1)}
               className="w-full text-gray-500 hover:text-gray-700 py-2 font-medium transition-colors"
             >

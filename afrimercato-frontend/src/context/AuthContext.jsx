@@ -52,39 +52,47 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = async () => {
     const token = localStorage.getItem('afrimercato_token')
 
+    // Dev logging
+    if (import.meta.env.DEV) {
+      console.log('🔐 Auth Check:', {
+        hasToken: !!token,
+        isAuth: isAuthenticated
+      })
+    }
+
     if (token) {
-      // Decode token to get user role (for UI routing only - backend still validates)
+      // Decode token to check expiry
       const decoded = decodeToken(token)
 
-      if (decoded && decoded.id) {
-        // Fetch fresh user data from backend
+      if (decoded && decoded.id && decoded.exp * 1000 > Date.now()) {
+        // Token is valid, validate with backend
         try {
-          // Guard the profile fetch with a timeout so the UI doesn't hang forever
-          const profilePromise = getUserProfile()
-          const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 12000))
-
-          const response = await Promise.race([profilePromise, timeoutPromise])
-
+          const response = await authAPI.me() // Use /api/auth/me endpoint
+          
           if (response && response.success) {
-            setUser(normalizeUserRoles(response.data))
+            const normalizedUser = normalizeUserRoles(response.data)
+            setUser(normalizedUser)
             setIsAuthenticated(true)
+            
+            // Update localStorage with standard keys
+            localStorage.setItem('afrimercato_role', normalizedUser.role)
+            localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
+            
+            if (import.meta.env.DEV) {
+              console.log('✅ Auth validated:', normalizedUser.role)
+            }
           } else {
-            // Token invalid or server returned error - clear tokens
-            localStorage.removeItem('afrimercato_token')
-            localStorage.removeItem('afrimercato_refresh_token')
+            // Token invalid - hard logout
+            hardLogout()
           }
         } catch (error) {
-          // If profile fetch fails, use decoded token data as fallback
-          // IMPORTANT: JWT contains 'roles' array, not 'role' string
-          const userRoles = decoded.roles || [];
-          setUser({
-            _id: decoded.id,
-            email: decoded.email,
-            roles: userRoles,
-            role: userRoles[0] || 'customer'
-          })
-          setIsAuthenticated(true)
+          console.error('Auth validation failed:', error)
+          // Hard logout on validation failure
+          hardLogout()
         }
+      } else {
+        // Token expired or invalid - hard logout
+        hardLogout()
       }
     }
 
@@ -96,12 +104,24 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login({ email, password })
 
       if (response && response.success) {
-        const { token, user } = response.data
-        localStorage.setItem('afrimercato_token', token)
-        // Normalize: ensure both roles array and role string are present
+        const { token, user, refreshToken } = response.data
         const normalizedUser = normalizeUserRoles(user)
+        
+        // Store in localStorage
+        localStorage.setItem('afrimercato_token', token)
+        localStorage.setItem('afrimercato_user_id', normalizedUser._id)
+        localStorage.setItem('afrimercato_user_role', normalizedUser.role)
+        if (refreshToken) {
+          localStorage.setItem('afrimercato_refresh_token', refreshToken)
+        }
+        
         setUser(normalizedUser)
         setIsAuthenticated(true)
+        
+        if (import.meta.env.DEV) {
+          console.log('🔑 Login success:', normalizedUser.role)
+        }
+        
         return { success: true, user: normalizedUser }
       } else {
         return {
@@ -140,11 +160,24 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (response && response.success) {
-        const { token, user } = response.data
-        localStorage.setItem('afrimercato_token', token)
+        const { token, user, refreshToken } = response.data
         const normalizedUser = normalizeUserRoles(user)
+        
+        // Store in localStorage with standard keys
+        localStorage.setItem('afrimercato_token', token)
+        localStorage.setItem('afrimercato_role', normalizedUser.role)
+        localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
+        if (refreshToken) {
+          localStorage.setItem('afrimercato_refresh_token', refreshToken)
+        }
+        
         setUser(normalizedUser)
         setIsAuthenticated(true)
+        
+        if (import.meta.env.DEV) {
+          console.log('📝 Register success:', normalizedUser.role)
+        }
+        
         return { success: true, user: normalizedUser }
       } else {
         return {
@@ -160,19 +193,64 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const logout = () => {
+  const hardLogout = (roleType = null) => {
+    // Clear ALL auth tokens (use standard keys only)
     localStorage.removeItem('afrimercato_token')
     localStorage.removeItem('afrimercato_refresh_token')
+    localStorage.removeItem('afrimercato_role')
+    localStorage.removeItem('afrimercato_user')
+    localStorage.removeItem('afrimercato_cart')
+    localStorage.removeItem('afrimercato_last_order_items')
+    localStorage.removeItem('repeatPurchaseFrequency')
+    localStorage.removeItem('checkout_redirect')
+    localStorage.removeItem('vendor_lock')
+    
+    // Clear legacy vendor tokens if they exist
+    localStorage.removeItem('afrimercato_vendor_token')
+    localStorage.removeItem('afrimercato_vendor_user')
+    localStorage.removeItem('afrimercato_vendor_refresh_token')
+    localStorage.removeItem('afrimercato_user_id')
+    localStorage.removeItem('afrimercato_user_role')
+    
+    // Clear any cached vendor data
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('vendor_')) {
+        localStorage.removeItem(key)
+      }
+    })
+    
+    sessionStorage.clear()
+    
     setUser(null)
     setIsAuthenticated(false)
+    
+    if (import.meta.env.DEV) {
+      console.log('🚪 Logout completed - all storage cleared')
+    }
+  }
+
+  const logout = (roleType = null) => {
+    hardLogout(roleType)
   }
 
   // Used by OAuthCallback to set auth state after social login
-  const setAuth = ({ user: userData, token, isAuthenticated: authStatus }) => {
-    if (token) {
+  const setAuth = ({ user: userData, token, refreshToken, isAuthenticated: authStatus }) => {
+    if (token && userData) {
+      const normalizedUser = normalizeUserRoles(userData)
+      
       localStorage.setItem('afrimercato_token', token)
+      localStorage.setItem('afrimercato_role', normalizedUser.role)
+      localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
+      if (refreshToken) {
+        localStorage.setItem('afrimercato_refresh_token', refreshToken)
+      }
+      
+      setUser(normalizedUser)
+      
+      if (import.meta.env.DEV) {
+        console.log('🔗 OAuth login:', normalizedUser.role)
+      }
     }
-    setUser(normalizeUserRoles(userData))
     setIsAuthenticated(authStatus)
   }
 
@@ -183,6 +261,7 @@ export const AuthProvider = ({ children }) => {
     login,
     register,
     logout,
+    hardLogout,
     checkAuth,
     setAuth
   }
