@@ -1257,8 +1257,8 @@ exports.getOrders = asyncHandler(async (req, res) => {
     search
   } = req.query;
 
-  // Build filter
-  const filter = { vendor: req.vendor._id };
+  // Build filter - use items.vendor for proper isolation
+  const filter = { 'items.vendor': req.vendor._id };
 
   if (status) {
     filter.status = status;
