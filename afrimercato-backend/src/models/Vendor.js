@@ -33,6 +33,13 @@ const vendorSchema = new mongoose.Schema({
     trim: true,
     uppercase: true
   },
+  slug: {
+    type: String,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match: [/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens']
+  },
   category: {
     type: String,
     required: [true, 'Category is required'],
@@ -214,11 +221,47 @@ const vendorSchema = new mongoose.Schema({
 // =================================================================
 vendorSchema.index({ user: 1 });
 vendorSchema.index({ storeId: 1 });
+vendorSchema.index({ slug: 1 }); // For slug-based lookups
 vendorSchema.index({ category: 1, isActive: 1 });
 vendorSchema.index({ approvalStatus: 1 });
 vendorSchema.index({ 'location.latitude': 1, 'location.longitude': 1 });
 vendorSchema.index({ 'location.coordinates.coordinates': '2dsphere' }); // Geospatial index
 vendorSchema.index({ 'location.city': 1 }); // CRITICAL: Enable fast city-based store search
 vendorSchema.index({ isActive: 1, isVerified: 1, approvalStatus: 1 }); // Compound index for common queries
+
+// =================================================================
+// MIDDLEWARE - AUTO-GENERATE SLUGS
+// =================================================================
+
+// Helper function to generate slug from store name
+function generateSlug(storeName) {
+  return storeName
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '') // Remove special characters
+    .replace(/[\s_-]+/g, '-') // Replace spaces and underscores with hyphens
+    .replace(/^-+|-+$/g, ''); // Remove leading/trailing hyphens
+}
+
+// Pre-save middleware to auto-generate slug
+vendorSchema.pre('save', async function(next) {
+  // Only generate slug if it's a new document or storeName changed
+  if (this.isNew || this.isModified('storeName')) {
+    if (!this.slug) {
+      let baseSlug = generateSlug(this.storeName);
+      let slugToTry = baseSlug;
+      let counter = 1;
+
+      // Ensure slug uniqueness
+      while (await this.constructor.findOne({ slug: slugToTry, _id: { $ne: this._id } })) {
+        slugToTry = `${baseSlug}-${counter}`;
+        counter++;
+      }
+
+      this.slug = slugToTry;
+    }
+  }
+  next();
+});
 
 module.exports = mongoose.model('Vendor', vendorSchema);

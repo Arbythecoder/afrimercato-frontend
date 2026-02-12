@@ -32,6 +32,56 @@ const { getCorsOptions, getCorsConfigSummary } = require('./src/config/cors');
 // Error handlers
 const { errorHandler, notFound } = require('./src/middleware/errorHandler');
 
+// Route logging utility
+const logRegisteredRoutes = (app) => {
+  console.log('\n📋 REGISTERED API ROUTES:');
+  console.log('=' .repeat(50));
+  
+  const routes = [];
+  
+  // Extract routes from express app
+  app._router.stack.forEach((middleware) => {
+    if (middleware.route) {
+      // Direct route
+      const methods = Object.keys(middleware.route.methods).map(m => m.toUpperCase());
+      routes.push({
+        method: methods.join(', '),
+        path: middleware.route.path
+      });
+    } else if (middleware.name === 'router' && middleware.regexp.source !== '^\\/?$') {
+      // Router middleware
+      let basePath = middleware.regexp.source
+        .replace('^\\', '')
+        .replace('\\/?(?=\\/|$)', '')
+        .replace(/\\\//g, '/')
+        .replace('?', '');
+      
+      if (middleware.handle && middleware.handle.stack) {
+        middleware.handle.stack.forEach((handler) => {
+          if (handler.route) {
+            const methods = Object.keys(handler.route.methods).map(m => m.toUpperCase());
+            routes.push({
+              method: methods.join(', '),
+              path: basePath + handler.route.path
+            });
+          }
+        });
+      }
+    }
+  });
+  
+  // Sort routes by path
+  routes.sort((a, b) => a.path.localeCompare(b.path));
+  
+  // Print routes
+  routes.forEach(route => {
+    console.log(`  ${route.method.padEnd(8)} ${route.path}`);
+  });
+  
+  console.log('=' .repeat(50));
+  console.log(`✅ Total routes registered: ${routes.length}\n`);
+};
+
 // Import all routes
 const vendorRoutes = require('./src/routes/vendorRoutes');
 const vendorDashboardRoutes = require('./src/routes/vendorDashboardRoutes');
@@ -152,8 +202,14 @@ app.use(
   })
 );
 
-// Static uploads
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Static uploads with CORS headers
+app.use('/uploads', (req, res, next) => {
+  // Set CORS headers for images
+  res.header('Cross-Origin-Resource-Policy', 'cross-origin');
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET');
+  next();
+}, express.static(path.join(__dirname, 'uploads')));
 
 // ======================= ROUTES =======================
 
@@ -283,6 +339,7 @@ app.use('/api/vendor/pickers', vendorPickerRoutes);
 // ======================= CUSTOMER ROUTES =======================
 app.use('/api/customers', customerRoutes);
 app.use('/api/products', productBrowsingRoutes);
+app.use('/api/vendors', productBrowsingRoutes); // Alias for vendor-related endpoints
 app.use('/api/cart', cartRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/payments', paymentRoutes);
@@ -327,6 +384,11 @@ const HOST = '0.0.0.0'; // Listen on all network interfaces (required for Fly.io
 
 const server = app.listen(PORT, HOST, () => {
   console.log(`🚀 Server running on ${HOST}:${PORT}`);
+  
+  // Log all registered routes for debugging
+  if (process.env.NODE_ENV !== 'test') {
+    logRegisteredRoutes(app);
+  }
 });
 
 // Socket.io

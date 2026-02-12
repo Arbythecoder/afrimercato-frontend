@@ -9,6 +9,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
+const { attachVendor } = require('../middleware/vendorMiddleware');
 const {
   getDashboard,
   getAnalytics,
@@ -19,8 +20,8 @@ const {
   getPerformanceMetrics
 } = require('../controllers/vendorDashboardController');
 
-// All dashboard routes require vendor authentication AND email verification
-router.use(protect, authorize('vendor'), requireEmailVerified);
+// All dashboard routes require vendor authentication, email verification AND vendor isolation
+router.use(protect, authorize('vendor'), requireEmailVerified, attachVendor);
 
 // =================================================================
 // MAIN DASHBOARD

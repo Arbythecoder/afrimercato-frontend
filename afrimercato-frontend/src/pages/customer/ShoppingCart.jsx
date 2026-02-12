@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, getVendorById } from '../../services/api'
+import { cartAPI, getVendorById, getVendorBySlug } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
 // Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
@@ -40,7 +40,25 @@ function ShoppingCart() {
       if (!vendorInfo || !vendorInfo.vendorId) return
 
       try {
-        const response = await getVendorById(vendorInfo.vendorId)
+        let response;
+        const vendorId = vendorInfo.vendorId;
+
+        // Check if vendorId is a MongoDB ObjectId (24 hex characters)
+        const isObjectId = /^[0-9a-fA-F]{24}$/.test(vendorId);
+
+        if (isObjectId) {
+          // Direct ObjectId lookup
+          response = await getVendorById(vendorId);
+        } else {
+          // Try slug resolution first
+          try {
+            response = await getVendorBySlug(vendorId);
+          } catch (slugError) {
+            // Fallback to direct lookup for backward compatibility
+            response = await getVendorById(vendorId);
+          }
+        }
+
         if (response.success && response.data) {
           setVendor(response.data)
         } else if (response.storeName) {
@@ -215,7 +233,39 @@ function ShoppingCart() {
       localStorage.removeItem('afrimercato_cart')
     }
 
+    // Clear vendor lock when clearing cart
+    localStorage.removeItem('vendor_lock')
+    localStorage.removeItem('afrimercato_last_order_items')
+
     window.dispatchEvent(new Event('cartUpdated'))
+  }
+
+  const clearCartAndSwitchToCustomer = async () => {
+    try {
+      // Clear cart completely
+      setCart([])
+      
+      if (isAuthenticated) {
+        await cartAPI.clear()
+      }
+      
+      // Clear all vendor/role related localStorage
+      localStorage.removeItem('afrimercato_cart')
+      localStorage.removeItem('vendor_lock')
+      localStorage.removeItem('afrimercato_last_order_items')
+      localStorage.removeItem('repeatPurchaseFrequency')
+      
+      // Clear vendor auth tokens
+      localStorage.removeItem('afrimercato_vendor_token')
+      localStorage.removeItem('afrimercato_vendor_user')
+      localStorage.removeItem('afrimercato_vendor_refresh_token')
+      
+      // Force redirect to customer login
+      window.location.href = '/login?type=customer&redirect=shopping&message=Please sign in with a customer account to shop'
+      
+    } catch (error) {
+      console.error('Failed to clear cart and switch:', error)
+    }
   }
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
@@ -249,8 +299,14 @@ function ShoppingCart() {
             </p>
             <button
               onClick={() => {
-                localStorage.removeItem('afrimercato_token')
-                navigate('/login')
+                clearCartAndSwitchToCustomer()
+              }}
+              className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-3 px-4 rounded-lg font-medium transition-colors mb-3"
+            >
+              Clear Cart & Sign In as Customer
+            </button>
+            <button
+              onClick={() => navigate('/login')
               }}
               className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-3 px-6 rounded-xl font-bold text-lg transition-all mb-3"
             >

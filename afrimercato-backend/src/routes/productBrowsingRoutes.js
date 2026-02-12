@@ -13,6 +13,7 @@ const {
   getCategories,
   getFeaturedVendors,
   getVendorProducts,
+  getVendorBySlug,
   getTrendingProducts,
   getDealProducts,
   getNearbyProducts,
@@ -29,6 +30,8 @@ router.get('/deals', getDealProducts);
 router.get('/new-arrivals', getNewProducts);
 router.get('/featured-vendors', getFeaturedVendors);
 router.get('/nearby', getNearbyProducts);
+// Vendor slug resolution (must come before vendor/:vendorId to avoid conflicts)
+router.get('/vendors/slug/:slug', getVendorBySlug);
 router.get('/vendor/:vendorId', getVendorProducts);
 router.get('/:productId', getProductDetails);
 

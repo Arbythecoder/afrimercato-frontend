@@ -236,7 +236,7 @@ exports.getFeaturedVendors = asyncHandler(async (req, res) => {
   })
     .sort({ createdAt: -1, rating: -1, totalOrders: -1 }) // Show newest first
     .limit(parseInt(limit))
-    .select('storeName logo location.city rating reviews totalOrders storeDescription category createdAt');
+    .select('storeName slug logo location.city rating reviews totalOrders storeDescription category createdAt');
 
   res.status(200).json({
     success: true,
@@ -247,7 +247,7 @@ exports.getFeaturedVendors = asyncHandler(async (req, res) => {
 
 /**
  * @route   GET /api/products/vendor/:vendorId
- * @desc    Get all products from a specific vendor
+ * @desc    Get all products from a specific vendor (supports both ObjectId and slug)
  * @access  Public
  */
 exports.getVendorProducts = asyncHandler(async (req, res) => {
@@ -256,8 +256,16 @@ exports.getVendorProducts = asyncHandler(async (req, res) => {
 
   const skip = (page - 1) * limit;
 
-  // Verify vendor exists
-  const vendor = await Vendor.findById(vendorId);
+  let vendor;
+
+  // Try to find vendor by ObjectId first, then by slug
+  if (vendorId.match(/^[0-9a-fA-F]{24}$/)) {
+    // Valid ObjectId format
+    vendor = await Vendor.findById(vendorId);
+  } else {
+    // Try slug lookup
+    vendor = await Vendor.findOne({ slug: vendorId.toLowerCase() });
+  }
 
   if (!vendor) {
     return res.status(404).json({
@@ -266,7 +274,7 @@ exports.getVendorProducts = asyncHandler(async (req, res) => {
     });
   }
 
-  const query = { vendor: vendorId, isActive: true };
+  const query = { vendor: vendor._id, isActive: true };
 
   if (category) {
     query.category = new RegExp(category, 'i');
@@ -302,6 +310,7 @@ exports.getVendorProducts = asyncHandler(async (req, res) => {
     vendor: {
       id: vendor._id,
       name: vendor.storeName,
+      slug: vendor.slug,
       logo: vendor.logo,
       rating: vendor.rating,
       reviews: vendor.reviews
@@ -440,6 +449,45 @@ exports.getRecommendations = asyncHandler(async (req, res) => {
     success: true,
     count: products.length,
     data: products
+  });
+});
+
+/**
+ * @route   GET /api/vendors/slug/:slug
+ * @desc    Get vendor ID by slug (for frontend routing)
+ * @access  Public
+ */
+exports.getVendorBySlug = asyncHandler(async (req, res) => {
+  const { slug } = req.params;
+
+  const vendor = await Vendor.findOne({ 
+    slug: slug.toLowerCase(),
+    isActive: true,
+    $or: [
+      { isVerified: true },
+      { approvalStatus: 'approved' }
+    ]
+  }).select('_id storeName slug logo rating reviews location');
+
+  if (!vendor) {
+    return res.status(404).json({
+      success: false,
+      message: 'Store not found'
+    });
+  }
+
+  res.status(200).json({
+    success: true,
+    data: {
+      _id: vendor._id,
+      id: vendor._id, // For compatibility
+      storeName: vendor.storeName,
+      slug: vendor.slug,
+      logo: vendor.logo,
+      rating: vendor.rating,
+      reviews: vendor.reviews,
+      location: vendor.location
+    }
   });
 });
 
