@@ -76,6 +76,7 @@ exports.previewOrder = asyncHandler(async (req, res) => {
 
     orderItems.push({
       product: product._id,
+      vendor: product.vendor._id,
       productName: product.name,
       quantity: cartItem.quantity,
       price: product.price,
@@ -96,6 +97,7 @@ exports.previewOrder = asyncHandler(async (req, res) => {
 
     vendorGroups[vendorId].items.push({
       product: product._id,
+      vendor: product.vendor._id,
       productName: product.name,
       quantity: cartItem.quantity,
       price: product.price,
@@ -227,6 +229,7 @@ exports.processCheckout = asyncHandler(async (req, res) => {
 
     ordersByVendor[vendorId].items.push({
       product: product._id,
+      vendor: product.vendor,
       quantity: cartItem.quantity,
       price: product.price
     });
