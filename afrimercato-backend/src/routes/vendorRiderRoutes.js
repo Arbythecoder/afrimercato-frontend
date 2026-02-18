@@ -4,10 +4,10 @@
 
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect, authorize, requireEmailVerified } = require('../middleware/auth');
 
 // All routes require vendor authentication
-router.use(protect, authorize('vendor'));
+router.use(protect, authorize('vendor'), requireEmailVerified);
 
 // Rider requests
 router.get('/requests', (req, res) => res.status(501).json({ message: 'Get pending rider requests' }));

@@ -76,28 +76,62 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const [statsResponse, chartResponse] = await Promise.all([
-        vendorAPI.getDashboardStats(),
-        vendorAPI.getChartData(timeRange),
+      
+      // Use Promise.allSettled to not fail entire dashboard if one API fails
+      // Add 5-second timeout to each API call
+      const timeout = (promise, ms = 5000) => {
+        return Promise.race([
+          promise,
+          new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Request timed out')), ms)
+          )
+        ])
+      }
+
+      const [statsResult, chartResult] = await Promise.allSettled([
+        timeout(vendorAPI.getDashboardStats()),
+        timeout(vendorAPI.getChartData(timeRange)),
       ])
 
-      if (statsResponse.success) {
-        setStats(statsResponse.data)
+      let hasError = false
+      const errors = []
+
+      // Handle stats response
+      if (statsResult.status === 'fulfilled' && statsResult.value?.success) {
+        setStats(statsResult.value.data)
         // Show confetti for good performance
-        if (statsResponse.data?.revenue?.trend > 10) {
+        if (statsResult.value.data?.revenue?.trend > 10) {
           setShowConfetti(true)
           setTimeout(() => setShowConfetti(false), 3000)
         }
+      } else {
+        hasError = true
+        errors.push('Dashboard stats')
+        console.error('Stats fetch failed:', statsResult.reason)
       }
-      if (chartResponse.success) {
-        setChartData(chartResponse.data)
+
+      // Handle chart response
+      if (chartResult.status === 'fulfilled' && chartResult.value?.success) {
+        setChartData(chartResult.value.data)
+      } else {
+        hasError = true
+        errors.push('Chart data')
+        console.error('Chart fetch failed:', chartResult.reason)
       }
+
+      // Show partial error message if some calls failed
+      if (hasError && errors.length > 0) {
+        console.warn(`⚠️ Partial dashboard load: ${errors.join(', ')} failed to load`)
+        // DO NOT logout - just log the error
+      }
+
       setNeedsOnboarding(false)
     } catch (error) {
       console.error('Dashboard error:', error)
       if (error.message && error.message.includes('Vendor profile not found')) {
         setNeedsOnboarding(true)
       }
+      // DO NOT logout on dashboard errors
     } finally {
       setLoading(false)
     }

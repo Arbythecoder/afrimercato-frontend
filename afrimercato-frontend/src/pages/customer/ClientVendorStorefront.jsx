@@ -244,9 +244,10 @@ export default function ClientVendorStorefront() {
   }
 
   const handleVendorSwitch = async () => {
-    // Clear current cart
+    // Clear current cart and vendor lock completely
     setCart([])
     localStorage.setItem('afrimercato_cart', JSON.stringify([]))
+    localStorage.removeItem('vendor_lock')
     
     // Clear backend cart if authenticated
     if (isAuthenticated && user?.roles?.includes('customer')) {
@@ -257,10 +258,16 @@ export default function ClientVendorStorefront() {
       }
     }
 
-    // Add the new product
+    // Close modal
+    setVendorSwitchModal({ isOpen: false, currentStoreName: '', newStoreName: '', pendingProduct: null })
+
+    // Add the new product from new vendor
     if (vendorSwitchModal.pendingProduct) {
       await performAddToCart(vendorSwitchModal.pendingProduct)
     }
+    
+    // Notify cart update
+    window.dispatchEvent(new Event('cartUpdated'))
   }
 
   const updateCartQuantity = async (productId, newQuantity) => {

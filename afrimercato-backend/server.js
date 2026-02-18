@@ -90,6 +90,7 @@ const customerRoutes = require('./src/routes/customerRoutes');
 const riderAuthRoutes = require('./src/routes/riderAuthRoutes');
 const pickerAuthRoutes = require('./src/routes/pickerAuthRoutes');
 const productBrowsingRoutes = require('./src/routes/productBrowsingRoutes');
+const vendorPublicRoutes = require('./src/routes/vendorPublicRoutes');
 const cartRoutes = require('./src/routes/cartRoutes');
 const checkoutRoutes = require('./src/routes/checkoutRoutes');
 const paymentRoutes = require('./src/routes/paymentRoutes');
@@ -339,7 +340,7 @@ app.use('/api/vendor/pickers', vendorPickerRoutes);
 // ======================= CUSTOMER ROUTES =======================
 app.use('/api/customers', customerRoutes);
 app.use('/api/products', productBrowsingRoutes);
-app.use('/api/vendors', productBrowsingRoutes); // Alias for vendor-related endpoints
+app.use('/api/vendors', vendorPublicRoutes);
 app.use('/api/cart', cartRoutes);
 app.use('/api/checkout', checkoutRoutes);
 app.use('/api/payments', paymentRoutes);

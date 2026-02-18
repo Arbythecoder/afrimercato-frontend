@@ -113,8 +113,10 @@ function ProductDetail() {
   }
 
   const handleVendorSwitch = async () => {
-    // Clear cart
+    // Clear cart and vendor lock completely
     localStorage.setItem('afrimercato_cart', JSON.stringify([]))
+    localStorage.removeItem('vendor_lock')
+    
     if (isAuthenticated) {
       try {
         await cartAPI.clear()
@@ -123,13 +125,19 @@ function ProductDetail() {
       }
     }
     
-    // Add new product
+    // Close modal
+    setVendorSwitchModal({ isOpen: false, currentStoreName: '', newStoreName: '', pendingProduct: null, pendingQuantity: 1 })
+    
+    // Add new product from new vendor
     if (vendorSwitchModal.pendingProduct) {
       await performAddToCart(
         vendorSwitchModal.pendingProduct,
         vendorSwitchModal.pendingQuantity
       )
     }
+    
+    // Notify cart update
+    window.dispatchEvent(new Event('cartUpdated'))
   }
 
   const buyNow = () => {

@@ -18,13 +18,22 @@ $API_URL = "http://localhost:5000/api"
 Write-Host "[1/6] Registering test vendor..." -ForegroundColor Yellow
 
 try {
-    $registerResponse = Invoke-RestMethod -Uri "$API_URL/auth/register" -Method Post -ContentType "application/json" -Body (@{
-        name = "Green Farm Vendors"
+    $registerResponse = Invoke-RestMethod -Uri "$API_URL/vendor/register" -Method Post -ContentType "application/json" -Body (@{
+        fullName = "Green Farm Vendors"
         email = "vendor@greenfarm.com"
         password = "vendor123"
         phone = "08012345678"
-        role = "vendor"
-    } | ConvertTo-Json)
+        storeName = "Green Farm Store"
+        storeDescription = "Fresh produce and groceries"
+        category = "groceries"
+        address = @{
+            street = "123 Farm Road"
+            city = "Lagos"
+            state = "Lagos"
+            country = "Nigeria"
+            postalCode = "100001"
+        }
+    } | ConvertTo-Json -Depth 10)
 
     Write-Host "✓ Vendor registered successfully!" -ForegroundColor Green
 } catch {
@@ -45,7 +54,7 @@ try {
     $loginResponse = Invoke-RestMethod -Uri "$API_URL/auth/login" -Method Post -ContentType "application/json" -Body (@{
         email = "vendor@greenfarm.com"
         password = "vendor123"
-    } | ConvertTo-Json)
+    } | ConvertTo-Json -Depth 10)
 
     $token = $loginResponse.data.token
     Write-Host "✓ Login successful!" -ForegroundColor Green

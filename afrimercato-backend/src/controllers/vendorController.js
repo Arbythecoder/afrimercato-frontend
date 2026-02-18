@@ -13,6 +13,7 @@ const { getFileUrl } = require('../middleware/upload');
 const { processVendorVerification } = require('../services/autoApprovalService');
 const { sendStoreProfileCreatedEmail } = require('../emails/vendorEmails');
 const { generateAccessToken, generateRefreshToken, setAuthCookies, formatUserResponse } = require('../utils/authHelpers');
+const { sendVerificationEmail } = require('../utils/emailService');
 
 // =================================================================
 // VENDOR PROFILE OPERATIONS
@@ -60,14 +61,15 @@ exports.registerVendor = asyncHandler(async (req, res) => {
     password, // Will be hashed by User model middleware
     phone,
     roles: ['vendor'],
-    primaryRole: 'vendor'
+    primaryRole: 'vendor',
+    emailVerified: false,
+    verified: false
   });
 
   // Generate unique store ID
   const storeId = await generateUniqueStoreId(category);
 
-  // Create vendor profile with AUTO-APPROVED status (production-ready)
-  // Vendors can immediately start selling - no admin approval required
+  // Create vendor profile with PENDING status (requires email verification)
   const vendor = await Vendor.create({
     user: user._id,
     storeId,
@@ -76,57 +78,29 @@ exports.registerVendor = asyncHandler(async (req, res) => {
     category,
     address,
     phone,
-    approvalStatus: 'approved',  // Auto-approve for immediate selling
-    isVerified: true,            // Auto-verify for production
-    isPublic: true,              // Visible to customers immediately
-    isActive: true,              // Active by default
-    approvedAt: new Date(),      // Record approval time
+    approvalStatus: 'pending',
+    isVerified: false,
+    isPublic: false,
+    isActive: true,
     submittedForReviewAt: new Date()
   });
 
-  // Generate email verification token (if method exists)
-  try {
-    if (typeof user.generateEmailVerificationToken === 'function') {
-      const verificationToken = user.generateEmailVerificationToken();
-      await user.save();
-      console.log(`📧 Email verification token generated for: ${email}`);
-    }
-  } catch (emailError) {
-    console.log('Email verification token generation skipped:', emailError.message);
-  }
+  // Generate email verification token and send verification email
+  const verificationToken = user.generateEmailVerificationToken();
+  await user.save();
+  
+  // Send verification email
+  await sendVerificationEmail(email, verificationToken, user.firstName);
 
-  // Generate JWT and refresh token for immediate login
-  const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
-  const refreshToken = generateRefreshToken();
-
-  // Set secure HTTP-only cookies
-  setAuthCookies(res, token, refreshToken);
-
-  // USER-FRIENDLY RESPONSE with token for SPA login
+  // Return success response (no login tokens until email is verified)
   res.status(201).json({
     success: true,
-    message: 'Registration successful! Your store is now live. 🎉',
+    message: 'Registration successful. Please verify your email.',
     data: {
-      token,
-      refreshToken,
-      user: formatUserResponse(user, 'vendor'),
-      vendor: {
-        id: vendor._id,
-        storeId: vendor.storeId,
-        storeName: vendor.storeName,
-        isVerified: vendor.isVerified,
-        approvalStatus: vendor.approvalStatus,
-        isPublic: vendor.isPublic,
-        isActive: vendor.isActive
-      },
-      onboarding: {
-        currentStep: 1,
-        totalSteps: 2,
-        nextAction: 'add_products',
-        message: 'Your store is live! Start adding products to begin selling.',
-        canAddProducts: true,
-        canReceiveOrders: true
-      }
+      email: user.email,
+      storeName: vendor.storeName,
+      emailVerified: false,
+      requiresVerification: true
     }
   });
 });

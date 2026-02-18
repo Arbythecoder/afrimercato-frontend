@@ -107,18 +107,16 @@ export const AuthProvider = ({ children }) => {
         const { token, user, refreshToken } = response.data
         const normalizedUser = normalizeUserRoles(user)
         
-        // Store in localStorage
-       const setAuth = (user, token) => {
-  if (token) {
-    localStorage.setItem('afrimercato_token', token);
-  }
-  if (user) {
-    localStorage.setItem('afrimercato_role', user.role);
-    localStorage.setItem('afrimercato_user', JSON.stringify(user));
-    setUser(user);
-    setRole(user.role);
-  }
-};
+        // Store in localStorage with standard keys
+        localStorage.setItem('afrimercato_token', token)
+        localStorage.setItem('afrimercato_role', normalizedUser.role)
+        localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
+        if (refreshToken) {
+          localStorage.setItem('afrimercato_refresh_token', refreshToken)
+        }
+        
+        setUser(normalizedUser)
+        setIsAuthenticated(true)
         
         if (import.meta.env.DEV) {
           console.log('🔑 Login success:', normalizedUser.role)
