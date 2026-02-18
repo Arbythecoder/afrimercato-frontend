@@ -92,15 +92,33 @@ exports.registerVendor = asyncHandler(async (req, res) => {
   // Send verification email
   await sendVerificationEmail(email, verificationToken, user.firstName);
 
-  // Return success response (no login tokens until email is verified)
+  // Generate JWT tokens (same as customer registration)
+  const token = generateAccessToken({ 
+    id: user._id, 
+    roles: user.roles, 
+    email: user.email 
+  });
+  const refreshToken = generateRefreshToken();
+
+  // Set secure HTTP-only cookies
+  setAuthCookies(res, token, refreshToken);
+
+  // Return success response with token and user data
   res.status(201).json({
     success: true,
-    message: 'Registration successful. Please verify your email.',
+    message: 'Registration successful. Please verify your email to access all features.',
     data: {
-      email: user.email,
-      storeName: vendor.storeName,
-      emailVerified: false,
-      requiresVerification: true
+      token,
+      refreshToken,
+      user: formatUserResponse(user, 'vendor'),
+      vendor: {
+        id: vendor._id,
+        storeId: vendor.storeId,
+        storeName: vendor.storeName,
+        approvalStatus: vendor.approvalStatus,
+        emailVerified: false,
+        requiresVerification: true
+      }
     }
   });
 });
