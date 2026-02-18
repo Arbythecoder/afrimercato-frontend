@@ -147,12 +147,18 @@ export const AuthProvider = ({ children }) => {
         const vendorData = {
           fullName: userData.name,
           email: userData.email,
-          phone: userData.phone,
+          phone: userData.phone || '+1234567890', // Default phone if not provided
           password: userData.password,
           storeName: `${userData.name}'s Store`, // Default store name
           storeDescription: 'Welcome to my store',
-          category: 'general',
-          address: ''
+          category: 'groceries', // Default to groceries (valid category)
+          address: {
+            street: '123 Main Street',
+            city: 'Default City',
+            state: '',
+            postalCode: '',
+            country: 'Nigeria'
+          }
         }
         response = await registerVendorAPI(vendorData)
       } else {
