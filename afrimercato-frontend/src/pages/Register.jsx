@@ -58,6 +58,7 @@ function Register() {
     e.preventDefault()
     setError('')
 
+    
     // Validation
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match')
@@ -71,43 +72,48 @@ function Register() {
 
     setLoading(true)
 
-    const result = await register(formData)
+    try {
+      const result = await register(formData)
 
-    if (result.success) {
-      // Check if user was redirected from checkout
-      const checkoutRedirect = localStorage.getItem('checkout_redirect')
+      if (result.success) {
+        // Check if user was redirected from checkout
+        const checkoutRedirect = localStorage.getItem('checkout_redirect')
 
-      if (checkoutRedirect === 'true') {
-        localStorage.removeItem('checkout_redirect')
-        navigate('/checkout')
-        return
+        if (checkoutRedirect === 'true') {
+          localStorage.removeItem('checkout_redirect')
+          navigate('/checkout')
+          return
+        }
+
+        // Route based on actual user role from server response
+        const userRole = result.user?.role || result.user?.primaryRole || formData.role
+        switch (userRole) {
+          case 'admin':
+            navigate('/admin')
+            break
+          case 'vendor':
+            navigate('/dashboard')
+            break
+          case 'rider':
+            navigate('/rider/dashboard')
+            break
+          case 'picker':
+            navigate('/picker/dashboard')
+            break
+          case 'customer':
+          default:
+            navigate('/')
+            break
+        }
+      } else {
+        setError(result.message || 'Registration failed. Please try again.')
+        setLoading(false)
       }
-
-      // Route based on actual user role from server response
-      const userRole = result.user?.role || result.user?.primaryRole || formData.role
-      switch (userRole) {
-        case 'admin':
-          navigate('/admin')
-          break
-        case 'vendor':
-          navigate('/dashboard')
-          break
-        case 'rider':
-          navigate('/rider/dashboard')
-          break
-        case 'picker':
-          navigate('/picker/dashboard')
-          break
-        case 'customer':
-        default:
-          navigate('/')
-          break
-      }
-    } else {
-      setError(result.message)
+    } catch (err) {
+      console.error('Registration error:', err)
+      setError('An unexpected error occurred. Please try again.')
+      setLoading(false)
     }
-
-    setLoading(false)
   }
 
   const containerVariants = {
