@@ -603,16 +603,13 @@ function Checkout() {
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Method</h2>
                 <div className="space-y-4 mb-6">
                   <div
-                    onClick={() => setPayment({ ...payment, method: 'card' })}
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                      payment.method === 'card' ? 'border-green-600 bg-green-50' : 'border-gray-200'
-                    }`}
+                    className="border-2 border-green-600 bg-green-50 rounded-lg p-4"
                   >
                     <div className="flex items-center">
                       <input
                         type="radio"
-                        checked={payment.method === 'card'}
-                        onChange={() => setPayment({ ...payment, method: 'card' })}
+                        checked={true}
+                        readOnly
                         className="mr-3"
                       />
                       <div>
@@ -621,33 +618,9 @@ function Checkout() {
                       </div>
                     </div>
                   </div>
-
-                  <div
-                    onClick={() => setPayment({ ...payment, method: 'cash' })}
-                    className={`border-2 rounded-lg p-4 cursor-pointer transition ${
-                      payment.method === 'cash' ? 'border-green-600 bg-green-50' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        checked={payment.method === 'cash'}
-                        onChange={() => setPayment({ ...payment, method: 'cash' })}
-                        className="mr-3"
-                      />
-                      <div>
-                        <div className="font-semibold text-gray-900">💵 Cash on Delivery</div>
-                        <div className="text-sm text-gray-600">Pay when you receive your order</div>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => setStep(1)}
-                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
+                <div className="flex gap-4">\n                  <button\n                    type="button"\n                    onClick={() => setStep(1)}\n                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
                   >
                     ← Back
                   </button>
@@ -694,7 +667,7 @@ function Checkout() {
                 <div className="mb-6 pb-6 border-b">
                   <h3 className="font-semibold text-gray-900 mb-3">Payment Method</h3>
                   <p className="text-gray-700">
-                    {payment.method === 'card' ? '💳 Card Payment (Stripe)' : '💵 Cash on Delivery'}
+                    💳 Card Payment (Stripe)
                   </p>
                   <button
                     type="button"

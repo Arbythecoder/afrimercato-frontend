@@ -27,6 +27,7 @@ function ProductDetail() {
 
   useEffect(() => {
     fetchProduct()
+    checkWishlistStatus()
   }, [productId])
 
   const fetchProduct = async () => {
@@ -52,6 +53,21 @@ function ProductDetail() {
       console.error('Error fetching product:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const checkWishlistStatus = async () => {
+    if (!isAuthenticated) return
+    
+    try {
+      const response = await customerAPI.getWishlist()
+      if (response.success && response.data) {
+        const wishlistIds = response.data.map(item => item.product?._id || item.product)
+        setIsWishlisted(wishlistIds.includes(productId))
+      }
+    } catch (error) {
+      // Silent fail - wishlist is optional feature
+      console.debug('Failed to load wishlist status:', error)
     }
   }
 
@@ -146,6 +162,12 @@ function ProductDetail() {
   }
 
   const toggleWishlist = async () => {
+    if (!isAuthenticated) {
+      alert('Please log in to add items to your wishlist')
+      navigate('/login')
+      return
+    }
+
     try {
       if (isWishlisted) {
         await customerAPI.removeFromWishlist(productId)
@@ -155,6 +177,7 @@ function ProductDetail() {
       setIsWishlisted(!isWishlisted)
     } catch (error) {
       console.error('Error updating wishlist:', error)
+      alert('Failed to update wishlist. Please try again.')
     }
   }
 

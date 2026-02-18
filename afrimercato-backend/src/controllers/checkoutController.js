@@ -627,6 +627,16 @@ exports.getRepeatPurchaseSettings = asyncHandler(async (req, res) => {
 exports.initializePayment = asyncHandler(async (req, res) => {
   const { items, deliveryAddress, payment, pricing, repeatPurchaseFrequency } = req.body;
 
+  // Validate Stripe configuration for card payments
+  if (payment?.method === 'card' && !process.env.STRIPE_SECRET_KEY) {
+    console.error('[PAYMENT_INIT_ERROR] STRIPE_SECRET_KEY not configured');
+    return res.status(500).json({
+      success: false,
+      message: 'Payment system not configured. Please contact support.',
+      code: 'PAYMENT_NOT_CONFIGURED'
+    });
+  }
+
   // Validate inputs
   if (!items || items.length === 0) {
     return res.status(400).json({
@@ -810,7 +820,7 @@ exports.initializePayment = asyncHandler(async (req, res) => {
           order: {
             _id: order._id,
             orderNumber: order.orderNumber,
-            totalAmount: finalTotal,
+            totalAmount: total,
             status: order.status
           },
           payment: {
@@ -820,7 +830,7 @@ exports.initializePayment = asyncHandler(async (req, res) => {
         }
       });
     } catch (error) {
-      console.error('Stripe error:', error);
+      console.error('[STRIPE_ERROR]', error.message, error.stack);
       // Restore stock on failure
       for (const item of orderItems) {
         const product = await Product.findById(item.product);
@@ -833,7 +843,8 @@ exports.initializePayment = asyncHandler(async (req, res) => {
 
       return res.status(500).json({
         success: false,
-        message: 'Failed to initialize payment. Please try again.'
+        message: 'Failed to initialize payment. Please try again.',
+        code: 'STRIPE_ERROR'
       });
     }
   }
@@ -864,13 +875,13 @@ exports.initializePayment = asyncHandler(async (req, res) => {
       order: {
         _id: order._id,
         orderNumber: order.orderNumber,
-        totalAmount: finalTotal,
+        totalAmount: total,
         status: order.status
       }
     }
   });
   } catch (error) {
-    console.error('[PAYMENT_INIT_ERROR]', error.message);
+    console.error('[PAYMENT_INIT_ERROR]', error.message, error.stack);
     if (error.code === 50 || error.message?.includes('timeout')) {
       return res.status(408).json({
         success: false,

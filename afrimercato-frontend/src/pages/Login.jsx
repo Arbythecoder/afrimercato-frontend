@@ -35,8 +35,13 @@ function Login() {
 
       if (checkoutRedirect === 'true') {
         localStorage.removeItem('checkout_redirect')
-        navigate('/checkout')
-        return
+        // Only redirect to checkout if cart has items
+        const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        if (cart.length > 0) {
+          navigate('/checkout')
+          return
+        }
+        // Cart is empty, proceed with normal role-based routing
       }
 
       // Check vendor approval status
