@@ -55,6 +55,8 @@ const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
 const VendorOnboarding = lazy(() => import('./components/VendorOnboarding'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
+const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
+const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 
 // Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
@@ -213,6 +215,8 @@ function AppContent() {
         element={isAuthenticated ? <RoleBasedRedirect /> : <Register />}
       />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
 
       {/* OAuth Callback Route */}
       <Route path="/oauth/callback" element={<OAuthCallback />} />

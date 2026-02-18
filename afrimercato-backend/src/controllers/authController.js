@@ -229,12 +229,12 @@ exports.forgotPassword = asyncHandler(async (req, res) => {
   }
 
   // Generate reset token
-  user.generatePasswordResetToken();
+  const resetToken = user.generatePasswordResetToken();
   await user.save();
 
-  // TODO: Send email with reset link
-  // const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${user.resetPasswordToken}`;
-  // await sendEmail(user.email, resetUrl);
+  // Send password reset email
+  const { sendPasswordResetEmail } = require('../utils/emailService');
+  await sendPasswordResetEmail(user.email, resetToken, user.firstName);
 
   res.json({
     success: true,
