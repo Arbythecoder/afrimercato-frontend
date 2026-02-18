@@ -1298,7 +1298,7 @@ exports.getOrders = asyncHandler(async (req, res) => {
 exports.getOrder = asyncHandler(async (req, res) => {
   const order = await Order.findOne({
     _id: req.params.id,
-    vendor: req.vendor._id
+    'items.vendor': req.vendor._id  // Multi-vendor support: check items
   })
     .populate('customer', 'name email phone')
     .populate('items.product', 'name images')
@@ -1328,7 +1328,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
 
   const order = await Order.findOne({
     _id: req.params.id,
-    vendor: req.vendor._id
+    'items.vendor': req.vendor._id  // Multi-vendor support: check items
   });
 
   if (!order) {
@@ -1407,7 +1407,7 @@ exports.rateRider = asyncHandler(async (req, res) => {
 
   const order = await Order.findOne({
     _id: req.params.id,
-    vendor: req.vendor._id
+    'items.vendor': req.vendor._id  // Multi-vendor support: check items
   }).populate('rider', 'name phone email');
 
   if (!order) {

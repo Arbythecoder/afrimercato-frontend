@@ -117,6 +117,7 @@ exports.approveVendor = async (req, res) => {
     vendor.approvalStatus = 'approved';
     vendor.isVerified = true;
     vendor.isActive = true;
+    vendor.isPublic = true;  // Make store visible to customers
 
     await vendor.save();
 

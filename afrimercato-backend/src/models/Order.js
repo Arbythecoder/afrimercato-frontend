@@ -94,6 +94,7 @@ const orderSchema = new mongoose.Schema({
 // Indexes for efficient queries
 orderSchema.index({ customer: 1, createdAt: -1 });
 orderSchema.index({ vendor: 1, createdAt: -1 });
+orderSchema.index({ 'items.vendor': 1, createdAt: -1 });  // Multi-vendor order queries
 orderSchema.index({ rider: 1, status: 1 });
 orderSchema.index({ picker: 1, status: 1 });
 orderSchema.index({ orderNumber: 1 });
