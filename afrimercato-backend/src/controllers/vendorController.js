@@ -538,41 +538,41 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
       .select('name stock lowStockThreshold unit')
       .limit(10),
 
-    // All time orders
-    Order.countDocuments({ vendor: vendorId }),
+    // All time orders - use items.vendor for multi-vendor support
+    Order.countDocuments({ 'items.vendor': vendorId }),
 
     // This month's orders
     Order.countDocuments({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       createdAt: { $gte: startOfMonth }
     }),
 
     // This week's orders
     Order.countDocuments({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       createdAt: { $gte: startOfWeek }
     }),
 
     // Today's orders
     Order.countDocuments({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       createdAt: { $gte: startOfToday }
     }),
 
     // Pending orders
     Order.countDocuments({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       status: { $in: ['pending', 'confirmed'] }
     }),
 
     // Ready to ship orders
     Order.countDocuments({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       status: 'ready_for_pickup'
     }),
 
     // Recent orders
-    Order.find({ vendor: vendorId })
+    Order.find({ 'items.vendor': vendorId })
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('customer', 'name email')
@@ -580,49 +580,65 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
 
     // All orders for revenue
     Order.find({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       status: { $ne: 'cancelled' }
     }).select('pricing createdAt items')
   ]);
 
-  // Calculate revenues
-  const totalRevenue = allOrders.reduce(
-    (sum, order) => sum + (order.pricing?.total || 0),
-    0
+  // Calculate revenues - only count this vendor's items in multi-vendor orders
+  const calculateVendorRevenue = (orders) => {
+    return orders.reduce((sum, order) => {
+      // Filter items to only this vendor's products
+      const vendorItems = order.items.filter(item => 
+        item.vendor.toString() === vendorId.toString()
+      );
+      // Sum up revenue from vendor's items only
+      const vendorTotal = vendorItems.reduce((itemSum, item) => 
+        itemSum + (item.price * item.quantity), 0
+      );
+      return sum + vendorTotal;
+    }, 0);
+  };
+
+  const totalRevenue = calculateVendorRevenue(allOrders);
+
+  const monthlyRevenue = calculateVendorRevenue(
+    allOrders.filter((order) => order.createdAt >= startOfMonth)
   );
 
-  const monthlyRevenue = allOrders
-    .filter((order) => order.createdAt >= startOfMonth)
-    .reduce((sum, order) => sum + (order.pricing?.total || 0), 0);
+  const weeklyRevenue = calculateVendorRevenue(
+    allOrders.filter((order) => order.createdAt >= startOfWeek)
+  );
 
-  const weeklyRevenue = allOrders
-    .filter((order) => order.createdAt >= startOfWeek)
-    .reduce((sum, order) => sum + (order.pricing?.total || 0), 0);
+  const todayRevenue = calculateVendorRevenue(
+    allOrders.filter((order) => order.createdAt >= startOfToday)
+  );
 
-  const todayRevenue = allOrders
-    .filter((order) => order.createdAt >= startOfToday)
-    .reduce((sum, order) => sum + (order.pricing?.total || 0), 0);
-
-  // Calculate units sold today
+  // Calculate units sold today - only count this vendor's items
   const todayUnits = allOrders
     .filter((order) => order.createdAt >= startOfToday)
     .reduce((sum, order) => {
-      const units = order.items?.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0) || 0;
+      const vendorItems = order.items.filter(item => 
+        item.vendor.toString() === vendorId.toString()
+      );
+      const units = vendorItems.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0);
       return sum + units;
     }, 0);
 
   // Calculate average order value for today
   const todayAvgOrderValue = todayOrders > 0 ? todayRevenue / todayOrders : 0;
 
-  // Get top selling products
+  // Get top selling products - filter by items.vendor
   const topProducts = await Order.aggregate([
-    { $match: { vendor: vendorId, status: { $ne: 'cancelled' } } },
+    { $match: { 'items.vendor': vendorId, status: { $ne: 'cancelled' } } },
     { $unwind: '$items' },
+    // Filter items to only this vendor's products
+    { $match: { 'items.vendor': vendorId } },
     {
       $group: {
         _id: '$items.product',
         totalQuantity: { $sum: '$items.quantity' },
-        totalRevenue: { $sum: '$items.subtotal' }
+        totalRevenue: { $sum: { $multiply: ['$items.price', '$items.quantity'] } }
       }
     },
     { $sort: { totalQuantity: -1 } },
@@ -661,6 +677,15 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
     }
   }
 
+  // Filter recent orders to show only this vendor's items
+  const filteredRecentOrders = recentOrders.map(order => {
+    const orderObj = order.toObject();
+    orderObj.items = orderObj.items.filter(item => 
+      item.vendor.toString() === vendorId.toString()
+    );
+    return orderObj;
+  });
+
   res.json({
     success: true,
     data: {
@@ -671,7 +696,7 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
       pendingOrders,
       readyToShipOrders,
       lowStockProducts,
-      recentOrders,
+      recentOrders: filteredRecentOrders,
       topProducts,
       accountHealth: 95, // TODO: Calculate based on metrics
       todayStats: {
@@ -1276,10 +1301,23 @@ exports.getOrders = asyncHandler(async (req, res) => {
 
   const total = await Order.countDocuments(filter);
 
+  // Filter items to show only this vendor's products
+  const filteredOrders = orders.map(order => {
+    const orderObj = order.toObject();
+    orderObj.items = orderObj.items.filter(item => 
+      item.vendor.toString() === req.vendor._id.toString()
+    );
+    // Recalculate total for vendor's items only
+    orderObj.vendorTotal = orderObj.items.reduce((sum, item) => 
+      sum + (item.price * item.quantity), 0
+    );
+    return orderObj;
+  });
+
   res.json({
     success: true,
     data: {
-      orders,
+      orders: filteredOrders,
       pagination: {
         currentPage: parseInt(page),
         totalPages: Math.ceil(total / limit),
@@ -1312,9 +1350,19 @@ exports.getOrder = asyncHandler(async (req, res) => {
     });
   }
 
+  // Filter items to show only this vendor's products
+  const orderObj = order.toObject();
+  orderObj.items = orderObj.items.filter(item => 
+    item.vendor.toString() === req.vendor._id.toString()
+  );
+  // Recalculate total for vendor's items only
+  orderObj.vendorTotal = orderObj.items.reduce((sum, item) => 
+    sum + (item.price * item.quantity), 0
+  );
+
   res.json({
     success: true,
-    data: { order }
+    data: { order: orderObj }
   });
 });
 
