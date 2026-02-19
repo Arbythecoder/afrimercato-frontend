@@ -1304,9 +1304,12 @@ exports.getOrders = asyncHandler(async (req, res) => {
   // Filter items to show only this vendor's products
   const filteredOrders = orders.map(order => {
     const orderObj = order.toObject();
+    const originalCount = orderObj.items.length;
     orderObj.items = orderObj.items.filter(item => 
       item.vendor.toString() === req.vendor._id.toString()
     );
+    const filteredCount = orderObj.items.length;
+    console.log(`[VENDOR FILTER] Order ${order.orderNumber}: ${originalCount} items → ${filteredCount} items (Vendor: ${req.vendor._id})`);
     // Recalculate total for vendor's items only
     orderObj.vendorTotal = orderObj.items.reduce((sum, item) => 
       sum + (item.price * item.quantity), 0
