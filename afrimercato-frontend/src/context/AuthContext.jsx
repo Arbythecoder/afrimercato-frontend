@@ -86,9 +86,29 @@ export const AuthProvider = ({ children }) => {
             hardLogout()
           }
         } catch (error) {
-          console.error('Auth validation failed:', error)
-          // Hard logout on validation failure
-          hardLogout()
+          // Only invalidate session on definitive auth rejections (expired/invalid token).
+          // Network timeouts, 503s, and server errors should NOT log the user out —
+          // the token may be perfectly valid but the server is cold-starting.
+          if (error.code === 'AUTH_EXPIRED' || error.status === 401) {
+            hardLogout()
+          } else {
+            if (import.meta.env.DEV) {
+              console.warn('[AuthContext] Auth check failed (server/network):', error.message)
+            }
+            // Fall back to cached user so the session survives a brief server hiccup
+            const cachedUserJson = localStorage.getItem('afrimercato_user')
+            if (cachedUserJson) {
+              try {
+                const parsed = JSON.parse(cachedUserJson)
+                const normalizedUser = normalizeUserRoles(parsed)
+                setUser(normalizedUser)
+                setIsAuthenticated(true)
+              } catch {
+                // Corrupted cache — clear and force re-login next visit
+                hardLogout()
+              }
+            }
+          }
         }
       } else {
         // Token expired or invalid - hard logout

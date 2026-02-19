@@ -121,10 +121,10 @@ const chatRoutes = require('./src/routes/chatRoutes');
 // App init
 const app = express();
 
-// Connect DB - Non-blocking (server should still start if DB is down)
-connectDB().catch(err => {
-  console.error('✗ MongoDB connection failed:', err.message);
-});
+// Connect DB — attempt in background; API routes return 503 until ready
+connectDB()
+  .then(() => console.log('✓ Database ready for requests'))
+  .catch(err => console.error('✗ MongoDB connection failed:', err.message));
 
 // Security headers
 app.use(
@@ -183,6 +183,24 @@ if (process.env.NODE_ENV === 'development') {
 
 // Trust proxy (Railway/Fly)
 app.set('trust proxy', 1);
+
+// =================================================================
+// DB READINESS GATE
+// Returns 503 on all /api/* requests until MongoDB is connected.
+// Health check is always exempt so Fly.io health probes pass immediately.
+// =================================================================
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health' || req.path === '/status') return next();
+  if (!isDBConnected()) {
+    return res.status(503).json({
+      success: false,
+      message: 'Service starting — database connecting. Please retry in a few seconds.',
+      code: 'DB_NOT_READY',
+      retryAfter: 5
+    });
+  }
+  next();
+});
 
 // Strict rate limiting for authentication endpoints (prevent brute force)
 const authLimiter = rateLimit({

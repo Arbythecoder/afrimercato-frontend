@@ -78,8 +78,10 @@ export default function ClientVendorStorefront() {
     window.dispatchEvent(new Event('cartUpdated'))
   }, [cart])
 
-  // Category tabs - African focused
-  const categoryTabs = ['All', 'Fresh Produce', 'Spices & Seasonings', 'Grains & Flour', 'Dried Fish & Meat', 'Cooking Oils']
+  // Category tabs derived from loaded products; static fallback until products load
+  const categoryTabs = products.length > 0
+    ? ['All', ...new Set(products.map(p => p.category).filter(Boolean))]
+    : ['All', 'Fresh Produce', 'Spices & Seasonings', 'Grains & Flour', 'Dried Fish & Meat', 'Cooking Oils']
 
   useEffect(() => {
     fetchVendorAndProducts()
@@ -102,62 +104,37 @@ export default function ClientVendorStorefront() {
     try {
       setLoading(true)
 
-      let actualVendorId = vendorId;
-      let vendorResponse;
+      // Single call — backend GET /api/products/vendor/:vendorId handles both
+      // MongoDB ObjectIds and slugs. Response shape:
+      //   { success, vendor: { id, name, slug, logo, rating }, data: Product[] }
+      const response = await getVendorProductsByVendorId(vendorId)
 
-      // Check if vendorId is a MongoDB ObjectId (24 hex characters)
-      const isObjectId = /^[0-9a-fA-F]{24}$/.test(vendorId);
-
-      if (isObjectId) {
-        // Direct ObjectId lookup
-        vendorResponse = await getVendorById(vendorId);
-      } else {
-        // Assume it's a slug, resolve to ObjectId first
-        try {
-          const slugResponse = await getVendorBySlug(vendorId);
-          if (slugResponse.success && slugResponse.data) {
-            actualVendorId = slugResponse.data._id;
-            vendorResponse = slugResponse;
-          } else {
-            throw new Error('Slug not found');
-          }
-        } catch (slugError) {
-          // If slug resolution fails, try direct lookup anyway (backward compatibility)
-          vendorResponse = await getVendorById(vendorId);
-        }
-      }
-
-      if (vendorResponse.success && vendorResponse.data) {
-        setVendor(vendorResponse.data)
-      } else if (vendorResponse.storeName) {
-        setVendor(vendorResponse)
-      } else {
-        // Check if we have store data passed via navigation state
-        const storedVendor = sessionStorage.getItem(`vendor_${vendorId}`)
-        if (storedVendor) {
-          setVendor(JSON.parse(storedVendor))
-        } else {
-          // Show error state - don't hardcode to a specific store
+      if (response.success) {
+        // --- Vendor info ---
+        // Backend returns vendor.name; template expects storeName / businessName
+        if (response.vendor) {
           setVendor({
-            storeName: 'Store Not Found',
-            businessName: 'Store Not Found',
-            phone: 'N/A',
-            deliveryTime: '30 mins',
-            notFound: true
+            ...response.vendor,
+            storeName: response.vendor.storeName || response.vendor.name,
+            businessName: response.vendor.businessName || response.vendor.name,
+            _id: response.vendor.id || response.vendor._id
           })
+        } else {
+          // Fall back to data stored by the store listing page on click
+          const storedVendor = sessionStorage.getItem(`vendor_${vendorId}`)
+          if (storedVendor) setVendor(JSON.parse(storedVendor))
         }
-      }
 
-      // Try to fetch real products using the actual vendor ID
-      const productsResponse = await getVendorProductsByVendorId(actualVendorId)
-      if (productsResponse.data?.products?.length > 0) {
-        setProducts(productsResponse.data.products)
-      } else if (productsResponse.products?.length > 0) {
-        setProducts(productsResponse.products)
+        // --- Products ---
+        // response.data IS the products array (not { products: [] })
+        const productsList = Array.isArray(response.data) ? response.data : []
+        if (productsList.length > 0) {
+          setProducts(productsList)
+        }
+        // If empty, SAMPLE_PRODUCTS from initial state remain as a UI fallback
       }
     } catch (error) {
       console.log('Fetching vendor data:', error.message)
-      // Check if we have store data in session storage
       const storedVendor = sessionStorage.getItem(`vendor_${vendorId}`)
       if (storedVendor) {
         setVendor(JSON.parse(storedVendor))
@@ -204,32 +181,30 @@ export default function ClientVendorStorefront() {
 
   const performAddToCart = async (product) => {
     const productId = product._id || product.id
-    const existingItem = cart.find(item => (item._id || item.id) === productId)
 
-    let updatedCart
-    if (existingItem) {
-      updatedCart = cart.map(item =>
-        (item._id || item.id) === productId
-          ? { ...item, quantity: item.quantity + 1 }
-          : item
-      )
-    } else {
-      // Ensure we have the right structure for cart items
-      updatedCart = [...cart, {
+    // Functional update prevents stale-closure bugs on rapid consecutive taps
+    setCart(prevCart => {
+      const existingItem = prevCart.find(item => (item._id || item.id) === productId)
+      if (existingItem) {
+        return prevCart.map(item =>
+          (item._id || item.id) === productId
+            ? { ...item, quantity: item.quantity + 1 }
+            : item
+        )
+      }
+      return [...prevCart, {
         _id: productId,
         id: productId,
         name: product.name,
         price: product.price,
         quantity: 1,
         unit: product.unit || 'piece',
-        images: product.images && product.images.length > 0 ? product.images : (product.image ? [product.image] : []),
+        images: product.images?.length > 0 ? product.images : (product.image ? [product.image] : []),
         vendor: product.vendor,
         vendorId: product.vendorId,
         storeName: product.storeName
       }]
-    }
-
-    setCart(updatedCart)
+    })
 
     // Only sync with backend if authenticated AND productId is a valid MongoDB ObjectId
     // Sample products have numeric IDs (1, 2, 3...) which are invalid for backend
@@ -307,8 +282,9 @@ export default function ClientVendorStorefront() {
   const cartItemCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0)
 
   const filteredProducts = products.filter(product => {
+    const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
     const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesSearch
+    return matchesCategory && matchesSearch
   })
 
   if (loading) {

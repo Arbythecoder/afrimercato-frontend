@@ -30,10 +30,9 @@ router.get('/new-arrivals', getNewProducts);
 router.get('/featured-vendors', getFeaturedVendors);
 router.get('/nearby', getNearbyProducts);
 router.get('/vendor/:vendorId', getVendorProducts);
-router.get('/:productId', getProductDetails);
-
-// Protected routes
+// Protected explicit route MUST be before /:productId catch-all or it is unreachable
 router.get('/recommendations/for-you', protect, getRecommendations);
+router.get('/:productId', getProductDetails);
 
 module.exports = router;
 

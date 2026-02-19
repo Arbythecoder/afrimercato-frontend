@@ -456,7 +456,11 @@ export const getVendorById = async (id) => {
 };
 
 export const getVendorBySlug = async (slug) => {
-  return apiCall(`/products/vendors/slug/${slug}`);
+  // /products/vendors/slug/:slug does not exist as a backend route.
+  // GET /api/products/vendor/:vendorId already handles slugs:
+  // when the param is not a 24-hex ObjectId, the controller does
+  //   Vendor.findOne({ slug: vendorId.toLowerCase() })
+  return apiCall(`/products/vendor/${slug}`);
 };
 
 export const getVendorProductsByVendorId = async (vendorId) => {

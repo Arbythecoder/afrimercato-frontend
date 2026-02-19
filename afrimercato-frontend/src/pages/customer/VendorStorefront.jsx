@@ -79,8 +79,10 @@ function VendorStorefront() {
   // Filter products
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
-    const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
-    return matchesCategory && matchesSearch && product.inStock
+    const matchesSearch = product.name?.toLowerCase().includes(searchQuery.toLowerCase())
+    // inStock undefined means the field was never set — treat as available (opt-out model)
+    const isAvailable = product.inStock !== false && (product.stock === undefined || product.stock > 0)
+    return matchesCategory && matchesSearch && isAvailable
   })
 
   if (loading) {
