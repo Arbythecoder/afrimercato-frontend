@@ -698,6 +698,7 @@ exports.initializePayment = asyncHandler(async (req, res) => {
 
     orderItems.push({
       product: product._id,
+      vendor: product.vendor,   // required by Order schema
       name: product.name,
       quantity: cartItem.quantity,
       price: cartItem.price,

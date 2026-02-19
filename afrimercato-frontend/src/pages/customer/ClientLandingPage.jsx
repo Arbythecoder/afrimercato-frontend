@@ -1,15 +1,63 @@
 /**
- * AFRIMERCATO - CLIENT-EXACT LANDING PAGE
- * Matches client's design EXACTLY with premium UX surpassing Just Eat / Uber Eats
- * Brand: Afrimercato
+ * AFRIMERCATO - CLIENT LANDING PAGE
  */
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
+import { getFeaturedVendors } from '../../services/api'
 
-// Hero images - Beautiful fresh groceries and produce
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=90' // Fresh colorful vegetables and groceries
+// Fallback stores shown while API loads or if no data
+const FALLBACK_STORES = [
+  {
+    id: 1,
+    storeName: "Mama Nkechi African Mart",
+    image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
+    hours: "06:00am - 09:00pm",
+    location: "Peckham, London",
+    distance: "0.1km",
+    deliveryTime: "25 mins",
+    priceRange: "£10-£500",
+    rating: 4.8,
+    isOpen: true,
+    deliveryFee: "Free over £50",
+    category: "Nigerian & Ghanaian",
+    methods: ["Shopping", "Pickup", "Delivery"],
+    slug: null
+  },
+  {
+    id: 2,
+    storeName: "Sahara Foods & Spices",
+    image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80",
+    hours: "06:00am - 08:00pm",
+    location: "Moss Side, Manchester",
+    distance: "1.2km",
+    deliveryTime: "30 mins",
+    priceRange: "£10-£500",
+    rating: 4.9,
+    isOpen: true,
+    deliveryFee: "£3.99",
+    category: "African & Middle Eastern",
+    methods: ["In-Shopping", "Delivery"],
+    slug: null
+  },
+  {
+    id: 3,
+    storeName: "AfroTaste Groceries",
+    image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=800&q=80",
+    hours: "06:00am - 10:00pm",
+    location: "Sparkbrook, Birmingham",
+    distance: "0.8km",
+    deliveryTime: "20 mins",
+    priceRange: "£5-£200",
+    rating: 4.7,
+    isOpen: true,
+    deliveryFee: "Free over £40",
+    category: "West African Specialties",
+    methods: ["Shopping", "Delivery"],
+    slug: null
+  }
+]
 
 export default function ClientLandingPage() {
   const navigate = useNavigate()
@@ -18,14 +66,15 @@ export default function ClientLandingPage() {
   const [shoppingMethod, setShoppingMethod] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
-  const [recentSearches] = useState(['Bristol', 'London', 'Manchester', 'Birmingham'])
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
-  const searchInputRef = useRef(null)
 
-  // Parallax scroll effect
-  const { scrollY } = useScroll()
-  const heroY = useTransform(scrollY, [0, 500], [0, 150])
-  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0.3])
+  // Partners section state
+  const [activePartnerTab, setActivePartnerTab] = useState('stores') // stores | pickers | riders
+  const [activeFilter, setActiveFilter] = useState('nearby') // nearby | top | featured
+  const [stores, setStores] = useState(FALLBACK_STORES)
+  const [storesLoading, setStoresLoading] = useState(true)
+
+  const recentSearches = ['Bristol', 'London', 'Manchester', 'Birmingham']
 
   // Detect scroll for nav styling
   useEffect(() => {
@@ -34,13 +83,36 @@ export default function ClientLandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
+  // Fetch real stores from API
+  useEffect(() => {
+    const fetchStores = async () => {
+      setStoresLoading(true)
+      try {
+        const response = await getFeaturedVendors(9)
+        if (response.success && response.data && response.data.length > 0) {
+          setStores(response.data)
+        }
+      } catch {
+        // Keep fallback stores on error
+      } finally {
+        setStoresLoading(false)
+      }
+    }
+    fetchStores()
+  }, [])
+
+  // Filter stores based on active filter tab
+  const filteredStores = (() => {
+    if (activeFilter === 'top') {
+      return [...stores].sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    }
+    return stores
+  })().slice(0, 3)
+
   // Handle search
   const handleFindStore = (e) => {
     e?.preventDefault()
-    if (!location.trim()) {
-      searchInputRef.current?.focus()
-      return
-    }
+    if (!location.trim()) return
     navigate(`/stores?location=${encodeURIComponent(location)}&price=${priceTag}&method=${shoppingMethod}`)
   }
 
@@ -51,62 +123,10 @@ export default function ClientLandingPage() {
     navigate(`/stores?location=${encodeURIComponent(loc)}`)
   }
 
-  // Featured stores data - Realistic African grocery stores
-  const featuredStores = [
-    {
-      id: 1,
-      name: "Mama Nkechi African Mart",
-      storeName: "Mama Nkechi African Mart",
-      image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
-      hours: "06:00am - 09:00pm",
-      location: "Peckham, London",
-      distance: "0.1km",
-      deliveryTime: "25 mins",
-      priceRange: "£10-£500",
-      rating: 4.8,
-      isOpen: true,
-      deliveryFee: "Free over £50",
-      category: "Nigerian & Ghanaian",
-      methods: ["Shopping", "Pickup", "Delivery"]
-    },
-    {
-      id: 2,
-      name: "Sahara Foods & Spices",
-      storeName: "Sahara Foods & Spices",
-      image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80",
-      hours: "06:00am - 08:00pm",
-      location: "Moss Side, Manchester",
-      distance: "1.2km",
-      deliveryTime: "30 mins",
-      priceRange: "£10-£500",
-      rating: 4.9,
-      isOpen: true,
-      deliveryFee: "£3.99",
-      category: "African & Middle Eastern",
-      methods: ["In-Shopping", "Delivery"]
-    },
-    {
-      id: 3,
-      name: "AfroTaste Groceries",
-      storeName: "AfroTaste Groceries",
-      image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=800&q=80",
-      hours: "06:00am - 10:00pm",
-      location: "Sparkbrook, Birmingham",
-      distance: "0.8km",
-      deliveryTime: "20 mins",
-      priceRange: "£5-£200",
-      rating: 4.7,
-      isOpen: true,
-      deliveryFee: "Free over £40",
-      category: "West African Specialties",
-      methods: ["Shopping", "Fitted", "In-Shopping", "Delivery"]
-    }
-  ]
-
   return (
     <div className="min-h-screen bg-[#F5A623] dark:bg-gray-900">
       {/* ============================================
-          NAVIGATION - Afrimercato branding
+          NAVIGATION
           ============================================ */}
       <motion.nav
         initial={{ y: -100 }}
@@ -117,46 +137,30 @@ export default function ClientLandingPage() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
-            {/* Logo - Afrimercato with X icon */}
+            {/* Logo */}
             <Link to="/" className="flex items-center gap-2 group">
-              <motion.div
-                whileHover={{ rotate: 360 }}
-                transition={{ duration: 0.5 }}
-                className="relative"
-              >
-                {/* X Icon */}
+              <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }}>
                 <svg className="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 40 40" fill="none">
-                  <path
-                    d="M8 8L32 32M32 8L8 32"
-                    stroke="#1a1a1a"
-                    strokeWidth="4"
-                    strokeLinecap="round"
-                  />
+                  <path d="M8 8L32 32M32 8L8 32" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round" />
                 </svg>
               </motion.div>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">
-                Afrimercato
-              </span>
+              <span className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Afrimercato</span>
             </Link>
 
-            {/* Desktop Navigation - Pill shaped */}
+            {/* Desktop Nav */}
             <div className="hidden md:flex items-center">
               <div className={`flex items-center gap-1 px-2 py-2 rounded-full ${
                 isScrolled ? 'bg-gray-100' : 'bg-white/90 backdrop-blur-sm'
               } shadow-sm`}>
-                <NavLink href="/delivery">Delivery</NavLink>
                 <NavLink href="/stores" active>Stores</NavLink>
                 <NavLink href="/about">About us</NavLink>
                 <NavLink href="/contact">Contact us</NavLink>
               </div>
             </div>
 
-            {/* Sign Up Button with Cart Icon */}
+            {/* Sign Up / Login */}
             <div className="flex items-center gap-3">
-              <Link
-                to="/login"
-                className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors"
-              >
+              <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
                 Log in
               </Link>
               <Link
@@ -170,22 +174,20 @@ export default function ClientLandingPage() {
                 </svg>
               </Link>
 
-              {/* Mobile Menu Button */}
+              {/* Mobile Menu */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="md:hidden p-2 rounded-lg hover:bg-white/20"
-                aria-label="Menu"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"}
-                  />
+                    d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
                 </svg>
               </button>
             </div>
           </div>
 
-          {/* Mobile Menu */}
+          {/* Mobile Menu Dropdown */}
           <AnimatePresence>
             {mobileMenuOpen && (
               <motion.div
@@ -196,15 +198,10 @@ export default function ClientLandingPage() {
               >
                 <div className="p-4 space-y-2">
                   <MobileNavLink to="/stores" onClick={() => setMobileMenuOpen(false)}>Stores</MobileNavLink>
-                  <MobileNavLink to="/delivery" onClick={() => setMobileMenuOpen(false)}>Delivery</MobileNavLink>
                   <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About us</MobileNavLink>
                   <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
                   <div className="pt-3 border-t">
-                    <Link
-                      to="/login"
-                      className="block py-3 text-center text-[#00897B] font-semibold"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
+                    <Link to="/login" className="block py-3 text-center text-[#00897B] font-semibold" onClick={() => setMobileMenuOpen(false)}>
                       Log in
                     </Link>
                   </div>
@@ -216,18 +213,14 @@ export default function ClientLandingPage() {
       </motion.nav>
 
       {/* ============================================
-          HERO SECTION - Exact client design
+          HERO SECTION
           ============================================ */}
       <section className="relative pt-20 sm:pt-24 pb-12 overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
-            {/* Left Side - Hero Content */}
-            <motion.div
-              style={{ y: heroY, opacity: heroOpacity }}
-              className="relative z-10 pt-8 lg:pt-0"
-            >
-              {/* Main Headline */}
+            {/* Left — no parallax to prevent content overlap */}
+            <div className="relative z-10 pt-8 lg:pt-0">
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -255,7 +248,6 @@ export default function ClientLandingPage() {
                 </span>
               </motion.h1>
 
-              {/* Subtext */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -274,35 +266,27 @@ export default function ClientLandingPage() {
                 transition={{ delay: 0.5, duration: 0.6 }}
                 className="mt-8 flex flex-wrap items-center gap-4"
               >
-                {/* Partner With Us Button */}
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Link
-                    to="/partner"
-                    className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
-                  >
-                    Partner With Us
-                  </Link>
-                </motion.div>
+                <Link
+                  to="/register?role=vendor"
+                  className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
+                >
+                  Partner With Us
+                </Link>
 
-                {/* Video Button with rotating text */}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="relative group"
                 >
                   <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-                    {/* Rotating text */}
                     <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 100 100">
                       <defs>
                         <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" />
                       </defs>
                       <text className="text-[8px] sm:text-[9px] fill-gray-700 font-medium uppercase tracking-widest">
-                        <textPath href="#circlePath">
-                          Learn about us through this video •
-                        </textPath>
+                        <textPath href="#circlePath">Learn about us through this video •</textPath>
                       </text>
                     </svg>
-                    {/* Play button */}
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
                         <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#00897B] ml-0.5" fill="currentColor" viewBox="0 0 20 20">
@@ -314,7 +298,7 @@ export default function ClientLandingPage() {
                 </motion.button>
               </motion.div>
 
-              {/* Trust Indicator */}
+              {/* Trust Indicator — contained here, outside parallax */}
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -322,15 +306,12 @@ export default function ClientLandingPage() {
                 className="mt-10 flex items-center gap-4"
               >
                 <div className="flex -space-x-3">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-3 border-[#F5A623] flex items-center justify-center text-lg"
-                    >
-                      {['👩🏾', '👨🏿', '👩🏽'][i-1]}
+                  {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
+                    <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">
+                      {emoji}
                     </div>
                   ))}
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-3 border-[#F5A623] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-[3px] border-[#F5A623] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
                     +4K
                   </div>
                 </div>
@@ -338,9 +319,9 @@ export default function ClientLandingPage() {
                   Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors
                 </p>
               </motion.div>
-            </motion.div>
+            </div>
 
-            {/* Right Side - Hero Image */}
+            {/* Right — Hero Image */}
             <motion.div
               initial={{ opacity: 0, x: 100 }}
               animate={{ opacity: 1, x: 0 }}
@@ -348,22 +329,18 @@ export default function ClientLandingPage() {
               className="relative mt-8 lg:mt-0"
             >
               <div className="relative">
-                {/* Main Image */}
-                <div className="relative z-10">
-                  <img
-                    src={HERO_IMAGE}
-                    alt="Happy customer with fresh groceries"
-                    className="w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[600px] object-cover object-center rounded-3xl shadow-2xl"
-                    loading="eager"
-                    fetchpriority="high"
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=90'
-                      e.target.onerror = null
-                    }}
-                  />
-                </div>
+                <img
+                  src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=90"
+                  alt="Fresh African groceries delivered"
+                  className="w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[560px] object-cover object-center rounded-3xl shadow-2xl"
+                  loading="eager"
+                  onError={(e) => {
+                    e.target.src = 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=90'
+                    e.target.onerror = null
+                  }}
+                />
 
-                {/* Floating Elements — hidden on mobile to prevent overflow */}
+                {/* Floating cards — desktop only */}
                 <motion.div
                   animate={{ y: [0, -10, 0] }}
                   transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
@@ -388,9 +365,7 @@ export default function ClientLandingPage() {
                   className="hidden md:block absolute bottom-20 right-0 lg:-right-4 bg-white rounded-2xl p-4 shadow-xl z-20"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">
-                      🚚
-                    </div>
+                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🚚</div>
                     <div>
                       <p className="font-bold text-gray-900">Fast Delivery</p>
                       <p className="text-sm text-gray-600">20-30 minutes</p>
@@ -402,18 +377,15 @@ export default function ClientLandingPage() {
           </div>
 
           {/* ============================================
-              SEARCH BAR - Exact client design
+              SEARCH BAR
               ============================================ */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="relative z-20 mt-8 lg:-mt-4"
+            className="relative z-20 mt-8 lg:mt-6"
           >
-            <form
-              onSubmit={handleFindStore}
-              className="bg-white rounded-2xl sm:rounded-full shadow-2xl p-3 sm:p-4"
-            >
+            <form onSubmit={handleFindStore} className="bg-white rounded-2xl sm:rounded-full shadow-2xl p-3 sm:p-4">
               <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center">
                 {/* Location Input */}
                 <div className="flex-1 relative">
@@ -422,7 +394,6 @@ export default function ClientLandingPage() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                     </svg>
                     <input
-                      ref={searchInputRef}
                       type="text"
                       value={location}
                       onChange={(e) => setLocation(e.target.value)}
@@ -433,7 +404,6 @@ export default function ClientLandingPage() {
                     />
                   </div>
 
-                  {/* Recent Searches Dropdown */}
                   <AnimatePresence>
                     {showLocationDropdown && (
                       <motion.div
@@ -451,7 +421,7 @@ export default function ClientLandingPage() {
                               onClick={() => selectLocation(city)}
                               className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
                             >
-                              <svg className="w-4 h-4 text-orange-500" fill="currentColor" viewBox="0 0 20 20">
+                              <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                 <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                               </svg>
                               <span className="text-gray-700">{city}</span>
@@ -463,7 +433,6 @@ export default function ClientLandingPage() {
                   </AnimatePresence>
                 </div>
 
-                {/* Divider */}
                 <div className="hidden sm:block w-px h-10 bg-gray-200 mx-2"></div>
 
                 {/* Price Tag */}
@@ -485,7 +454,6 @@ export default function ClientLandingPage() {
                   </div>
                 </div>
 
-                {/* Divider */}
                 <div className="hidden sm:block w-px h-10 bg-gray-200 mx-2"></div>
 
                 {/* Shopping Method */}
@@ -507,7 +475,6 @@ export default function ClientLandingPage() {
                   </div>
                 </div>
 
-                {/* Find Store Button */}
                 <motion.button
                   type="submit"
                   whileHover={{ scale: 1.02 }}
@@ -530,6 +497,7 @@ export default function ClientLandingPage() {
               {['London', 'Birmingham', 'Manchester', 'Leeds', 'Bristol'].map((city) => (
                 <button
                   key={city}
+                  type="button"
                   onClick={() => selectLocation(city)}
                   className="px-3 py-1.5 bg-white/60 hover:bg-white text-gray-700 hover:text-gray-900 rounded-full text-sm font-medium transition-all shadow-sm hover:shadow-md"
                 >
@@ -540,7 +508,7 @@ export default function ClientLandingPage() {
           </motion.div>
         </div>
 
-        {/* Background Decorations — contained to prevent horizontal scroll */}
+        {/* Background decorations */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
           <div className="absolute top-1/4 right-0 w-64 md:w-96 h-64 md:h-96 bg-yellow-300/30 rounded-full blur-3xl"></div>
           <div className="absolute bottom-0 left-1/4 w-48 md:w-64 h-48 md:h-64 bg-orange-300/20 rounded-full blur-2xl"></div>
@@ -548,11 +516,10 @@ export default function ClientLandingPage() {
       </section>
 
       {/* ============================================
-          STORE MARKETPLACE SECTION - From three.jpg
+          STORE MARKETPLACE SECTION
           ============================================ */}
       <section className="bg-white dark:bg-gray-800 py-16 sm:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Section Header */}
           <div className="text-center mb-8">
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
@@ -580,32 +547,55 @@ export default function ClientLandingPage() {
 
             {/* Tabs: Stores | Pickers | Riders */}
             <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full mb-6">
-              <button className="px-6 py-2 bg-[#00897B] text-white rounded-full font-medium text-sm">
-                Stores
-              </button>
-              <button className="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-full font-medium text-sm transition-colors">
-                Pickers
-              </button>
-              <button className="px-6 py-2 text-gray-700 hover:bg-gray-200 rounded-full font-medium text-sm transition-colors">
-                Riders
-              </button>
+              {[
+                { id: 'stores', label: 'Stores' },
+                { id: 'pickers', label: 'Pickers' },
+                { id: 'riders', label: 'Riders' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => setActivePartnerTab(tab.id)}
+                  className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
+                    activePartnerTab === tab.id
+                      ? 'bg-[#00897B] text-white shadow-sm'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
             </div>
 
-            {/* Filter Tabs */}
-            <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
-              <button className="text-[#00897B] font-medium border-b-2 border-[#00897B] pb-1">
-                Stores near by
-              </button>
-              <button className="text-gray-600 hover:text-gray-900 font-medium pb-1">
-                Top stores
-              </button>
-              <button className="text-gray-600 hover:text-gray-900 font-medium pb-1">
-                Featured stores
-              </button>
-              <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50">
-                Onboard your store
-              </button>
-            </div>
+            {/* Store filter tabs — only show for stores */}
+            {activePartnerTab === 'stores' && (
+              <div className="flex flex-wrap items-center justify-center gap-4 mb-8">
+                {[
+                  { id: 'nearby', label: 'Stores near by' },
+                  { id: 'top', label: 'Top stores' },
+                  { id: 'featured', label: 'Featured stores' },
+                ].map((f) => (
+                  <button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setActiveFilter(f.id)}
+                    className={`font-medium pb-1 transition-colors ${
+                      activeFilter === f.id
+                        ? 'text-[#00897B] border-b-2 border-[#00897B]'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {f.label}
+                  </button>
+                ))}
+                <Link
+                  to="/register?role=vendor"
+                  className="flex items-center gap-2 px-4 py-2 border border-[#00897B] text-[#00897B] rounded-full font-medium text-sm hover:bg-[#00897B] hover:text-white transition-all"
+                >
+                  + Onboard your store
+                </Link>
+              </div>
+            )}
 
             <div className="text-right mb-4">
               <Link to="/stores" className="text-[#00897B] font-medium hover:underline">
@@ -614,177 +604,39 @@ export default function ClientLandingPage() {
             </div>
           </div>
 
-          {/* Store Cards Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {featuredStores.map((store, index) => (
-              <motion.div
-                key={store._id || store.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                whileHover={{ y: -8, transition: { duration: 0.2 } }}
-                onClick={() => navigate(`/store/${store._id || store.id}`)}
-                className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
-              >
-                {/* Store Image */}
-                <div className="relative aspect-video overflow-hidden bg-gray-100">
-                  <img
-                    src={store.image}
-                    alt={store.name}
-                    loading="lazy"
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    onError={(e) => {
-                      e.target.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80';
-                    }}
-                  />
-                  {/* Price Range Badge */}
-                  <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
-                    Shop from {store.priceRange}
-                  </div>
-                  {/* Open Status Badge */}
-                  <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${
-                    store.isOpen
-                      ? 'bg-green-500 text-white'
-                      : 'bg-red-500 text-white'
-                  }`}>
-                    {store.rating} {store.isOpen ? 'Open' : 'Closed'}
-                  </div>
+          {/* Content based on active tab */}
+          {activePartnerTab === 'stores' ? (
+            <>
+              {storesLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-gray-100 rounded-2xl animate-pulse h-80" />
+                  ))}
                 </div>
-
-                {/* Store Info */}
-                <div className="p-5">
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                      {store.storeName || store.name}
-                      <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                    </h3>
-                  </div>
-
-                  <p className="text-sm text-gray-600 mb-1">
-                    Available: {store.hours}
-                  </p>
-                  <p className="text-sm text-gray-600 mb-3">
-                    Location: {store.location}
-                  </p>
-
-                  {/* Delivery Info */}
-                  <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
-                    <span className="flex items-center gap-1">
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                      </svg>
-                      {store.distance}
-                    </span>
-                    <span>•</span>
-                    <span>{store.deliveryFee} Deliveries</span>
-                    <span>•</span>
-                    <span>{store.deliveryTime}</span>
-                  </div>
-
-                  {/* Rating Stars */}
-                  <div className="flex items-center gap-1 mb-3">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <svg
-                        key={star}
-                        className={`w-4 h-4 ${star <= Math.floor(store.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                      </svg>
-                    ))}
-                  </div>
-
-                  {/* Shopping Methods */}
-                  <div className="flex flex-wrap gap-1">
-                    {store.methods.map((method) => (
-                      <span
-                        key={method}
-                        className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium"
-                      >
-                        {method}
-                      </span>
-                    ))}
-                  </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredStores.map((store, index) => (
+                    <StoreCard key={store._id || store.id} store={store} index={index} navigate={navigate} />
+                  ))}
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              )}
+            </>
+          ) : (
+            <PartnerCTA type={activePartnerTab} />
+          )}
 
-          {/* View All Button */}
+          {/* View All */}
           <div className="text-center mt-10">
-            <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                to="/stores"
-                className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
-              >
-                View All Stores
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ============================================
-          JOIN WAITLIST SECTION - From client design
-          ============================================ */}
-      <section className="relative py-16 overflow-hidden">
-        {/* Wavy yellow background */}
-        <div className="absolute inset-0 bg-[#F5A623]">
-          <svg className="absolute top-0 left-0 w-full" viewBox="0 0 1440 100" fill="none" preserveAspectRatio="none">
-            <path d="M0 50C240 100 480 0 720 50C960 100 1200 0 1440 50V0H0V50Z" fill="white"/>
-          </svg>
-        </div>
-
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center py-12">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4"
-          >
-            Join the waitlist for Our App
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="text-gray-700 mb-8 max-w-xl mx-auto"
-          >
-            Exciting things are coming your way! Be the first to experience the ultimate shopping
-            convenience with our upcoming app. Whether you prefer an in-store shopping experience or
-            hassle-free home delivery, our app puts the power of choice in your hands.
-          </motion.p>
-
-          <motion.form
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto"
-          >
-            <input
-              type="email"
-              placeholder="Enter email address"
-              className="flex-1 px-5 py-3 rounded-full border-2 border-gray-200 focus:border-[#00897B] outline-none text-gray-900"
-            />
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              type="submit"
-              className="bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-3 rounded-full font-bold shadow-lg transition-all whitespace-nowrap"
+            <Link
+              to="/stores"
+              className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
             >
-              Join List
-            </motion.button>
-          </motion.form>
+              View All Stores
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -810,17 +662,14 @@ export default function ClientLandingPage() {
           >
             <p>
               Afrimercato was born from a simple but powerful observation. A Nigerian living abroad
-              noticed how difficult it was for people outside Africa — and even within Africa — to
-              reliably access authentic African goods.
+              noticed how difficult it was for people outside Africa to reliably access authentic African goods.
             </p>
             <p>
               Local stores struggled with visibility. Customers struggled with trust and convenience.
               Delivery systems were fragmented, expensive, or unfair. Yet the demand was clear.
               And the businesses were ready — they just lacked the right digital bridge.
             </p>
-            <p className="text-[#00897B] font-semibold text-xl">
-              Afrimercato is that bridge.
-            </p>
+            <p className="text-[#00897B] font-semibold text-xl">Afrimercato is that bridge.</p>
           </motion.div>
           <motion.div
             initial={{ opacity: 0 }}
@@ -829,10 +678,7 @@ export default function ClientLandingPage() {
             transition={{ delay: 0.3 }}
             className="mt-8"
           >
-            <Link
-              to="/about"
-              className="inline-flex items-center gap-2 text-[#00897B] font-semibold hover:underline"
-            >
+            <Link to="/about" className="inline-flex items-center gap-2 text-[#00897B] font-semibold hover:underline">
               Read our full story
               <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
@@ -843,7 +689,7 @@ export default function ClientLandingPage() {
       </section>
 
       {/* ============================================
-          WHO IT'S FOR — Audience Cards
+          WHO IT'S FOR
           ============================================ */}
       <section className="py-16 sm:py-20 bg-gray-50 dark:bg-gray-900">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -857,24 +703,9 @@ export default function ClientLandingPage() {
           </motion.h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              {
-                icon: '🏪',
-                title: 'Stores',
-                message: 'You control your business, your delivery, your costs.',
-                color: 'from-[#00897B] to-[#00695C]'
-              },
-              {
-                icon: '🚴',
-                title: 'Riders & Pickers',
-                message: 'Work independently. Choose your stores. Pay only when you earn.',
-                color: 'from-[#F5A623] to-[#FF9800]'
-              },
-              {
-                icon: '🛒',
-                title: 'Customers',
-                message: 'Discover authentic African goods from trusted local stores, delivered to your door.',
-                color: 'from-[#4285F4] to-[#1a73e8]'
-              }
+              { icon: '🏪', title: 'Stores', message: 'You control your business, your delivery, your costs.', color: 'from-[#00897B] to-[#00695C]' },
+              { icon: '🚴', title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', color: 'from-[#F5A623] to-[#FF9800]' },
+              { icon: '🛒', title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', color: 'from-[#4285F4] to-[#1a73e8]' }
             ].map((card, index) => (
               <motion.div
                 key={card.title}
@@ -903,27 +734,16 @@ export default function ClientLandingPage() {
       <section className="py-16 sm:py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ opacity: 0, x: -30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-            >
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
               <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
-                To be the digital home where African and local businesses thrive — connecting stores,
-                customers, and communities worldwide.
+                To be the digital home where African and local businesses thrive — connecting stores, customers, and communities worldwide.
               </p>
             </motion.div>
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-            >
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 }}>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
               <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
-                Afrimercato empowers local and international merchants to sell, fulfil, and grow
-                through a fair, flexible, and trusted marketplace.
+                Afrimercato empowers local and international merchants to sell, fulfil, and grow through a fair, flexible, and trusted marketplace.
               </p>
             </motion.div>
           </div>
@@ -935,19 +755,18 @@ export default function ClientLandingPage() {
             className="mt-10 pt-8 border-t border-white/20 text-center"
           >
             <p className="text-white/80 text-sm">
-              We are currently in a guided testing phase to ensure speed, reliability, and strong
-              foundations before scaling to new regions.
+              We are currently in a guided testing phase to ensure speed, reliability, and strong foundations before scaling to new regions.
             </p>
           </motion.div>
         </div>
       </section>
 
       {/* ============================================
-          FOOTER - From client design (six.jpg)
+          FOOTER
           ============================================ */}
       <footer id="contact" className="bg-[#1a1a1a] text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-10">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             {/* Contact Info */}
             <div className="lg:col-span-2">
               <h3 className="text-xl font-bold mb-4">You've Got Questions?<br />Do Reach Out!</h3>
@@ -955,18 +774,9 @@ export default function ClientLandingPage() {
                 A fair, flexible marketplace connecting African stores, customers, and communities worldwide.
               </p>
               <div className="space-y-3 text-gray-400">
-                <p className="flex items-center gap-2">
-                  <span className="text-yellow-500">📞</span>
-                  +44 7778 285855
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-yellow-500">📧</span>
-                  Email: info@afrimercato.co.uk
-                </p>
-                <p className="flex items-center gap-2">
-                  <span className="text-yellow-500">📍</span>
-                  Location: Washington Ave, Manchester, United Kingdom.
-                </p>
+                <p className="flex items-center gap-2"><span className="text-yellow-500">📞</span> +44 7778 285855</p>
+                <p className="flex items-center gap-2"><span className="text-yellow-500">📧</span> info@afrimercato.co.uk</p>
+                <p className="flex items-center gap-2"><span className="text-yellow-500">📍</span> Washington Ave, Manchester, United Kingdom.</p>
               </div>
             </div>
 
@@ -974,12 +784,11 @@ export default function ClientLandingPage() {
             <div>
               <h4 className="font-bold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><Link to="/delivery" className="hover:text-yellow-500 transition-colors">Delivery</Link></li>
                 <li><Link to="/stores" className="hover:text-yellow-500 transition-colors">Stores</Link></li>
                 <li><Link to="/about" className="hover:text-yellow-500 transition-colors">About us</Link></li>
                 <li><Link to="/contact" className="hover:text-yellow-500 transition-colors">Contact us</Link></li>
-                <li><Link to="/stores" className="hover:text-yellow-500 transition-colors">Stores near me</Link></li>
-                <li><Link to="/partner" className="hover:text-yellow-500 transition-colors">Partner With Us</Link></li>
+                <li><Link to="/register?role=vendor" className="hover:text-yellow-500 transition-colors">Partner With Us</Link></li>
+                <li><Link to="/privacy" className="hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
               </ul>
             </div>
 
@@ -987,75 +796,166 @@ export default function ClientLandingPage() {
             <div>
               <h4 className="font-bold mb-4">Cities</h4>
               <ul className="space-y-2 text-gray-400">
-                <li><button onClick={() => selectLocation('Bristol')} className="hover:text-yellow-500 transition-colors">Bristol</button></li>
-                <li><button onClick={() => selectLocation('London')} className="hover:text-yellow-500 transition-colors">London</button></li>
-                <li><button onClick={() => selectLocation('Leicester')} className="hover:text-yellow-500 transition-colors">Leicester</button></li>
-                <li><button onClick={() => selectLocation('Liverpool')} className="hover:text-yellow-500 transition-colors">Liverpool</button></li>
-                <li><button onClick={() => selectLocation('Beckham')} className="hover:text-yellow-500 transition-colors">Beckham</button></li>
-                <li><button onClick={() => selectLocation('Birmingham')} className="hover:text-yellow-500 transition-colors">Birmingham</button></li>
+                {['Bristol', 'London', 'Leicester', 'Liverpool', 'Birmingham', 'Manchester'].map((city) => (
+                  <li key={city}>
+                    <button
+                      type="button"
+                      onClick={() => selectLocation(city)}
+                      className="hover:text-yellow-500 transition-colors text-left"
+                    >
+                      {city}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
-          {/* Bottom Footer */}
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
             <p>© 2026 Afrimercato</p>
             <p>Designed By thedesignpygi</p>
-            <p>All Right Reserved.</p>
+            <p>All Rights Reserved.</p>
           </div>
         </div>
       </footer>
 
-      {/* Custom Styles */}
       <style>{`
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 10s linear infinite;
-        }
-        .border-3 {
-          border-width: 3px;
-        }
+        @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 10s linear infinite; }
       `}</style>
     </div>
   )
 }
 
-// Nav Link Component
-function NavLink({ href, children, active }) {
-  const isRoute = href?.startsWith('/')
-  const Component = isRoute ? Link : 'a'
+// ============================================
+// STORE CARD COMPONENT
+// ============================================
+function StoreCard({ store, index, navigate }) {
+  const storeImage = store.image || store.logo || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
+  const storeName = store.storeName || store.name || 'African Store'
+  const storeLocation = store.location?.city
+    ? `${store.location.city}${store.location.country ? ', ' + store.location.country : ''}`
+    : (store.location || 'United Kingdom')
+  const rating = store.rating || store.averageRating || 4.5
+  const isOpen = store.isOpen !== undefined ? store.isOpen : store.isActive !== false
+
+  const handleClick = () => {
+    if (store.slug) navigate(`/store/${store.slug}`)
+    else if (store._id) navigate(`/store/${store._id}`)
+  }
 
   return (
-    <Component
-      to={isRoute ? href : undefined}
-      href={!isRoute ? href : undefined}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-        active
-          ? 'bg-[#00897B] text-white'
-          : 'text-gray-800 hover:bg-white/50'
-      }`}
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ delay: index * 0.1 }}
+      whileHover={{ y: -8, transition: { duration: 0.2 } }}
+      onClick={handleClick}
+      className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
     >
-      {children}
-    </Component>
+      <div className="relative aspect-video overflow-hidden bg-gray-100">
+        <img
+          src={storeImage}
+          alt={storeName}
+          loading="lazy"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          onError={(e) => {
+            e.target.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
+            e.target.onerror = null
+          }}
+        />
+        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
+          {store.priceRange || store.category || 'African Store'}
+        </div>
+        <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${isOpen ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+          {rating} ★ {isOpen ? 'Open' : 'Closed'}
+        </div>
+      </div>
+
+      <div className="p-5">
+        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
+          {storeName}
+          <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+          </svg>
+        </h3>
+        <p className="text-sm text-gray-500 mb-3">📍 {storeLocation}</p>
+
+        <div className="flex items-center gap-1">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <svg key={star} className={`w-4 h-4 ${star <= Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
+              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+            </svg>
+          ))}
+          <span className="text-xs text-gray-500 ml-1">{rating}</span>
+        </div>
+      </div>
+    </motion.div>
   )
 }
 
-// Mobile Nav Link Component
-function MobileNavLink({ to, onClick, children }) {
-  const isRoute = to?.startsWith('/')
-  const Component = isRoute ? Link : 'a'
-
+// ============================================
+// PARTNER CTA — for Pickers and Riders tabs
+// ============================================
+function PartnerCTA({ type }) {
+  const config = {
+    pickers: {
+      icon: '📦',
+      title: 'Become a Picker',
+      desc: 'Help fulfil orders in local African stores near you. Flexible hours, fair pay, and a growing network of stores to work with.',
+      link: '/register?role=picker',
+      cta: 'Sign Up as Picker'
+    },
+    riders: {
+      icon: '🏍️',
+      title: 'Become a Rider',
+      desc: 'Deliver authentic African groceries to customers in your city. Set your own hours and earn on every delivery.',
+      link: '/register?role=rider',
+      cta: 'Sign Up as Rider'
+    }
+  }
+  const c = config[type]
   return (
-    <Component
-      to={isRoute ? to : undefined}
-      href={!isRoute ? to : undefined}
+    <div className="flex flex-col items-center justify-center py-16 text-center">
+      <div className="text-6xl mb-4">{c.icon}</div>
+      <h3 className="text-2xl font-bold text-gray-900 mb-3">{c.title}</h3>
+      <p className="text-gray-600 max-w-md mb-8">{c.desc}</p>
+      <Link
+        to={c.link}
+        className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
+      >
+        {c.cta}
+        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+        </svg>
+      </Link>
+    </div>
+  )
+}
+
+// Nav helpers
+function NavLink({ href, children, active }) {
+  return (
+    <Link
+      to={href}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+        active ? 'bg-[#00897B] text-white' : 'text-gray-800 hover:bg-white/50'
+      }`}
+    >
+      {children}
+    </Link>
+  )
+}
+
+function MobileNavLink({ to, onClick, children }) {
+  return (
+    <Link
+      to={to}
       onClick={onClick}
       className="block py-3 px-4 text-gray-700 font-medium hover:bg-gray-50 rounded-xl transition-colors"
     >
       {children}
-    </Component>
+    </Link>
   )
 }

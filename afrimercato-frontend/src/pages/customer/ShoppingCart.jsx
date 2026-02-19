@@ -12,6 +12,40 @@ const isValidMongoId = (id) => {
   return /^[0-9a-fA-F]{24}$/.test(stringId)
 }
 
+// Helper to group cart items by vendor
+const groupCartByVendor = (cart) => {
+  const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
+  
+  if (!multiVendorEnabled) {
+    // Single vendor mode - return as single group
+    return cart.length > 0 ? [{
+      vendorId: cart[0].vendor?._id || cart[0].vendor?.id || cart[0].vendorId || 'unknown',
+      vendorName: cart[0].vendor?.storeName || cart[0].vendor?.businessName || 'Store',
+      items: cart
+    }] : []
+  }
+
+  // Multi-vendor mode - group by vendorId
+  const groups = {}
+  
+  for (const item of cart) {
+    const vendorId = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
+    const vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || 'Unknown Store'
+    
+    if (!groups[vendorId]) {
+      groups[vendorId] = {
+        vendorId,
+        vendorName,
+        items: []
+      }
+    }
+    
+    groups[vendorId].items.push(item)
+  }
+  
+  return Object.values(groups)
+}
+
 function ShoppingCart() {
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
@@ -337,15 +371,30 @@ function ShoppingCart() {
           </p>
           {/* Store Indicator */}
           {cart.length > 0 && (() => {
-            const vendorInfo = getCartVendorInfo(cart)
-            return vendorInfo ? (
-              <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                <span className="text-xl">🏪</span>
-                <span className="text-sm font-medium">
-                  Shopping from: <strong>{vendorInfo.vendorName}</strong>
-                </span>
-              </div>
-            ) : null
+            const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
+            const vendorGroups = groupCartByVendor(cart)
+            
+            if (!multiVendorEnabled) {
+              const vendorInfo = getCartVendorInfo(cart)
+              return vendorInfo ? (
+                <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                  <span className="text-xl">🏪</span>
+                  <span className="text-sm font-medium">
+                    Shopping from: <strong>{vendorInfo.vendorName}</strong>
+                  </span>
+                </div>
+              ) : null
+            } else if (vendorGroups.length > 1) {
+              return (
+                <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                  <span className="text-xl">🏪</span>
+                  <span className="text-sm font-medium">
+                    Shopping from <strong>{vendorGroups.length}</strong> different stores
+                  </span>
+                </div>
+              )
+            }
+            return null
           })()}
         </div>
       </div>
@@ -377,64 +426,104 @@ function ShoppingCart() {
                 </button>
               </div>
 
-              {cart.map((item) => (
-                <div
-                  key={item._id}
-                  className="bg-white rounded-xl shadow-lg p-4 flex gap-4 hover:shadow-xl transition-shadow"
-                >
-                  <img
-                    src={getProductImage(item)}
-                    alt={item.name}
-                    className="w-24 h-24 rounded-lg object-cover cursor-pointer"
-                    onClick={() => navigate(`/product/${item._id}`)}
-                  />
+              {/* Group cart items by vendor */}
+              {groupCartByVendor(cart).map((vendorGroup) => {
+                const vendorSubtotal = vendorGroup.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+                const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
+                
+                return (
+                  <div key={vendorGroup.vendorId} className="space-y-3">
+                    {/* Vendor Header - only show if multi-vendor enabled */}
+                    {multiVendorEnabled && (
+                      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-4 py-3 rounded-t-xl flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">🏪</span>
+                          <span className="font-semibold">{vendorGroup.vendorName}</span>
+                        </div>
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                          {vendorGroup.items.length} {vendorGroup.items.length === 1 ? 'item' : 'items'}
+                        </span>
+                      </div>
+                    )}
 
-                  <div className="flex-1">
-                    <div className="flex justify-between">
-                      <div>
-                        <h3
-                          className="font-semibold text-gray-900 hover:text-afri-green cursor-pointer"
-                          onClick={() => navigate(`/product/${item._id}`)}
+                    {/* Vendor Items */}
+                    <div className={`space-y-3 ${multiVendorEnabled ? 'border-2 border-t-0 border-afri-green/20 rounded-b-xl p-3' : ''}`}>
+                      {vendorGroup.items.map((item) => (
+                        <div
+                          key={item._id}
+                          className="bg-white rounded-xl shadow-lg p-4 flex gap-4 hover:shadow-xl transition-shadow"
                         >
-                          {item.name}
-                        </h3>
-                        <p className="text-sm text-gray-500">{item.unit || 'per item'}</p>
-                        <p className="text-sm text-afri-green">{item.vendor?.storeName || 'AfriMercato'}</p>
-                      </div>
-                      <button
-                        onClick={() => removeItem(item._id)}
-                        className="text-gray-400 hover:text-red-500 transition-colors h-fit"
-                      >
-                        ✕
-                      </button>
-                    </div>
+                          <img
+                            src={getProductImage(item)}
+                            alt={item.name}
+                            className="w-24 h-24 rounded-lg object-cover cursor-pointer"
+                            onClick={() => navigate(`/product/${item._id}`)}
+                          />
 
-                    <div className="flex items-center justify-between mt-4">
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => updateQuantity(item._id, item.quantity - 1)}
-                          className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold"
-                        >
-                          −
-                        </button>
-                        <span className="font-semibold w-8 text-center">{item.quantity}</span>
-                        <button
-                          onClick={() => updateQuantity(item._id, item.quantity + 1)}
-                          className="w-8 h-8 rounded-full bg-afri-green text-white hover:bg-afri-green-dark flex items-center justify-center font-bold"
-                        >
-                          +
-                        </button>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-afri-green">
-                          £{(item.price * item.quantity).toFixed(2)}
-                        </p>
-                        <p className="text-xs text-gray-500">£{item.price.toFixed(2)} each</p>
-                      </div>
+                          <div className="flex-1">
+                            <div className="flex justify-between">
+                              <div>
+                                <h3
+                                  className="font-semibold text-gray-900 hover:text-afri-green cursor-pointer"
+                                  onClick={() => navigate(`/product/${item._id}`)}
+                                >
+                                  {item.name}
+                                </h3>
+                                <p className="text-sm text-gray-500">{item.unit || 'per item'}</p>
+                                {!multiVendorEnabled && (
+                                  <p className="text-sm text-afri-green">{item.vendor?.storeName || 'AfriMercato'}</p>
+                                )}
+                              </div>
+                              <button
+                                onClick={() => removeItem(item._id)}
+                                className="text-gray-400 hover:text-red-500 transition-colors h-fit"
+                              >
+                                ✕
+                              </button>
+                            </div>
+
+                            <div className="flex items-center justify-between mt-4">
+                              <div className="flex items-center gap-3">
+                                <button
+                                  onClick={() => updateQuantity(item._id, item.quantity - 1)}
+                                  className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center font-bold"
+                                >
+                                  −
+                                </button>
+                                <span className="font-semibold w-8 text-center">{item.quantity}</span>
+                                <button
+                                  onClick={() => updateQuantity(item._id, item.quantity + 1)}
+                                  className="w-8 h-8 rounded-full bg-afri-green text-white hover:bg-afri-green-dark flex items-center justify-center font-bold"
+                                >
+                                  +
+                                </button>
+                              </div>
+                              <div className="text-right">
+                                <p className="text-lg font-bold text-afri-green">
+                                  £{(item.price * item.quantity).toFixed(2)}
+                                </p>
+                                <p className="text-xs text-gray-500">£{item.price.toFixed(2)} each</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      {/* Vendor Subtotal - only show if multi-vendor enabled */}
+                      {multiVendorEnabled && (
+                        <div className="bg-afri-green-light/10 border border-afri-green/20 rounded-lg p-3 flex justify-between items-center">
+                          <span className="text-sm font-semibold text-gray-700">
+                            {vendorGroup.vendorName} Subtotal
+                          </span>
+                          <span className="text-lg font-bold text-afri-green">
+                            £{vendorSubtotal.toFixed(2)}
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
 
               {/* Repeat Purchase Section moved to Order Summary */}
             </div>
@@ -460,6 +549,26 @@ function ShoppingCart() {
                       Add £{(30 - subtotal).toFixed(2)} more for FREE delivery!
                     </p>
                   )}
+                  
+                  {/* Multi-Vendor Notice */}
+                  {(() => {
+                    const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
+                    const vendorGroups = groupCartByVendor(cart)
+                    
+                    if (multiVendorEnabled && vendorGroups.length > 1) {
+                      return (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-xs text-blue-800 font-semibold mb-1">
+                            📦 Multiple Vendor Order
+                          </p>
+                          <p className="text-xs text-blue-700">
+                            Your order will be split into {vendorGroups.length} separate deliveries (one per store)
+                          </p>
+                        </div>
+                      )
+                    }
+                    return null
+                  })()}
                   
                   {/* Minimum Order Warning */}
                   {(() => {
@@ -495,43 +604,54 @@ function ShoppingCart() {
                   <span className="text-afri-green text-2xl">£{total.toFixed(2)}</span>
                 </div>
 
-                {/* Repeat Purchase Section - ABOVE checkout for visibility */}
-                <div className="mb-4 p-4 bg-gradient-to-br from-afri-green-light/10 to-afri-green/10 rounded-xl border-2 border-afri-green-light">
-                  <div className="flex items-start gap-2 mb-3">
-                    <span className="text-2xl">🔄</span>
-                    <div className="flex-1">
-                      <h3 className="text-base font-bold text-gray-900 mb-1">Auto-Reorder (Optional)</h3>
-                      <p className="text-xs text-gray-600">Set how often you want to reorder these items automatically</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    {['Weekly', 'Bi-weekly', 'Monthly', 'Quarterly'].map((frequency) => (
-                      <button
-                        key={frequency}
-                        onClick={async () => {
-                          const value = frequency.toLowerCase()
-                          const newFreq = repeatPurchaseFrequency === value ? null : value
-                          setRepeatPurchaseFrequency(newFreq)
+                {/* Auto-Reorder Section */}
+                <div className="mb-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={!!repeatPurchaseFrequency}
+                      onChange={(e) => {
+                        if (!e.target.checked) {
+                          setRepeatPurchaseFrequency(null)
                           if (isAuthenticated) {
-                            try { await cartAPI.setRepurchaseSchedule(newFreq) } catch (e) { /* non-critical */ }
+                            cartAPI.setRepurchaseSchedule(null).catch(() => {})
                           }
-                        }}
-                        className={`py-2.5 px-3 rounded-lg font-semibold text-sm transition-all min-h-[44px] ${
-                          repeatPurchaseFrequency === frequency.toLowerCase()
-                            ? 'bg-afri-green text-white shadow-md'
-                            : 'bg-white text-gray-700 border-2 border-gray-200 hover:border-afri-green hover:bg-afri-green-light/5'
-                        }`}
-                      >
-                        {frequency}
-                      </button>
-                    ))}
-                  </div>
+                        } else {
+                          setRepeatPurchaseFrequency('weekly')
+                          if (isAuthenticated) {
+                            cartAPI.setRepurchaseSchedule('weekly').catch(() => {})
+                          }
+                        }
+                      }}
+                      className="w-5 h-5 rounded accent-afri-green cursor-pointer"
+                    />
+                    <div>
+                      <span className="font-semibold text-gray-900 text-sm">🔄 Auto-Reorder (Optional)</span>
+                      <p className="text-xs text-gray-500">Reorder these items automatically</p>
+                    </div>
+                  </label>
 
                   {repeatPurchaseFrequency && (
-                    <div className="mt-3 p-2.5 bg-white rounded-lg border-l-4 border-afri-green">
-                      <p className="text-xs text-gray-700">
-                        ✓ Will repeat <span className="font-bold capitalize">{repeatPurchaseFrequency}</span> until you cancel
+                    <div className="mt-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">Frequency</label>
+                      <select
+                        value={repeatPurchaseFrequency}
+                        onChange={async (e) => {
+                          const val = e.target.value
+                          setRepeatPurchaseFrequency(val)
+                          if (isAuthenticated) {
+                            cartAPI.setRepurchaseSchedule(val).catch(() => {})
+                          }
+                        }}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 bg-white focus:border-afri-green outline-none"
+                      >
+                        <option value="weekly">Weekly</option>
+                        <option value="bi-weekly">Bi-weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="quarterly">Quarterly</option>
+                      </select>
+                      <p className="text-xs text-afri-green mt-1.5 font-medium">
+                        ✓ Repeats <span className="capitalize">{repeatPurchaseFrequency}</span> until cancelled
                       </p>
                     </div>
                   )}

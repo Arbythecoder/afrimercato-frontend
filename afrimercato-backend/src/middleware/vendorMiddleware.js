@@ -43,6 +43,12 @@ const attachVendor = async (req, res, next) => {
     const vendor = await Vendor.findOne({ user: userId });
 
     if (!vendor) {
+      // Log for debugging - helps diagnose why vendor profile is missing
+      console.error('❌ attachVendor: Vendor profile not found');
+      console.error('   User ID:', req.user.id);
+      console.error('   User Email:', req.user.email || 'N/A');
+      console.error('   User Roles:', req.user.roles || 'N/A');
+      
       return res.status(403).json({
         success: false,
         message: 'Vendor profile not found. Please complete vendor registration first.',

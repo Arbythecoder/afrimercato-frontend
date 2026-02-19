@@ -10,6 +10,14 @@
  * @returns {Object} { needsConfirmation: boolean, currentVendorId: string, currentVendorName: string, newVendorId: string, newVendorName: string }
  */
 export const checkVendorLock = (product, currentCart) => {
+  // Feature flag: Multi-vendor cart enabled
+  const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
+  
+  if (multiVendorEnabled) {
+    // Allow items from multiple vendors
+    return { needsConfirmation: false }
+  }
+
   // If cart is empty, no conflict
   if (!currentCart || currentCart.length === 0) {
     return { needsConfirmation: false }
