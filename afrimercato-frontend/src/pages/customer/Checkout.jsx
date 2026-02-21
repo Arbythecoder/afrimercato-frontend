@@ -620,7 +620,11 @@ function Checkout() {
                   </div>
                 </div>
 
-                <div className="flex gap-4">\n                  <button\n                    type="button"\n                    onClick={() => setStep(1)}\n                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
+                <div className="flex gap-4">
+                  <button
+                    type="button"
+                    onClick={() => setStep(1)}
+                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
                   >
                     ← Back
                   </button>
