@@ -66,11 +66,8 @@ export default function Delivery() {
       <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none">
-                <path d="M8 8L32 32M32 8L8 32" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round"/>
-              </svg>
-              <span className="text-xl font-bold text-gray-900">Afrimercato</span>
+            <Link to="/" className="flex items-center">
+              <img src="/logo.svg" alt="Afrimercato" className="h-8 w-auto" />
             </Link>
 
             <div className="hidden md:flex items-center gap-6">

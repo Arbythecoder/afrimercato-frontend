@@ -307,11 +307,8 @@ export default function ClientVendorStorefront() {
             {/* Left Side */}
             <div className="flex items-center gap-6">
               {/* Logo */}
-              <Link to="/" className="flex items-center gap-2">
-                <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none">
-                  <path d="M8 8L32 32M32 8L8 32" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round"/>
-                </svg>
-                <span className="text-lg font-bold text-gray-900">Afrimercato</span>
+              <Link to="/" className="flex items-center">
+                <img src="/logo.svg" alt="Afrimercato" className="h-8 w-auto" />
               </Link>
             </div>
 

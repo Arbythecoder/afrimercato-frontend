@@ -134,11 +134,8 @@ export default function PartnerWithUs() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex justify-between items-center h-16">
-            <Link to="/" className="flex items-center gap-2">
-              <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none">
-                <path d="M8 8L32 32M32 8L8 32" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round" />
-              </svg>
-              <span className="text-xl font-bold text-gray-900">Afrimercato</span>
+            <Link to="/" className="flex items-center">
+              <img src="/logo.svg" alt="Afrimercato" className="h-8 w-auto" />
             </Link>
             <div className="flex items-center gap-4">
               <Link to="/" className="text-gray-600 hover:text-[#00897B] transition-colors">Home</Link>
@@ -508,11 +505,8 @@ export default function PartnerWithUs() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-8 mb-8">
             <div className="col-span-2 sm:col-span-1">
-              <Link to="/" className="flex items-center gap-2 mb-4">
-                <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none">
-                  <path d="M8 8L32 32M32 8L8 32" stroke="white" strokeWidth="4" strokeLinecap="round" />
-                </svg>
-                <span className="text-xl font-bold">Afrimercato</span>
+              <Link to="/" className="flex items-center mb-4">
+                <img src="/logo.svg" alt="Afrimercato" className="h-8 w-auto brightness-0 invert" />
               </Link>
               <p className="text-gray-400 text-sm">African groceries delivered to your door across the UK.</p>
             </div>

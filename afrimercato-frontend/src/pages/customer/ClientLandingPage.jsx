@@ -2,7 +2,7 @@
  * AFRIMERCATO - CLIENT LANDING PAGE
  */
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors } from '../../services/api'
@@ -74,6 +74,11 @@ export default function ClientLandingPage() {
   const [stores, setStores] = useState(FALLBACK_STORES)
   const [storesLoading, setStoresLoading] = useState(true)
 
+  // Location autocomplete
+  const [locationSuggestions, setLocationSuggestions] = useState([])
+  const [locationLoading, setLocationLoading] = useState(false)
+  const debounceRef = useRef(null)
+
   const recentSearches = ['Bristol', 'London', 'Manchester', 'Birmingham']
 
   // Detect scroll for nav styling
@@ -82,6 +87,54 @@ export default function ClientLandingPage() {
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
+
+  // Live location autocomplete via OpenStreetMap Nominatim
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+
+    const query = location.trim()
+    if (query.length < 2) {
+      setLocationSuggestions([])
+      return
+    }
+
+    debounceRef.current = setTimeout(async () => {
+      setLocationLoading(true)
+      try {
+        const params = new URLSearchParams({
+          key: import.meta.env.VITE_LOCATIONIQ_TOKEN,
+          q: query,
+          limit: '6',
+          countrycodes: 'gb,ie',
+          dedupe: '1',
+          normalizecity: '1',
+          tag: 'place:city,place:town,place:village,place:suburb,boundary:administrative'
+        })
+        const res = await fetch(`https://api.locationiq.com/v1/autocomplete?${params}`)
+        const data = await res.json()
+        if (!Array.isArray(data)) {
+          setLocationSuggestions([])
+          return
+        }
+        const suggestions = data
+          .map((item) => {
+            if (item.display_place && item.display_address) {
+              const region = item.display_address.split(',')[0].trim()
+              return region ? `${item.display_place}, ${region}` : item.display_place
+            }
+            return item.display_name?.split(',').slice(0, 2).join(',').trim() || ''
+          })
+          .filter(Boolean)
+        setLocationSuggestions([...new Set(suggestions)])
+      } catch {
+        setLocationSuggestions([])
+      } finally {
+        setLocationLoading(false)
+      }
+    }, 350)
+
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
+  }, [location])
 
   // Fetch real stores from API
   useEffect(() => {
@@ -138,13 +191,8 @@ export default function ClientLandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <motion.div whileHover={{ rotate: 360 }} transition={{ duration: 0.5 }}>
-                <svg className="w-8 h-8 sm:w-10 sm:h-10" viewBox="0 0 40 40" fill="none">
-                  <path d="M8 8L32 32M32 8L8 32" stroke="#1a1a1a" strokeWidth="4" strokeLinecap="round" />
-                </svg>
-              </motion.div>
-              <span className="text-xl sm:text-2xl font-bold tracking-tight text-gray-900">Afrimercato</span>
+            <Link to="/" className="flex items-center group">
+              <img src="/logo.svg" alt="Afrimercato" className="h-8 sm:h-10 w-auto" />
             </Link>
 
             {/* Desktop Nav */}
@@ -396,7 +444,7 @@ export default function ClientLandingPage() {
                     <input
                       type="text"
                       value={location}
-                      onChange={(e) => setLocation(e.target.value)}
+                      onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
                       onFocus={() => setShowLocationDropdown(true)}
                       onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
                       placeholder="Postcode, store name, location"
@@ -413,20 +461,53 @@ export default function ClientLandingPage() {
                         className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
                       >
                         <div className="p-3">
-                          <p className="text-xs text-gray-500 font-medium mb-2 px-2">Recent searches</p>
-                          {recentSearches.map((city) => (
-                            <button
-                              key={city}
-                              type="button"
-                              onClick={() => selectLocation(city)}
-                              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                            >
-                              <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                              </svg>
-                              <span className="text-gray-700">{city}</span>
-                            </button>
-                          ))}
+                          {location.trim().length >= 2 ? (
+                            <>
+                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Suggestions</p>
+                              {locationLoading && (
+                                <div className="flex items-center gap-2 px-3 py-2.5 text-gray-400 text-sm">
+                                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                  </svg>
+                                  Searching...
+                                </div>
+                              )}
+                              {!locationLoading && locationSuggestions.length === 0 && (
+                                <p className="text-sm text-gray-400 px-3 py-2.5">No results found</p>
+                              )}
+                              {!locationLoading && locationSuggestions.map((suggestion) => (
+                                <button
+                                  key={suggestion}
+                                  type="button"
+                                  onClick={() => selectLocation(suggestion)}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                                >
+                                  <svg className="w-4 h-4 text-[#00897B] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-gray-700">{suggestion}</span>
+                                </button>
+                              ))}
+                            </>
+                          ) : (
+                            <>
+                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Popular locations</p>
+                              {recentSearches.map((city) => (
+                                <button
+                                  key={city}
+                                  type="button"
+                                  onClick={() => selectLocation(city)}
+                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                                >
+                                  <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                                  </svg>
+                                  <span className="text-gray-700">{city}</span>
+                                </button>
+                              ))}
+                            </>
+                          )}
                         </div>
                       </motion.div>
                     )}
