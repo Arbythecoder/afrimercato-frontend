@@ -592,7 +592,7 @@ function Dashboard() {
               title="Low Stock Alert"
               message={`${lowStockProducts} product(s) are running low on stock`}
               action="View Products"
-              actionLink="/products"
+              actionLink="/vendor/products"
             />
           )}
           {pendingOrders > 0 && (
@@ -601,7 +601,7 @@ function Dashboard() {
               title="Pending Orders"
               message={`You have ${pendingOrders} order(s) waiting to be processed`}
               action="View Orders"
-              actionLink="/orders"
+              actionLink="/vendor/orders"
             />
           )}
         </div>
