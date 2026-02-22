@@ -17,19 +17,95 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* Dark mode — body-level only; page-specific dark: classes live in components */
+/* =============================================================
+   GLOBAL DARK MODE — switches the entire app, every page
+   ============================================================= */
 html.dark {
   color-scheme: dark;
 }
 
-html.dark body {
+html.dark body,
+html.dark #root {
   background-color: #111827;
   color: #f3f4f6;
 }
 
-html.dark a {
-  color: #93c5fd;
+/* Smooth transitions on theme switch */
+html.dark body *,
+body * {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.15s ease;
 }
+
+/* ── White / near-white backgrounds → dark panels ── */
+html.dark .bg-white          { background-color: #1f2937 !important; }
+html.dark .bg-gray-50        { background-color: #111827 !important; }
+html.dark .bg-gray-100       { background-color: #1f2937 !important; }
+html.dark .bg-gray-200       { background-color: #374151 !important; }
+html.dark .bg-afri-gray-50   { background-color: #111827 !important; }
+html.dark .bg-afri-gray-100  { background-color: #1f2937 !important; }
+
+/* ── Text colours ── */
+html.dark .text-gray-900     { color: #f9fafb !important; }
+html.dark .text-gray-800     { color: #f3f4f6 !important; }
+html.dark .text-gray-700     { color: #e5e7eb !important; }
+html.dark .text-gray-600     { color: #d1d5db !important; }
+html.dark .text-gray-500     { color: #9ca3af !important; }
+html.dark .text-afri-gray-900 { color: #f9fafb !important; }
+html.dark .text-afri-gray-700 { color: #e5e7eb !important; }
+html.dark .text-afri-gray-500 { color: #9ca3af !important; }
+
+/* ── Borders ── */
+html.dark .border-gray-100   { border-color: #374151 !important; }
+html.dark .border-gray-200   { border-color: #4b5563 !important; }
+html.dark .border-gray-300   { border-color: #6b7280 !important; }
+html.dark .border             { border-color: #374151 !important; }
+html.dark .divide-gray-200 > * + * { border-color: #374151 !important; }
+html.dark .divide-y > * + *  { border-color: #374151 !important; }
+
+/* ── Inputs, selects, textareas ── */
+html.dark input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="submit"]):not([type="button"]),
+html.dark textarea,
+html.dark select {
+  background-color: #374151 !important;
+  color: #f3f4f6 !important;
+  border-color: #4b5563 !important;
+}
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #9ca3af !important; }
+
+/* ── Tables ── */
+html.dark thead,
+html.dark thead tr,
+html.dark thead th { background-color: #1f2937 !important; color: #d1d5db !important; }
+html.dark tbody tr { background-color: #1f2937; }
+html.dark tbody tr:nth-child(even) { background-color: #111827; }
+html.dark tbody tr:hover { background-color: #374151 !important; }
+html.dark td, html.dark th { border-color: #374151 !important; }
+
+/* ── Navigation bars ── */
+html.dark nav { background-color: #1f2937; border-color: #374151; }
+
+/* ── Modals / overlays ── */
+html.dark .modal,
+html.dark [role="dialog"] { background-color: #1f2937 !important; }
+
+/* ── Shadows — make them visible on dark ── */
+html.dark .shadow,
+html.dark .shadow-sm,
+html.dark .shadow-md,
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  --tw-shadow-color: rgba(0,0,0,0.5);
+}
+
+/* ── Scrollbar in dark mode ── */
+html.dark ::-webkit-scrollbar-track { background: #1f2937; }
+html.dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+html.dark ::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+
+/* ── Links ── */
+html.dark a:not([class]) { color: #6ee7b7; }
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {

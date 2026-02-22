@@ -425,9 +425,11 @@ function ThemeToggle() {
     const root = document.documentElement
     if (dark) {
       root.classList.add('dark')
+      root.setAttribute('data-theme', 'dark')
       localStorage.setItem('theme', 'dark')
     } else {
       root.classList.remove('dark')
+      root.setAttribute('data-theme', 'light')
       localStorage.setItem('theme', 'light')
     }
   }, [dark])
