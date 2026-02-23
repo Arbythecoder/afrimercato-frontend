@@ -15,7 +15,7 @@ const isCustomerRole = (user) => {
 
 function Checkout() {
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuth()
+  const { isAuthenticated, user, logout } = useAuth()
 
   // Stable reference to avoid re-triggering effects when user object ref changes
   const isCustomer = useMemo(() => isCustomerRole(user), [user?.role, user?.roles, user?.primaryRole])
@@ -377,7 +377,10 @@ function Checkout() {
             <button
               type="button"
               onClick={() => {
-                localStorage.removeItem('afrimercato_token')
+                // Full logout first (clears cookies + auth state)
+                logout()
+                // Set redirect AFTER logout so hardLogout doesn't wipe it
+                localStorage.setItem('checkout_redirect', 'true')
                 navigate('/login')
               }}
               className="w-full bg-[#00897B] hover:bg-[#00695C] text-white py-3 px-6 rounded-xl font-bold text-lg transition-all mb-3"
