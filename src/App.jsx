@@ -186,11 +186,8 @@ function AppContent() {
       />
 
       {/* Checkout & Order Routes */}
-      <Route path="/checkout" element={
-        <ProtectedRoute allowedRoles={['customer']}>
-          <Checkout />
-        </ProtectedRoute>
-      } />
+      {/* Checkout — Checkout.jsx handles its own auth + role guard internally */}
+      <Route path="/checkout" element={<Checkout />} />
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
 

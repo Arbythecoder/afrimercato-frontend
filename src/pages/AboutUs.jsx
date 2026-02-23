@@ -9,22 +9,37 @@ import { motion } from 'framer-motion'
 export default function AboutUs() {
   const teamMembers = [
     {
-      name: 'Sarah Adeyemi',
+      name: 'Efezino',
       role: 'Founder & CEO',
-      initials: 'SA',
+      initials: 'EF',
+      bio: 'Visionary leader building Afrimercato into the UK\'s leading African grocery marketplace.'
+    },
+    {
+      name: 'Abigeal',
+      role: 'Co-Founder',
+      initials: 'AB',
       bio: 'Passionate about connecting African communities with authentic products across the UK.'
     },
     {
-      name: 'David Okonkwo',
-      role: 'Head of Operations',
-      initials: 'DO',
-      bio: 'Ensuring seamless delivery experiences for thousands of customers daily.'
+      name: 'Coming Soon',
+      role: 'Co-Founder',
+      initials: '+',
+      bio: 'This seat is reserved for our next Co-Founder.',
+      placeholder: true
     },
     {
-      name: 'Amara Johnson',
-      role: 'Head of Vendor Relations',
-      initials: 'AJ',
-      bio: 'Building strong partnerships with vendors across the United Kingdom.'
+      name: 'Coming Soon',
+      role: 'Role TBD',
+      initials: '+',
+      bio: 'We\'re growing the team — this role is being defined.',
+      placeholder: true
+    },
+    {
+      name: 'Coming Soon',
+      role: 'Role TBD',
+      initials: '+',
+      bio: 'We\'re growing the team — this role is being defined.',
+      placeholder: true
     }
   ]
 
@@ -266,40 +281,50 @@ export default function AboutUs() {
       </section>
 
       {/* Timeline */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">Our Journey</h2>
+      <section className="py-16 bg-gradient-to-br from-gray-50 to-white overflow-hidden">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-2"
+          >
+            Our <span className="text-[#F5A623]">Journey</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-gray-500 text-center mb-12"
+          >
+            From idea to marketplace — every milestone matters.
+          </motion.p>
+
           <div className="relative">
-            <div className="absolute left-1/2 transform -translate-x-1/2 h-full w-1 bg-[#00897B] hidden md:block"></div>
-            <div className="space-y-12">
+            {/* Connecting line */}
+            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[#00897B] via-[#F5A623] to-[#00897B]" />
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {milestones.map((milestone, index) => (
                 <motion.div
                   key={milestone.year}
-                  initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
+                  initial={{ opacity: 0, y: 30 }}
+                  whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true }}
-                  className={`flex items-center ${index % 2 === 0 ? 'md:flex-row' : 'md:flex-row-reverse'}`}
+                  transition={{ delay: index * 0.15 }}
+                  className="flex flex-col items-center text-center group"
                 >
-                  <div className="flex-1 text-center md:text-right md:pr-8">
-                    {index % 2 === 0 && (
-                      <div className="bg-white p-6 rounded-xl shadow-lg inline-block">
-                        <p className="text-[#00897B] font-bold text-2xl mb-1">{milestone.year}</p>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{milestone.title}</h3>
-                        <p className="text-gray-600">{milestone.description}</p>
-                      </div>
-                    )}
+                  {/* Year bubble */}
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00897B] to-[#00695C] flex flex-col items-center justify-center text-white z-10 shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300 ring-4 ring-white">
+                    <span className="text-xs font-medium opacity-80">year</span>
+                    <span className="text-2xl font-extrabold leading-none">{milestone.year.slice(2)}</span>
                   </div>
-                  <div className="hidden md:flex w-8 h-8 bg-[#00897B] rounded-full items-center justify-center text-white font-bold z-10">
-                    {index + 1}
-                  </div>
-                  <div className="flex-1 text-center md:text-left md:pl-8">
-                    {index % 2 !== 0 && (
-                      <div className="bg-white p-6 rounded-xl shadow-lg inline-block">
-                        <p className="text-[#00897B] font-bold text-2xl mb-1">{milestone.year}</p>
-                        <h3 className="text-xl font-bold text-gray-900 mb-2">{milestone.title}</h3>
-                        <p className="text-gray-600">{milestone.description}</p>
-                      </div>
-                    )}
+                  {/* Card */}
+                  <div className="bg-white rounded-2xl shadow-md p-5 w-full group-hover:shadow-xl transition-shadow border border-gray-100">
+                    <p className="text-[#F5A623] font-bold text-base mb-1">{milestone.year}</p>
+                    <h3 className="text-lg font-bold text-gray-900 mb-1">{milestone.title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed">{milestone.description}</p>
                   </div>
                 </motion.div>
               ))}
@@ -309,32 +334,82 @@ export default function AboutUs() {
       </section>
 
       {/* Team */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-16 bg-gradient-to-br from-[#00897B]/5 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">Meet Our Team</h2>
-          <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
-            The passionate people behind Afrimercato, working every day to bring you the best experience.
-          </p>
+          <motion.h2
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-2"
+          >
+            Meet the <span className="text-[#00897B]">Founders</span>
+          </motion.h2>
+          <motion.p
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.1 }}
+            className="text-gray-500 text-center mb-12 max-w-2xl mx-auto"
+          >
+            The people building Afrimercato — and the seats still to be filled.
+          </motion.p>
+
           <div className="grid md:grid-cols-3 gap-8">
             {teamMembers.map((member, index) => (
               <motion.div
-                key={member.name}
+                key={`${member.name}-${index}`}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-shadow"
+                className={`rounded-2xl overflow-hidden transition-all duration-300 ${
+                  member.placeholder
+                    ? 'border-2 border-dashed border-gray-300 bg-white hover:border-[#F5A623] hover:shadow-md'
+                    : 'bg-white shadow-lg hover:shadow-2xl hover:-translate-y-1'
+                }`}
               >
-                {/* Avatar with initials */}
-                <div className="w-full h-64 bg-gradient-to-br from-[#00897B] to-[#00695C] flex items-center justify-center">
-                  <span className="text-6xl font-bold text-white">
+                {/* Avatar panel */}
+                <div className={`relative w-full h-44 flex items-center justify-center overflow-hidden ${
+                  member.placeholder
+                    ? 'bg-gray-50'
+                    : index === 0
+                      ? 'bg-gradient-to-br from-[#00897B] via-[#00695C] to-[#004D40]'
+                      : 'bg-gradient-to-br from-[#F5A623] via-[#e09520] to-[#c27a10]'
+                }`}>
+                  {!member.placeholder && (
+                    <div className="absolute inset-0 opacity-10">
+                      <div className="absolute top-2 right-4 text-6xl">✦</div>
+                      <div className="absolute bottom-2 left-4 text-4xl">✦</div>
+                    </div>
+                  )}
+                  <span className={`text-7xl font-extrabold z-10 select-none ${
+                    member.placeholder ? 'text-gray-300' : 'text-white drop-shadow-md'
+                  }`}>
                     {member.initials}
                   </span>
                 </div>
+
                 <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900">{member.name}</h3>
-                  <p className="text-[#00897B] font-medium mb-3">{member.role}</p>
-                  <p className="text-gray-600 text-sm">{member.bio}</p>
+                  {member.placeholder ? (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 bg-amber-50 border border-amber-200 text-amber-700 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse" />
+                        Open Seat
+                      </div>
+                      <h3 className="text-lg font-bold text-gray-400 mb-1">{member.role}</h3>
+                      <p className="text-gray-400 text-sm">{member.bio}</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="inline-flex items-center gap-1.5 bg-green-50 border border-green-200 text-green-700 text-xs font-semibold px-2.5 py-1 rounded-full mb-3">
+                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                        Founder
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-0.5">{member.name}</h3>
+                      <p className="text-[#00897B] font-semibold text-sm mb-3">{member.role}</p>
+                      <p className="text-gray-500 text-sm leading-relaxed">{member.bio}</p>
+                    </>
+                  )}
                 </div>
               </motion.div>
             ))}

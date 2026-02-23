@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { vendorAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 import VendorOnboarding from '../../components/VendorOnboarding'
 import {
   LineChart,
@@ -32,6 +33,7 @@ const STATUS_COLORS = {
 }
 
 function Dashboard() {
+  const { user } = useAuth()
   const [stats, setStats] = useState(null)
   const [chartData, setChartData] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -44,6 +46,26 @@ function Dashboard() {
   const [showNotifications, setShowNotifications] = useState(false)
   const [unreadCount, setUnreadCount] = useState(0)
   const notificationRef = useRef(null)
+  const [resendingVerify, setResendingVerify] = useState(false)
+  const [verifyMessage, setVerifyMessage] = useState('')
+
+  const resendVerificationEmail = async () => {
+    setResendingVerify(true)
+    setVerifyMessage('')
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' }
+      })
+      const data = await res.json()
+      setVerifyMessage(data.message || 'Verification email sent! Check your inbox.')
+    } catch {
+      setVerifyMessage('Failed to send. Please try again.')
+    } finally {
+      setResendingVerify(false)
+    }
+  }
 
   useEffect(() => {
     fetchDashboardData()
@@ -390,6 +412,31 @@ function Dashboard() {
 
   return (
     <div className="space-y-6 pb-8">
+      {/* Email Verification Banner — shown only when email is not verified */}
+      {user && user.emailVerified === false && (
+        <div className="rounded-xl border-2 border-amber-400 bg-amber-50 px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3">
+          <div className="flex items-start gap-3 flex-1">
+            <span className="text-2xl mt-0.5">📧</span>
+            <div>
+              <p className="font-bold text-amber-900 text-sm">Verify your email to unlock product creation</p>
+              <p className="text-amber-800 text-sm mt-0.5">
+                We sent a verification link to <strong>{user.email}</strong>. Check your inbox (and spam folder).
+              </p>
+              {verifyMessage && (
+                <p className="text-green-700 text-sm font-medium mt-1">{verifyMessage}</p>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={resendVerificationEmail}
+            disabled={resendingVerify}
+            className="shrink-0 bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-sm font-bold px-5 py-2.5 rounded-lg transition-all"
+          >
+            {resendingVerify ? 'Sending…' : 'Resend Email'}
+          </button>
+        </div>
+      )}
+
       {/* Confetti effect for good performance */}
       {showConfetti && (
         <div className="fixed inset-0 pointer-events-none z-50">

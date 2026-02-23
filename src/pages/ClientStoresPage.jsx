@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { searchVendorsByLocation } from '../services/api'
 
 export default function ClientStoresPage() {
@@ -275,8 +275,12 @@ export default function ClientStoresPage() {
     ]
 
     if (searchLocation) {
+      const q = searchLocation.toLowerCase()
       const filtered = allStores.filter(store =>
-        store.location.toLowerCase().includes(searchLocation.toLowerCase())
+        store.location.toLowerCase().includes(q) ||
+        store.name.toLowerCase().includes(q) ||
+        (store.category || '').toLowerCase().includes(q) ||
+        (store.tags || []).some(t => t.toLowerCase().includes(q))
       )
       return filtered.length > 0 ? filtered : allStores
     }
@@ -358,113 +362,156 @@ export default function ClientStoresPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="bg-white py-10 border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* Left Side */}
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
-              >
-                African Online Store<br />In the United Kingdom
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-gray-600 mb-6"
-              >
-                Use existing infrastructure of African products delivered to your doorstep.
-                Open stores, no staff needed, deliver to you however convenient.
-              </motion.p>
-
-              {/* Search Bar */}
-              <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-                <div className="flex-1 relative">
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-3">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input
-                      type="text"
-                      value={searchLocation}
-                      onChange={(e) => setSearchLocation(e.target.value)}
-                      onFocus={() => setShowLocationDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                      placeholder="Postcode, store name, location"
-                      className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-500"
-                    />
-                  </div>
-                  
-                  {/* HOTFIX: Live autocomplete dropdown to make search feel interactive */}
-                  {showLocationDropdown && locationSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
-                      {locationSuggestions.map((loc, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            setSearchLocation(loc)
-                            setShowLocationDropdown(false)
-                            navigate(`/stores?location=${encodeURIComponent(loc)}`)
-                          }}
-                          className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                        >
-                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="text-gray-700">{loc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-6 py-3 rounded-lg font-semibold transition-all"
+      {/* Hero — full when no search, compact when results are showing */}
+      {!location || loading ? (
+        <section className="bg-gradient-to-br from-[#00897B] via-[#00695C] to-[#004D40] py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl sm:text-4xl font-bold text-white mb-3"
                 >
-                  Find Store
-                </button>
-              </form>
+                  African Groceries,<br />
+                  <span className="text-[#F5A623]">Delivered Across the UK</span>
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-green-100 mb-6"
+                >
+                  Search by city, postcode, or store name to find authentic African stores near you.
+                </motion.p>
 
-              {/* Trust Badge */}
-              <div className="flex items-center gap-3">
-                <span className="text-gray-600 text-sm">Trusted by</span>
-                <div className="flex -space-x-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-sm">
-                      {['👩🏾', '👨🏿', '👩🏽'][i-1]}
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+                  <div className="flex-1 relative">
+                    <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-3 shadow-md">
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                      </svg>
+                      <input
+                        type="text"
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                        onFocus={() => setShowLocationDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                        placeholder="City, postcode, or store name…"
+                        className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400"
+                      />
                     </div>
-                  ))}
-                </div>
-                <span className="bg-white border border-gray-200 px-3 py-1 rounded-full text-sm font-medium text-gray-700">
-                  4,320+ Vendors
-                </span>
-              </div>
-            </div>
+                    {showLocationDropdown && locationSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
+                        {locationSuggestions.map((loc, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setSearchLocation(loc)
+                              setShowLocationDropdown(false)
+                              navigate(`/stores?location=${encodeURIComponent(loc)}`)
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span className="text-gray-700">{loc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-[#F5A623] hover:bg-[#E59400] text-white px-6 py-3 rounded-lg font-bold shadow-md transition-all"
+                  >
+                    Search
+                  </button>
+                </form>
 
-            {/* Right Side - Image */}
-            <div className="hidden lg:block">
-              <div className="relative bg-[#F5A623] rounded-2xl p-6 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"
-                  alt="Fresh produce"
-                  className="w-full h-64 object-cover rounded-xl"
-                />
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {['👩🏾', '👨🏿', '👩🏽'].map((e, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-white flex items-center justify-center text-sm">{e}</div>
+                    ))}
+                  </div>
+                  <span className="bg-white/20 border border-white/30 px-3 py-1 rounded-full text-sm font-medium text-white">
+                    4,320+ Vendors across the UK
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="relative bg-[#F5A623] rounded-2xl p-4 overflow-hidden shadow-2xl">
+                  <img
+                    src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"
+                    alt="Fresh produce"
+                    className="w-full h-64 object-cover rounded-xl"
+                  />
+                  <div className="absolute bottom-6 left-6 bg-white rounded-xl px-4 py-2 shadow-lg">
+                    <p className="text-xs text-gray-500">Avg. delivery</p>
+                    <p className="font-bold text-[#00897B]">25–40 mins</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        /* Compact bar shown once stores are displaying */
+        <section className="bg-white border-b shadow-sm py-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-gray-700">
+                <svg className="w-5 h-5 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span className="font-semibold text-gray-900">{filteredStores.length} store{filteredStores.length !== 1 ? 's' : ''}</span>
+                <span className="text-gray-500">near <span className="text-[#00897B] font-medium">{location}</span></span>
+              </div>
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                    placeholder="Search different location…"
+                    className="bg-transparent outline-none text-sm text-gray-900 placeholder-gray-400 w-48"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                >
+                  Go
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/stores')}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Clear
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Meet Our Partners Section */}
       <section className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">Meet Our Partners</h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
+            Meet Our <span className="text-[#F5A623]">Partners</span>
+          </h2>
 
           {/* Tabs: Stores | Pickers | Riders */}
           <div className="flex justify-center mb-6">

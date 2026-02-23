@@ -32,20 +32,35 @@ function Login() {
     if (result.success) {
       // Check if user was redirected from checkout
       const checkoutRedirect = localStorage.getItem('checkout_redirect')
+      const userRole = result.user?.role || result.user?.primaryRole || 'customer'
 
       if (checkoutRedirect === 'true') {
         localStorage.removeItem('checkout_redirect')
-        // Only redirect to checkout if cart has items
+
+        // Block non-customer accounts from the checkout flow
+        if (userRole !== 'customer') {
+          const roleLabel = userRole === 'vendor' ? 'Vendor'
+            : userRole === 'rider' ? 'Rider'
+            : userRole === 'picker' ? 'Picker'
+            : userRole === 'admin' ? 'Admin'
+            : 'non-Customer'
+          setError(`This is a ${roleLabel} account. Shopping and checkout are only available for Customer accounts. Please register a separate Customer account to shop.`)
+          setLoading(false)
+          return
+        }
+
+        // Only customer accounts proceed to checkout
         const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
         if (cart.length > 0) {
           navigate('/checkout')
           return
         }
-        // Cart is empty, proceed with normal role-based routing
+        // Cart is empty — fall through to home page
+        navigate('/')
+        return
       }
 
       // Check vendor approval status
-      const userRole = result.user?.role || result.user?.primaryRole || 'customer'
       const approvalStatus = result.user?.approvalStatus
 
       // If vendor with rejected approval, show error
