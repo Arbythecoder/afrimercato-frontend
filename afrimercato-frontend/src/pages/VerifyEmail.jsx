@@ -37,10 +37,19 @@ export default function VerifyEmail() {
         setMessage('Your email has been verified successfully!')
 
         // Refresh auth so the user object picks up emailVerified: true
-        // then redirect to the right dashboard after a short delay
+        // then redirect to the right place after a short delay
         setTimeout(async () => {
           if (isAuthenticated) {
             await checkAuth()
+
+            // If they were mid-checkout, send them back there
+            const checkoutRedirect = localStorage.getItem('checkout_redirect')
+            if (checkoutRedirect === 'true') {
+              localStorage.removeItem('checkout_redirect')
+              navigate('/checkout')
+              return
+            }
+
             const role = user?.role || user?.roles?.[0] || 'customer'
             if (role === 'vendor') navigate('/vendor/dashboard')
             else if (role === 'rider') navigate('/rider/dashboard')

@@ -5,7 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
-const { protect, authorize } = require('../middleware/auth');
+const { protect } = require('../middleware/auth');
 const {
   getCart,
   addToCart,
@@ -18,8 +18,9 @@ const {
   getCartRepurchaseSchedule
 } = require('../controllers/cartController');
 
-// All cart routes require customer authentication
-router.use(protect, authorize('customer'));
+// Cart routes require login — any role can build a cart and browse
+// (only checkout enforces the customer-role restriction)
+router.use(protect);
 
 router.get('/', getCart);
 router.post('/add', addToCart);
