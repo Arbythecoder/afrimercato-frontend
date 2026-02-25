@@ -88,9 +88,18 @@ exports.registerVendor = asyncHandler(async (req, res) => {
   // Generate email verification token and send verification email
   const verificationToken = user.generateEmailVerificationToken();
   await user.save();
-  
-  // Send verification email
-  await sendVerificationEmail(email, verificationToken, user.firstName);
+
+  // Send verification email — don't crash registration if email fails
+  let emailSent = false;
+  try {
+    const emailResult = await sendVerificationEmail(email, verificationToken, user.firstName);
+    emailSent = emailResult.success;
+    if (!emailResult.success) {
+      console.error('[VENDOR_EMAIL_ERROR]', emailResult.message);
+    }
+  } catch (emailError) {
+    console.error('[VENDOR_EMAIL_ERROR]', emailError.message);
+  }
 
   // Generate JWT tokens (same as customer registration)
   const token = generateAccessToken({ 
@@ -117,7 +126,8 @@ exports.registerVendor = asyncHandler(async (req, res) => {
         storeName: vendor.storeName,
         approvalStatus: vendor.approvalStatus,
         emailVerified: false,
-        requiresVerification: true
+        requiresVerification: true,
+        emailSent
       }
     }
   });

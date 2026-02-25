@@ -16,6 +16,15 @@ const transporter = nodemailer.createTransport({
 
 const FROM = `"Afrimercato" <${process.env.EMAIL_FROM || process.env.SMTP_USER}>`;
 
+// Verify SMTP connection at startup — logs to server console so you can see immediately if credentials are wrong
+transporter.verify((err) => {
+  if (err) {
+    console.error('[email] SMTP connection FAILED:', err.message, '— emails will not send until fixed');
+  } else {
+    console.log('[email] SMTP connection OK — ready to send');
+  }
+});
+
 // App uses HashRouter — links must include /#/ so the browser loads
 // index.html and React Router picks up the hash path correctly.
 const buildLink = (path, query) => {

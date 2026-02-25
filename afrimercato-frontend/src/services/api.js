@@ -67,7 +67,7 @@ const refreshAccessToken = async () => {
 };
 
 // Generic API call function with automatic token refresh
-const apiCall = async (endpoint, options = {}, isRetry = false) => {
+export const apiCall = async (endpoint, options = {}, isRetry = false) => {
   // Enforce a request timeout using AbortController to avoid hanging the UI
   const controller = new AbortController();
   const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 10000;

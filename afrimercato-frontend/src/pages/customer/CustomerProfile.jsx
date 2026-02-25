@@ -159,6 +159,7 @@ function CustomerProfile() {
           <div className="p-6">
             {/* Profile Tab */}
             {activeTab === 'profile' && (
+              <>
               <form onSubmit={handleProfileUpdate} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
@@ -257,6 +258,7 @@ function CustomerProfile() {
                   </div>
                 )}
               </div>
+              </>
             )}
 
             {/* Addresses Tab */}
@@ -288,6 +290,7 @@ function CustomerProfile() {
 
             {/* Security Tab */}
             {activeTab === 'security' && (
+              <>
               <form onSubmit={handlePasswordChange} className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
@@ -352,6 +355,7 @@ function CustomerProfile() {
                   </button>
                 </div>
               </div>
+              </>
             )}
 
             {/* Preferences Tab */}

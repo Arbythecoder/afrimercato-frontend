@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { useAuth } from '../context/AuthContext'
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { checkAuth, user, isAuthenticated } = useAuth()
   const token = searchParams.get('token')
 
   const [status, setStatus] = useState('verifying') // verifying | success | error
@@ -33,8 +35,22 @@ export default function VerifyEmail() {
       if (data.success) {
         setStatus('success')
         setMessage('Your email has been verified successfully!')
-        // Redirect to login after 3 seconds
-        setTimeout(() => navigate('/login'), 3000)
+
+        // Refresh auth so the user object picks up emailVerified: true
+        // then redirect to the right dashboard after a short delay
+        setTimeout(async () => {
+          if (isAuthenticated) {
+            await checkAuth()
+            const role = user?.role || user?.roles?.[0] || 'customer'
+            if (role === 'vendor') navigate('/vendor/dashboard')
+            else if (role === 'rider') navigate('/rider/dashboard')
+            else if (role === 'picker') navigate('/picker/dashboard')
+            else if (role === 'admin') navigate('/admin/dashboard')
+            else navigate('/')
+          } else {
+            navigate('/login')
+          }
+        }, 2000)
       } else {
         setStatus('error')
         setMessage(data.message || 'Verification failed')
@@ -73,7 +89,7 @@ export default function VerifyEmail() {
               <CheckCircleIcon className="w-16 h-16 text-green-600 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Email Verified!</h2>
               <p className="text-gray-600 mb-6">{message}</p>
-              <p className="text-sm text-gray-500">Redirecting to login...</p>
+              <p className="text-sm text-gray-500">Redirecting to your dashboard...</p>
             </>
           )}
 
