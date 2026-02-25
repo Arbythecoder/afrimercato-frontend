@@ -5,6 +5,8 @@ import CookieConsent from './components/CookieConsent'
 import BetaBanner from './components/BetaBanner'
 import BetaFeedbackButton from './components/BetaFeedbackButton'
 import ComingSoon from './components/ComingSoon'
+import CrispChat from './components/CrispChat'
+import PushNotificationBanner from './components/PushNotificationBanner'
 
 // Lazy load pages for code splitting - ⚡ Improves initial load time
 const Login = lazy(() => import('./pages/Login'))
@@ -51,8 +53,19 @@ const RiderProfile = lazy(() => import('./pages/rider/RiderProfile'))
 const PickerDashboard = lazy(() => import('./pages/picker/PickerDashboard'))
 const PickerOrderFulfillment = lazy(() => import('./pages/picker/PickerOrderFulfillment'))
 const PickerPerformance = lazy(() => import('./pages/picker/PickerPerformance'))
+const PickerProfile = lazy(() => import('./pages/picker/PickerProfile'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
+const AdminRiderManagement = lazy(() => import('./pages/admin/AdminRiderManagement'))
+const AdminPickerManagement = lazy(() => import('./pages/admin/AdminPickerManagement'))
+const AdminCustomerManagement = lazy(() => import('./pages/admin/AdminCustomerManagement'))
+const AdminAuditLogs = lazy(() => import('./pages/admin/AdminAuditLogs'))
+const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
+const DeliverySettings = lazy(() => import('./pages/vendor/DeliverySettings'))
+const PaymentVerify = lazy(() => import('./pages/customer/PaymentVerify'))
+const CustomerSupport = lazy(() => import('./pages/customer/CustomerSupport'))
+const NotFound = lazy(() => import('./pages/NotFound'))
+const VerifyPhone = lazy(() => import('./pages/VerifyPhone'))
 const VendorOnboarding = lazy(() => import('./components/VendorOnboarding'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
@@ -60,6 +73,8 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 
 // Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
+import RiderLayout from './components/Layout/RiderLayout'
+import PickerLayout from './components/Layout/PickerLayout'
 
 // Loading fallback for lazy-loaded pages
 function LazyLoadingFallback() {
@@ -87,6 +102,8 @@ function RoleBasedRedirect() {
       return <Navigate to="/rider/dashboard" replace />
     case 'picker':
       return <Navigate to="/picker/dashboard" replace />
+    case 'admin':
+      return <Navigate to="/admin/dashboard" replace />
     case 'customer':
     default:
       return <Navigate to="/" replace />
@@ -186,25 +203,23 @@ function AppContent() {
       />
 
       {/* Checkout & Order Routes */}
-      <Route path="/checkout" element={
-        <ProtectedRoute allowedRoles={['customer']}>
-          <Checkout />
-        </ProtectedRoute>
-      } />
+      {/* Checkout — Checkout.jsx handles its own auth + role guard internally */}
+      <Route path="/checkout" element={<Checkout />} />
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
 
-      {/* Rider Routes */}
-      <Route path="/rider/dashboard" element={isAuthenticated ? <RiderDashboard /> : <Navigate to="/login" />} />
-      <Route path="/rider/deliveries" element={isAuthenticated ? <RiderDeliveries /> : <Navigate to="/login" />} />
+      {/* Rider Routes — layout adds bottom nav on main pages */}
+      <Route path="/rider/dashboard" element={isAuthenticated ? <RiderLayout><RiderDashboard /></RiderLayout> : <Navigate to="/login" />} />
+      <Route path="/rider/deliveries" element={isAuthenticated ? <RiderLayout><RiderDeliveries /></RiderLayout> : <Navigate to="/login" />} />
       <Route path="/rider/delivery/:deliveryId" element={isAuthenticated ? <RiderDeliveryDetail /> : <Navigate to="/login" />} />
-      <Route path="/rider/earnings" element={isAuthenticated ? <RiderEarnings /> : <Navigate to="/login" />} />
-      <Route path="/rider/profile" element={isAuthenticated ? <RiderProfile /> : <Navigate to="/login" />} />
+      <Route path="/rider/earnings" element={isAuthenticated ? <RiderLayout><RiderEarnings /></RiderLayout> : <Navigate to="/login" />} />
+      <Route path="/rider/profile" element={isAuthenticated ? <RiderLayout><RiderProfile /></RiderLayout> : <Navigate to="/login" />} />
 
-      {/* Picker Routes */}
-      <Route path="/picker/dashboard" element={isAuthenticated ? <PickerDashboard /> : <Navigate to="/login" />} />
+      {/* Picker Routes — layout adds bottom nav on main pages */}
+      <Route path="/picker/dashboard" element={isAuthenticated ? <PickerLayout><PickerDashboard /></PickerLayout> : <Navigate to="/login" />} />
       <Route path="/picker/order/:orderId" element={isAuthenticated ? <PickerOrderFulfillment /> : <Navigate to="/login" />} />
-      <Route path="/picker/performance" element={isAuthenticated ? <PickerPerformance /> : <Navigate to="/login" />} />
+      <Route path="/picker/performance" element={isAuthenticated ? <PickerLayout><PickerPerformance /></PickerLayout> : <Navigate to="/login" />} />
+      <Route path="/picker/profile" element={isAuthenticated ? <PickerLayout><PickerProfile /></PickerLayout> : <Navigate to="/login" />} />
 
       <Route
         path="/login"
@@ -215,6 +230,7 @@ function AppContent() {
         element={isAuthenticated ? <RoleBasedRedirect /> : <Register />}
       />
       <Route path="/verify-email" element={<VerifyEmail />} />
+      <Route path="/verify-phone" element={<VerifyPhone />} />
       <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/reset-password" element={<ResetPassword />} />
 
@@ -386,6 +402,101 @@ function AppContent() {
           )
         }
       />
+      <Route
+        path="/admin/riders"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <AdminRiderManagement />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/admin/pickers"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <AdminPickerManagement />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/admin/customers"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <AdminCustomerManagement />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/admin/audit-logs"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <AdminAuditLogs />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+      <Route
+        path="/admin/analytics"
+        element={
+          isAuthenticated ? (
+            user?.role === 'admin' ? (
+              <AdminAnalytics />
+            ) : (
+              <Navigate to="/" />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+
+      {/* Vendor: Delivery Settings */}
+      <Route
+        path="/vendor/delivery-settings"
+        element={
+          isAuthenticated ? (
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <DeliverySettings />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+
+      {/* Customer: Payment Verification + Support */}
+      <Route path="/payment/verify" element={<PaymentVerify />} />
+      <Route path="/support" element={isAuthenticated ? <CustomerSupport /> : <Navigate to="/login" />} />
+
+      {/* 404 catch-all */}
+      <Route path="*" element={<NotFound />} />
     </Routes>
     </Suspense>
     </>
@@ -474,11 +585,13 @@ function App() {
   return (
     <AuthProvider>
       <ComingSoon>
+        <PushNotificationBanner />
         <AppContent />
         <ThemeToggle />
         <LiveChatButton />
         <BetaFeedbackButton />
         <CookieConsent />
+        <CrispChat />
       </ComingSoon>
     </AuthProvider>
   )

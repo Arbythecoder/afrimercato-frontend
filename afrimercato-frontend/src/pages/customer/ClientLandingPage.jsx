@@ -8,56 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors } from '../../services/api'
 
 // Fallback stores shown while API loads or if no data
-const FALLBACK_STORES = [
-  {
-    id: 1,
-    storeName: "Mama Nkechi African Mart",
-    image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
-    hours: "06:00am - 09:00pm",
-    location: "Peckham, London",
-    distance: "0.1km",
-    deliveryTime: "25 mins",
-    priceRange: "£10-£500",
-    rating: 4.8,
-    isOpen: true,
-    deliveryFee: "Free over £50",
-    category: "Nigerian & Ghanaian",
-    methods: ["Shopping", "Pickup", "Delivery"],
-    slug: null
-  },
-  {
-    id: 2,
-    storeName: "Sahara Foods & Spices",
-    image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80",
-    hours: "06:00am - 08:00pm",
-    location: "Moss Side, Manchester",
-    distance: "1.2km",
-    deliveryTime: "30 mins",
-    priceRange: "£10-£500",
-    rating: 4.9,
-    isOpen: true,
-    deliveryFee: "£3.99",
-    category: "African & Middle Eastern",
-    methods: ["In-Shopping", "Delivery"],
-    slug: null
-  },
-  {
-    id: 3,
-    storeName: "AfroTaste Groceries",
-    image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=800&q=80",
-    hours: "06:00am - 10:00pm",
-    location: "Sparkbrook, Birmingham",
-    distance: "0.8km",
-    deliveryTime: "20 mins",
-    priceRange: "£5-£200",
-    rating: 4.7,
-    isOpen: true,
-    deliveryFee: "Free over £40",
-    category: "West African Specialties",
-    methods: ["Shopping", "Delivery"],
-    slug: null
-  }
-]
+const FALLBACK_STORES = []
 
 export default function ClientLandingPage() {
   const navigate = useNavigate()
@@ -88,7 +39,19 @@ export default function ClientLandingPage() {
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Live location autocomplete via OpenStreetMap Nominatim
+  // Static UK fallback locations for when LocationIQ is unavailable
+  const UK_CITIES = [
+    'London', 'Manchester', 'Birmingham', 'Leeds', 'Sheffield',
+    'Bristol', 'Liverpool', 'Leicester', 'Edinburgh', 'Glasgow',
+    'Coventry', 'Bradford', 'Nottingham', 'Southampton', 'Cardiff',
+    'Peckham, London', 'Brixton, London', 'Tottenham, London',
+    'East Ham, London', 'Hackney, London', 'Lewisham, London',
+    'Croydon, London', 'Southwark, London', 'Newham, London',
+    'Moss Side, Manchester', 'Handsworth, Birmingham', 'Chapeltown, Leeds',
+    'Sparkbrook, Birmingham', 'Toxteth, Liverpool',
+  ]
+
+  // Live location autocomplete — LocationIQ with static UK fallback
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
@@ -98,11 +61,24 @@ export default function ClientLandingPage() {
       return
     }
 
+    // Static fallback filter (instant)
+    const staticMatches = UK_CITIES.filter(c =>
+      c.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 6)
+
+    const locationIQKey = import.meta.env.VITE_LOCATIONIQ_TOKEN
+
+    // If no API key, use static list only
+    if (!locationIQKey) {
+      setLocationSuggestions(staticMatches)
+      return
+    }
+
     debounceRef.current = setTimeout(async () => {
       setLocationLoading(true)
       try {
         const params = new URLSearchParams({
-          key: import.meta.env.VITE_LOCATIONIQ_TOKEN,
+          key: locationIQKey,
           q: query,
           limit: '6',
           countrycodes: 'gb,ie',
@@ -112,8 +88,8 @@ export default function ClientLandingPage() {
         })
         const res = await fetch(`https://api.locationiq.com/v1/autocomplete?${params}`)
         const data = await res.json()
-        if (!Array.isArray(data)) {
-          setLocationSuggestions([])
+        if (!Array.isArray(data) || data.length === 0) {
+          setLocationSuggestions(staticMatches)
           return
         }
         const suggestions = data
@@ -127,7 +103,8 @@ export default function ClientLandingPage() {
           .filter(Boolean)
         setLocationSuggestions([...new Set(suggestions)])
       } catch {
-        setLocationSuggestions([])
+        // API failed — fall back to static list
+        setLocationSuggestions(staticMatches)
       } finally {
         setLocationLoading(false)
       }
@@ -263,7 +240,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           HERO SECTION
           ============================================ */}
-      <section className="relative pt-20 sm:pt-24 pb-12 overflow-x-clip">
+      <section className="relative pt-28 sm:pt-32 pb-12 overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
@@ -670,7 +647,7 @@ export default function ClientLandingPage() {
                   </button>
                 ))}
                 <Link
-                  to="/register?role=vendor"
+                  to="/partner"
                   className="flex items-center gap-2 px-4 py-2 border border-[#00897B] text-[#00897B] rounded-full font-medium text-sm hover:bg-[#00897B] hover:text-white transition-all"
                 >
                   + Onboard your store

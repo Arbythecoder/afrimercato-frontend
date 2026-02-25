@@ -1,105 +1,75 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiCall } from '../../services/api'
+import { motion, AnimatePresence } from 'framer-motion'
+import { TrendingUp, Package, RefreshCw, ChevronRight } from 'lucide-react'
+
+const PERIODS = [
+  { id: 'week',  label: '7 Days',  days: 7 },
+  { id: 'month', label: '30 Days', days: 30 },
+  { id: 'year',  label: '1 Year',  days: 365 },
+]
 
 function RiderEarnings() {
   const navigate = useNavigate()
   const [period, setPeriod] = useState('week')
-  const [earnings, setEarnings] = useState({
-    total: 0,
-    deliveries: 0,
-    tips: 0,
-    bonus: 0
-  })
+  const [summary, setSummary] = useState({ totalEarnings: 0, totalDeliveries: 0 })
   const [history, setHistory] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchEarnings()
-  }, [period])
-
-  const fetchEarnings = async () => {
+  const fetchEarnings = useCallback(async () => {
+    setLoading(true)
+    setError(null)
     try {
-      setLoading(true)
-      // Simulate API call
-      setTimeout(() => {
-        const mockData = {
-          week: {
-            total: 336.50,
-            deliveries: 295.00,
-            tips: 31.50,
-            bonus: 10.00,
-            count: 42
-          },
-          month: {
-            total: 1420.75,
-            deliveries: 1250.00,
-            tips: 120.75,
-            bonus: 50.00,
-            count: 178
-          },
-          year: {
-            total: 15890.00,
-            deliveries: 14000.00,
-            tips: 1390.00,
-            bonus: 500.00,
-            count: 1987
-          }
-        }
-
-        const data = mockData[period]
-        setEarnings({
-          total: data.total,
-          deliveries: data.deliveries,
-          tips: data.tips,
-          bonus: data.bonus,
-          count: data.count
-        })
-
-        setHistory([
-          { date: '2024-01-20', amount: 64.50, deliveries: 8, status: 'paid' },
-          { date: '2024-01-19', amount: 52.00, deliveries: 7, status: 'paid' },
-          { date: '2024-01-18', amount: 78.25, deliveries: 10, status: 'paid' },
-          { date: '2024-01-17', amount: 45.00, deliveries: 5, status: 'paid' },
-          { date: '2024-01-16', amount: 58.75, deliveries: 7, status: 'paid' },
-          { date: '2024-01-15', amount: 38.00, deliveries: 5, status: 'pending' }
-        ])
-        setLoading(false)
-      }, 500)
-    } catch (error) {
-      console.error('Error fetching earnings:', error)
+      const days = PERIODS.find(p => p.id === period)?.days || 7
+      const end = new Date()
+      const start = new Date()
+      start.setDate(end.getDate() - days)
+      const startDate = start.toISOString().split('T')[0]
+      const endDate = end.toISOString().split('T')[0]
+      const res = await apiCall(`/riders/earnings?startDate=${startDate}&endDate=${endDate}`)
+      const d = res?.data
+      if (d) {
+        setSummary({ totalEarnings: parseFloat(d.summary?.totalEarnings || 0), totalDeliveries: d.summary?.totalDeliveries || 0 })
+        setHistory(d.deliveries || [])
+      }
+    } catch {
+      setError('Failed to load earnings.')
+    } finally {
       setLoading(false)
     }
-  }
+  }, [period])
 
-  const periods = [
-    { id: 'week', label: 'This Week' },
-    { id: 'month', label: 'This Month' },
-    { id: 'year', label: 'This Year' }
-  ]
+  useEffect(() => { fetchEarnings() }, [fetchEarnings])
+
+  const avgPerDelivery = summary.totalDeliveries > 0 ? summary.totalEarnings / summary.totalDeliveries : 0
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-6">
-        <div className="max-w-4xl mx-auto px-4">
-          <button onClick={() => navigate('/rider/dashboard')} className="text-purple-200 hover:text-white mb-2">
-            ← Back to Dashboard
-          </button>
-          <h1 className="text-2xl font-bold">My Earnings</h1>
+    <div className="min-h-screen bg-slate-50">
+      {/* Hero */}
+      <div className="bg-gradient-to-br from-violet-600 to-violet-900 px-5 pt-14 pb-28 rounded-b-[2.5rem] relative overflow-hidden">
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
+        <div className="relative">
+          <p className="text-violet-200 text-sm font-medium">My Earnings</p>
+          <p className="text-white text-5xl font-black mt-1">
+            {loading ? '—' : `£${summary.totalEarnings.toFixed(2)}`}
+          </p>
+          <p className="text-violet-200 text-sm mt-1">
+            {loading ? '...' : `${summary.totalDeliveries} deliveries`}
+          </p>
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-6">
-        {/* Period Selector */}
-        <div className="flex gap-2 mb-6">
-          {periods.map(p => (
+      <div className="px-5 -mt-16 space-y-5 pb-4">
+        {/* Period pill selector */}
+        <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm">
+          {PERIODS.map(p => (
             <button
               key={p.id}
               onClick={() => setPeriod(p.id)}
-              className={`flex-1 py-3 rounded-xl font-semibold transition-all ${
-                period === p.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                period === p.id ? 'bg-violet-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {p.label}
@@ -107,118 +77,104 @@ function RiderEarnings() {
           ))}
         </div>
 
-        {loading ? (
-          <div className="space-y-4">
-            <div className="bg-white rounded-xl p-6 animate-pulse">
-              <div className="h-12 bg-gray-200 rounded w-1/2 mx-auto"></div>
-            </div>
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center justify-between">
+            <p className="text-red-600 text-sm">{error}</p>
+            <button onClick={fetchEarnings} className="flex items-center gap-1 text-red-500 text-sm font-semibold">
+              <RefreshCw size={14} /> Retry
+            </button>
           </div>
-        ) : (
-          <>
-            {/* Total Earnings Card */}
-            <div className="bg-gradient-to-r from-green-500 to-green-600 rounded-xl p-6 text-white text-center mb-6">
-              <p className="text-green-100 mb-1">Total Earnings</p>
-              <p className="text-5xl font-bold">£{earnings.total.toFixed(2)}</p>
-              <p className="text-green-100 mt-2">{earnings.count} deliveries completed</p>
-            </div>
-
-            {/* Earnings Breakdown */}
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-                <span className="text-2xl">🚚</span>
-                <p className="text-2xl font-bold text-gray-900 mt-2">£{earnings.deliveries.toFixed(2)}</p>
-                <p className="text-sm text-gray-500">Delivery Fees</p>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-                <span className="text-2xl">💝</span>
-                <p className="text-2xl font-bold text-gray-900 mt-2">£{earnings.tips.toFixed(2)}</p>
-                <p className="text-sm text-gray-500">Tips</p>
-              </div>
-              <div className="bg-white rounded-xl shadow-lg p-4 text-center">
-                <span className="text-2xl">🎁</span>
-                <p className="text-2xl font-bold text-gray-900 mt-2">£{earnings.bonus.toFixed(2)}</p>
-                <p className="text-sm text-gray-500">Bonuses</p>
-              </div>
-            </div>
-
-            {/* Payout Info */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900">Next Payout</h2>
-                <span className="text-sm text-gray-500">Scheduled for Friday</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-3xl font-bold text-green-600">£64.50</p>
-                  <p className="text-sm text-gray-500">8 deliveries since last payout</p>
-                </div>
-                <button 
-                  disabled
-                  className="px-6 py-3 bg-gray-300 text-gray-500 rounded-lg font-semibold cursor-not-allowed"
-                  title="Payouts are processed automatically every Friday"
-                >
-                  Auto-Payout Enabled
-                </button>
-              </div>
-              {/* Manual Payout Notice */}
-              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>📅 Automatic Weekly Payouts:</strong> Your earnings are paid out automatically every Friday via bank transfer. Ensure your bank details are up to date in Settings.
-                </p>
-              </div>
-            </div>
-
-            {/* Payout History */}
-            <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-              <div className="p-6 border-b">
-                <h2 className="text-lg font-bold text-gray-900">Payout History</h2>
-              </div>
-              <div className="divide-y">
-                {history.map((item, index) => (
-                  <div key={index} className="p-4 flex items-center justify-between hover:bg-gray-50">
-                    <div>
-                      <p className="font-semibold text-gray-900">
-                        {new Date(item.date).toLocaleDateString('en-GB', {
-                          weekday: 'short',
-                          day: 'numeric',
-                          month: 'short'
-                        })}
-                      </p>
-                      <p className="text-sm text-gray-500">{item.deliveries} deliveries</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">£{item.amount.toFixed(2)}</p>
-                      <span className={`text-xs px-2 py-1 rounded-full ${
-                        item.status === 'paid'
-                          ? 'bg-green-100 text-green-700'
-                          : 'bg-yellow-100 text-yellow-700'
-                      }`}>
-                        {item.status === 'paid' ? 'Paid' : 'Pending'}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bank Account Info */}
-            <div className="bg-white rounded-xl shadow-lg p-6 mt-6">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">Payment Method</h2>
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-4">
-                  <span className="text-3xl">🏦</span>
-                  <div>
-                    <p className="font-semibold">Bank Account</p>
-                    <p className="text-sm text-gray-500">****1234 - Barclays</p>
-                  </div>
-                </div>
-                <button className="text-purple-600 hover:underline font-semibold">
-                  Update
-                </button>
-              </div>
-            </div>
-          </>
         )}
+
+        {/* Stat cards */}
+        <AnimatePresence mode="wait">
+          {!loading && (
+            <motion.div key={period} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center mb-2">
+                  <TrendingUp size={18} className="text-emerald-600" />
+                </div>
+                <p className="text-2xl font-black text-gray-900">£{avgPerDelivery.toFixed(2)}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Avg per delivery</p>
+              </div>
+              <div className="bg-white rounded-2xl p-4 shadow-sm">
+                <div className="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center mb-2">
+                  <Package size={18} className="text-violet-600" />
+                </div>
+                <p className="text-2xl font-black text-gray-900">{summary.totalDeliveries}</p>
+                <p className="text-xs text-gray-400 mt-0.5">Total deliveries</p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Payout info */}
+        <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🏦</div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-800">Auto-Payout Active</p>
+              <p className="text-xs text-gray-400">Paid every Friday via bank transfer</p>
+            </div>
+            <button onClick={() => navigate('/rider/profile')} className="text-violet-500">
+              <ChevronRight size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* History list */}
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-gray-900 font-bold text-lg">Delivery History</h2>
+            <span className="text-xs text-gray-400">{history.length} records</span>
+          </div>
+
+          {loading ? (
+            <div className="space-y-2">
+              {[1,2,3,4].map(i => (
+                <div key={i} className="bg-white rounded-2xl p-4 animate-pulse flex justify-between">
+                  <div className="space-y-1.5">
+                    <div className="h-4 bg-gray-200 rounded w-28" />
+                    <div className="h-3 bg-gray-200 rounded w-20" />
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded w-14" />
+                </div>
+              ))}
+            </div>
+          ) : history.length === 0 ? (
+            <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
+              <div className="w-16 h-16 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Package size={28} className="text-violet-300" />
+              </div>
+              <p className="font-semibold text-gray-600">No deliveries in this period</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
+              {history.map((item, i) => (
+                <div key={item.id || i} className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50">
+                  <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                      <Package size={14} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-gray-800">{item.orderNumber || `Delivery #${i + 1}`}</p>
+                      <p className="text-xs text-gray-400">
+                        {item.vendor || '—'}
+                        {item.deliveredAt && ` · ${new Date(item.deliveredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
+                      </p>
+                      {item.distance && <p className="text-xs text-gray-300">{item.distance} km</p>}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-emerald-600">£{Number(item.earnings || 0).toFixed(2)}</p>
+                    <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-medium">Paid</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   )

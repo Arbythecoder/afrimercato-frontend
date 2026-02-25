@@ -109,13 +109,38 @@ function isAllowedLocation(location) {
 
 /**
  * Validate address object for UK/Dublin only
+ * UPDATED: Market-aware validation with grandfathering
+ * - MARKET_MODE=UK: Enforces UK postcode format
+ * - MARKET_MODE=GLOBAL: Allows any country/postcode
+ * - Grandfathers existing addresses (only validates new/changed fields)
  */
-function validateAddress(address) {
+function validateAddress(address, options = {}) {
   if (!address) {
     return { valid: false, error: 'Address is required' };
   }
 
   const { country, postcode } = address;
+  const { isUpdate = false, changedFields = [] } = options;
+
+  // Check market mode
+  const marketMode = process.env.MARKET_MODE || 'GLOBAL';
+
+  // GLOBAL mode: Allow any country
+  if (marketMode === 'GLOBAL') {
+    return { valid: true };
+  }
+
+  // UK mode: Enforce UK/Dublin restrictions
+  // Grandfathering: On updates, only validate if country/postcode is being changed
+  if (isUpdate && changedFields.length > 0) {
+    const isCountryChanged = changedFields.includes('country');
+    const isPostcodeChanged = changedFields.includes('postcode');
+    
+    // If neither country nor postcode is being changed, skip validation (grandfather)
+    if (!isCountryChanged && !isPostcodeChanged) {
+      return { valid: true };
+    }
+  }
 
   // Check country
   const allowedCountries = ['united kingdom', 'ireland', 'uk', 'ie', 'gb'];

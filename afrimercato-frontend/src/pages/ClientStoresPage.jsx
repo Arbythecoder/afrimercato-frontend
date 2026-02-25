@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { searchVendorsByLocation } from '../services/api'
 
 export default function ClientStoresPage() {
@@ -51,15 +51,13 @@ export default function ClientStoresPage() {
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        // No real stores found — show demo stores filtered by search location
-        setStores(getSampleStores(location))
+        setStores([])
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[STORE_SEARCH_FAIL]', location, error.message)
       }
-      // API failed — show demo stores so customers always see content
-      setStores(getSampleStores(location))
+      setStores([])
     } finally {
       setLoading(false)
     }
@@ -73,13 +71,13 @@ export default function ClientStoresPage() {
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        setStores(getSampleStores(location))
+        setStores([])
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[EXPAND_SEARCH_FAIL]', error.message)
       }
-      setStores(getSampleStores(location))
+      setStores([])
     } finally {
       setLoading(false)
     }
@@ -94,193 +92,18 @@ export default function ClientStoresPage() {
         setStores(response.data.vendors)
         setSearchLocation('')
       } else {
-        setStores(getSampleStores(''))
+        setStores([])
         setSearchLocation('')
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[BROWSE_ALL_FAIL]', error.message)
       }
-      setStores(getSampleStores(''))
+      setStores([])
       setSearchLocation('')
     } finally {
       setLoading(false)
     }
-  }
-
-  const getSampleStores = (searchLocation) => {
-    // Sample stores with unique string IDs for demo purposes
-    // These will be replaced by real vendor data from the API
-    const allStores = [
-      {
-        _id: "sample-mama-nkechi-african-mart",
-        name: "Mama Nkechi African Mart",
-        storeName: "Mama Nkechi African Mart",
-        image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80",
-        hours: "07:00am - 10:00pm",
-        location: "London, Peckham",
-        distance: "0.3km",
-        deliveryTime: "25 mins",
-        priceRange: "£5-£200",
-        rating: 4.9,
-        isOpen: true,
-        deliveryFee: "Free over £50",
-        miles: "0.5 miles",
-        methods: ["Delivery", "Pickup", "In-Store"],
-        verified: true,
-        category: "African Groceries",
-        tags: ["African", "Halal", "Fresh Produce"],
-        description: "Authentic Nigerian, Ghanaian & Caribbean groceries. Fresh yams, plantain, palm oil & more."
-      },
-      {
-        _id: "sample-sahara-foods-spices",
-        name: "Sahara Foods & Spices",
-        storeName: "Sahara Foods & Spices",
-        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
-        hours: "08:00am - 09:00pm",
-        location: "Manchester, Cheetham Hill",
-        distance: "1.2km",
-        deliveryTime: "30 mins",
-        priceRange: "£3-£150",
-        rating: 4.8,
-        isOpen: true,
-        deliveryFee: "£3.99",
-        miles: "1.8 miles",
-        methods: ["Delivery", "Pickup"],
-        verified: true,
-        category: "African & Middle Eastern",
-        tags: ["Spices", "Halal", "Organic"],
-        description: "Traditional African spices, seasonings, and fresh produce from trusted suppliers."
-      },
-      {
-        _id: "sample-afrotaste-groceries",
-        name: "AfroTaste Groceries",
-        storeName: "AfroTaste Groceries",
-        image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
-        hours: "06:00am - 11:00pm",
-        location: "Birmingham, Sparkbrook",
-        distance: "0.8km",
-        deliveryTime: "20 mins",
-        priceRange: "£2-£100",
-        rating: 4.7,
-        isOpen: true,
-        deliveryFee: "£2.99",
-        miles: "1.2 miles",
-        methods: ["Delivery", "Pickup", "In-Store"],
-        verified: true,
-        category: "Nigerian Specialties",
-        tags: ["Fresh Produce", "Frozen Foods", "Authentic"],
-        description: "Fresh Nigerian ingredients, frozen fish, stockfish, and authentic seasonings."
-      },
-      {
-        _id: "sample-accra-fresh-market",
-        name: "Accra Fresh Market",
-        storeName: "Accra Fresh Market",
-        image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&q=80",
-        hours: "09:00am - 08:00pm",
-        location: "Leeds, Harehills",
-        distance: "2.1km",
-        deliveryTime: "35 mins",
-        priceRange: "£5-£180",
-        rating: 4.6,
-        isOpen: true,
-        deliveryFee: "£4.50",
-        miles: "3.2 miles",
-        methods: ["Delivery", "Pickup"],
-        verified: true,
-        category: "Ghanaian Specialties",
-        tags: ["Fresh", "Authentic", "Traditional"],
-        description: "Ghanaian specialty foods, kenkey, banku flour, shito, and palm soup base."
-      },
-      {
-        _id: "sample-zobo-suya-corner",
-        name: "Zobo & Suya Corner",
-        storeName: "Zobo & Suya Corner",
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
-        hours: "10:00am - 09:00pm",
-        location: "Bristol, St Paul's",
-        distance: "1.5km",
-        deliveryTime: "40 mins",
-        priceRange: "£8-£120",
-        rating: 4.5,
-        isOpen: true,
-        deliveryFee: "£3.50",
-        miles: "2.3 miles",
-        methods: ["Delivery", "In-Store"],
-        verified: true,
-        category: "West African Delights",
-        tags: ["Nigerian", "Grilled", "Beverages"],
-        description: "Authentic Nigerian suya spices, zobo drinks, and West African delicacies."
-      },
-      {
-        _id: "sample-naija-pantry-uk",
-        name: "Naija Pantry UK",
-        storeName: "Naija Pantry UK",
-        image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80",
-        hours: "07:00am - 10:00pm",
-        location: "Leicester, Highfields",
-        distance: "0.6km",
-        deliveryTime: "25 mins",
-        priceRange: "£4-£200",
-        rating: 4.8,
-        isOpen: true,
-        deliveryFee: "Free over £40",
-        miles: "0.9 miles",
-        methods: ["Delivery", "Pickup", "In-Store"],
-        verified: true,
-        category: "Nigerian Essentials",
-        tags: ["Fresh Produce", "Halal", "Frozen Foods"],
-        description: "Your one-stop shop for Nigerian essentials. Fresh yams, stockfish, palm oil & more."
-      },
-      {
-        _id: "sample-afro-caribbean-delights",
-        name: "Afro Caribbean Delights",
-        storeName: "Afro Caribbean Delights",
-        image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80",
-        hours: "06:00am - 10:00pm",
-        location: "Liverpool, Toxteth",
-        distance: "1.0km",
-        deliveryTime: "30 mins",
-        priceRange: "£3-£150",
-        rating: 4.7,
-        isOpen: true,
-        deliveryFee: "£2.99",
-        miles: "1.5 miles",
-        methods: ["Delivery", "Pickup"],
-        verified: true,
-        category: "Caribbean & African",
-        tags: ["Caribbean", "African", "Jerk Seasoning"],
-        description: "Best of Caribbean & African cuisine. Jerk seasoning, ackee, callaloo, plantain & more."
-      },
-      {
-        _id: "sample-east-african-emporium",
-        name: "East African Emporium",
-        storeName: "East African Emporium",
-        image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80",
-        hours: "08:00am - 09:00pm",
-        location: "Sheffield, Burngreave",
-        distance: "1.8km",
-        deliveryTime: "35 mins",
-        priceRange: "£5-£100",
-        rating: 4.4,
-        isOpen: true,
-        deliveryFee: "£3.99",
-        miles: "2.7 miles",
-        methods: ["Delivery", "In-Store"],
-        verified: true,
-        category: "East African Specialties",
-        tags: ["Ethiopian", "Kenyan", "Somali"],
-        description: "East African groceries. Injera, teff flour, berbere, ugali, and nyama choma spices."
-      }
-    ]
-
-    if (searchLocation) {
-      const filtered = allStores.filter(store =>
-        store.location.toLowerCase().includes(searchLocation.toLowerCase())
-      )
-      return filtered.length > 0 ? filtered : allStores
-    }
-    return allStores
   }
 
   // Apply filter/sort logic to stores
@@ -358,113 +181,158 @@ export default function ClientStoresPage() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="bg-white py-10 border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            {/* Left Side */}
-            <div>
-              <motion.h1
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4"
-              >
-                African Online Store<br />In the United Kingdom
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 }}
-                className="text-gray-600 mb-6"
-              >
-                Use existing infrastructure of African products delivered to your doorstep.
-                Open stores, no staff needed, deliver to you however convenient.
-              </motion.p>
-
-              {/* Search Bar */}
-              <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-                <div className="flex-1 relative">
-                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-3">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                    </svg>
-                    <input
-                      type="text"
-                      value={searchLocation}
-                      onChange={(e) => setSearchLocation(e.target.value)}
-                      onFocus={() => setShowLocationDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                      placeholder="Postcode, store name, location"
-                      className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-500"
-                    />
-                  </div>
-                  
-                  {/* HOTFIX: Live autocomplete dropdown to make search feel interactive */}
-                  {showLocationDropdown && locationSuggestions.length > 0 && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
-                      {locationSuggestions.map((loc, idx) => (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => {
-                            setSearchLocation(loc)
-                            setShowLocationDropdown(false)
-                            navigate(`/stores?location=${encodeURIComponent(loc)}`)
-                          }}
-                          className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                        >
-                          <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="text-gray-700">{loc}</span>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="submit"
-                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-6 py-3 rounded-lg font-semibold transition-all"
+      {/* Hero — full when no search, compact when results are showing */}
+      {!location || loading ? (
+        <section className="bg-gradient-to-br from-[#00897B] via-[#00695C] to-[#004D40] py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl sm:text-4xl font-bold text-white mb-3"
                 >
-                  Find Store
-                </button>
-              </form>
+                  African Groceries,<br />
+                  <span className="text-[#F5A623]">Delivered Across the UK</span>
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-green-100 mb-6"
+                >
+                  Search by city, postcode, or store name to find authentic African stores near you.
+                </motion.p>
 
-              {/* Trust Badge */}
-              <div className="flex items-center gap-3">
-                <span className="text-gray-600 text-sm">Trusted by</span>
-                <div className="flex -space-x-2">
-                  {[1, 2, 3].map((i) => (
-                    <div key={i} className="w-8 h-8 rounded-full bg-gray-200 border-2 border-white flex items-center justify-center text-sm">
-                      {['👩🏾', '👨🏿', '👩🏽'][i-1]}
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+                  <div className="flex-1 relative">
+                    <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-3 shadow-md">
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                      </svg>
+                      <input
+                        type="text"
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                        onFocus={() => setShowLocationDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                        placeholder="City, postcode, or store name…"
+                        className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400"
+                      />
                     </div>
-                  ))}
-                </div>
-                <span className="bg-white border border-gray-200 px-3 py-1 rounded-full text-sm font-medium text-gray-700">
-                  4,320+ Vendors
-                </span>
-              </div>
-            </div>
+                    {showLocationDropdown && locationSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
+                        {locationSuggestions.map((loc, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setSearchLocation(loc)
+                              setShowLocationDropdown(false)
+                              navigate(`/stores?location=${encodeURIComponent(loc)}`)
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span className="text-gray-700">{loc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-[#F5A623] hover:bg-[#E59400] text-white px-6 py-3 rounded-lg font-bold shadow-md transition-all"
+                  >
+                    Search
+                  </button>
+                </form>
 
-            {/* Right Side - Image */}
-            <div className="hidden lg:block">
-              <div className="relative bg-[#F5A623] rounded-2xl p-6 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"
-                  alt="Fresh produce"
-                  className="w-full h-64 object-cover rounded-xl"
-                />
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {['👩🏾', '👨🏿', '👩🏽'].map((e, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-white flex items-center justify-center text-sm">{e}</div>
+                    ))}
+                  </div>
+                  <span className="bg-white/20 border border-white/30 px-3 py-1 rounded-full text-sm font-medium text-white">
+                    4,320+ Vendors across the UK
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="relative bg-gradient-to-br from-afri-green-dark to-afri-green rounded-2xl p-4 overflow-hidden shadow-2xl">
+                  <div className="w-full h-64 rounded-xl flex items-center justify-center">
+                    <div className="text-center text-white/90">
+                      <div className="text-7xl mb-3">🛒</div>
+                      <p className="font-bold text-lg">African Groceries</p>
+                      <p className="text-sm text-white/70">Delivered to your door</p>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-6 left-6 bg-white rounded-xl px-4 py-2 shadow-lg">
+                    <p className="text-xs text-gray-500">Avg. delivery</p>
+                    <p className="font-bold text-[#00897B]">25–40 mins</p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      ) : (
+        /* Compact bar shown once stores are displaying */
+        <section className="bg-white border-b shadow-sm py-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-gray-700">
+                <svg className="w-5 h-5 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span className="font-semibold text-gray-900">{filteredStores.length} store{filteredStores.length !== 1 ? 's' : ''}</span>
+                <span className="text-gray-500">near <span className="text-[#00897B] font-medium">{location}</span></span>
+              </div>
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                    placeholder="Search different location…"
+                    className="bg-transparent outline-none text-sm text-gray-900 placeholder-gray-400 w-48"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                >
+                  Go
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/stores')}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Clear
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Meet Our Partners Section */}
       <section className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">Meet Our Partners</h2>
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
+            Meet Our <span className="text-[#F5A623]">Partners</span>
+          </h2>
 
           {/* Tabs: Stores | Pickers | Riders */}
           <div className="flex justify-center mb-6">
@@ -593,15 +461,23 @@ export default function ClientStoresPage() {
                 >
                   {/* Store Image - 16:9 aspect ratio */}
                   <div className="relative w-full aspect-video bg-gray-200 overflow-hidden">
-                    <img
-                      src={store.image || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'}
-                      alt={store.name || store.storeName || 'African Grocery Store'}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
-                      }}
-                    />
+                    {store.image || store.logo ? (
+                      <img
+                        src={store.image || store.logo}
+                        alt={store.name || store.storeName || 'African Grocery Store'}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        loading="lazy"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-afri-green to-afri-green-dark"
+                      style={{ display: (store.image || store.logo) ? 'none' : 'flex' }}
+                    >
+                      <span className="text-5xl font-bold text-white/80">
+                        {(store.name || store.storeName || store.businessName || 'S').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
                     {/* Price Range Badge */}
                     <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
                       Shop from {store.priceRange || '£10-£500'}

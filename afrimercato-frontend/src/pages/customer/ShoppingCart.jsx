@@ -132,17 +132,27 @@ function ShoppingCart() {
 
     try {
       setSyncing(true)
+      let syncedCount = 0
       // Add each local item to backend cart (only if valid MongoDB ObjectId)
       for (const item of localCart) {
         const itemId = item._id || item.id
         if (isValidMongoId(itemId)) {
-          await cartAPI.add(itemId, item.quantity)
+          try {
+            await cartAPI.add(itemId, item.quantity)
+            syncedCount++
+          } catch {
+            // individual item sync failure — keep in localStorage
+          }
         }
       }
-      // Clear localStorage after sync attempt
-      localStorage.removeItem('afrimercato_cart')
-      // Reload cart from backend
-      await loadCart()
+      // Only clear localStorage if at least one item was synced to backend
+      if (syncedCount > 0) {
+        localStorage.removeItem('afrimercato_cart')
+        // Reload cart from backend to show synced items
+        await loadCart()
+      }
+      // If nothing was synced (all sample/demo products), localStorage stays intact
+      // so loadCart's fallback will still display them
     } catch (error) {
       console.error('Failed to sync cart:', error)
     } finally {
@@ -162,7 +172,7 @@ function ShoppingCart() {
       if (isAuthenticated) {
         // Load from backend
         const response = await cartAPI.get()
-        if (response.success) {
+        if (response.success && response.data && response.data.length > 0) {
           // Transform backend cart format to frontend format
           const backendCart = response.data.map(item => ({
             _id: item.productId?.toString() || item.productId,
@@ -174,6 +184,11 @@ function ShoppingCart() {
             vendor: item.vendor
           }))
           setCart(backendCart)
+        } else {
+          // Backend cart empty — fall back to localStorage (e.g. items added from storefront
+          // that haven't synced yet, or demo/sample products with non-ObjectId IDs)
+          const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+          setCart(savedCart)
         }
       } else {
         // Load from localStorage for guests
@@ -673,6 +688,14 @@ function ShoppingCart() {
                     } else {
                       localStorage.removeItem('repeatPurchaseFrequency')
                     }
+
+                    // Redirect unauthenticated users to login, preserving checkout intent
+                    if (!isAuthenticated) {
+                      localStorage.setItem('checkout_redirect', 'true')
+                      navigate('/login')
+                      return
+                    }
+
                     navigate('/checkout')
                   }}
                   disabled={(() => {

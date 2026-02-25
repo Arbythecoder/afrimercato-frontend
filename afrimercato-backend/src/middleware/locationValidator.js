@@ -37,6 +37,7 @@ exports.validateLocation = (req, res, next) => {
 /**
  * Validate address object (for checkout, vendor registration)
  * Strict validation for saved addresses
+ * UPDATED: Market-aware with grandfathering support
  */
 exports.validateAddress = (req, res, next) => {
   const address = req.body.address || req.body.deliveryAddress || req.body.location;
@@ -48,7 +49,15 @@ exports.validateAddress = (req, res, next) => {
     });
   }
 
-  const validation = validateAddressHelper(address);
+  // Determine if this is an update operation (for grandfathering)
+  const isUpdate = req.method === 'PUT' || req.method === 'PATCH';
+  
+  // For updates, detect which fields are being changed
+  const changedFields = isUpdate && req.body.changedFields 
+    ? req.body.changedFields 
+    : Object.keys(address);
+
+  const validation = validateAddressHelper(address, { isUpdate, changedFields });
 
   if (!validation.valid) {
     return res.status(400).json({

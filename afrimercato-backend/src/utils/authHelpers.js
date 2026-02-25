@@ -100,7 +100,8 @@ const formatUserResponse = (user, role = null) => {
     roles: user.roles || [primaryRole],
     role: primaryRole,
     primaryRole,
-    avatar: user.avatar
+    avatar: user.avatar,
+    emailVerified: user.emailVerified || false
   };
 };
 

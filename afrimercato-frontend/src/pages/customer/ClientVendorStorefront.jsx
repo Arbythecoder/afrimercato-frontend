@@ -409,15 +409,19 @@ export default function ClientVendorStorefront() {
                 </motion.div>
               )}
 
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  placeholder="Email Address"
-                  className="flex-1 max-w-xs px-4 py-3 rounded-lg border border-gray-300 focus:border-[#00897B] outline-none"
-                />
-                <button className="bg-[#00897B] hover:bg-[#00695C] text-white px-6 py-3 rounded-lg font-semibold transition-all">
-                  Find Store
+              <div className="flex flex-wrap gap-3">
+                <button
+                  onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="bg-[#F5A623] hover:bg-[#e09520] text-white px-8 py-3 rounded-lg font-bold transition-all shadow-md"
+                >
+                  Shop Now
                 </button>
+                <Link
+                  to="/stores"
+                  className="bg-white hover:bg-gray-50 text-[#00897B] border border-[#00897B] px-6 py-3 rounded-lg font-semibold transition-all"
+                >
+                  Browse More Stores
+                </Link>
               </div>
             </div>
 
@@ -502,7 +506,7 @@ export default function ClientVendorStorefront() {
         </div>
 
         {/* Daily Best Sales */}
-        <div className="mb-12">
+        <div id="products-section" className="mb-12">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">Daily Best Sales</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
             {filteredProducts.slice(0, 10).map((product, index) => (

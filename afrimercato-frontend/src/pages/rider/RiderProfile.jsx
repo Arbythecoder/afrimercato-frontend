@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { apiCall } from '../../services/api'
 
 function RiderProfile() {
   const navigate = useNavigate()
   const { user, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
+  const [pageLoading, setPageLoading] = useState(true)
   const [message, setMessage] = useState({ type: '', text: '' })
 
   const [profile, setProfile] = useState({
@@ -18,21 +20,59 @@ function RiderProfile() {
   })
 
   const [stats, setStats] = useState({
-    totalDeliveries: 1987,
-    rating: 4.8,
-    completionRate: 98,
-    memberSince: '2023-06-15'
+    totalDeliveries: 0,
+    rating: 0,
+    completionRate: 0,
+    memberSince: ''
   })
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await apiCall('/rider-auth/profile')
+        if (res?.data) {
+          const d = res.data
+          setProfile(prev => ({
+            ...prev,
+            name: d.name || prev.name,
+            email: d.email || prev.email,
+            phone: d.phone || prev.phone,
+            vehicleType: d.vehicleType || prev.vehicleType,
+            licensePlate: d.licensePlate || prev.licensePlate
+          }))
+          const s = d.stats || {}
+          setStats({
+            totalDeliveries: s.totalDeliveries || 0,
+            rating: parseFloat(s.averageRating) || 0,
+            completionRate: parseFloat(s.completionRate) || 0,
+            memberSince: d.createdAt || ''
+          })
+        }
+      } catch {
+        // fail silently — fall back to auth context data
+      } finally {
+        setPageLoading(false)
+      }
+    }
+    fetchProfile()
+  }, [])
 
   const handleProfileUpdate = async (e) => {
     e.preventDefault()
     setLoading(true)
     try {
-      // API call to update profile
-      await new Promise(r => setTimeout(r, 1000))
+      await apiCall('/rider-auth/profile', {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: profile.name,
+          phone: profile.phone,
+          vehicleType: profile.vehicleType,
+          licensePlate: profile.licensePlate
+        })
+      })
       setMessage({ type: 'success', text: 'Profile updated successfully!' })
     } catch (error) {
-      setMessage({ type: 'error', text: 'Failed to update profile' })
+      setMessage({ type: 'error', text: error.message || 'Failed to update profile' })
     } finally {
       setLoading(false)
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
@@ -68,19 +108,31 @@ function RiderProfile() {
             </div>
             <div>
               <h1 className="text-2xl font-bold">{profile.name}</h1>
-              <div className="flex items-center gap-4 mt-2">
-                <div className="flex items-center gap-1">
-                  <span className="text-yellow-400">★</span>
-                  <span>{stats.rating}</span>
+              {pageLoading ? (
+                <div className="flex gap-3 mt-2">
+                  <div className="h-4 bg-white/20 rounded w-20 animate-pulse" />
+                  <div className="h-4 bg-white/20 rounded w-28 animate-pulse" />
                 </div>
-                <span className="text-purple-200">•</span>
-                <span>{stats.totalDeliveries} deliveries</span>
-                <span className="text-purple-200">•</span>
-                <span>{stats.completionRate}% completion</span>
-              </div>
-              <p className="text-purple-200 text-sm mt-1">
-                Member since {new Date(stats.memberSince).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
-              </p>
+              ) : (
+                <div className="flex items-center gap-4 mt-2 flex-wrap">
+                  {stats.rating > 0 && (
+                    <div className="flex items-center gap-1">
+                      <span className="text-yellow-400">★</span>
+                      <span>{stats.rating.toFixed(1)}</span>
+                    </div>
+                  )}
+                  {stats.rating > 0 && <span className="text-purple-200">•</span>}
+                  <span>{stats.totalDeliveries} deliveries</span>
+                  {stats.completionRate > 0 && (
+                    <><span className="text-purple-200">•</span><span>{stats.completionRate}% completion</span></>
+                  )}
+                </div>
+              )}
+              {stats.memberSince && (
+                <p className="text-purple-200 text-sm mt-1">
+                  Member since {new Date(stats.memberSince).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
+                </p>
+              )}
             </div>
           </div>
         </div>

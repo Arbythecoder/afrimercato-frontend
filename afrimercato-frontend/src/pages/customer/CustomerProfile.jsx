@@ -1,12 +1,15 @@
 import { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { userAPI } from '../../services/api'
+import { userAPI, orderAPI } from '../../services/api'
 
 function CustomerProfile() {
-  const { user, updateUser } = useAuth()
+  const { user, updateUser, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState({ type: '', text: '' })
+  const [recentOrders, setRecentOrders] = useState([])
+  const [ordersLoading, setOrdersLoading] = useState(true)
 
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -23,7 +26,20 @@ function CustomerProfile() {
 
   useEffect(() => {
     fetchProfile()
+    fetchRecentOrders()
   }, [])
+
+  const fetchRecentOrders = async () => {
+    try {
+      const res = await orderAPI.getUserOrders()
+      const orders = res?.data || res?.orders || []
+      setRecentOrders(Array.isArray(orders) ? orders.slice(0, 3) : [])
+    } catch {
+      setRecentOrders([])
+    } finally {
+      setOrdersLoading(false)
+    }
+  }
 
   const fetchProfile = async () => {
     try {
@@ -77,6 +93,21 @@ function CustomerProfile() {
     } finally {
       setLoading(false)
       setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+    }
+  }
+
+  const [deleteConfirm, setDeleteConfirm] = useState('')
+  const [deleteLoading, setDeleteLoading] = useState(false)
+
+  const handleDeleteAccount = async () => {
+    if (deleteConfirm !== 'DELETE') return
+    setDeleteLoading(true)
+    try {
+      await userAPI.deleteAccount?.()
+      logout()
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to delete account. Please contact support.' })
+      setDeleteLoading(false)
     }
   }
 
@@ -164,6 +195,68 @@ function CustomerProfile() {
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>
               </form>
+
+              {/* Recent Orders Summary */}
+              <div className="mt-8 pt-6 border-t">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="font-bold text-gray-900">Recent Orders</h3>
+                  <Link to="/orders" className="text-sm text-afri-green font-semibold hover:underline">
+                    View all →
+                  </Link>
+                </div>
+                {ordersLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map(i => (
+                      <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />
+                    ))}
+                  </div>
+                ) : recentOrders.length === 0 ? (
+                  <div className="text-center py-6 bg-gray-50 rounded-xl">
+                    <p className="text-gray-400 text-sm">No orders yet</p>
+                    <Link to="/stores" className="mt-2 inline-block text-afri-green text-sm font-semibold hover:underline">
+                      Browse stores →
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {recentOrders.map((order) => {
+                      const statusColors = {
+                        delivered:  'bg-green-100 text-green-700',
+                        pending:    'bg-yellow-100 text-yellow-700',
+                        processing: 'bg-blue-100 text-blue-700',
+                        cancelled:  'bg-red-100 text-red-700',
+                      }
+                      const status = order.status || 'pending'
+                      return (
+                        <Link
+                          key={order._id}
+                          to={`/order/${order._id}`}
+                          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                        >
+                          <div>
+                            <p className="font-semibold text-gray-900 text-sm">
+                              Order #{(order._id || '').slice(-6).toUpperCase()}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-0.5">
+                              {order.createdAt
+                                ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                                : '—'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${statusColors[status] || 'bg-gray-100 text-gray-600'}`}>
+                              {status}
+                            </span>
+                            <span className="font-bold text-gray-900 text-sm">
+                              £{(order.pricing?.total || order.total || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Addresses Tab */}
@@ -231,6 +324,34 @@ function CustomerProfile() {
                   {loading ? 'Updating...' : 'Change Password'}
                 </button>
               </form>
+
+              {/* Danger Zone — GDPR */}
+              <div className="mt-8 border border-red-200 rounded-xl p-5 bg-red-50">
+                <h3 className="font-bold text-red-700 mb-1">Danger Zone</h3>
+                <p className="text-sm text-red-600 mb-4">
+                  Permanently delete your account and all associated data. This action cannot be undone.
+                </p>
+                <div className="space-y-3">
+                  <label className="block text-sm font-medium text-gray-700">
+                    Type <span className="font-mono font-bold">DELETE</span> to confirm
+                  </label>
+                  <input
+                    type="text"
+                    value={deleteConfirm}
+                    onChange={e => setDeleteConfirm(e.target.value)}
+                    placeholder="DELETE"
+                    className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleDeleteAccount}
+                    disabled={deleteConfirm !== 'DELETE' || deleteLoading}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    {deleteLoading ? 'Deleting...' : 'Delete My Account'}
+                  </button>
+                </div>
+              </div>
             )}
 
             {/* Preferences Tab */}
@@ -256,6 +377,15 @@ function CustomerProfile() {
                     <p className="text-sm text-gray-500">Receive deals and offers</p>
                   </div>
                   <input type="checkbox" className="w-5 h-5 text-afri-green rounded" />
+                </div>
+
+                <div className="pt-4 border-t">
+                  <button
+                    onClick={logout}
+                    className="w-full py-3 bg-red-50 text-red-600 rounded-lg font-semibold hover:bg-red-100 transition-colors"
+                  >
+                    Sign Out
+                  </button>
                 </div>
               </div>
             )}

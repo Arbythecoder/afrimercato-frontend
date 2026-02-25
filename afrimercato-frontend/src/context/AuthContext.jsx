@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react'
-import { authAPI, getUserProfile, registerVendor as registerVendorAPI } from '../services/api'
+import { authAPI, apiCall, registerVendor as registerVendorAPI } from '../services/api'
 
 const AuthContext = createContext()
 
@@ -181,6 +181,16 @@ export const AuthProvider = ({ children }) => {
           }
         }
         response = await registerVendorAPI(vendorData)
+      } else if (userData.role === 'rider') {
+        response = await apiCall('/rider-auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name: userData.name, email: userData.email, phone: userData.phone, password: userData.password })
+        })
+      } else if (userData.role === 'picker') {
+        response = await apiCall('/picker-auth/register', {
+          method: 'POST',
+          body: JSON.stringify({ name: userData.name, email: userData.email, phone: userData.phone, password: userData.password })
+        })
       } else {
         response = await authAPI.register(userData)
       }
@@ -188,7 +198,15 @@ export const AuthProvider = ({ children }) => {
       if (response && response.success) {
         const { token, user, refreshToken } = response.data
         const normalizedUser = normalizeUserRoles(user)
-        
+
+        // Vendors must verify their email before being logged in
+        if (normalizedUser.role === 'vendor') {
+          if (import.meta.env.DEV) {
+            console.log('📧 Vendor registered — awaiting email verification')
+          }
+          return { success: true, user: normalizedUser, requiresVerification: true }
+        }
+
         // Store in localStorage with standard keys
         localStorage.setItem('afrimercato_token', token)
         localStorage.setItem('afrimercato_role', normalizedUser.role)
@@ -196,14 +214,14 @@ export const AuthProvider = ({ children }) => {
         if (refreshToken) {
           localStorage.setItem('afrimercato_refresh_token', refreshToken)
         }
-        
+
         setUser(normalizedUser)
         setIsAuthenticated(true)
-        
+
         if (import.meta.env.DEV) {
           console.log('📝 Register success:', normalizedUser.role)
         }
-        
+
         return { success: true, user: normalizedUser }
       } else {
         return {
@@ -249,10 +267,13 @@ export const AuthProvider = ({ children }) => {
     
     setUser(null)
     setIsAuthenticated(false)
-    
+
     if (import.meta.env.DEV) {
       console.log('🚪 Logout completed - all storage cleared')
     }
+
+    // Redirect to home page (not login) after logout
+    window.location.replace('/')
   }
 
   const logout = (roleType = null) => {
