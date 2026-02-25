@@ -16,9 +16,9 @@ export default function AboutUs() {
     },
     {
       name: 'Abigeal',
-      role: 'Co-Founder',
+      role: 'Lead Software Engineer',
       initials: 'AB',
-      bio: 'Passionate about connecting African communities with authentic products across the UK.'
+      bio: 'Building the technology that powers Afrimercato — from backend APIs to the customer experience.'
     },
     {
       name: 'Coming Soon',

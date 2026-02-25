@@ -2,6 +2,29 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { orderAPI } from '../../services/api'
 
+const reorderItems = (order, navigate, setReorderedId) => {
+  if (!order?.items?.length) return
+  const cartItems = order.items.map(item => ({
+    _id: item.product?._id || item.product || item._id,
+    id: item.product?._id || item.product || item._id,
+    name: item.name,
+    price: item.price,
+    quantity: item.quantity,
+    unit: item.unit,
+    images: item.images || [],
+    vendor: {
+      _id: order.vendor?._id,
+      storeName: order.vendor?.storeName || '',
+      businessName: order.vendor?.businessName || order.vendor?.storeName || '',
+      logo: order.vendor?.logo || ''
+    }
+  }))
+  localStorage.setItem('afrimercato_cart', JSON.stringify(cartItems))
+  window.dispatchEvent(new Event('cartUpdated'))
+  setReorderedId(order._id)
+  setTimeout(() => navigate('/cart'), 800)
+}
+
 const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
@@ -18,6 +41,7 @@ function OrderHistory() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
+  const [reorderedId, setReorderedId] = useState(null)
 
   useEffect(() => {
     fetchOrders()
@@ -151,12 +175,28 @@ function OrderHistory() {
                     <p className="text-2xl font-bold text-afri-green">
                       £{order.totalAmount?.toFixed(2)}
                     </p>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/order/${order._id}`) }}
-                      className="mt-2 text-sm text-afri-green hover:underline font-semibold"
-                    >
-                      View Details →
-                    </button>
+                    <div className="flex items-center justify-end gap-3 mt-2">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); navigate(`/order/${order._id}`) }}
+                        className="text-sm text-afri-green hover:underline font-semibold"
+                      >
+                        View Details →
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          reorderItems(order, navigate, setReorderedId)
+                        }}
+                        disabled={reorderedId === order._id}
+                        className={`text-sm px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                          reorderedId === order._id
+                            ? 'bg-green-500 text-white'
+                            : 'bg-afri-green text-white hover:bg-afri-green-dark'
+                        }`}
+                      >
+                        {reorderedId === order._id ? '✓ Added!' : 'Reorder'}
+                      </button>
+                    </div>
                   </div>
                 </div>
 

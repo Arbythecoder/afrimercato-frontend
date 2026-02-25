@@ -36,6 +36,13 @@ export default function StoresPage() {
   }, [location])
 
   const fetchStores = async () => {
+    // No location — skip API call, show all sample stores immediately
+    if (!location.trim()) {
+      setStores(getSampleStores(''))
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       const response = await searchVendorsByLocation(location, 50)
@@ -43,48 +50,18 @@ export default function StoresPage() {
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        setStores([])
+        setStores(getSampleStores(location))
       }
     } catch (error) {
       console.error('[STORE_SEARCH_FAIL]', location, error.message)
-      setStores([])
+      setStores(getSampleStores(location))
     } finally {
       setLoading(false)
     }
   }
 
-  const expandSearchRadius = async () => {
-    try {
-      setLoading(true)
-      const response = await searchVendorsByLocation(location, 100)
-      
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
-        setStores(response.data.vendors)
-      }
-    } catch (error) {
-      console.error('[EXPAND_SEARCH_FAIL]', error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
 
-  const browseAllStores = async () => {
-    try {
-      setLoading(true)
-      const response = await searchVendorsByLocation('', 500)
-      
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
-        setStores(response.data.vendors)
-        setSearchLocation('')
-      }
-    } catch (error) {
-      console.error('[BROWSE_ALL_FAIL]', error.message)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getSampleStores = (searchLocation) => {
+  const getSampleStores = (searchLoc) => {
     // Sample stores with UK locations
     const allStores = [
       // London stores
@@ -116,16 +93,18 @@ export default function StoresPage() {
       { id: 16, name: 'Toxteth Tropical Foods', category: 'Tropical Foods', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600', rating: 4.6, deliveryTime: '25-35 min', minOrder: '£12', tags: ['Plantain', 'Yam'], location: 'Liverpool', address: '23 Upper Parliament Street, Liverpool L8' },
     ]
 
+    const tagged = allStores.map(s => ({ ...s, _isSample: true }))
+
     // Filter by location
-    if (searchLocation) {
-      const filtered = allStores.filter(store =>
-        store.location.toLowerCase().includes(searchLocation.toLowerCase()) ||
-        store.address.toLowerCase().includes(searchLocation.toLowerCase())
+    if (searchLoc) {
+      const filtered = tagged.filter(store =>
+        store.location.toLowerCase().includes(searchLoc.toLowerCase()) ||
+        store.address.toLowerCase().includes(searchLoc.toLowerCase())
       )
-      return filtered.length > 0 ? filtered : allStores.slice(0, 6)
+      return filtered.length > 0 ? filtered : tagged.slice(0, 6)
     }
 
-    return allStores
+    return tagged
   }
 
   const handleSearch = (e) => {
@@ -236,7 +215,7 @@ export default function StoresPage() {
               {location ? `Stores in ${location}` : 'All Stores'}
             </h2>
             <p className="text-gray-600">
-              {loading ? 'Searching...' : `${stores.length} stores found`}
+              {loading ? 'Searching...' : stores.some(s => s._isSample) ? `${stores.length} stores coming soon` : `${stores.length} stores found`}
             </p>
           </div>
 
@@ -248,120 +227,78 @@ export default function StoresPage() {
             </div>
           )}
 
-          {/* Empty State - Production Ready (Like Uber Eats) */}
-          {!loading && stores.length === 0 && (
-            <div className="text-center py-16 bg-white rounded-2xl shadow-lg max-w-2xl mx-auto">
-              <div className="px-6">
-                {/* Icon */}
-                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                  </svg>
-                </div>
-
-                {/* Message */}
-                <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {searchLocation ? `No stores in ${searchLocation}` : 'No stores available'}
-                </h3>
-                <p className="text-gray-600 mb-8">
-                  {searchLocation 
-                    ? `We're working to bring Afrimercato to ${searchLocation}. Meanwhile, try these options:`
-                    : 'Try searching for a specific location or explore our available stores.'}
-                </p>
-
-                {/* Actions */}
-                <div className="space-y-3 max-w-sm mx-auto">
-                  {searchLocation && (
-                    <button
-                      onClick={expandSearchRadius}
-                      className="w-full bg-green-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-green-700 transition-all shadow-md"
-                    >
-                      Search wider area
-                    </button>
-                  )}
-                  
-                  <button
-                    onClick={browseAllStores}
-                    className="w-full border-2 border-green-600 text-green-600 px-6 py-3 rounded-xl font-semibold hover:bg-green-50 transition-all"
-                  >
-                    Browse all stores
-                  </button>
-
-                  {/* Suggested Locations */}
-                  <div className="pt-4">
-                    <p className="text-sm text-gray-500 mb-3">Try these locations:</p>
-                    <div className="flex flex-wrap gap-2 justify-center">
-                      {['London', 'Manchester', 'Birmingham', 'Dublin', 'Liverpool'].map(city => (
-                        <button
-                          key={city}
-                          onClick={() => {
-                            setSearchLocation(city)
-                            navigate(`/stores?location=${city}`)
-                          }}
-                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm hover:bg-gray-200 transition-colors"
-                        >
-                          {city}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Store Grid */}
           {!loading && stores.length > 0 && (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {stores.map((store) => (
-                <motion.div
-                  key={store._id || store.id}
-                  whileHover={{ y: -5 }}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
-                  onClick={() => navigate(`/store/${store._id || store.id}`)}
-                >
-                  {/* Store Image */}
-                  <div className="relative h-48">
-                    <img src={store.image} alt={store.name} className="w-full h-full object-cover" />
-                    <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full shadow-md flex items-center gap-1">
-                      <StarIcon className="w-4 h-4 text-yellow-500" />
-                      <span className="font-bold text-gray-900">{store.rating}</span>
-                    </div>
-                  </div>
+              {stores.map((store) => {
+                const isSample = store._isSample === true
+                const displayName = store.storeName || store.name
+                const displayAddress = typeof store.address === 'object'
+                  ? `${store.address.street}, ${store.address.city}`
+                  : store.address || store.location?.address || store.location
+                const displayImage = store.image || store.images?.[0] || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600'
+                const displayRating = store.rating ? parseFloat(store.rating).toFixed(1) : '4.8'
 
-                  {/* Store Info */}
-                  <div className="p-5">
-                    <h3 className="text-xl font-bold text-gray-900 mb-1">
-                      {store.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mb-1">{store.category}</p>
-                    <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
-                      <MapPinIcon className="w-3 h-3" />
-                      {store.address || store.location}
-                    </p>
-
-                    {/* Tags */}
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {store.tags?.slice(0, 3).map((tag, i) => (
-                        <span key={i} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Delivery Info */}
-                    <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t">
-                      <div className="flex items-center gap-1">
-                        <ClockIcon className="w-4 h-4" />
-                        <span>{store.deliveryTime}</span>
+                return (
+                  <motion.div
+                    key={store._id || store.id}
+                    whileHover={{ y: -5 }}
+                    className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
+                    onClick={() => isSample
+                      ? navigate(`/partner?city=${encodeURIComponent(store.location || '')}`)
+                      : navigate(`/store/${store._id}`)
+                    }
+                  >
+                    {/* Store Image */}
+                    <div className="relative h-48">
+                      <img src={displayImage} alt={displayName} className="w-full h-full object-cover" />
+                      <div className="absolute top-3 right-3 bg-white px-3 py-1 rounded-full shadow-md flex items-center gap-1">
+                        <StarIcon className="w-4 h-4 text-yellow-500" />
+                        <span className="font-bold text-gray-900">{displayRating}</span>
                       </div>
-                      <div className="font-semibold text-gray-900">
-                        Min. {store.minOrder}
+                      {isSample && (
+                        <div className="absolute top-3 left-3 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                          Coming Soon
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Store Info */}
+                    <div className="p-5">
+                      <h3 className="text-xl font-bold text-gray-900 mb-1">
+                        {displayName}
+                      </h3>
+                      <p className="text-sm text-gray-600 mb-1">{store.category}</p>
+                      <p className="text-xs text-gray-500 mb-3 flex items-center gap-1">
+                        <MapPinIcon className="w-3 h-3" />
+                        {displayAddress}
+                      </p>
+
+                      {/* Tags */}
+                      {store.tags && (
+                        <div className="flex flex-wrap gap-2 mb-4">
+                          {store.tags.slice(0, 3).map((tag, i) => (
+                            <span key={i} className="bg-gray-100 text-gray-700 px-3 py-1 rounded-full text-xs font-medium">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Delivery Info */}
+                      <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t">
+                        <div className="flex items-center gap-1">
+                          <ClockIcon className="w-4 h-4" />
+                          <span>{store.deliveryTime || '30-45 min'}</span>
+                        </div>
+                        <div className="font-semibold text-gray-900">
+                          {isSample ? 'Register your store' : `Min. ${store.minOrder || store.minimumOrder || '£10'}`}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                )
+              })}
             </div>
           )}
         </div>

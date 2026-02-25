@@ -1,23 +1,23 @@
 // =================================================================
 // CURATED DEMO STORES - Production-Safe Seed Data
 // =================================================================
-// High-quality demo stores for public testing phase
-// Realistic names, products, and pricing for UK/Ireland market
+// 3 demo stores for public testing phase.
+// Realistic names, products, and UK pricing.
+// Coordinates are hardcoded so geospatial search always works.
 
 const Vendor = require('../models/Vendor');
 const User = require('../models/User');
 const Product = require('../models/Product');
 const { asyncHandler } = require('../middleware/errorHandler');
 const { geocode } = require('../services/geocodingService');
-const bcrypt = require('bcryptjs');
 
 /**
- * Curated demo stores with realistic African grocery inventory
- * These stores represent real businesses and help avoid empty marketplace
+ * Curated demo stores with realistic African grocery inventory.
+ * Each store has hardcoded lat/lng so location search is reliable.
  */
 const DEMO_STORES = [
   {
-    // London - Premium African Groceries
+    // London - Peckham (SE15)
     storeName: "Abis Fresh Farm",
     email: "abis@afrimercato-demo.com",
     phone: "+44 20 7946 0958",
@@ -31,7 +31,9 @@ const DEMO_STORES = [
     },
     location: {
       address: "London SE15 4NB",
-      postcode: "SE15 4NB"
+      postcode: "SE15 4NB",
+      latitude: 51.4694,
+      longitude: -0.0639
     },
     businessHours: {
       monday: "8:00 AM - 9:00 PM",
@@ -54,7 +56,7 @@ const DEMO_STORES = [
     ]
   },
   {
-    // Manchester - Budget-Friendly African Market
+    // Manchester - Cheetham Hill (M8)
     storeName: "Mama Khadija's Market",
     email: "mamakhadija@afrimercato-demo.com",
     phone: "+44 161 839 1122",
@@ -68,7 +70,9 @@ const DEMO_STORES = [
     },
     location: {
       address: "Manchester M8 8PZ",
-      postcode: "M8 8PZ"
+      postcode: "M8 8PZ",
+      latitude: 53.5044,
+      longitude: -2.2284
     },
     businessHours: {
       monday: "9:00 AM - 8:00 PM",
@@ -89,7 +93,7 @@ const DEMO_STORES = [
     ]
   },
   {
-    // Birmingham - Caribbean & African Fusion
+    // Birmingham - Handsworth (B21)
     storeName: "Tropical Harvest Store",
     email: "tropicalharvest@afrimercato-demo.com",
     phone: "+44 121 551 4455",
@@ -103,7 +107,9 @@ const DEMO_STORES = [
     },
     location: {
       address: "Birmingham B21 9LR",
-      postcode: "B21 9LR"
+      postcode: "B21 9LR",
+      latitude: 52.5010,
+      longitude: -1.9060
     },
     businessHours: {
       monday: "8:30 AM - 8:30 PM",
@@ -123,48 +129,13 @@ const DEMO_STORES = [
       { name: "Dried Hibiscus (Zobo) 200g", price: 3.99, stock: 30, unit: "pack", category: "Beverages" },
       { name: "Ogbono Seeds (250g)", price: 7.99, stock: 20, unit: "pack", category: "Spices & Seasonings" }
     ]
-  },
-  {
-    // Dublin - Irish-African Community Market
-    storeName: "Afro-Irish Provisions",
-    email: "afroirish@afrimercato-demo.com",
-    phone: "+353 1 873 2200",
-    category: "African Groceries",
-    description: "Bridging African and Irish communities through food. We offer authentic African ingredients with the warmth of Irish hospitality. Serving Dublin's diverse neighborhoods since 2018.",
-    address: {
-      street: "45 Capel Street",
-      city: "Dublin",
-      postcode: "D01 X2E1",
-      country: "Ireland"
-    },
-    location: {
-      address: "Dublin D01 X2E1",
-      postcode: "D01 X2E1"
-    },
-    businessHours: {
-      monday: "9:00 AM - 8:00 PM",
-      tuesday: "9:00 AM - 8:00 PM",
-      wednesday: "9:00 AM - 8:00 PM",
-      thursday: "9:00 AM - 8:00 PM",
-      friday: "9:00 AM - 9:00 PM",
-      saturday: "9:00 AM - 9:00 PM",
-      sunday: "11:00 AM - 7:00 PM"
-    },
-    products: [
-      { name: "Fresh Garden Eggs (Eggplant)", price: 2.99, stock: 35, unit: "pack", category: "Fresh Produce" },
-      { name: "Nigerian Brown Beans (1kg)", price: 4.99, stock: 40, unit: "pack", category: "Grains & Flours" },
-      { name: "Locust Beans (Iru) 200g", price: 5.99, stock: 25, unit: "jar", category: "Spices & Seasonings" },
-      { name: "Palm Wine (Non-Alcoholic) 1L", price: 6.99, stock: 20, unit: "bottle", category: "Beverages" },
-      { name: "African Nutmeg (Ehuru) 50g", price: 4.50, stock: 30, unit: "pack", category: "Spices & Seasonings" },
-      { name: "Fresh Spinach (Efo Tete)", price: 2.50, stock: 35, unit: "bunch", category: "Fresh Produce" }
-    ]
   }
 ];
 
 /**
  * @route   POST /api/seed/demo-stores
- * @desc    Seed curated demo stores (production-safe)
- * @access  Private (Admin only - or public for testing)
+ * @desc    Seed curated demo stores (production-safe, idempotent)
+ * @access  Public (for testing phase)
  */
 exports.seedDemoStores = asyncHandler(async (req, res) => {
   const createdStores = [];
@@ -174,9 +145,8 @@ exports.seedDemoStores = asyncHandler(async (req, res) => {
     try {
       // Check if store already exists
       let user = await User.findOne({ email: storeData.email });
-      
+
       if (!user) {
-        // Create user account for vendor
         user = await User.create({
           name: storeData.storeName,
           firstName: storeData.storeName.split(' ')[0],
@@ -193,34 +163,36 @@ exports.seedDemoStores = asyncHandler(async (req, res) => {
 
       // Check if vendor profile exists
       let vendor = await Vendor.findOne({ user: user._id });
-      
+
       if (!vendor) {
-        // Generate unique store ID
         const storeId = `DEMO-${storeData.category.substring(0, 4).toUpperCase()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
 
-        // Geocode the store location for geospatial queries
+        // Use hardcoded coordinates when available, fall back to geocoding
+        let latitude = storeData.location.latitude || null;
+        let longitude = storeData.location.longitude || null;
         let coordinates = null;
-        let latitude = null;
-        let longitude = null;
-        
-        try {
-          const geocoded = await geocode(`${storeData.location.postcode}, ${storeData.address.city}`);
-          if (geocoded) {
-            latitude = geocoded.lat;
-            longitude = geocoded.lng;
-            coordinates = {
-              type: 'Point',
-              coordinates: [longitude, latitude] // [lng, lat] for GeoJSON
-            };
+
+        if (latitude && longitude) {
+          coordinates = {
+            type: 'Point',
+            coordinates: [longitude, latitude] // [lng, lat] for GeoJSON
+          };
+        } else {
+          try {
+            const geocoded = await geocode(`${storeData.location.postcode}, ${storeData.address.city}`);
+            if (geocoded) {
+              latitude = geocoded.lat;
+              longitude = geocoded.lng;
+              coordinates = {
+                type: 'Point',
+                coordinates: [longitude, latitude]
+              };
+            }
+          } catch (error) {
+            console.log(`Could not geocode ${storeData.storeName}, skipping coordinates`);
           }
-        } catch (error) {
-          console.log(`Could not geocode ${storeData.storeName}, skipping coordinates`);
         }
 
-        // Determine currency based on country
-        const currency = storeData.address.country === 'Ireland' ? 'EUR' : 'GBP';
-
-        // Update location object with coordinates and city
         const location = {
           ...storeData.location,
           city: storeData.address.city,
@@ -230,7 +202,6 @@ exports.seedDemoStores = asyncHandler(async (req, res) => {
           coordinates
         };
 
-        // Create vendor profile
         vendor = await Vendor.create({
           user: user._id,
           storeId,
@@ -239,27 +210,37 @@ exports.seedDemoStores = asyncHandler(async (req, res) => {
           category: storeData.category,
           address: storeData.address,
           location,
-          currency,
+          currency: 'GBP',
           phone: storeData.phone,
           businessHours: storeData.businessHours,
           approvalStatus: 'approved',
           isVerified: true,
           isPublic: true,
           isActive: true,
-          isDemo: true, // Mark as demo store
-          isSeeded: true, // Mark as seeded data
-          rating: 4.5 + Math.random() * 0.5, // Random rating 4.5-5.0
+          isDemo: true,
+          isSeeded: true,
+          rating: 4.5 + Math.random() * 0.5,
           approvedAt: new Date(),
           submittedForReviewAt: new Date()
         });
+      } else {
+        // Update coordinates on existing vendor if still missing
+        const hasCoords = vendor.location && vendor.location.latitude && vendor.location.longitude;
+        if (!hasCoords && storeData.location.latitude) {
+          await Vendor.findByIdAndUpdate(vendor._id, {
+            'location.latitude': storeData.location.latitude,
+            'location.longitude': storeData.location.longitude,
+            'location.coordinates': {
+              type: 'Point',
+              coordinates: [storeData.location.longitude, storeData.location.latitude]
+            }
+          });
+        }
       }
 
-      // Create products for this vendor
+      // Create missing products for this vendor
       for (const productData of storeData.products) {
-        const existingProduct = await Product.findOne({
-          vendor: vendor._id,
-          name: productData.name
-        });
+        const existingProduct = await Product.findOne({ vendor: vendor._id, name: productData.name });
 
         if (!existingProduct) {
           await Product.create({
@@ -274,7 +255,7 @@ exports.seedDemoStores = asyncHandler(async (req, res) => {
             inStock: true,
             unlimitedStock: false,
             lowStockThreshold: 10,
-            images: [] // Will use fallback images from image helper
+            images: []
           });
         }
       }
@@ -314,13 +295,8 @@ exports.removeDemoStores = asyncHandler(async (req, res) => {
   const vendorIds = demoVendors.map(v => v._id);
   const userIds = demoVendors.map(v => v.user);
 
-  // Delete products
   const productsDeleted = await Product.deleteMany({ vendor: { $in: vendorIds } });
-
-  // Delete vendors
   const vendorsDeleted = await Vendor.deleteMany({ isDemo: true });
-
-  // Delete users
   const usersDeleted = await User.deleteMany({ _id: { $in: userIds } });
 
   res.json({

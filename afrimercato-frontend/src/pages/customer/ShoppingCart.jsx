@@ -12,37 +12,21 @@ const isValidMongoId = (id) => {
   return /^[0-9a-fA-F]{24}$/.test(stringId)
 }
 
-// Helper to group cart items by vendor
+// Helper to group cart items by vendor (multi-vendor always enabled)
 const groupCartByVendor = (cart) => {
-  const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
-  
-  if (!multiVendorEnabled) {
-    // Single vendor mode - return as single group
-    return cart.length > 0 ? [{
-      vendorId: cart[0].vendor?._id || cart[0].vendor?.id || cart[0].vendorId || 'unknown',
-      vendorName: cart[0].vendor?.storeName || cart[0].vendor?.businessName || 'Store',
-      items: cart
-    }] : []
-  }
-
-  // Multi-vendor mode - group by vendorId
   const groups = {}
-  
+
   for (const item of cart) {
     const vendorId = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
     const vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || 'Unknown Store'
-    
+
     if (!groups[vendorId]) {
-      groups[vendorId] = {
-        vendorId,
-        vendorName,
-        items: []
-      }
+      groups[vendorId] = { vendorId, vendorName, items: [] }
     }
-    
+
     groups[vendorId].items.push(item)
   }
-  
+
   return Object.values(groups)
 }
 
@@ -308,7 +292,10 @@ function ShoppingCart() {
       localStorage.removeItem('afrimercato_vendor_token')
       localStorage.removeItem('afrimercato_vendor_user')
       localStorage.removeItem('afrimercato_vendor_refresh_token')
-      
+
+      // Set checkout redirect flag so Login page blocks non-customer accounts
+      localStorage.setItem('checkout_redirect', 'true')
+
       // Force redirect to customer login
       window.location.href = '/login?type=customer&redirect=shopping&message=Please sign in with a customer account to shop'
       
@@ -386,20 +373,8 @@ function ShoppingCart() {
           </p>
           {/* Store Indicator */}
           {cart.length > 0 && (() => {
-            const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
             const vendorGroups = groupCartByVendor(cart)
-            
-            if (!multiVendorEnabled) {
-              const vendorInfo = getCartVendorInfo(cart)
-              return vendorInfo ? (
-                <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
-                  <span className="text-xl">🏪</span>
-                  <span className="text-sm font-medium">
-                    Shopping from: <strong>{vendorInfo.vendorName}</strong>
-                  </span>
-                </div>
-              ) : null
-            } else if (vendorGroups.length > 1) {
+            if (vendorGroups.length > 1) {
               return (
                 <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
                   <span className="text-xl">🏪</span>
@@ -409,7 +384,15 @@ function ShoppingCart() {
                 </div>
               )
             }
-            return null
+            const vendorInfo = getCartVendorInfo(cart)
+            return vendorInfo ? (
+              <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
+                <span className="text-xl">🏪</span>
+                <span className="text-sm font-medium">
+                  Shopping from: <strong>{vendorInfo.vendorName}</strong>
+                </span>
+              </div>
+            ) : null
           })()}
         </div>
       </div>
@@ -444,25 +427,22 @@ function ShoppingCart() {
               {/* Group cart items by vendor */}
               {groupCartByVendor(cart).map((vendorGroup) => {
                 const vendorSubtotal = vendorGroup.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-                const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
-                
+
                 return (
                   <div key={vendorGroup.vendorId} className="space-y-3">
-                    {/* Vendor Header - only show if multi-vendor enabled */}
-                    {multiVendorEnabled && (
-                      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-4 py-3 rounded-t-xl flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xl">🏪</span>
-                          <span className="font-semibold">{vendorGroup.vendorName}</span>
-                        </div>
-                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
-                          {vendorGroup.items.length} {vendorGroup.items.length === 1 ? 'item' : 'items'}
-                        </span>
+                    {/* Vendor Header */}
+                    <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white px-4 py-3 rounded-t-xl flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🏪</span>
+                        <span className="font-semibold">{vendorGroup.vendorName}</span>
                       </div>
-                    )}
+                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                        {vendorGroup.items.length} {vendorGroup.items.length === 1 ? 'item' : 'items'}
+                      </span>
+                    </div>
 
                     {/* Vendor Items */}
-                    <div className={`space-y-3 ${multiVendorEnabled ? 'border-2 border-t-0 border-afri-green/20 rounded-b-xl p-3' : ''}`}>
+                    <div className="space-y-3 border-2 border-t-0 border-afri-green/20 rounded-b-xl p-3">
                       {vendorGroup.items.map((item) => (
                         <div
                           key={item._id}
@@ -485,9 +465,6 @@ function ShoppingCart() {
                                   {item.name}
                                 </h3>
                                 <p className="text-sm text-gray-500">{item.unit || 'per item'}</p>
-                                {!multiVendorEnabled && (
-                                  <p className="text-sm text-afri-green">{item.vendor?.storeName || 'AfriMercato'}</p>
-                                )}
                               </div>
                               <button
                                 onClick={() => removeItem(item._id)}
@@ -524,17 +501,15 @@ function ShoppingCart() {
                         </div>
                       ))}
                       
-                      {/* Vendor Subtotal - only show if multi-vendor enabled */}
-                      {multiVendorEnabled && (
-                        <div className="bg-afri-green-light/10 border border-afri-green/20 rounded-lg p-3 flex justify-between items-center">
-                          <span className="text-sm font-semibold text-gray-700">
-                            {vendorGroup.vendorName} Subtotal
-                          </span>
-                          <span className="text-lg font-bold text-afri-green">
-                            £{vendorSubtotal.toFixed(2)}
-                          </span>
-                        </div>
-                      )}
+                      {/* Vendor Subtotal */}
+                      <div className="bg-afri-green-light/10 border border-afri-green/20 rounded-lg p-3 flex justify-between items-center">
+                        <span className="text-sm font-semibold text-gray-700">
+                          {vendorGroup.vendorName} Subtotal
+                        </span>
+                        <span className="text-lg font-bold text-afri-green">
+                          £{vendorSubtotal.toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 )
@@ -566,24 +541,16 @@ function ShoppingCart() {
                   )}
                   
                   {/* Multi-Vendor Notice */}
-                  {(() => {
-                    const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
-                    const vendorGroups = groupCartByVendor(cart)
-                    
-                    if (multiVendorEnabled && vendorGroups.length > 1) {
-                      return (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-                          <p className="text-xs text-blue-800 font-semibold mb-1">
-                            📦 Multiple Vendor Order
-                          </p>
-                          <p className="text-xs text-blue-700">
-                            Your order will be split into {vendorGroups.length} separate deliveries (one per store)
-                          </p>
-                        </div>
-                      )
-                    }
-                    return null
-                  })()}
+                  {groupCartByVendor(cart).length > 1 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                      <p className="text-xs text-blue-800 font-semibold mb-1">
+                        📦 Multiple Vendor Order
+                      </p>
+                      <p className="text-xs text-blue-700">
+                        Your order will be split into {groupCartByVendor(cart).length} separate deliveries (one per store)
+                      </p>
+                    </div>
+                  )}
                   
                   {/* Minimum Order Warning */}
                   {(() => {

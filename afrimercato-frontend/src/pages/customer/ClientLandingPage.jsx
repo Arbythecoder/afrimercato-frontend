@@ -582,7 +582,7 @@ export default function ClientLandingPage() {
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3"
             >
               African Online Store In the United Kingdom
@@ -590,7 +590,7 @@ export default function ClientLandingPage() {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.1 }}
               className="text-gray-600 max-w-2xl mx-auto"
             >
@@ -706,7 +706,7 @@ export default function ClientLandingPage() {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6"
           >
             Why Afrimercato Exists
@@ -714,7 +714,7 @@ export default function ClientLandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.1 }}
             className="text-gray-600 text-lg leading-relaxed space-y-4"
           >
@@ -732,7 +732,7 @@ export default function ClientLandingPage() {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.3 }}
             className="mt-8"
           >
@@ -754,7 +754,7 @@ export default function ClientLandingPage() {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-12"
           >
             Who It's For
@@ -769,8 +769,8 @@ export default function ClientLandingPage() {
                 key={card.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: 0.15 + index * 0.15 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
               >
                 <div className={`bg-gradient-to-r ${card.color} p-6`}>
@@ -792,13 +792,13 @@ export default function ClientLandingPage() {
       <section className="py-16 sm:py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }}>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
               <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
                 To be the digital home where African and local businesses thrive — connecting stores, customers, and communities worldwide.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 }}>
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ delay: 0.15 }}>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
               <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
                 Afrimercato empowers local and international merchants to sell, fulfil, and grow through a fair, flexible, and trusted marketplace.
@@ -808,7 +808,7 @@ export default function ClientLandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.3 }}
             className="mt-10 pt-8 border-t border-white/20 text-center"
           >
@@ -906,8 +906,8 @@ function StoreCard({ store, index, navigate }) {
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ delay: 0.1 + index * 0.12 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       onClick={handleClick}
       className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"

@@ -26,6 +26,7 @@ function OrderDetail() {
   const navigate = useNavigate()
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [reordered, setReordered] = useState(false)
 
   useEffect(() => {
     fetchOrder()
@@ -43,6 +44,31 @@ function OrderDetail() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleReorder = () => {
+    if (!order?.items?.length) return
+
+    const cartItems = order.items.map(item => ({
+      _id: item.product?._id || item.product || item._id,
+      id: item.product?._id || item.product || item._id,
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity,
+      unit: item.unit,
+      images: item.images || [],
+      vendor: {
+        _id: order.vendor?._id,
+        storeName: order.vendor?.storeName || '',
+        businessName: order.vendor?.businessName || order.vendor?.storeName || '',
+        logo: order.vendor?.logo || ''
+      }
+    }))
+
+    localStorage.setItem('afrimercato_cart', JSON.stringify(cartItems))
+    window.dispatchEvent(new Event('cartUpdated'))
+    setReordered(true)
+    setTimeout(() => navigate('/cart'), 800)
   }
 
   const getCurrentStep = () => {
@@ -325,10 +351,15 @@ function OrderDetail() {
                 </button>
               )}
               <button
-                onClick={() => navigate('/products')}
-                className="w-full py-3 border-2 border-afri-green text-afri-green rounded-xl font-semibold hover:bg-afri-green hover:text-white"
+                onClick={handleReorder}
+                disabled={reordered}
+                className={`w-full py-3 border-2 rounded-xl font-semibold transition-all ${
+                  reordered
+                    ? 'border-green-500 bg-green-500 text-white'
+                    : 'border-afri-green text-afri-green hover:bg-afri-green hover:text-white'
+                }`}
               >
-                Order Again
+                {reordered ? '✓ Added to cart — going there now...' : 'Order Again'}
               </button>
               {order.status === 'out-for-delivery' && (
                 <button
