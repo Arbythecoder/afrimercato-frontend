@@ -288,12 +288,16 @@ function ShoppingCart() {
       localStorage.removeItem('afrimercato_last_order_items')
       localStorage.removeItem('repeatPurchaseFrequency')
       
-      // Clear vendor auth tokens
+      // Clear ALL auth tokens so the user is fully signed out before redirecting to login
+      localStorage.removeItem('afrimercato_token')
+      localStorage.removeItem('afrimercato_refresh_token')
+      localStorage.removeItem('afrimercato_role')
+      localStorage.removeItem('afrimercato_user')
       localStorage.removeItem('afrimercato_vendor_token')
       localStorage.removeItem('afrimercato_vendor_user')
       localStorage.removeItem('afrimercato_vendor_refresh_token')
 
-      // Set checkout redirect flag so Login page blocks non-customer accounts
+      // Set checkout redirect flag so Login page sends customer straight to checkout
       localStorage.setItem('checkout_redirect', 'true')
 
       // Force redirect to customer login

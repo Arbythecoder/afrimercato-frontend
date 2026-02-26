@@ -246,7 +246,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('afrimercato_cart')
     localStorage.removeItem('afrimercato_last_order_items')
     localStorage.removeItem('repeatPurchaseFrequency')
-    localStorage.removeItem('checkout_redirect')
+    // NOTE: do NOT clear checkout_redirect here — it must survive OAuth redirects
+    // and auth re-checks so OAuthCallback / Login can consume it after sign-in.
     localStorage.removeItem('vendor_lock')
     
     // Clear legacy vendor tokens if they exist

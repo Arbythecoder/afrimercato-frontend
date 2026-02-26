@@ -87,7 +87,7 @@ function Login() {
           break
         case 'customer':
         default:
-          navigate('/')
+          navigate('/cart')
           break
       }
     } else {

@@ -203,8 +203,9 @@ function AppContent() {
       />
 
       {/* Checkout & Order Routes */}
-      {/* Checkout — Checkout.jsx handles its own auth + role guard internally */}
-      <Route path="/checkout" element={<Checkout />} />
+      {/* Guard: unauthenticated users redirected to login. ShoppingCart already sets
+          checkout_redirect before navigating here, so the return trip is handled. */}
+      <Route path="/checkout" element={isAuthenticated ? <Checkout /> : <Navigate to="/login" replace />} />
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
 

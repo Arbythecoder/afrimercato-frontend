@@ -99,7 +99,7 @@ function Register() {
             break
           case 'customer':
           default:
-            navigate('/', { replace: true })
+            navigate('/cart', { replace: true })
             break
         }
       } else {
