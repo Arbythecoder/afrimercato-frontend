@@ -274,8 +274,8 @@ export default function ClientStoresPage() {
                     </div>
                   </div>
                   <div className="absolute bottom-6 left-6 bg-white rounded-xl px-4 py-2 shadow-lg">
-                    <p className="text-xs text-gray-500">Avg. delivery</p>
-                    <p className="font-bold text-[#00897B]">25–40 mins</p>
+                    <p className="text-xs text-gray-500">Avg. Delivery Time</p>
+                    <p className="font-bold text-[#00897B]">ADT 25–40 mins</p>
                   </div>
                 </div>
               </div>
@@ -520,7 +520,7 @@ export default function ClientStoresPage() {
                       <span>•</span>
                       <span>{store.deliveryFee || '£25'} Deliveries</span>
                       <span>•</span>
-                      <span>{store.deliveryTime || '30 mins'}</span>
+                      <span>ADT {store.deliveryTime || '30 mins'}</span>
                     </div>
 
                     {/* Rating Stars */}

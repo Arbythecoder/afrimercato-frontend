@@ -289,7 +289,7 @@ export default function StoresPage() {
                       <div className="flex items-center justify-between text-sm text-gray-600 pt-3 border-t">
                         <div className="flex items-center gap-1">
                           <ClockIcon className="w-4 h-4" />
-                          <span>{store.deliveryTime || '30-45 min'}</span>
+                          <span>ADT {store.deliveryTime || '30-45 min'}</span>
                         </div>
                         <div className="font-semibold text-gray-900">
                           {isSample ? 'Register your store' : `Min. ${store.minOrder || store.minimumOrder || '£10'}`}

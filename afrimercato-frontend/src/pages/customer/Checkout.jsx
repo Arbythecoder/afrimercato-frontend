@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
 // Helper: check if user has customer role (supports both roles array and role string)
@@ -158,6 +158,29 @@ function Checkout() {
     }
 
     loadRepurchaseItems()
+  }, [isAuthenticated, isCustomer])
+
+  // Pre-fill delivery address from user profile — non-blocking, runs once on mount
+  useEffect(() => {
+    if (!isAuthenticated || !isCustomer) return
+    const prefillAddress = async () => {
+      try {
+        const res = await userAPI.getProfile()
+        const profile = res?.data || res
+        if (!profile) return
+        setAddress(prev => ({
+          fullName:     prev.fullName     || profile.name  || '',
+          phone:        prev.phone        || profile.phone || '',
+          street:       prev.street       || (profile.addresses?.[0]?.street)  || '',
+          city:         prev.city         || (profile.addresses?.[0]?.city)    || '',
+          postcode:     prev.postcode     || (profile.addresses?.[0]?.postcode) || '',
+          instructions: prev.instructions || ''
+        }))
+      } catch {
+        // Non-blocking — ignore silently if profile fetch fails
+      }
+    }
+    prefillAddress()
   }, [isAuthenticated, isCustomer])
 
   // Fetch vendor data when cart loads
