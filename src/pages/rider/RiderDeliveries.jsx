@@ -1,231 +1,231 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { apiCall } from '../../services/api'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Package, MapPin, Clock, Ruler, ChevronRight, RefreshCw } from 'lucide-react'
+
+const STATUS_CONFIG = {
+  pending:    { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700',  stripe: 'bg-amber-400' },
+  accepted:   { label: 'Accepted',         color: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-400' },
+  picked_up:  { label: 'Picked Up',        color: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-400' },
+  in_transit: { label: 'In Transit',       color: 'bg-afri-green-pale text-afri-green-dark', stripe: 'bg-afri-green' },
+  delivered:  { label: 'Delivered',        color: 'bg-emerald-100 text-emerald-700', stripe: 'bg-emerald-500' },
+}
+
+const FILTERS = [
+  { id: 'active', label: 'Active' },
+  { id: 'completed', label: 'Completed' },
+  { id: 'cancelled', label: 'Cancelled' },
+]
+
+function SkeletonDelivery() {
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden shadow-sm animate-pulse">
+      <div className="h-1 bg-gray-200 w-full" />
+      <div className="p-4 space-y-3">
+        <div className="flex justify-between">
+          <div className="h-4 bg-gray-200 rounded w-28" />
+          <div className="h-4 bg-gray-200 rounded w-16" />
+        </div>
+        <div className="h-3 bg-gray-200 rounded w-44" />
+        <div className="h-3 bg-gray-200 rounded w-36" />
+      </div>
+    </div>
+  )
+}
 
 function RiderDeliveries() {
   const navigate = useNavigate()
   const [deliveries, setDeliveries] = useState([])
   const [filter, setFilter] = useState('active')
   const [loading, setLoading] = useState(true)
+  const [actionLoading, setActionLoading] = useState(null)
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchDeliveries()
+  const fetchDeliveries = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      if (filter === 'active') {
+        const res = await apiCall('/riders/deliveries/active')
+        setDeliveries(res?.data?.deliveries || [])
+      } else if (filter === 'completed') {
+        const res = await apiCall('/riders/earnings')
+        setDeliveries(res?.data?.deliveries || [])
+      } else {
+        setDeliveries([])
+      }
+    } catch {
+      setError('Failed to load deliveries.')
+      setDeliveries([])
+    } finally {
+      setLoading(false)
+    }
   }, [filter])
 
-  const fetchDeliveries = async () => {
+  useEffect(() => { fetchDeliveries() }, [fetchDeliveries])
+
+  const handleAction = async (e, deliveryId, action) => {
+    e.stopPropagation()
+    setActionLoading(deliveryId + action)
     try {
-      setLoading(true)
-      // Simulate API call
-      setTimeout(() => {
-        if (filter === 'active') {
-          setDeliveries([
-            {
-              id: 'DEL001',
-              orderNumber: 'AFM-2024-001',
-              customer: { name: 'Sarah Johnson', phone: '+44 7700 900001' },
-              address: '42 High Street, London SW1A 1AA',
-              distance: 2.3,
-              status: 'picking-up',
-              estimatedTime: '15 min',
-              vendor: { name: 'Fresh Valley Farms', address: '123 Market Lane' },
-              items: 5,
-              earnings: 4.50,
-              createdAt: new Date().toISOString()
-            },
-            {
-              id: 'DEL002',
-              orderNumber: 'AFM-2024-002',
-              customer: { name: 'James Wilson', phone: '+44 7700 900002' },
-              address: '78 Oak Lane, London E1 6AN',
-              distance: 3.1,
-              status: 'pending-pickup',
-              estimatedTime: '25 min',
-              vendor: { name: 'Daily Dairy', address: '456 Farm Road' },
-              items: 3,
-              earnings: 5.20,
-              createdAt: new Date().toISOString()
-            }
-          ])
-        } else if (filter === 'completed') {
-          setDeliveries([
-            {
-              id: 'DEL100',
-              orderNumber: 'AFM-2024-100',
-              customer: { name: 'Emma Brown' },
-              address: '15 Park Avenue, London N1 2AB',
-              earnings: 4.80,
-              status: 'delivered',
-              rating: 5,
-              completedAt: new Date(Date.now() - 3600000).toISOString()
-            },
-            {
-              id: 'DEL099',
-              orderNumber: 'AFM-2024-099',
-              customer: { name: 'Michael Davis' },
-              address: '89 Church Road, London W2 4GH',
-              earnings: 6.20,
-              status: 'delivered',
-              rating: 5,
-              completedAt: new Date(Date.now() - 7200000).toISOString()
-            }
-          ])
-        } else {
-          setDeliveries([])
-        }
-        setLoading(false)
-      }, 500)
-    } catch (error) {
-      console.error('Error fetching deliveries:', error)
-      setLoading(false)
+      await apiCall(`/riders/deliveries/${deliveryId}/${action}`, { method: 'POST' })
+      fetchDeliveries()
+    } catch {
+      alert(`Failed to ${action} delivery. Please try again.`)
+    } finally {
+      setActionLoading(null)
     }
   }
 
-  const statusColors = {
-    'pending-pickup': 'bg-yellow-100 text-yellow-800',
-    'picking-up': 'bg-blue-100 text-blue-800',
-    'in-transit': 'bg-purple-100 text-purple-800',
-    'arriving': 'bg-green-100 text-green-800',
-    'delivered': 'bg-gray-100 text-gray-800'
-  }
-
-  const statusLabels = {
-    'pending-pickup': 'Waiting for Pickup',
-    'picking-up': 'Picking Up',
-    'in-transit': 'In Transit',
-    'arriving': 'Arriving Soon',
-    'delivered': 'Delivered'
-  }
-
-  const filters = [
-    { id: 'active', label: 'Active', icon: '🚚' },
-    { id: 'completed', label: 'Completed', icon: '✓' },
-    { id: 'cancelled', label: 'Cancelled', icon: '✕' }
-  ]
-
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-afri-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-6">
-        <div className="max-w-7xl mx-auto px-4">
-          <button onClick={() => navigate('/rider/dashboard')} className="text-purple-200 hover:text-white mb-2">
-            ← Back to Dashboard
-          </button>
-          <h1 className="text-2xl font-bold">My Deliveries</h1>
-        </div>
+      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-6 rounded-b-[2rem]">
+        <h1 className="text-white text-2xl font-bold">My Deliveries</h1>
+        <p className="text-afri-green-light text-sm mt-0.5">{deliveries.length} {filter} {deliveries.length === 1 ? 'delivery' : 'deliveries'}</p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
+      <div className="px-5 py-5 space-y-5">
         {/* Filter Tabs */}
-        <div className="flex gap-2 mb-6 overflow-x-auto">
-          {filters.map(f => (
+        <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm">
+          {FILTERS.map(f => (
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`flex items-center gap-2 px-5 py-3 rounded-xl font-semibold transition-all whitespace-nowrap ${
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 filter === f.id
-                  ? 'bg-purple-600 text-white'
-                  : 'bg-white text-gray-700 hover:bg-gray-100'
+                  ? 'bg-afri-green text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
               }`}
             >
-              <span>{f.icon}</span>
               {f.label}
             </button>
           ))}
         </div>
 
-        {/* Deliveries List */}
-        {loading ? (
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="bg-white rounded-xl p-6 animate-pulse">
-                <div className="h-5 bg-gray-200 rounded w-1/4 mb-4"></div>
-                <div className="h-4 bg-gray-200 rounded w-1/2"></div>
-              </div>
-            ))}
-          </div>
-        ) : deliveries.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-            <span className="text-6xl">📦</span>
-            <h2 className="text-xl font-bold text-gray-900 mt-4">No {filter} deliveries</h2>
-            <p className="text-gray-500 mt-2">
-              {filter === 'active' ? 'New orders will appear here when assigned to you' : 'No deliveries in this category'}
-            </p>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {deliveries.map(delivery => (
-              <div
-                key={delivery.id}
-                className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow cursor-pointer"
-                onClick={() => navigate(`/rider/delivery/${delivery.id}`)}
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div>
-                    <div className="flex items-center gap-3">
-                      <h3 className="text-lg font-bold text-gray-900">{delivery.orderNumber}</h3>
-                      <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColors[delivery.status]}`}>
-                        {statusLabels[delivery.status]}
-                      </span>
-                    </div>
-                    {delivery.vendor && (
-                      <p className="text-sm text-gray-500 mt-1">from {delivery.vendor.name}</p>
-                    )}
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-bold text-green-600">£{delivery.earnings.toFixed(2)}</p>
-                    {delivery.rating && (
-                      <div className="flex items-center justify-end gap-1 mt-1">
-                        {[...Array(delivery.rating)].map((_, i) => (
-                          <span key={i} className="text-yellow-400">★</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3 mb-4">
-                  <span className="text-xl mt-1">📍</span>
-                  <div>
-                    <p className="font-medium text-gray-900">{delivery.customer.name}</p>
-                    <p className="text-sm text-gray-500">{delivery.address}</p>
-                    {delivery.customer.phone && (
-                      <p className="text-sm text-purple-600">{delivery.customer.phone}</p>
-                    )}
-                  </div>
-                </div>
-
-                {filter === 'active' && (
-                  <div className="flex items-center justify-between pt-4 border-t">
-                    <div className="flex items-center gap-4 text-sm text-gray-500">
-                      <span>📦 {delivery.items} items</span>
-                      <span>📏 {delivery.distance} km</span>
-                      <span>⏱️ {delivery.estimatedTime}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <button
-                        onClick={(e) => { e.stopPropagation(); /* Call customer */ }}
-                        className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
-                      >
-                        📞 Call
-                      </button>
-                      <button
-                        onClick={(e) => { e.stopPropagation(); /* Navigate */ }}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                      >
-                        🗺️ Navigate
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {filter === 'completed' && (
-                  <div className="flex items-center justify-between pt-4 border-t text-sm text-gray-500">
-                    <span>Completed {new Date(delivery.completedAt).toLocaleString('en-GB')}</span>
-                  </div>
-                )}
-              </div>
-            ))}
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 flex items-center justify-between">
+            <p className="text-red-600 text-sm">{error}</p>
+            <button onClick={fetchDeliveries} className="flex items-center gap-1 text-red-500 text-sm font-semibold">
+              <RefreshCw size={14} /> Retry
+            </button>
           </div>
         )}
+
+        {/* List */}
+        <AnimatePresence mode="wait">
+          {loading ? (
+            <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
+              {[1,2,3].map(i => <SkeletonDelivery key={i} />)}
+            </motion.div>
+          ) : deliveries.length === 0 ? (
+            <motion.div key="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-12 text-center shadow-sm">
+              <div className="w-20 h-20 bg-afri-green-pale rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package size={32} className="text-afri-green-light" />
+              </div>
+              <p className="font-bold text-gray-700 text-lg">No {filter} deliveries</p>
+              <p className="text-gray-400 text-sm mt-1">
+                {filter === 'active' ? 'New orders will appear here when assigned to you' : `Nothing here yet`}
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
+              {deliveries.map((d, i) => {
+                const id = d.id || d._id
+                const st = STATUS_CONFIG[d.status] || STATUS_CONFIG.pending
+                return (
+                  <motion.div
+                    key={id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    onClick={() => navigate(`/rider/delivery/${id}`)}
+                    className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                  >
+                    <div className={`h-1 w-full ${st.stripe}`} />
+                    <div className="p-4">
+                      {/* Top row */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-bold text-gray-900 text-sm">
+                              {d.order?.orderNumber || d.orderNumber || id}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>
+                              {st.label}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400">{d.vendor?.storeName || d.vendor || '—'}</p>
+                        </div>
+                        <span className="text-lg font-black text-emerald-600">
+                          £{Number(d.riderEarnings || d.earnings || 0).toFixed(2)}
+                        </span>
+                      </div>
+
+                      {/* Address */}
+                      <div className="flex items-start gap-2 mb-3">
+                        <MapPin size={14} className="text-afri-green mt-0.5 flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">
+                            {d.customer?.name || 'Customer'}
+                          </p>
+                          <p className="text-xs text-gray-400 truncate">
+                            {d.deliveryAddress?.street || d.deliveryAddress?.address || '—'}
+                          </p>
+                          {d.customer?.phone && <p className="text-xs text-afri-green mt-0.5">{d.customer.phone}</p>}
+                        </div>
+                      </div>
+
+                      {/* Bottom row */}
+                      {filter === 'active' && (
+                        <div className="flex items-center justify-between pt-3 border-t border-gray-50">
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                            {d.distance && <span className="flex items-center gap-1"><Ruler size={11} />{d.distance} km</span>}
+                            {d.estimatedDeliveryTime && <span className="flex items-center gap-1"><Clock size={11} />{new Date(d.estimatedDeliveryTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>}
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {d.status === 'accepted' && (
+                              <button
+                                onClick={e => handleAction(e, id, 'start')}
+                                disabled={actionLoading === id + 'start'}
+                                className="px-4 py-1.5 bg-afri-green text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                              >
+                                {actionLoading === id + 'start' ? '...' : 'Start →'}
+                              </button>
+                            )}
+                            {d.status === 'in_transit' && (
+                              <button
+                                onClick={e => handleAction(e, id, 'complete')}
+                                disabled={actionLoading === id + 'complete'}
+                                className="px-4 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                              >
+                                {actionLoading === id + 'complete' ? '...' : '✓ Delivered'}
+                              </button>
+                            )}
+                            <button
+                              onClick={e => { e.stopPropagation(); navigate(`/rider/delivery/${id}`) }}
+                              className="w-8 h-8 bg-gray-50 rounded-xl flex items-center justify-center"
+                            >
+                              <ChevronRight size={16} className="text-gray-400" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {filter === 'completed' && d.deliveredAt && (
+                        <div className="pt-3 border-t border-gray-50 text-xs text-gray-400">
+                          Delivered {new Date(d.deliveredAt).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                      )}
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   )

@@ -1,317 +1,287 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { apiCall } from '../../services/api'
+import { motion } from 'framer-motion'
+import {
+  Star,
+  Package,
+  ChevronRight,
+  MapPin,
+  Clock,
+  Ruler,
+  RefreshCw,
+  Wifi,
+  WifiOff
+} from 'lucide-react'
+
+const STATUS_CONFIG = {
+  pending:    { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700',   dot: 'bg-amber-400' },
+  accepted:   { label: 'Accepted',        color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-400' },
+  picked_up:  { label: 'Picked Up',       color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-400' },
+  in_transit: { label: 'In Transit',      color: 'bg-afri-green-pale text-afri-green-dark', dot: 'bg-afri-green' },
+  delivered:  { label: 'Delivered',       color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+}
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl p-5 animate-pulse">
+      <div className="flex justify-between mb-3">
+        <div className="h-4 bg-gray-200 rounded w-24" />
+        <div className="h-4 bg-gray-200 rounded w-16" />
+      </div>
+      <div className="h-3 bg-gray-200 rounded w-40 mb-2" />
+      <div className="h-3 bg-gray-200 rounded w-32" />
+    </div>
+  )
+}
 
 function RiderDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [stats, setStats] = useState({
-    todayDeliveries: 0,
-    todayEarnings: 0,
-    weeklyDeliveries: 0,
-    weeklyEarnings: 0,
-    rating: 4.8,
-    completionRate: 98
-  })
+  const [stats, setStats] = useState({ todayDeliveries: 0, todayEarnings: 0, rating: 0, weeklyDeliveries: 0, weeklyEarnings: 0 })
   const [activeDeliveries, setActiveDeliveries] = useState([])
   const [recentDeliveries, setRecentDeliveries] = useState([])
   const [isOnline, setIsOnline] = useState(true)
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  useEffect(() => {
-    fetchDashboardData()
-  }, [])
+  useEffect(() => { fetchDashboardData() }, [])
 
   const fetchDashboardData = async () => {
+    setLoading(true)
+    setError(null)
     try {
-      // Simulate API call
-      setTimeout(() => {
-        setStats({
-          todayDeliveries: 8,
-          todayEarnings: 64.50,
-          weeklyDeliveries: 42,
-          weeklyEarnings: 336.00,
-          rating: 4.8,
-          completionRate: 98
-        })
-        setActiveDeliveries([
-          {
-            id: 'DEL001',
-            orderNumber: 'AFM-2024-001',
-            customer: 'Sarah Johnson',
-            address: '42 High Street, London SW1A 1AA',
-            distance: 2.3,
-            status: 'picking-up',
-            estimatedTime: '15 min',
-            vendor: 'Fresh Valley Farms',
-            items: 5,
-            earnings: 4.50
-          },
-          {
-            id: 'DEL002',
-            orderNumber: 'AFM-2024-002',
-            customer: 'James Wilson',
-            address: '78 Oak Lane, London E1 6AN',
-            distance: 3.1,
-            status: 'pending-pickup',
-            estimatedTime: '25 min',
-            vendor: 'Daily Dairy',
-            items: 3,
-            earnings: 5.20
-          }
-        ])
-        setRecentDeliveries([
-          { id: 'DEL100', customer: 'Emma Brown', earnings: 4.80, time: '1 hour ago', rating: 5 },
-          { id: 'DEL099', customer: 'Michael Davis', earnings: 6.20, time: '2 hours ago', rating: 5 },
-          { id: 'DEL098', customer: 'Lisa Chen', earnings: 3.90, time: '3 hours ago', rating: 4 }
-        ])
-        setLoading(false)
-      }, 500)
-    } catch (error) {
-      console.error('Error fetching dashboard:', error)
+      const [profileRes, activeRes, earningsRes] = await Promise.allSettled([
+        apiCall('/rider-auth/profile'),
+        apiCall('/riders/deliveries/active'),
+        apiCall('/riders/earnings'),
+      ])
+      if (profileRes.status === 'fulfilled' && profileRes.value?.data) {
+        const s = profileRes.value.data.stats || {}
+        setStats(prev => ({ ...prev, rating: parseFloat(s.averageRating) || 0, weeklyDeliveries: s.totalDeliveries || 0, weeklyEarnings: parseFloat(s.totalEarnings) || 0 }))
+      }
+      if (activeRes.status === 'fulfilled' && activeRes.value?.data) {
+        setActiveDeliveries(activeRes.value.data.deliveries || [])
+      }
+      if (earningsRes.status === 'fulfilled' && earningsRes.value?.data) {
+        const d = earningsRes.value.data
+        setRecentDeliveries((d.deliveries || []).slice(0, 4))
+        const todayKey = new Date().toISOString().split('T')[0]
+        const todayEntry = (d.earningsByDate || []).find(e => e.date === todayKey)
+        if (todayEntry) {
+          setStats(prev => ({ ...prev, todayDeliveries: todayEntry.deliveries || 0, todayEarnings: parseFloat(todayEntry.earnings) || 0 }))
+        }
+      }
+    } catch {
+      setError('Failed to load. Tap retry.')
+    } finally {
       setLoading(false)
     }
   }
 
-  const toggleOnlineStatus = () => {
-    setIsOnline(!isOnline)
-  }
-
-  const statusColors = {
-    'pending-pickup': 'bg-yellow-100 text-yellow-800',
-    'picking-up': 'bg-blue-100 text-blue-800',
-    'in-transit': 'bg-purple-100 text-purple-800',
-    'arriving': 'bg-green-100 text-green-800'
-  }
-
-  const statusLabels = {
-    'pending-pickup': 'Waiting for Pickup',
-    'picking-up': 'Picking Up',
-    'in-transit': 'In Transit',
-    'arriving': 'Arriving Soon'
-  }
-
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-afri-green"></div>
+      <div className="min-h-screen bg-afri-gray-50">
+        <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-20 rounded-b-[2.5rem]">
+          <div className="h-6 bg-white/10 rounded w-40 mb-2 animate-pulse" />
+          <div className="h-4 bg-white/5 rounded w-24 animate-pulse" />
+        </div>
+        <div className="px-5 -mt-12 space-y-3">
+          {[1,2,3].map(i => <SkeletonCard key={i} />)}
+        </div>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-afri-gray-50 flex flex-col items-center justify-center gap-4 px-5">
+        <div className="text-5xl">⚠️</div>
+        <p className="text-gray-600 font-medium">{error}</p>
+        <button onClick={fetchDashboardData} className="flex items-center gap-2 px-6 py-3 bg-afri-green text-white rounded-2xl font-bold">
+          <RefreshCw size={16} /> Retry
+        </button>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold">Hello, {user?.name?.split(' ')[0] || 'Rider'}!</h1>
-              <p className="text-purple-200">Ready for deliveries?</p>
-            </div>
-            <button
-              onClick={toggleOnlineStatus}
-              className={`px-6 py-3 rounded-full font-semibold transition-all ${
-                isOnline
-                  ? 'bg-green-500 text-white'
-                  : 'bg-gray-200 text-gray-700'
-              }`}
-            >
-              {isOnline ? '🟢 Online' : '⚪ Offline'}
-            </button>
+    <div className="min-h-screen bg-afri-gray-50">
+      {/* Hero Header — premium dark with brand green accents */}
+      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-52 h-52 bg-afri-green/10 rounded-full blur-2xl" />
+        <div className="absolute bottom-0 -left-8 w-40 h-40 bg-afri-yellow-dark/10 rounded-full blur-2xl" />
+        <div className="absolute top-8 right-6 w-2 h-2 bg-afri-green rounded-full opacity-70" />
+        <div className="absolute top-16 right-16 w-1.5 h-1.5 bg-afri-yellow rounded-full opacity-50" />
+
+        <div className="relative flex items-start justify-between mb-6">
+          <div>
+            <p className="text-afri-green-light text-sm font-medium">
+              Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}
+            </p>
+            <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Rider'} 👋</h1>
+            {stats.rating > 0 && (
+              <div className="flex items-center gap-1 mt-1">
+                <Star size={13} className="fill-afri-yellow text-afri-yellow" />
+                <span className="text-afri-yellow text-sm font-semibold">{stats.rating.toFixed(1)}</span>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={() => setIsOnline(o => !o)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
+              isOnline
+                ? 'bg-afri-green text-white shadow-lg shadow-afri-green/30'
+                : 'bg-white/10 text-white/60 border border-white/20'
+            }`}
+          >
+            {isOnline ? <Wifi size={15} /> : <WifiOff size={15} />}
+            {isOnline ? 'Online' : 'Offline'}
+          </button>
+        </div>
+
+        <div className="relative grid grid-cols-2 gap-3">
+          <div className="bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+            <p className="text-afri-green-light text-xs font-medium mb-1">Today's Earnings</p>
+            <p className="text-white text-2xl font-black">£{stats.todayEarnings.toFixed(2)}</p>
+          </div>
+          <div className="bg-white/8 backdrop-blur-sm border border-white/10 rounded-2xl p-4">
+            <p className="text-afri-green-light text-xs font-medium mb-1">Deliveries Today</p>
+            <p className="text-white text-2xl font-black">{stats.todayDeliveries}</p>
           </div>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 py-6">
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 text-sm">Today's Deliveries</span>
-              <span className="text-2xl">🚚</span>
-            </div>
-            <p className="text-3xl font-bold text-gray-900">{stats.todayDeliveries}</p>
-            <p className="text-sm text-green-600">+3 from yesterday</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 text-sm">Today's Earnings</span>
-              <span className="text-2xl">💷</span>
-            </div>
-            <p className="text-3xl font-bold text-green-600">£{stats.todayEarnings.toFixed(2)}</p>
-            <p className="text-sm text-gray-500">+£12.50 from yesterday</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 text-sm">Your Rating</span>
-              <span className="text-2xl">⭐</span>
-            </div>
-            <p className="text-3xl font-bold text-yellow-500">{stats.rating}</p>
-            <p className="text-sm text-gray-500">Excellent!</p>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-gray-500 text-sm">Completion Rate</span>
-              <span className="text-2xl">✓</span>
-            </div>
-            <p className="text-3xl font-bold text-purple-600">{stats.completionRate}%</p>
-            <p className="text-sm text-gray-500">Top performer!</p>
-          </div>
-        </div>
-
+      <div className="px-5 -mt-10 space-y-6 pb-4">
         {/* Active Deliveries */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Active Deliveries</h2>
-            <button
-              onClick={() => navigate('/rider/deliveries')}
-              className="text-purple-600 hover:underline font-semibold"
-            >
-              View All →
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-afri-gray-900 font-bold text-lg">Active Deliveries</h2>
+            <button onClick={() => navigate('/rider/deliveries')} className="text-afri-green text-sm font-semibold flex items-center gap-0.5">
+              See all <ChevronRight size={15} />
             </button>
           </div>
 
           {activeDeliveries.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-              <span className="text-6xl">📦</span>
-              <h3 className="text-xl font-bold text-gray-900 mt-4">No active deliveries</h3>
-              <p className="text-gray-500 mt-2">New orders will appear here when assigned</p>
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-afri-gray-100">
+              <div className="w-16 h-16 bg-afri-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
+                <Package size={28} className="text-afri-green-light" />
+              </div>
+              <p className="font-semibold text-gray-700">No active deliveries</p>
+              <p className="text-gray-400 text-sm mt-1">New orders will appear here</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {activeDeliveries.map(delivery => (
-                <div
-                  key={delivery.id}
-                  className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow cursor-pointer"
-                  onClick={() => navigate(`/rider/delivery/${delivery.id}`)}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-gray-900">{delivery.orderNumber}</h3>
-                        <span className={`px-2 py-1 rounded-full text-xs font-semibold ${statusColors[delivery.status]}`}>
-                          {statusLabels[delivery.status]}
+            <div className="space-y-3">
+              {activeDeliveries.map((d, i) => {
+                const id = d.id || d._id
+                const st = STATUS_CONFIG[d.status] || STATUS_CONFIG.pending
+                return (
+                  <motion.div
+                    key={id}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * 0.07 }}
+                    onClick={() => navigate(`/rider/delivery/${id}`)}
+                    className="bg-white rounded-2xl shadow-sm border border-afri-gray-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                  >
+                    <div className={`h-1 w-full ${st.dot}`} />
+                    <div className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div>
+                          <div className="flex items-center gap-2 mb-0.5">
+                            <span className="font-bold text-afri-gray-900 text-sm">
+                              {d.order?.orderNumber || d.orderNumber || id}
+                            </span>
+                            <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>
+                              {st.label}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-400">{d.vendor?.storeName || d.vendor || '—'}</p>
+                        </div>
+                        <span className="text-lg font-black text-afri-green-dark">
+                          £{Number(d.riderEarnings || d.earnings || 0).toFixed(2)}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-500">from {delivery.vendor}</p>
-                    </div>
-                    <span className="text-lg font-bold text-green-600">£{delivery.earnings.toFixed(2)}</span>
-                  </div>
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xl">📍</span>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">{delivery.customer}</p>
-                      <p className="text-sm text-gray-500">{delivery.address}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <MapPin size={14} className="text-afri-green flex-shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-gray-800 truncate">{d.customer?.name || 'Customer'}</p>
+                          <p className="text-xs text-gray-400 truncate">{d.deliveryAddress?.street || d.deliveryAddress?.address || '—'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-3 border-t border-afri-gray-100">
+                        <div className="flex items-center gap-4 text-xs text-gray-400">
+                          {d.distance && <span className="flex items-center gap-1"><Ruler size={12} />{d.distance} km</span>}
+                          {d.estimatedDeliveryTime && <span className="flex items-center gap-1"><Clock size={12} />{new Date(d.estimatedDeliveryTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>}
+                        </div>
+                        <button className="px-4 py-1.5 bg-afri-green text-white text-xs font-bold rounded-xl">
+                          Open →
+                        </button>
+                      </div>
+                    </div>
+                  </motion.div>
+                )
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* All-time summary */}
+        <section className="bg-gradient-to-br from-afri-gray-900 to-[#2B3632] rounded-2xl p-5 text-white relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-afri-green/10 rounded-full -translate-y-1/2 translate-x-1/2 blur-xl" />
+          <div className="absolute bottom-0 left-0 w-24 h-24 bg-afri-yellow-dark/10 rounded-full translate-y-1/2 -translate-x-1/2 blur-xl" />
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-1.5 h-4 bg-afri-green rounded-full" />
+              <p className="text-gray-400 text-xs font-semibold uppercase tracking-wide">All Time</p>
+            </div>
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <p className="text-gray-400 text-xs mb-0.5">Total Deliveries</p>
+                <p className="text-3xl font-black">{stats.weeklyDeliveries}</p>
+              </div>
+              <div>
+                <p className="text-gray-400 text-xs mb-0.5">Total Earned</p>
+                <p className="text-3xl font-black text-afri-green-light">£{Number(stats.weeklyEarnings).toFixed(0)}</p>
+              </div>
+            </div>
+            <button
+              onClick={() => navigate('/rider/earnings')}
+              className="w-full py-2.5 bg-afri-green text-white rounded-xl text-sm font-bold text-center"
+            >
+              View Full Earnings Report →
+            </button>
+          </div>
+        </section>
+
+        {/* Recent Deliveries */}
+        {recentDeliveries.length > 0 && (
+          <section>
+            <h2 className="text-afri-gray-900 font-bold text-lg mb-3">Recent</h2>
+            <div className="bg-white rounded-2xl shadow-sm border border-afri-gray-100 overflow-hidden divide-y divide-afri-gray-50">
+              {recentDeliveries.map((d, i) => (
+                <div key={d.id || i} className="flex items-center justify-between px-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-afri-green-pale rounded-full flex items-center justify-center">
+                      <Package size={14} className="text-afri-green-dark" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-afri-gray-900">{d.orderNumber || `Delivery #${i+1}`}</p>
+                      <p className="text-xs text-gray-400">{d.vendor || '—'}</p>
                     </div>
                   </div>
-
-                  <div className="flex items-center justify-between pt-3 border-t text-sm">
-                    <div className="flex items-center gap-4 text-gray-500">
-                      <span>📦 {delivery.items} items</span>
-                      <span>📏 {delivery.distance} km</span>
-                      <span>⏱️ {delivery.estimatedTime}</span>
-                    </div>
-                    <button className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700">
-                      Navigate
-                    </button>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-afri-green-dark">£{Number(d.earnings || 0).toFixed(2)}</p>
+                    {d.deliveredAt && <p className="text-xs text-gray-400">{new Date(d.deliveredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>}
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
-
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <button
-            onClick={() => navigate('/rider/deliveries')}
-            className="bg-white rounded-xl shadow-lg p-4 text-center hover:shadow-xl transition-shadow"
-          >
-            <span className="text-3xl">📦</span>
-            <p className="font-semibold text-gray-900 mt-2">All Deliveries</p>
-          </button>
-          <button
-            onClick={() => navigate('/rider/earnings')}
-            className="bg-white rounded-xl shadow-lg p-4 text-center hover:shadow-xl transition-shadow"
-          >
-            <span className="text-3xl">💰</span>
-            <p className="font-semibold text-gray-900 mt-2">Earnings</p>
-          </button>
-          <button
-            onClick={() => navigate('/rider/profile')}
-            className="bg-white rounded-xl shadow-lg p-4 text-center hover:shadow-xl transition-shadow"
-          >
-            <span className="text-3xl">👤</span>
-            <p className="font-semibold text-gray-900 mt-2">Profile</p>
-          </button>
-          <button
-            disabled
-            title="Support feature coming soon"
-            className="bg-gray-100 rounded-xl shadow-lg p-4 text-center cursor-not-allowed opacity-60"
-          >
-            <span className="text-3xl">🆘</span>
-            <p className="font-semibold text-gray-600 mt-2">Support (Coming Soon)</p>
-          </button>
-        </div>
-
-        {/* Recent Deliveries */}
-        <div className="mb-8">
-          <h2 className="text-xl font-bold text-gray-900 mb-4">Recent Deliveries</h2>
-          <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            {recentDeliveries.map((delivery, index) => (
-              <div
-                key={delivery.id}
-                className={`flex items-center justify-between p-4 ${
-                  index < recentDeliveries.length - 1 ? 'border-b' : ''
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
-                    ✓
-                  </div>
-                  <div>
-                    <p className="font-semibold text-gray-900">{delivery.customer}</p>
-                    <p className="text-sm text-gray-500">{delivery.time}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-green-600">£{delivery.earnings.toFixed(2)}</p>
-                  <div className="flex items-center gap-1">
-                    {[...Array(delivery.rating)].map((_, i) => (
-                      <span key={i} className="text-yellow-400 text-sm">★</span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Weekly Summary */}
-        <div className="bg-gradient-to-r from-purple-600 to-purple-800 rounded-xl p-6 text-white">
-          <h3 className="text-lg font-bold mb-4">This Week's Summary</h3>
-          <div className="grid grid-cols-2 gap-6">
-            <div>
-              <p className="text-purple-200">Total Deliveries</p>
-              <p className="text-3xl font-bold">{stats.weeklyDeliveries}</p>
-            </div>
-            <div>
-              <p className="text-purple-200">Total Earnings</p>
-              <p className="text-3xl font-bold">£{stats.weeklyEarnings.toFixed(2)}</p>
-            </div>
-          </div>
-          <button
-            onClick={() => navigate('/rider/earnings')}
-            className="mt-4 w-full py-3 bg-white text-purple-600 rounded-lg font-semibold hover:bg-gray-100"
-          >
-            View Detailed Report →
-          </button>
-        </div>
+          </section>
+        )}
       </div>
     </div>
   )

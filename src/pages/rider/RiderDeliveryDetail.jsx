@@ -98,9 +98,9 @@ function RiderDeliveryDetail() {
     switch (delivery?.status) {
       case 'assigned':
       case 'picking-up':
-        return { label: 'Confirm Pickup', status: 'picked-up', color: 'bg-blue-600 hover:bg-blue-700' }
+        return { label: 'Confirm Pickup', status: 'picked-up', color: 'bg-afri-green hover:bg-afri-green-dark' }
       case 'picked-up':
-        return { label: 'Start Delivery', status: 'in-transit', color: 'bg-purple-600 hover:bg-purple-700' }
+        return { label: 'Start Delivery', status: 'in-transit', color: 'bg-afri-green hover:bg-afri-green-dark' }
       case 'in-transit':
         return { label: 'Mark as Delivered', status: 'delivered', color: 'bg-green-600 hover:bg-green-700' }
       default:
@@ -111,7 +111,7 @@ function RiderDeliveryDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-afri-green"></div>
       </div>
     )
   }
@@ -124,7 +124,7 @@ function RiderDeliveryDetail() {
           <h2 className="text-xl font-bold mt-4">Delivery not found</h2>
           <button
             onClick={() => navigate('/rider/deliveries')}
-            className="mt-4 px-6 py-3 bg-purple-600 text-white rounded-xl"
+            className="mt-4 px-6 py-3 bg-afri-green text-white rounded-xl"
           >
             Back to Deliveries
           </button>
@@ -139,15 +139,15 @@ function RiderDeliveryDetail() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-6">
+      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] text-white py-6">
         <div className="max-w-2xl mx-auto px-4">
-          <button onClick={() => navigate('/rider/deliveries')} className="text-purple-200 hover:text-white mb-2">
+          <button onClick={() => navigate('/rider/deliveries')} className="text-afri-green-light hover:text-white mb-2">
             ← Back to Deliveries
           </button>
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-2xl font-bold">{delivery.orderNumber}</h1>
-              <p className="text-purple-200">{delivery.items.length} items • {delivery.distance} km</p>
+              <p className="text-afri-green-light">{delivery.items.length} items • {delivery.distance} km</p>
             </div>
             <span className="text-2xl font-bold">£{delivery.earnings.toFixed(2)}</span>
           </div>
@@ -161,7 +161,7 @@ function RiderDeliveryDetail() {
           <div className="relative">
             <div className="absolute top-6 left-0 right-0 h-1 bg-gray-200">
               <div
-                className="h-full bg-purple-600 transition-all"
+                className="h-full bg-afri-green transition-all"
                 style={{ width: `${(currentStep / (statusSteps.length - 1)) * 100}%` }}
               />
             </div>
@@ -171,14 +171,14 @@ function RiderDeliveryDetail() {
                   <div
                     className={`w-12 h-12 rounded-full flex items-center justify-center text-xl z-10 ${
                       index <= currentStep
-                        ? 'bg-purple-600 text-white'
+                        ? 'bg-afri-green text-white'
                         : 'bg-gray-200 text-gray-400'
                     }`}
                   >
                     {step.icon}
                   </div>
                   <p className={`mt-2 text-xs font-medium text-center ${
-                    index <= currentStep ? 'text-purple-600' : 'text-gray-400'
+                    index <= currentStep ? 'text-afri-green' : 'text-gray-400'
                   }`}>
                     {step.label}
                   </p>
@@ -193,7 +193,7 @@ function RiderDeliveryDetail() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-gray-900">📍 Pickup</h2>
             {['assigned', 'picking-up'].includes(delivery.status) && (
-              <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-semibold">
+              <span className="px-3 py-1 bg-afri-green-pale text-afri-green-dark rounded-full text-sm font-semibold">
                 Current Stop
               </span>
             )}
@@ -205,7 +205,7 @@ function RiderDeliveryDetail() {
           <div className="flex gap-2">
             <button
               onClick={() => openNavigation(delivery.vendor.address)}
-              className="flex-1 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
+              className="flex-1 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark"
             >
               🗺️ Navigate
             </button>
@@ -223,7 +223,7 @@ function RiderDeliveryDetail() {
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-bold text-gray-900">🏠 Delivery</h2>
             {['picked-up', 'in-transit'].includes(delivery.status) && (
-              <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm font-semibold">
+              <span className="px-3 py-1 bg-afri-green-pale text-afri-green-dark rounded-full text-sm font-semibold">
                 Current Stop
               </span>
             )}
@@ -241,7 +241,7 @@ function RiderDeliveryDetail() {
           <div className="flex gap-2">
             <button
               onClick={() => openNavigation(delivery.customer.address)}
-              className="flex-1 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700"
+              className="flex-1 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark"
             >
               🗺️ Navigate
             </button>
