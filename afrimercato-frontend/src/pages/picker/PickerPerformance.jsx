@@ -162,9 +162,9 @@ function PickerPerformance() {
 
         {/* All-time stats grid */}
         <div className="grid grid-cols-2 gap-3">
-          <StatCard icon={Package} label="Total Orders" value={totalOrders} color="bg-violet-500" delay={0.1} />
+          <StatCard icon={Package} label="Total Orders" value={totalOrders} color="bg-afri-yellow-dark" delay={0.1} />
           <StatCard icon={TrendingUp} label="Total Earned" value={`£${totalEarnings.toFixed(0)}`} color="bg-emerald-500" delay={0.15} />
-          <StatCard icon={Clock} label="Avg Order Time" value={avgTime > 0 ? `${Math.round(avgTime)}m` : '—'} color="bg-blue-500" delay={0.2} />
+          <StatCard icon={Clock} label="Avg Order Time" value={avgTime > 0 ? `${Math.round(avgTime)}m` : '—'} color="bg-afri-green" delay={0.2} />
           <StatCard icon={Target} label="Accuracy" value={`${accuracy.toFixed(1)}%`} color="bg-orange-500" delay={0.25} />
         </div>
 

@@ -6,9 +6,9 @@ import { ChevronLeft, RefreshCw, ShieldCheck, Search, Filter } from 'lucide-reac
 
 const ACTION_COLORS = {
   create:   'bg-emerald-100 text-emerald-700',
-  update:   'bg-blue-100 text-blue-600',
+  update:   'bg-afri-yellow-light text-afri-yellow-dark',
   delete:   'bg-red-100 text-red-600',
-  login:    'bg-purple-100 text-purple-600',
+  login:    'bg-afri-green-pale text-afri-green-dark',
   logout:   'bg-gray-100 text-gray-500',
   approve:  'bg-teal-100 text-teal-700',
   suspend:  'bg-orange-100 text-orange-600',
@@ -105,7 +105,7 @@ export default function AdminAuditLogs() {
               placeholder="Search action, user, resource…"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white"
+              className="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-afri-green focus:bg-white"
             />
           </div>
 

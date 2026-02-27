@@ -46,16 +46,17 @@ function RiderEarnings() {
   const avgPerDelivery = summary.totalDeliveries > 0 ? summary.totalEarnings / summary.totalDeliveries : 0
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-afri-gray-50">
       {/* Hero */}
-      <div className="bg-gradient-to-br from-violet-600 to-violet-900 px-5 pt-14 pb-28 rounded-b-[2.5rem] relative overflow-hidden">
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-white/5 rounded-full" />
+      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-28 rounded-b-[2.5rem] relative overflow-hidden">
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-afri-green/10 rounded-full blur-2xl" />
+        <div className="absolute top-6 right-6 w-2 h-2 bg-afri-green rounded-full opacity-60" />
         <div className="relative">
-          <p className="text-violet-200 text-sm font-medium">My Earnings</p>
+          <p className="text-afri-green-light text-sm font-medium">My Earnings</p>
           <p className="text-white text-5xl font-black mt-1">
             {loading ? '—' : `£${summary.totalEarnings.toFixed(2)}`}
           </p>
-          <p className="text-violet-200 text-sm mt-1">
+          <p className="text-afri-green-light text-sm mt-1">
             {loading ? '...' : `${summary.totalDeliveries} deliveries`}
           </p>
         </div>
@@ -69,7 +70,7 @@ function RiderEarnings() {
               key={p.id}
               onClick={() => setPeriod(p.id)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                period === p.id ? 'bg-violet-600 text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'
+                period === p.id ? 'bg-afri-green text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
               {p.label}
@@ -99,8 +100,8 @@ function RiderEarnings() {
                 <p className="text-xs text-gray-400 mt-0.5">Avg per delivery</p>
               </div>
               <div className="bg-white rounded-2xl p-4 shadow-sm">
-                <div className="w-9 h-9 bg-violet-50 rounded-xl flex items-center justify-center mb-2">
-                  <Package size={18} className="text-violet-600" />
+                <div className="w-9 h-9 bg-afri-green-pale rounded-xl flex items-center justify-center mb-2">
+                  <Package size={18} className="text-afri-green-dark" />
                 </div>
                 <p className="text-2xl font-black text-gray-900">{summary.totalDeliveries}</p>
                 <p className="text-xs text-gray-400 mt-0.5">Total deliveries</p>
@@ -117,7 +118,7 @@ function RiderEarnings() {
               <p className="text-sm font-semibold text-gray-800">Auto-Payout Active</p>
               <p className="text-xs text-gray-400">Paid every Friday via bank transfer</p>
             </div>
-            <button onClick={() => navigate('/rider/profile')} className="text-violet-500">
+            <button onClick={() => navigate('/rider/profile')} className="text-afri-green">
               <ChevronRight size={18} />
             </button>
           </div>
@@ -144,8 +145,8 @@ function RiderEarnings() {
             </div>
           ) : history.length === 0 ? (
             <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
-              <div className="w-16 h-16 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Package size={28} className="text-violet-300" />
+              <div className="w-16 h-16 bg-afri-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
+                <Package size={28} className="text-afri-green-light" />
               </div>
               <p className="font-semibold text-gray-600">No deliveries in this period</p>
             </div>

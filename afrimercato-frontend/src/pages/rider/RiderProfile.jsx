@@ -96,9 +96,9 @@ function RiderProfile() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white">
+      <div className="bg-gradient-to-r from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] text-white">
         <div className="max-w-4xl mx-auto px-4 py-6">
-          <button onClick={() => navigate('/rider/dashboard')} className="text-purple-200 hover:text-white mb-4">
+          <button onClick={() => navigate('/rider/dashboard')} className="text-afri-green-light hover:text-white mb-4">
             ← Back to Dashboard
           </button>
 
@@ -121,15 +121,15 @@ function RiderProfile() {
                       <span>{stats.rating.toFixed(1)}</span>
                     </div>
                   )}
-                  {stats.rating > 0 && <span className="text-purple-200">•</span>}
+                  {stats.rating > 0 && <span className="text-afri-green-light">•</span>}
                   <span>{stats.totalDeliveries} deliveries</span>
                   {stats.completionRate > 0 && (
-                    <><span className="text-purple-200">•</span><span>{stats.completionRate}% completion</span></>
+                    <><span className="text-afri-green-light">•</span><span>{stats.completionRate}% completion</span></>
                   )}
                 </div>
               )}
               {stats.memberSince && (
-                <p className="text-purple-200 text-sm mt-1">
+                <p className="text-afri-green-light text-sm mt-1">
                   Member since {new Date(stats.memberSince).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}
                 </p>
               )}
@@ -157,7 +157,7 @@ function RiderProfile() {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${
                   activeTab === tab.id
-                    ? 'text-purple-600 border-b-2 border-purple-600 bg-purple-50'
+                    ? 'text-afri-green border-b-2 border-afri-green bg-afri-green-pale'
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
@@ -177,7 +177,7 @@ function RiderProfile() {
                     type="text"
                     value={profile.name}
                     onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
                   />
                 </div>
                 <div>
@@ -195,13 +195,13 @@ function RiderProfile() {
                     type="tel"
                     value={profile.phone}
                     onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
                   />
                 </div>
                 <button
                   type="submit"
                   disabled={loading}
-                  className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 disabled:opacity-50"
+                  className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
                 >
                   {loading ? 'Saving...' : 'Save Changes'}
                 </button>
@@ -220,7 +220,7 @@ function RiderProfile() {
                         onClick={() => setProfile({ ...profile, vehicleType: v.id })}
                         className={`p-4 rounded-xl border-2 text-center transition-all ${
                           profile.vehicleType === v.id
-                            ? 'border-purple-600 bg-purple-50'
+                            ? 'border-afri-green bg-afri-green-pale'
                             : 'border-gray-200 hover:border-gray-300'
                         }`}
                       >
@@ -239,12 +239,12 @@ function RiderProfile() {
                       value={profile.licensePlate}
                       onChange={(e) => setProfile({ ...profile, licensePlate: e.target.value.toUpperCase() })}
                       placeholder="AB12 CDE"
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-purple-500"
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
                     />
                   </div>
                 )}
 
-                <button className="px-6 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700">
+                <button className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark">
                   Update Vehicle
                 </button>
               </div>
@@ -294,7 +294,7 @@ function RiderProfile() {
                       <p className="text-sm text-yellow-600">Expires in 30 days</p>
                     </div>
                   </div>
-                  <button className="text-purple-600 hover:underline">Update</button>
+                  <button className="text-afri-green hover:underline">Update</button>
                 </div>
               </div>
             )}
@@ -307,7 +307,7 @@ function RiderProfile() {
                     <p className="font-semibold">Push Notifications</p>
                     <p className="text-sm text-gray-500">Get notified of new orders</p>
                   </div>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  <input type="checkbox" defaultChecked className="w-5 h-5 text-afri-green rounded" />
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -315,7 +315,7 @@ function RiderProfile() {
                     <p className="font-semibold">Sound Alerts</p>
                     <p className="text-sm text-gray-500">Play sound for new orders</p>
                   </div>
-                  <input type="checkbox" defaultChecked className="w-5 h-5 text-purple-600 rounded" />
+                  <input type="checkbox" defaultChecked className="w-5 h-5 text-afri-green rounded" />
                 </div>
 
                 <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
@@ -323,7 +323,7 @@ function RiderProfile() {
                     <p className="font-semibold">Auto-Accept Orders</p>
                     <p className="text-sm text-gray-500">Automatically accept nearby orders</p>
                   </div>
-                  <input type="checkbox" className="w-5 h-5 text-purple-600 rounded" />
+                  <input type="checkbox" className="w-5 h-5 text-afri-green rounded" />
                 </div>
 
                 <div className="pt-6 border-t">

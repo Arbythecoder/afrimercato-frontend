@@ -8,7 +8,7 @@ import { Package, RefreshCw, Plus } from 'lucide-react'
 const STATUS_COLORS = {
   assigned_to_picker: { badge: 'bg-amber-100 text-amber-700', stripe: 'bg-amber-400', label: 'Assigned' },
   picking:            { badge: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-500',  label: 'Picking' },
-  packed:             { badge: 'bg-emerald-100 text-emerald-700', stripe: 'bg-emerald-500', label: 'Packed' },
+  packed:             { badge: 'bg-afri-green-pale text-afri-green-dark', stripe: 'bg-afri-green', label: 'Packed' },
 }
 
 function SkeletonCard() {
@@ -81,8 +81,8 @@ function PickerDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-50">
-        <div className="bg-gradient-to-br from-orange-500 to-orange-700 px-5 pt-14 pb-20 rounded-b-[2.5rem]">
+      <div className="min-h-screen bg-afri-gray-50">
+        <div className="bg-gradient-to-br from-afri-yellow-dark via-[#F5A623] to-[#FFB300] px-5 pt-14 pb-20 rounded-b-[2.5rem]">
           <div className="h-5 bg-white/20 rounded w-36 mb-2 animate-pulse" />
           <div className="h-4 bg-white/10 rounded w-24 animate-pulse" />
         </div>
@@ -95,10 +95,10 @@ function PickerDashboard() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center gap-4 px-5">
+      <div className="min-h-screen bg-afri-gray-50 flex flex-col items-center justify-center gap-4 px-5">
         <div className="text-5xl">⚠️</div>
         <p className="text-gray-600 font-medium">{error}</p>
-        <button onClick={fetchDashboardData} className="flex items-center gap-2 px-6 py-3 bg-orange-500 text-white rounded-2xl font-semibold">
+        <button onClick={fetchDashboardData} className="flex items-center gap-2 px-6 py-3 bg-afri-yellow-dark text-white rounded-2xl font-semibold">
           <RefreshCw size={16} /> Retry
         </button>
       </div>
@@ -106,22 +106,24 @@ function PickerDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      {/* Hero */}
-      <div className="bg-gradient-to-br from-orange-500 via-orange-600 to-orange-800 px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
-        <div className="absolute -top-10 -right-10 w-44 h-44 bg-white/5 rounded-full" />
-        <div className="absolute bottom-4 -left-8 w-32 h-32 bg-white/5 rounded-full" />
+    <div className="min-h-screen bg-afri-gray-50">
+      {/* Hero — warm amber-orange gradient matching brand yellow-dark */}
+      <div className="bg-gradient-to-br from-afri-yellow-dark via-[#F5A623] to-[#FFB300] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
+        <div className="absolute -top-10 -right-10 w-44 h-44 bg-white/8 rounded-full blur-2xl" />
+        <div className="absolute bottom-4 -left-8 w-32 h-32 bg-afri-green/15 rounded-full blur-2xl" />
+        <div className="absolute top-8 right-8 w-2 h-2 bg-white rounded-full opacity-50" />
+
         <div className="relative flex items-start justify-between">
           <div>
-            <p className="text-orange-200 text-sm font-medium">
+            <p className="text-white/80 text-sm font-medium">
               Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}
             </p>
             <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Picker'} 👋</h1>
-            <p className="text-orange-200 text-sm mt-1">{stats.pendingOrders} active · {orderQueue.length} available</p>
+            <p className="text-white/70 text-sm mt-1">{stats.pendingOrders} active · {orderQueue.length} available</p>
           </div>
-          <div className="bg-white/15 backdrop-blur-sm rounded-2xl px-4 py-2 text-right">
+          <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-2 text-right border border-white/20">
             <p className="text-white text-xl font-black">{stats.accuracy.toFixed(1)}%</p>
-            <p className="text-orange-200 text-xs">Accuracy</p>
+            <p className="text-white/70 text-xs">Accuracy</p>
           </div>
         </div>
 
@@ -131,9 +133,9 @@ function PickerDashboard() {
             { label: 'All Time', value: stats.completedOrders, unit: 'done' },
             { label: 'Avg Time', value: stats.avgPickTime > 0 ? `${Math.round(stats.avgPickTime)}m` : '—', unit: 'per order' },
           ].map((s, i) => (
-            <div key={i} className="bg-white/15 backdrop-blur-sm rounded-xl p-3 text-center">
+            <div key={i} className="bg-white/20 backdrop-blur-sm border border-white/20 rounded-xl p-3 text-center">
               <p className="text-white text-xl font-black">{s.value}</p>
-              <p className="text-orange-200 text-[10px] font-medium">{s.label}</p>
+              <p className="text-white/70 text-[10px] font-medium">{s.label}</p>
             </div>
           ))}
         </div>
@@ -143,16 +145,16 @@ function PickerDashboard() {
         {/* Active Orders */}
         <section>
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-gray-900 font-bold text-lg">My Active Orders</h2>
-            <button onClick={fetchDashboardData} className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm">
+            <h2 className="text-afri-gray-900 font-bold text-lg">My Active Orders</h2>
+            <button onClick={fetchDashboardData} className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-sm border border-afri-gray-100">
               <RefreshCw size={15} className="text-gray-400" />
             </button>
           </div>
 
           {activeOrders.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center shadow-sm">
-              <div className="w-16 h-16 bg-orange-50 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Package size={28} className="text-orange-300" />
+            <div className="bg-white rounded-2xl p-8 text-center shadow-sm border border-afri-gray-100">
+              <div className="w-16 h-16 bg-afri-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
+                <Package size={28} className="text-afri-green-light" />
               </div>
               <p className="font-semibold text-gray-700">No active orders</p>
               <p className="text-gray-400 text-sm mt-1">Claim an order below to start picking</p>
@@ -170,7 +172,7 @@ function PickerDashboard() {
                     initial={{ opacity: 0, y: 12 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.07 }}
-                    className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                    className="bg-white rounded-2xl shadow-sm border border-afri-gray-100 overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
                     onClick={() => navigate(`/picker/order/${id}`)}
                   >
                     <div className={`h-1 w-full ${st.stripe}`} />
@@ -178,14 +180,14 @@ function PickerDashboard() {
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <div className="flex items-center gap-2 mb-0.5">
-                            <span className="font-bold text-gray-900 text-sm">{order.orderNumber || id}</span>
+                            <span className="font-bold text-afri-gray-900 text-sm">{order.orderNumber || id}</span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${st.badge}`}>{st.label}</span>
                           </div>
                           <p className="text-xs text-gray-400">{order.vendor?.storeName || '—'} · {totalItems} items</p>
                         </div>
                         <button
                           onClick={e => { e.stopPropagation(); navigate(`/picker/order/${id}`) }}
-                          className="px-4 py-1.5 bg-orange-500 text-white text-xs font-bold rounded-xl"
+                          className="px-4 py-1.5 bg-afri-yellow-dark text-white text-xs font-bold rounded-xl"
                         >
                           Continue
                         </button>
@@ -196,9 +198,9 @@ function PickerDashboard() {
                             <span>Progress</span>
                             <span>{pickedItems}/{totalItems}</span>
                           </div>
-                          <div className="h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div className="h-1.5 bg-afri-gray-100 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-orange-500 rounded-full transition-all"
+                              className="h-full bg-afri-green rounded-full transition-all"
                               style={{ width: `${totalItems > 0 ? (pickedItems / totalItems) * 100 : 0}%` }}
                             />
                           </div>
@@ -216,8 +218,8 @@ function PickerDashboard() {
         {orderQueue.length > 0 && (
           <section>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-gray-900 font-bold text-lg">Available to Claim</h2>
-              <span className="text-xs bg-orange-100 text-orange-600 font-bold px-2.5 py-1 rounded-full">
+              <h2 className="text-afri-gray-900 font-bold text-lg">Available to Claim</h2>
+              <span className="text-xs bg-afri-green-pale text-afri-green-dark font-bold px-2.5 py-1 rounded-full">
                 {orderQueue.length}
               </span>
             </div>
@@ -230,10 +232,10 @@ function PickerDashboard() {
                     initial={{ opacity: 0, y: 8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-white rounded-2xl shadow-sm p-4 flex items-center justify-between"
+                    className="bg-white rounded-2xl shadow-sm border border-afri-gray-100 p-4 flex items-center justify-between"
                   >
                     <div>
-                      <p className="font-semibold text-gray-900 text-sm">{order.orderNumber || id}</p>
+                      <p className="font-semibold text-afri-gray-900 text-sm">{order.orderNumber || id}</p>
                       <div className="flex items-center gap-3 mt-0.5 text-xs text-gray-400">
                         <span className="flex items-center gap-1"><Package size={11} />{order.items?.length || 0} items</span>
                         {order.vendor?.storeName && <span>{order.vendor.storeName}</span>}
@@ -241,7 +243,7 @@ function PickerDashboard() {
                     </div>
                     <button
                       onClick={() => claimOrder(id)}
-                      className="flex items-center gap-1.5 px-4 py-2 bg-orange-500 text-white text-xs font-bold rounded-xl hover:bg-orange-600"
+                      className="flex items-center gap-1.5 px-4 py-2 bg-afri-green hover:bg-afri-green-dark text-white text-xs font-bold rounded-xl transition-colors"
                     >
                       <Plus size={13} /> Claim
                     </button>

@@ -159,7 +159,7 @@ export default function AdminPickerManagement() {
                             <button
                               onClick={() => doAction(id, 'reactivate')}
                               disabled={!!actionLoading}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-500 rounded-lg text-xs font-semibold hover:bg-blue-100 disabled:opacity-50"
+                              className="flex items-center gap-1 px-3 py-1.5 bg-afri-green-pale text-afri-green hover:bg-afri-green-pale/70 rounded-lg text-xs font-semibold disabled:opacity-50"
                             >
                               {actionLoading === id + 'reactivate' ? '...' : <><RefreshCw size={13} /> Reactivate</>}
                             </button>

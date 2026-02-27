@@ -12,11 +12,11 @@ function PickerLayout({ children }) {
   const navigate = useNavigate()
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-20">
+    <div className="min-h-screen bg-gray-50 pb-20">
       {children}
 
       {/* Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-gray-100 safe-area-pb">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-white/97 backdrop-blur-xl border-t border-gray-100 shadow-lg safe-area-pb">
         <div className="flex items-stretch justify-around max-w-lg mx-auto">
           {tabs.map(({ path, label, icon: Icon }) => {
             const isActive = location.pathname === path
@@ -29,9 +29,11 @@ function PickerLayout({ children }) {
                 }`}
               >
                 {isActive && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-orange-500 rounded-full" />
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-orange-500 rounded-full" />
                 )}
-                <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />
+                <div className={`${isActive ? 'bg-orange-50 rounded-xl px-3 py-1' : 'px-3 py-1'} transition-all`}>
+                  <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />
+                </div>
                 <span>{label}</span>
               </button>
             )

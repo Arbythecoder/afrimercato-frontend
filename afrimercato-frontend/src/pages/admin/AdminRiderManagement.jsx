@@ -72,7 +72,7 @@ export default function AdminRiderManagement() {
             placeholder="Search by name or email…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-violet-500"
+            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-afri-green"
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function AdminRiderManagement() {
                     >
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-violet-100 rounded-full flex items-center justify-center text-violet-600 font-bold text-xs flex-shrink-0">
+                          <div className="w-8 h-8 bg-afri-green-pale rounded-full flex items-center justify-center text-afri-green-dark font-bold text-xs flex-shrink-0">
                             {rider.name?.[0]?.toUpperCase() || 'R'}
                           </div>
                           <div>
@@ -160,7 +160,7 @@ export default function AdminRiderManagement() {
                             <button
                               onClick={() => doAction(id, 'reactivate')}
                               disabled={!!actionLoading}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-500 rounded-lg text-xs font-semibold hover:bg-blue-100 disabled:opacity-50"
+                              className="flex items-center gap-1 px-3 py-1.5 bg-afri-green-pale text-afri-green rounded-lg text-xs font-semibold hover:bg-afri-green-pale/70 disabled:opacity-50"
                             >
                               {actionLoading === id + 'reactivate' ? '...' : <><RefreshCw size={13} /> Reactivate</>}
                             </button>

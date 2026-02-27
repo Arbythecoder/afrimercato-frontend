@@ -124,8 +124,8 @@ export default function AdminAnalytics() {
         {/* KPI Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard icon={DollarSign} label="Total Revenue"    value={loading ? '—' : `£${(stats.revenue || 0).toFixed(0)}`}   color="bg-emerald-500" delay={0}    sub="+15% vs prev" />
-          <StatCard icon={ShoppingBag} label="Total Orders"    value={loading ? '—' : stats.orders || 0}                        color="bg-violet-500"  delay={0.05} sub="+8% vs prev" />
-          <StatCard icon={Users}       label="Total Customers" value={loading ? '—' : stats.users || 0}                         color="bg-blue-500"    delay={0.1}  sub="+12% vs prev" />
+          <StatCard icon={ShoppingBag} label="Total Orders"    value={loading ? '—' : stats.orders || 0}                        color="bg-afri-yellow-dark"  delay={0.05} sub="+8% vs prev" />
+          <StatCard icon={Users}       label="Total Customers" value={loading ? '—' : stats.users || 0}                         color="bg-afri-green"    delay={0.1}  sub="+12% vs prev" />
           <StatCard icon={Store}       label="Active Vendors"  value={loading ? '—' : stats.vendors?.approved || 0}             color="bg-amber-500"   delay={0.15} />
         </div>
 
@@ -169,7 +169,7 @@ export default function AdminAnalytics() {
           )}
           <div className="flex items-center gap-5 mt-2">
             <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-emerald-500" /><span className="text-xs text-gray-500">Revenue</span></div>
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-violet-500" /><span className="text-xs text-gray-500">Orders</span></div>
+            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded-full bg-afri-yellow-dark" /><span className="text-xs text-gray-500">Orders</span></div>
           </div>
         </motion.div>
 

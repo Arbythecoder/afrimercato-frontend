@@ -8,7 +8,7 @@ const STATUS_CONFIG = {
   pending:    { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700',  stripe: 'bg-amber-400' },
   accepted:   { label: 'Accepted',         color: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-400' },
   picked_up:  { label: 'Picked Up',        color: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-400' },
-  in_transit: { label: 'In Transit',       color: 'bg-violet-100 text-violet-700', stripe: 'bg-violet-500' },
+  in_transit: { label: 'In Transit',       color: 'bg-afri-green-pale text-afri-green-dark', stripe: 'bg-afri-green' },
   delivered:  { label: 'Delivered',        color: 'bg-emerald-100 text-emerald-700', stripe: 'bg-emerald-500' },
 }
 
@@ -79,11 +79,11 @@ function RiderDeliveries() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-afri-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-br from-violet-600 to-violet-800 px-5 pt-14 pb-6 rounded-b-[2rem]">
+      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-6 rounded-b-[2rem]">
         <h1 className="text-white text-2xl font-bold">My Deliveries</h1>
-        <p className="text-violet-200 text-sm mt-0.5">{deliveries.length} {filter} {deliveries.length === 1 ? 'delivery' : 'deliveries'}</p>
+        <p className="text-afri-green-light text-sm mt-0.5">{deliveries.length} {filter} {deliveries.length === 1 ? 'delivery' : 'deliveries'}</p>
       </div>
 
       <div className="px-5 py-5 space-y-5">
@@ -95,7 +95,7 @@ function RiderDeliveries() {
               onClick={() => setFilter(f.id)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 filter === f.id
-                  ? 'bg-violet-600 text-white shadow-sm'
+                  ? 'bg-afri-green text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -122,8 +122,8 @@ function RiderDeliveries() {
             </motion.div>
           ) : deliveries.length === 0 ? (
             <motion.div key="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-12 text-center shadow-sm">
-              <div className="w-20 h-20 bg-violet-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Package size={32} className="text-violet-300" />
+              <div className="w-20 h-20 bg-afri-green-pale rounded-full flex items-center justify-center mx-auto mb-4">
+                <Package size={32} className="text-afri-green-light" />
               </div>
               <p className="font-bold text-gray-700 text-lg">No {filter} deliveries</p>
               <p className="text-gray-400 text-sm mt-1">
@@ -166,7 +166,7 @@ function RiderDeliveries() {
 
                       {/* Address */}
                       <div className="flex items-start gap-2 mb-3">
-                        <MapPin size={14} className="text-violet-400 mt-0.5 flex-shrink-0" />
+                        <MapPin size={14} className="text-afri-green mt-0.5 flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">
                             {d.customer?.name || 'Customer'}
@@ -174,7 +174,7 @@ function RiderDeliveries() {
                           <p className="text-xs text-gray-400 truncate">
                             {d.deliveryAddress?.street || d.deliveryAddress?.address || '—'}
                           </p>
-                          {d.customer?.phone && <p className="text-xs text-violet-500 mt-0.5">{d.customer.phone}</p>}
+                          {d.customer?.phone && <p className="text-xs text-afri-green mt-0.5">{d.customer.phone}</p>}
                         </div>
                       </div>
 
@@ -190,7 +190,7 @@ function RiderDeliveries() {
                               <button
                                 onClick={e => handleAction(e, id, 'start')}
                                 disabled={actionLoading === id + 'start'}
-                                className="px-4 py-1.5 bg-violet-600 text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                                className="px-4 py-1.5 bg-afri-green text-white text-xs font-bold rounded-xl disabled:opacity-50"
                               >
                                 {actionLoading === id + 'start' ? '...' : 'Start →'}
                               </button>
