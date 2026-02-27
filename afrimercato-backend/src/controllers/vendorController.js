@@ -599,11 +599,11 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const calculateVendorRevenue = (orders) => {
     return orders.reduce((sum, order) => {
       // Filter items to only this vendor's products
-      const vendorItems = order.items.filter(item => 
-        item.vendor.toString() === vendorId.toString()
+      const vendorItems = order.items.filter(item =>
+        item.vendor && item.vendor.toString() === vendorId.toString()
       );
       // Sum up revenue from vendor's items only
-      const vendorTotal = vendorItems.reduce((itemSum, item) => 
+      const vendorTotal = vendorItems.reduce((itemSum, item) =>
         itemSum + (item.price * item.quantity), 0
       );
       return sum + vendorTotal;
@@ -628,8 +628,8 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   const todayUnits = allOrders
     .filter((order) => order.createdAt >= startOfToday)
     .reduce((sum, order) => {
-      const vendorItems = order.items.filter(item => 
-        item.vendor.toString() === vendorId.toString()
+      const vendorItems = order.items.filter(item =>
+        item.vendor && item.vendor.toString() === vendorId.toString()
       );
       const units = vendorItems.reduce((itemSum, item) => itemSum + (item.quantity || 0), 0);
       return sum + units;
@@ -690,8 +690,8 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
   // Filter recent orders to show only this vendor's items
   const filteredRecentOrders = recentOrders.map(order => {
     const orderObj = order.toObject();
-    orderObj.items = orderObj.items.filter(item => 
-      item.vendor.toString() === vendorId.toString()
+    orderObj.items = orderObj.items.filter(item =>
+      item.vendor && item.vendor.toString() === vendorId.toString()
     );
     return orderObj;
   });
@@ -723,6 +723,14 @@ exports.getDashboardStats = asyncHandler(async (req, res) => {
         fulfillmentRate: 95,
         responseTime: 2,
         cancellationRate: 2
+      },
+      // Vendor store link info
+      storeInfo: {
+        slug: req.vendor.slug || null,
+        storeName: req.vendor.storeName,
+        storeUrl: req.vendor.slug
+          ? `${process.env.FRONTEND_URL || 'https://afrimercato.com'}/store/${req.vendor.slug}`
+          : null
       },
       // Add approval status info for frontend to display
       approvalStatus: {
@@ -1315,11 +1323,13 @@ exports.getOrders = asyncHandler(async (req, res) => {
   const filteredOrders = orders.map(order => {
     const orderObj = order.toObject();
     const originalCount = orderObj.items.length;
-    orderObj.items = orderObj.items.filter(item => 
-      item.vendor.toString() === req.vendor._id.toString()
+    orderObj.items = orderObj.items.filter(item =>
+      item.vendor && item.vendor.toString() === req.vendor._id.toString()
     );
     const filteredCount = orderObj.items.length;
-    console.log(`[VENDOR FILTER] Order ${order.orderNumber}: ${originalCount} items → ${filteredCount} items (Vendor: ${req.vendor._id})`);
+    if (import.meta?.env?.DEV || process.env.NODE_ENV === 'development') {
+      console.log(`[VENDOR FILTER] Order ${order.orderNumber}: ${originalCount} items → ${filteredCount} items (Vendor: ${req.vendor._id})`);
+    }
     // Recalculate total for vendor's items only
     orderObj.vendorTotal = orderObj.items.reduce((sum, item) => 
       sum + (item.price * item.quantity), 0
@@ -1365,11 +1375,11 @@ exports.getOrder = asyncHandler(async (req, res) => {
 
   // Filter items to show only this vendor's products
   const orderObj = order.toObject();
-  orderObj.items = orderObj.items.filter(item => 
-    item.vendor.toString() === req.vendor._id.toString()
+  orderObj.items = orderObj.items.filter(item =>
+    item.vendor && item.vendor.toString() === req.vendor._id.toString()
   );
   // Recalculate total for vendor's items only
-  orderObj.vendorTotal = orderObj.items.reduce((sum, item) => 
+  orderObj.vendorTotal = orderObj.items.reduce((sum, item) =>
     sum + (item.price * item.quantity), 0
   );
 

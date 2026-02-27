@@ -482,6 +482,47 @@ function Settings() {
             </button>
           </div>
 
+          {/* My Store Link */}
+          {vendorProfile.slug && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 text-lg">
+                  🔗
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 mb-1">Your Store Link</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Share this link with your customers so they can browse your store directly.
+                  </p>
+                  <div className="flex items-center gap-2 bg-white border border-green-300 rounded-lg px-4 py-2">
+                    <span className="text-sm text-green-700 font-mono flex-1 truncate">
+                      {`${window.location.origin}/store/${vendorProfile.slug}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/store/${vendorProfile.slug}`)
+                          .then(() => success('Store link copied to clipboard!'))
+                          .catch(() => warning('Could not copy — please copy manually'))
+                      }}
+                      className="flex-shrink-0 px-3 py-1 text-xs font-semibold bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      Copy
+                    </button>
+                    <a
+                      href={`/store/${vendorProfile.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 px-3 py-1 text-xs font-semibold bg-white border border-green-600 text-green-700 rounded-md hover:bg-green-50 transition-colors"
+                    >
+                      Preview
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Store Information</h2>
 
