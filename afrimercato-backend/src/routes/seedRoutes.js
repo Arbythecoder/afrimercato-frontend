@@ -6,7 +6,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
-const { seedVendors, seedProducts, clearVendors, clearProducts, getSeedStatus } = require('../controllers/seedController');
+const { seedVendors, seedProducts, clearVendors, clearProducts, getSeedStatus, seedRiders, clearRiders } = require('../controllers/seedController');
 const { seedDemoStores, removeDemoStores } = require('../controllers/demoStoreController');
 
 // Public access for demo stores during testing phase
@@ -18,15 +18,16 @@ router.use(protect, authorize('admin'));
 // Seed operations
 router.post('/vendors', seedVendors);
 router.post('/products', seedProducts);
-router.post('/customers', (req, res) => res.status(501).json({ message: 'Seed customer data' }));
-router.post('/orders', (req, res) => res.status(501).json({ message: 'Seed order data' }));
-router.post('/riders', (req, res) => res.status(501).json({ message: 'Seed rider data' }));
-router.post('/pickers', (req, res) => res.status(501).json({ message: 'Seed picker data' }));
+router.post('/customers', (_req, res) => res.status(501).json({ message: 'Seed customer data' }));
+router.post('/orders', (_req, res) => res.status(501).json({ message: 'Seed order data' }));
+router.post('/riders', seedRiders);
+router.post('/pickers', (_req, res) => res.status(501).json({ message: 'Seed picker data' }));
 
 // Clear demo data
 router.post('/clear', clearVendors);
 router.post('/clear/vendors', clearVendors);
 router.post('/clear/products', clearProducts);
+router.post('/clear/riders', clearRiders);
 router.delete('/demo-stores', removeDemoStores);
 
 // Status
