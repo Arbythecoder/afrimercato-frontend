@@ -221,6 +221,108 @@ const SEED_VENDORS = [
       { name: 'Sorghum 1kg',               category: 'Grains & Flour',      price: 3.49, unit: '1kg',  stock: 40, images: [IMG.grains],  rating: 4.4 },
       { name: 'Coconut Milk (Tin) 400ml',   category: 'Cooking Essentials',  price: 1.49, unit: '400ml', stock: 70, images: [IMG.general], rating: 4.6 }
     ]
+  },
+
+  // ── OUT-OF-LONDON STORES (5 cities) ────────────────────────────────────────
+  {
+    email: 'cheetham.african@afrimercato.dev',
+    storeName: 'Cheetham Hill African Market',
+    storeId: 'CHTHML11',
+    category: 'African Groceries',
+    description: 'Manchester\'s leading African grocery store with a wide selection of West and East African staples.',
+    address: { street: '34 Cheetham Hill Road', city: 'Manchester', postcode: 'M8 8QS' },
+    location: { address: 'Cheetham Hill, Manchester', postcode: 'M8 8QS', latitude: 53.5045, longitude: -2.2344 },
+    phone: '+44 7911 123411',
+    rating: 4.6,
+    logo: IMG.spices,
+    prepTime: 30,
+    products: [
+      { name: 'Egusi (Whole) 500g',          category: 'Soups & Seeds',       price: 7.49, unit: '500g', stock: 40, images: [IMG.spices],   rating: 4.7 },
+      { name: 'Dried Crayfish 200g',          category: 'Spices & Seasonings', price: 4.99, unit: '200g', stock: 35, images: [IMG.spices],   rating: 4.6 },
+      { name: 'Jollof Rice Mix 500g',         category: 'Grains & Rice',       price: 3.99, unit: '500g', stock: 55, images: [IMG.grains],   rating: 4.8 },
+      { name: 'Palm Oil (Red) 2L',            category: 'Cooking Oils',        price: 10.99, unit: '2L',  stock: 30, images: [IMG.oil],      rating: 4.5 },
+      { name: 'Eba (Garri Yellow) 1.5kg',     category: 'Grains & Flour',      price: 5.49, unit: '1.5kg', stock: 45, images: [IMG.grains], rating: 4.6 }
+    ]
+  },
+  {
+    email: 'soho.road.foods@afrimercato.dev',
+    storeName: 'Soho Road African Foods',
+    storeId: 'SOHORD12',
+    category: 'African & Halal Groceries',
+    description: 'Premium African and Halal groceries serving Birmingham\'s diverse Handsworth community.',
+    address: { street: '23 Soho Road', city: 'Birmingham', postcode: 'B21 9BH' },
+    location: { address: 'Handsworth, Birmingham', postcode: 'B21 9BH', latitude: 52.5000, longitude: -1.9310 },
+    phone: '+44 7911 123412',
+    rating: 4.8,
+    logo: IMG.produce,
+    prepTime: 25,
+    products: [
+      { name: 'Fresh Yam (Cut) 2kg',          category: 'Fresh Produce',       price: 8.49, unit: '2kg',  stock: 35, images: [IMG.yam],     rating: 4.8 },
+      { name: 'Plantain (Ripe) 4 pcs',        category: 'Fresh Produce',       price: 2.99, unit: '4 pcs', stock: 50, images: [IMG.plantain], rating: 4.7 },
+      { name: 'Stockfish (Medium) 300g',       category: 'Dried Fish',          price: 12.49, unit: '300g', stock: 20, images: [IMG.fish],   rating: 4.6 },
+      { name: 'Suya Spice 100g',              category: 'Spices & Seasonings', price: 3.49, unit: '100g', stock: 60, images: [IMG.spices],  rating: 4.9 },
+      { name: 'Orishirishi Mix 400g',         category: 'Soups & Seeds',       price: 6.99, unit: '400g', stock: 25, images: [IMG.spices],  rating: 4.5 }
+    ]
+  },
+  {
+    email: 'stapleton.rd.market@afrimercato.dev',
+    storeName: 'Stapleton Road Market',
+    storeId: 'STPLRD13',
+    category: 'African Caribbean Groceries',
+    description: 'Bristol\'s go-to African and Caribbean grocery store in the heart of Easton.',
+    address: { street: '12 Stapleton Road', city: 'Bristol', postcode: 'BS5 0QH' },
+    location: { address: 'Easton, Bristol', postcode: 'BS5 0QH', latitude: 51.4602, longitude: -2.5665 },
+    phone: '+44 7911 123413',
+    rating: 4.7,
+    logo: IMG.general,
+    prepTime: 28,
+    products: [
+      { name: 'Scotch Bonnet Peppers 500g',   category: 'Fresh Produce',       price: 4.99, unit: '500g', stock: 45, images: [IMG.peppers], rating: 4.8 },
+      { name: 'Coconut Oil (Raw) 500ml',      category: 'Cooking Oils',        price: 7.49, unit: '500ml', stock: 30, images: [IMG.oil],    rating: 4.7 },
+      { name: 'Black-Eyed Beans 1kg',         category: 'Legumes',             price: 3.29, unit: '1kg',  stock: 55, images: [IMG.grains],  rating: 4.5 },
+      { name: 'Plantain Flour 500g',          category: 'Grains & Flour',      price: 5.99, unit: '500g', stock: 35, images: [IMG.grains],  rating: 4.6 },
+      { name: 'Dried Tilapia 250g',           category: 'Dried Fish',          price: 8.99, unit: '250g', stock: 25, images: [IMG.fish],    rating: 4.4 }
+    ]
+  },
+  {
+    email: 'harehills.grocers@afrimercato.dev',
+    storeName: 'Harehills African Grocers',
+    storeId: 'HREHLS14',
+    category: 'African Foods',
+    description: 'Serving Leeds\' African community with authentic produce and pantry essentials since 2018.',
+    address: { street: '67 Harehills Lane', city: 'Leeds', postcode: 'LS8 4DN' },
+    location: { address: 'Harehills, Leeds', postcode: 'LS8 4DN', latitude: 53.8136, longitude: -1.5180 },
+    phone: '+44 7911 123414',
+    rating: 4.6,
+    logo: IMG.grains,
+    prepTime: 32,
+    products: [
+      { name: 'Ogbono Seeds 300g',            category: 'Soups & Seeds',       price: 7.99, unit: '300g', stock: 30, images: [IMG.spices],   rating: 4.7 },
+      { name: 'White Beans 1kg',              category: 'Legumes',             price: 2.99, unit: '1kg',  stock: 60, images: [IMG.grains],   rating: 4.5 },
+      { name: 'Groundnut Oil 1L',             category: 'Cooking Oils',        price: 5.99, unit: '1L',   stock: 40, images: [IMG.oil],      rating: 4.6 },
+      { name: 'Semovita 1kg',                 category: 'Grains & Flour',      price: 4.49, unit: '1kg',  stock: 45, images: [IMG.grains],   rating: 4.8 },
+      { name: 'Ede-Ede Spice Blend 150g',     category: 'Spices & Seasonings', price: 3.79, unit: '150g', stock: 35, images: [IMG.spices],   rating: 4.4 }
+    ]
+  },
+  {
+    email: 'granby.street.market@afrimercato.dev',
+    storeName: 'Granby Street African Market',
+    storeId: 'GRNBST15',
+    category: 'African & Caribbean Foods',
+    description: 'Liverpool\'s finest African and Caribbean food store in the vibrant Toxteth neighbourhood.',
+    address: { street: '45 Granby Street', city: 'Liverpool', postcode: 'L8 2TU' },
+    location: { address: 'Toxteth, Liverpool', postcode: 'L8 2TU', latitude: 53.3875, longitude: -2.9747 },
+    phone: '+44 7911 123415',
+    rating: 4.7,
+    logo: IMG.produce,
+    prepTime: 30,
+    products: [
+      { name: 'Fufu (Cocoyam) 1kg',           category: 'Grains & Flour',      price: 6.49, unit: '1kg',  stock: 40, images: [IMG.grains],   rating: 4.7 },
+      { name: 'Bitter Leaf (Dried) 100g',     category: 'Spices & Seasonings', price: 3.49, unit: '100g', stock: 35, images: [IMG.produce],  rating: 4.5 },
+      { name: 'Mackerel (Smoked) 2 pcs',      category: 'Dried Fish',          price: 5.49, unit: '2 pcs', stock: 30, images: [IMG.fish],    rating: 4.6 },
+      { name: 'Fresh Okra 300g',              category: 'Fresh Produce',       price: 2.79, unit: '300g', stock: 55, images: [IMG.produce],  rating: 4.8 },
+      { name: 'Dawadawa Powder 100g',         category: 'Spices & Seasonings', price: 4.29, unit: '100g', stock: 30, images: [IMG.spices],   rating: 4.6 }
+    ]
   }
 ];
 
