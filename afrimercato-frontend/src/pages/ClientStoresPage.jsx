@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { searchVendorsByLocation } from '../services/api'
+import { searchVendorsByLocation, getFeaturedVendors } from '../services/api'
 
 // Sample stores shown immediately while backend wakes up
 const SAMPLE_STORES = [
@@ -66,28 +66,36 @@ export default function ClientStoresPage() {
   }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStores = async () => {
-    // If location search — show spinner while fetching
-    if (location.trim()) {
-      setLoading(true)
-    }
     try {
-      const response = await searchVendorsByLocation(location, 50)
-
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
-        setStores(response.data.vendors)
-      } else if (location.trim()) {
-        // No results for this location — show empty (not sample)
-        setStores([])
+      if (!location.trim()) {
+        // No location — load ALL real vendors from DB
+        const response = await getFeaturedVendors(50)
+        if (response.success && response.data?.length > 0) {
+          // Normalise field names for the store card
+          const vendors = response.data.map(v => ({
+            ...v,
+            name: v.storeName,
+            image: v.logo,
+            location: v.location?.city || v.location || 'United Kingdom',
+          }))
+          setStores(vendors)
+        }
+        // else keep sample stores
+      } else {
+        // Location search — show spinner
+        setLoading(true)
+        const response = await searchVendorsByLocation(location, 50)
+        if (response.success && response.data?.vendors?.length > 0) {
+          setStores(response.data.vendors)
+        } else {
+          setStores([])
+        }
       }
-      // If no location + no results, keep showing sample stores
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.warn('[STORE_SEARCH_FAIL]', location, error.message)
+        console.warn('[STORE_FETCH_FAIL]', error.message)
       }
-      // On error: keep sample stores visible rather than showing empty state
-      if (location.trim()) {
-        setStores([])
-      }
+      // keep sample stores on error
     } finally {
       setLoading(false)
     }
