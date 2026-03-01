@@ -8,13 +8,29 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { searchVendorsByLocation } from '../services/api'
 
+// Sample stores shown immediately while backend wakes up
+const SAMPLE_STORES = [
+  { id: 1, name: 'Sahel Spice House', storeName: 'Sahel Spice House', location: 'London', hours: '08:00am - 08:00pm', rating: 4.9, deliveryTime: '30-45 min', distance: '0.3km', _isSample: true },
+  { id: 2, name: 'Baobab Organics', storeName: 'Baobab Organics', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '0.5km', _isSample: true },
+  { id: 3, name: "Mama Ade's Kitchen", storeName: "Mama Ade's Kitchen", location: 'London', hours: '06:00am - 08:00pm', rating: 4.9, deliveryTime: '20-35 min', distance: '0.7km', _isSample: true },
+  { id: 4, name: 'Calabash & Co', storeName: 'Calabash & Co', location: 'London', hours: '08:00am - 10:00pm', rating: 4.7, deliveryTime: '30-50 min', distance: '1.2km', _isSample: true },
+  { id: 5, name: 'Fresh Roots Produce', storeName: 'Fresh Roots Produce', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '1.5km', _isSample: true },
+  { id: 6, name: 'Cheetham Hill Market', storeName: 'Cheetham Hill Market', location: 'Manchester', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '30-45 min', distance: '0.8km', _isSample: true },
+  { id: 7, name: 'Soho Road African Foods', storeName: 'Soho Road African Foods', location: 'Birmingham', hours: '07:00am - 09:00pm', rating: 4.7, deliveryTime: '25-40 min', distance: '0.4km', _isSample: true },
+  { id: 8, name: 'Stapleton Road Market', storeName: 'Stapleton Road Market', location: 'Bristol', hours: '08:00am - 08:00pm', rating: 4.8, deliveryTime: '30-50 min', distance: '0.6km', _isSample: true },
+  { id: 9, name: 'Harehills African Grocers', storeName: 'Harehills African Grocers', location: 'Leeds', hours: '07:00am - 09:00pm', rating: 4.6, deliveryTime: '25-40 min', distance: '1.1km', _isSample: true },
+  { id: 10, name: 'Granby Street Market', storeName: 'Granby Street Market', location: 'Liverpool', hours: '08:00am - 08:00pm', rating: 4.7, deliveryTime: '30-45 min', distance: '0.9km', _isSample: true },
+  { id: 11, name: 'Sharrow African Market', storeName: 'Sharrow African Market', location: 'Sheffield', hours: '07:00am - 09:00pm', rating: 4.5, deliveryTime: '30-50 min', distance: '1.4km', _isSample: true },
+  { id: 12, name: 'Govanhill African Foods', storeName: 'Govanhill African Foods', location: 'Glasgow', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '35-50 min', distance: '2.1km', _isSample: true },
+]
+
 export default function ClientStoresPage() {
   const [searchParams] = useSearchParams()
   const location = searchParams.get('location') || ''
   const navigate = useNavigate()
 
-  const [stores, setStores] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [stores, setStores] = useState(SAMPLE_STORES)
+  const [loading, setLoading] = useState(false)
   const [searchLocation, setSearchLocation] = useState(location)
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
@@ -40,24 +56,38 @@ export default function ClientStoresPage() {
   }, [searchLocation])
 
   useEffect(() => {
+    // Show sample stores immediately so users never see a blank spinner
+    if (!location.trim()) {
+      setStores(SAMPLE_STORES)
+      setLoading(false)
+    }
+    // Silently load real data in background
     fetchStores()
-  }, [location])
+  }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStores = async () => {
-    try {
+    // If location search — show spinner while fetching
+    if (location.trim()) {
       setLoading(true)
+    }
+    try {
       const response = await searchVendorsByLocation(location, 50)
 
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
-      } else {
+      } else if (location.trim()) {
+        // No results for this location — show empty (not sample)
         setStores([])
       }
+      // If no location + no results, keep showing sample stores
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[STORE_SEARCH_FAIL]', location, error.message)
       }
-      setStores([])
+      // On error: keep sample stores visible rather than showing empty state
+      if (location.trim()) {
+        setStores([])
+      }
     } finally {
       setLoading(false)
     }
@@ -84,23 +114,21 @@ export default function ClientStoresPage() {
   }
 
   const browseAllStores = async () => {
+    setStores(SAMPLE_STORES)
+    setSearchLocation('')
     try {
       setLoading(true)
       const response = await searchVendorsByLocation('', 500)
 
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
-        setSearchLocation('')
-      } else {
-        setStores([])
-        setSearchLocation('')
       }
+      // else keep sample stores
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[BROWSE_ALL_FAIL]', error.message)
       }
-      setStores([])
-      setSearchLocation('')
+      // keep sample stores on error
     } finally {
       setLoading(false)
     }
@@ -443,6 +471,11 @@ export default function ClientStoresPage() {
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ y: -8 }}
                   onClick={() => {
+                    // Sample store — invite to onboard
+                    if (store._isSample) {
+                      navigate(`/partner?city=${encodeURIComponent(store.location || '')}`)
+                      return
+                    }
                     // Store vendor data in sessionStorage for the storefront to use
                     const vendorId = store._id || store.id
                     sessionStorage.setItem(`vendor_${vendorId}`, JSON.stringify({
@@ -478,9 +511,9 @@ export default function ClientStoresPage() {
                         {(store.name || store.storeName || store.businessName || 'S').charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    {/* Price Range Badge */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
-                      Shop from {store.priceRange || '£10-£500'}
+                    {/* Price Range / Coming Soon Badge */}
+                    <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${store._isSample ? 'bg-yellow-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-700'}`}>
+                      {store._isSample ? 'Coming Soon' : `Shop from ${store.priceRange || '£10-£500'}`}
                     </div>
                     {/* Rating & Open Badge */}
                     <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md flex items-center gap-1 ${
