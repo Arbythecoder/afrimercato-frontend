@@ -306,25 +306,26 @@ function Register() {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Role Selection - MVP only (Customer/Vendor) */}
-            <div>
-              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
-                I want to register as
-              </label>
-              <select
-                id="role"
-                name="role"
-                required
-                value={formData.role}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition bg-white"
-              >
-                <option value="customer">Customer — Shop for groceries</option>
-                <option value="vendor">Vendor — Sell products</option>
-                <option value="rider">Delivery Rider — Earn per delivery</option>
-                <option value="picker">Order Picker — Fulfil in-store orders</option>
-              </select>
-            </div>
+            {/* Role Selection — only visible for non-customer roles (vendor/rider/picker via URL param) */}
+            {formData.role !== 'customer' && (
+              <div>
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                  Registering as
+                </label>
+                <select
+                  id="role"
+                  name="role"
+                  required
+                  value={formData.role}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition bg-white"
+                >
+                  <option value="vendor">Vendor — Sell products</option>
+                  <option value="rider">Delivery Rider — Earn per delivery</option>
+                  <option value="picker">Order Picker — Fulfil in-store orders</option>
+                </select>
+              </div>
+            )}
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
@@ -358,22 +359,25 @@ function Register() {
               />
             </div>
 
-            <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                Phone Number (UK/Ireland)
-              </label>
-              <input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                value={formData.phone}
-                onChange={handleChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                placeholder="+44 7700 900000 or +353 85 123 4567"
-              />
-              <p className="text-xs text-gray-500 mt-1">UK: +44 7xxx xxxxxx | Ireland: +353 8x xxx xxxx</p>
-            </div>
+            {/* Phone — required for vendors/riders/pickers, hidden for customers */}
+            {formData.role !== 'customer' && (
+              <div>
+                <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
+                  Phone Number (UK/Ireland)
+                </label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  value={formData.phone}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
+                  placeholder="+44 7700 900000 or +353 85 123 4567"
+                />
+                <p className="text-xs text-gray-500 mt-1">UK: +44 7xxx xxxxxx | Ireland: +353 8x xxx xxxx</p>
+              </div>
+            )}
 
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
