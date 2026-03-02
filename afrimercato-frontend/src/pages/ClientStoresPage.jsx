@@ -31,6 +31,7 @@ export default function ClientStoresPage() {
 
   const [stores, setStores] = useState(SAMPLE_STORES)
   const [loading, setLoading] = useState(false)
+  const [loadingRealStores, setLoadingRealStores] = useState(true)
   const [searchLocation, setSearchLocation] = useState(location)
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
@@ -81,6 +82,7 @@ export default function ClientStoresPage() {
           setStores(vendors)
         }
         // else keep sample stores
+        setLoadingRealStores(false)
       } else {
         // Location search — show spinner
         setLoading(true)
@@ -98,6 +100,7 @@ export default function ClientStoresPage() {
       // keep sample stores on error
     } finally {
       setLoading(false)
+      setLoadingRealStores(false)
     }
   }
 
@@ -468,6 +471,17 @@ export default function ClientStoresPage() {
             </div>
           )}
 
+          {/* Loading banner — shown while real stores are being fetched from the backend */}
+          {loadingRealStores && (
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 text-sm text-amber-800">
+              <svg className="animate-spin h-4 w-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              <span>Finding live stores near you — real stores will appear in a few seconds…</span>
+            </div>
+          )}
+
           {/* Store Cards Grid */}
           {!loading && activeTab === 'stores' && filteredStores.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -477,13 +491,10 @@ export default function ClientStoresPage() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
+                  whileHover={store._isSample ? {} : { y: -8 }}
                   onClick={() => {
-                    // Sample store — invite to onboard
-                    if (store._isSample) {
-                      navigate(`/partner?city=${encodeURIComponent(store.location || '')}`)
-                      return
-                    }
+                    // Sample store — not yet live, do nothing
+                    if (store._isSample) return
                     // Store vendor data in sessionStorage for the storefront to use
                     const vendorId = store._id || store.id
                     sessionStorage.setItem(`vendor_${vendorId}`, JSON.stringify({
@@ -498,7 +509,7 @@ export default function ClientStoresPage() {
                     }))
                     navigate(`/store/${vendorId}`)
                   }}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all border border-gray-100"
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all border border-gray-100 ${store._isSample ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl cursor-pointer'}`}
                 >
                   {/* Store Image - 16:9 aspect ratio */}
                   <div className="relative w-full aspect-video bg-gray-200 overflow-hidden">
