@@ -5,6 +5,8 @@
 const Delivery = require('../models/Delivery');
 const Order = require('../models/Order');
 const User = require('../models/User');
+const { sendRiderAssignedEmail, sendOrderStatusEmail } = require('../utils/emailService');
+const Notification = require('../models/Notification');
 
 // Get available deliveries
 exports.getAvailableDeliveries = async (req, res) => {
@@ -138,6 +140,27 @@ exports.acceptDelivery = async (req, res) => {
       delivery.order.rider = req.user.id;
       delivery.order.timestamps.riderAccepted = new Date();
       await delivery.order.save();
+
+      // Non-blocking: notify customer that rider is assigned
+      try {
+        User.findById(delivery.order.customer).select('email firstName').lean()
+          .then(customer => {
+            if (customer?.email) {
+              sendRiderAssignedEmail(customer, delivery.order, req.user).catch(() => {});
+            }
+          }).catch(() => {});
+
+        Notification.create({
+          userId: delivery.order.customer,
+          type: 'rider_assigned',
+          title: 'Rider assigned!',
+          message: `A rider is on the way to collect your order #${delivery.order.orderNumber || ''}.`,
+          orderId: delivery.order._id,
+          meta: { orderNumber: delivery.order.orderNumber }
+        }).catch(() => {});
+      } catch (e) {
+        console.error('[email] acceptDelivery trigger:', e.message);
+      }
     }
 
     res.json({
@@ -316,6 +339,27 @@ exports.completeDelivery = async (req, res) => {
       delivery.order.status = 'delivered';
       delivery.order.timestamps.delivered = new Date();
       await delivery.order.save();
+
+      // Non-blocking: notify customer of delivery
+      try {
+        User.findById(delivery.order.customer).select('email firstName').lean()
+          .then(customer => {
+            if (customer?.email) {
+              sendOrderStatusEmail(customer, delivery.order, 'delivered').catch(() => {});
+            }
+          }).catch(() => {});
+
+        Notification.create({
+          userId: delivery.order.customer,
+          type: 'order_delivered',
+          title: 'Order delivered!',
+          message: `Your order #${delivery.order.orderNumber || ''} has been delivered. Enjoy!`,
+          orderId: delivery.order._id,
+          meta: { orderNumber: delivery.order.orderNumber }
+        }).catch(() => {});
+      } catch (e) {
+        console.error('[email] completeDelivery trigger:', e.message);
+      }
     }
 
     res.json({

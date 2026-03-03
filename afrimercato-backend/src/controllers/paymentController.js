@@ -382,23 +382,33 @@ exports.handleStripeWebhook = asyncHandler(async (req, res) => {
   // Handle event
   try {
     switch (event.type) {
-      case 'checkout.session.completed':
+      case 'checkout.session.completed': {
         const session = event.data.object;
         await handleCheckoutSessionCompleted(session);
         break;
+      }
 
-      case 'payment_intent.succeeded':
+      case 'checkout.session.expired': {
+        // Customer abandoned Stripe checkout — restore decremented stock
+        const expiredSession = event.data.object;
+        await handleCheckoutSessionExpired(expiredSession);
+        break;
+      }
+
+      case 'payment_intent.succeeded': {
         const paymentIntent = event.data.object;
         await handlePaymentIntentSucceeded(paymentIntent);
         break;
+      }
 
-      case 'payment_intent.payment_failed':
+      case 'payment_intent.payment_failed': {
         const failedIntent = event.data.object;
         await handlePaymentIntentFailed(failedIntent);
         break;
+      }
 
       default:
-        console.log(`Unhandled event type: ${event.type}`);
+        console.log(`Unhandled Stripe event type: ${event.type}`);
     }
 
     res.json({ received: true });
@@ -416,18 +426,23 @@ async function handleCheckoutSessionCompleted(session) {
   const orderId = session.metadata?.orderId;
 
   if (!orderId) {
-    console.error('No order ID in session metadata');
+    console.error('[webhook] checkout.session.completed — no orderId in metadata');
     return;
   }
 
   const order = await Order.findById(orderId);
 
   if (!order) {
-    console.error('Order not found:', orderId);
+    console.error('[webhook] checkout.session.completed — order not found:', orderId);
     return;
   }
 
-  // Update order payment status
+  // Idempotency: skip if already paid (Stripe may retry webhooks)
+  if (order.paymentStatus === 'paid') {
+    console.log(`[webhook] Order ${order.orderNumber} already paid — skipping duplicate event`);
+    return;
+  }
+
   order.paymentStatus = 'paid';
   order.payment = order.payment || {};
   order.payment.paidAt = new Date();
@@ -435,14 +450,55 @@ async function handleCheckoutSessionCompleted(session) {
   order.payment.paymentIntentId = session.payment_intent;
   order.payment.provider = 'stripe';
 
-  // Update order status to confirmed
   if (order.status === 'pending') {
     order.status = 'confirmed';
   }
 
   await order.save();
 
-  console.log(`✓ Payment confirmed for order ${order.orderNumber}`);
+  console.log(`[webhook] ✓ Payment confirmed for order ${order.orderNumber}`);
+}
+
+async function handleCheckoutSessionExpired(session) {
+  const orderId = session.metadata?.orderId;
+
+  if (!orderId) {
+    console.warn('[webhook] checkout.session.expired — no orderId in metadata');
+    return;
+  }
+
+  const order = await Order.findById(orderId).populate('items.product');
+
+  if (!order) {
+    console.warn('[webhook] checkout.session.expired — order not found:', orderId);
+    return;
+  }
+
+  // Only restore stock if order is still unpaid/pending
+  if (order.paymentStatus !== 'pending' || order.status !== 'pending') {
+    console.log(`[webhook] Order ${order.orderNumber} already processed — skipping stock restore`);
+    return;
+  }
+
+  // Restore stock for each item
+  for (const item of order.items) {
+    const productId = item.product?._id || item.product;
+    if (productId && item.quantity) {
+      await Product.findByIdAndUpdate(productId, { $inc: { stock: item.quantity } });
+    }
+  }
+
+  order.paymentStatus = 'failed';
+  order.status = 'cancelled';
+  order.cancellation = {
+    cancelledBy: 'system',
+    reason: 'Stripe checkout session expired without payment',
+    cancelledAt: new Date()
+  };
+
+  await order.save();
+
+  console.log(`[webhook] Stock restored + order cancelled for expired session: ${order.orderNumber}`);
 }
 
 async function handlePaymentIntentSucceeded(paymentIntent) {
@@ -475,25 +531,40 @@ async function handlePaymentIntentFailed(paymentIntent) {
   const orderId = paymentIntent.metadata?.orderId;
 
   if (!orderId) {
-    console.error('No order ID in payment intent metadata');
+    console.error('[webhook] payment_intent.payment_failed — no orderId in metadata');
     return;
   }
 
   const order = await Order.findById(orderId);
 
   if (!order) {
-    console.error('Order not found:', orderId);
+    console.error('[webhook] payment_intent.payment_failed — order not found:', orderId);
     return;
   }
 
+  // Idempotency: skip if already failed or paid
+  if (order.paymentStatus !== 'pending') {
+    console.log(`[webhook] Order ${order.orderNumber} already in status ${order.paymentStatus} — skipping`);
+    return;
+  }
+
+  // Restore stock
+  for (const item of order.items) {
+    const productId = item.product?._id || item.product;
+    if (productId && item.quantity) {
+      await Product.findByIdAndUpdate(productId, { $inc: { stock: item.quantity } });
+    }
+  }
+
   order.paymentStatus = 'failed';
+  order.status = 'cancelled';
   order.payment = order.payment || {};
   order.payment.failedAt = new Date();
   order.payment.failureReason = paymentIntent.last_payment_error?.message || 'Payment failed';
 
   await order.save();
 
-  console.log(`✗ Payment failed for order ${order.orderNumber}`);
+  console.log(`[webhook] ✗ Payment failed + stock restored for order ${order.orderNumber}`);
 }
 
 // =================================================================

@@ -1,33 +1,63 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { searchVendorsByLocation } from '../../services/api'
+import { searchVendorsByLocation, getFeaturedVendors } from '../../services/api'
+
+// Shown immediately while the backend loads (Fly.io cold-start can take 10-30s)
+const SAMPLE_STORES = [
+  { id: 's1', storeName: 'Sahel Spice House',   rating: 4.9, distance: 0.3, featured: true,  address: { city: 'London',     country: 'United Kingdom' } },
+  { id: 's2', storeName: 'Baobab Organics',      rating: 4.8, distance: 0.5, featured: true,  address: { city: 'London',     country: 'United Kingdom' } },
+  { id: 's3', storeName: "Mama Ade's Kitchen",   rating: 4.9, distance: 0.7, featured: true,  address: { city: 'London',     country: 'United Kingdom' } },
+  { id: 's4', storeName: 'Calabash & Co',        rating: 4.7, distance: 1.2, featured: false, address: { city: 'Manchester', country: 'United Kingdom' } },
+  { id: 's5', storeName: 'Fresh Roots Produce',  rating: 4.8, distance: 1.5, featured: false, address: { city: 'Birmingham', country: 'United Kingdom' } },
+  { id: 's6', storeName: 'Cheetham Hill Market', rating: 4.6, distance: 0.8, featured: false, address: { city: 'Manchester', country: 'United Kingdom' } },
+]
 
 function StoreMarketplace() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
-  const [stores, setStores] = useState([])
+  const [stores, setStores] = useState(SAMPLE_STORES)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filter, setFilter] = useState('nearby') // nearby | top | featured
   const [searchLocation, setSearchLocation] = useState(searchParams.get('location') || '')
 
+  // Fetch on mount and when filter tab changes (not on every keystroke)
   useEffect(() => {
     fetchStores()
-  }, [searchLocation, filter])
+  }, [filter]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStores = async () => {
     try {
       setLoading(true)
       setError(null)
 
-      // Call location search API
-      const response = await searchVendorsByLocation(searchLocation, 50)
+      let vendors = []
 
-      setStores(response.data?.vendors || response.vendors || [])
+      if (searchLocation.trim()) {
+        // User entered a location — search by it
+        const response = await searchVendorsByLocation(searchLocation, 50)
+        vendors = response.data?.vendors || response.vendors || []
+        // For a location search that returns nothing, show empty (user feedback)
+        setStores(vendors)
+      } else {
+        // No location — load all active vendors from the platform
+        const response = await getFeaturedVendors(50)
+        // Normalise field names so StoreCard renders correctly
+        vendors = (response.data || []).map(v => ({
+          ...v,
+          storeImage: v.logo || v.storeImage,
+          featured: (v.rating || 0) >= 4.5, // treat high-rated real stores as featured
+          address: v.address || { city: v.location?.city, country: 'United Kingdom' },
+        }))
+        // Keep sample stores if API returns empty (cold-start or no vendors yet)
+        if (vendors.length > 0) {
+          setStores(vendors)
+        }
+      }
     } catch (err) {
-      console.error('Error fetching stores:', err)
-      setError(err.message || 'Failed to load stores')
+      if (import.meta.env.DEV) console.error('Error fetching stores:', err)
+      // Keep whatever stores are currently shown (samples) on error
     } finally {
       setLoading(false)
     }
@@ -43,20 +73,15 @@ function StoreMarketplace() {
     }
   }
 
-  // Filter stores based on selected filter
+  // Filter + sort stores based on selected tab
   const filteredStores = stores.filter(store => {
-    if (filter === 'top') {
-      return store.rating >= 4.0
-    }
-    if (filter === 'featured') {
-      return store.featured === true
-    }
-    return true // nearby - show all
+    if (filter === 'top') return (store.rating || 0) >= 4.0
+    if (filter === 'featured') return store.featured === true || (store.rating || 0) >= 4.5
+    return true
   }).sort((a, b) => {
-    if (filter === 'top') {
-      return b.rating - a.rating // highest rated first
-    }
-    return a.distance - b.distance // nearest first
+    if (filter === 'top' || filter === 'featured') return (b.rating || 0) - (a.rating || 0)
+    if (a.distance != null && b.distance != null) return a.distance - b.distance
+    return 0 // no distance data — keep original order
   })
 
   return (

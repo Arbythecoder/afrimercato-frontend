@@ -13,7 +13,8 @@ const { getFileUrl } = require('../middleware/upload');
 const { processVendorVerification } = require('../services/autoApprovalService');
 const { sendStoreProfileCreatedEmail } = require('../emails/vendorEmails');
 const { generateAccessToken, generateRefreshToken, setAuthCookies, formatUserResponse } = require('../utils/authHelpers');
-const { sendVerificationEmail } = require('../utils/emailService');
+const { sendVerificationEmail, sendOrderStatusEmail } = require('../utils/emailService');
+const Notification = require('../models/Notification');
 
 // =================================================================
 // VENDOR PROFILE OPERATIONS
@@ -1410,14 +1411,13 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
     });
   }
 
-  // Validate status transition
+  // Validate status transition — values MUST match Order schema enum exactly
   const validTransitions = {
-    pending: ['confirmed', 'cancelled'],
-    confirmed: ['preparing', 'cancelled'],
-    preparing: ['ready'],
-    ready: ['out-for-delivery'],
-    'out-for-delivery': ['delivered'],
-    delivered: ['completed']
+    pending:            ['confirmed', 'cancelled'],
+    confirmed:          ['preparing', 'cancelled'],
+    preparing:          ['ready_for_delivery', 'cancelled'],
+    ready_for_delivery: ['out_for_delivery'],
+    out_for_delivery:   ['delivered'],
   };
 
   const allowedStatuses = validTransitions[order.status];
@@ -1425,7 +1425,7 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   if (!allowedStatuses || !allowedStatuses.includes(status)) {
     return res.status(400).json({
       success: false,
-      message: `Cannot change status from ${order.status} to ${status}`,
+      message: `Cannot change status from '${order.status}' to '${status}'. Allowed next: ${allowedStatuses?.join(', ') || 'none'}`,
       errorCode: 'INVALID_STATUS_TRANSITION'
     });
   }
@@ -1451,6 +1451,44 @@ exports.updateOrderStatus = asyncHandler(async (req, res) => {
   }
 
   await order.save();
+
+  // Non-blocking: status email + in-app notification to customer
+  const emailStatuses = ['confirmed', 'preparing', 'out_for_delivery', 'delivered', 'cancelled'];
+  if (emailStatuses.includes(status)) {
+    try {
+      User.findById(order.customer).select('email firstName').lean()
+        .then(customer => {
+          if (customer?.email) {
+            sendOrderStatusEmail(customer, order, status).catch(() => {});
+          }
+        }).catch(() => {});
+
+      const notifTypeMap = {
+        confirmed:          'order_confirmed',
+        preparing:          'order_processing',
+        out_for_delivery:   'order_out_for_delivery',
+        delivered:          'order_delivered',
+        cancelled:          'order_cancelled',
+      };
+      const notifTitleMap = {
+        confirmed:          'Order confirmed!',
+        preparing:          'Order being prepared',
+        out_for_delivery:   'On the way!',
+        delivered:          'Order delivered',
+        cancelled:          'Order cancelled',
+      };
+      Notification.create({
+        userId: order.customer,
+        type: notifTypeMap[status] || 'system',
+        title: notifTitleMap[status] || `Order ${status}`,
+        message: `Your order #${order.orderNumber} is now: ${status.replace(/_/g, ' ')}.`,
+        orderId: order._id,
+        meta: { orderNumber: order.orderNumber }
+      }).catch(() => {});
+    } catch (e) {
+      console.error('[email] updateOrderStatus trigger:', e.message);
+    }
+  }
 
   res.json({
     success: true,

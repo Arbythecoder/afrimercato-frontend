@@ -9,6 +9,8 @@ const Order = require('../models/Order');
 const Product = require('../models/Product');
 const Vendor = require('../models/Vendor');
 const { asyncHandler } = require('../middleware/errorHandler');
+const { sendOrderConfirmationEmail, sendNewOrderEmail } = require('../utils/emailService');
+const Notification = require('../models/Notification');
 
 // Initialize Stripe
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -302,6 +304,47 @@ exports.processCheckout = asyncHandler(async (req, res) => {
   // Clear cart
   customer.cart = [];
   await customer.save();
+
+  // Non-blocking: order confirmation email + in-app notification
+  if (createdOrders.length > 0) {
+    try {
+      sendOrderConfirmationEmail(customer, {
+        _id: createdOrders[0]._id,
+        orderNumber: createdOrders[0].orderNumber,
+        items: createdOrders.flatMap(o => o.items),
+        totalAmount: finalTotal,
+        deliveryAddressDetails: address
+      }).catch(() => {});
+
+      Notification.create({
+        userId: customer._id,
+        type: 'order_placed',
+        title: 'Order placed!',
+        message: `Your order #${createdOrders[0].orderNumber} has been received.`,
+        orderId: createdOrders[0]._id,
+        meta: { orderNumber: createdOrders[0].orderNumber }
+      }).catch(() => {});
+
+      for (const vId of Object.keys(ordersByVendor)) {
+        Vendor.findById(vId).populate('user', 'email').lean()
+          .then(vendorDoc => {
+            if (vendorDoc?.user?.email) {
+              sendNewOrderEmail(
+                { email: vendorDoc.user.email, storeName: vendorDoc.storeName },
+                {
+                  orderNumber: createdOrders[0].orderNumber,
+                  items: ordersByVendor[vId].items,
+                  totalAmount: ordersByVendor[vId].subtotal,
+                  deliveryAddress: `${address.street}, ${address.city}, ${address.postcode}`
+                }
+              ).catch(() => {});
+            }
+          }).catch(() => {});
+      }
+    } catch (e) {
+      console.error('[email] processCheckout trigger:', e.message);
+    }
+  }
 
   res.status(201).json({
     success: true,
@@ -759,6 +802,46 @@ exports.initializePayment = asyncHandler(async (req, res) => {
     },
     ...(repeatPurchaseData && { repeatPurchase: repeatPurchaseData })
   });
+
+  // Non-blocking: order received email + in-app notification
+  try {
+    sendOrderConfirmationEmail(customer, {
+      _id: order._id,
+      orderNumber: order.orderNumber,
+      items: orderItems,
+      totalAmount: total,
+      deliveryAddressDetails: deliveryAddress
+    }).catch(() => {});
+
+    Notification.create({
+      userId: customer._id,
+      type: 'order_placed',
+      title: 'Order placed!',
+      message: `Your order #${order.orderNumber} has been received.`,
+      orderId: order._id,
+      meta: { orderNumber: order.orderNumber }
+    }).catch(() => {});
+
+    const uniqueVendorIds = [...new Set(orderItems.map(i => i.vendor?.toString()).filter(Boolean))];
+    for (const vId of uniqueVendorIds) {
+      Vendor.findById(vId).populate('user', 'email').lean()
+        .then(vendorDoc => {
+          if (vendorDoc?.user?.email) {
+            sendNewOrderEmail(
+              { email: vendorDoc.user.email, storeName: vendorDoc.storeName },
+              {
+                orderNumber: order.orderNumber,
+                items: orderItems.filter(i => i.vendor?.toString() === vId),
+                totalAmount: subtotal,
+                deliveryAddress: order.deliveryAddress
+              }
+            ).catch(() => {});
+          }
+        }).catch(() => {});
+    }
+  } catch (e) {
+    console.error('[email] initializePayment trigger:', e.message);
+  }
 
   // If payment method is card, create Stripe Checkout Session
   if (payment?.method === 'card') {

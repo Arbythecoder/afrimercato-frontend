@@ -124,6 +124,15 @@ const userSchema = new mongoose.Schema({
   primaryRole: String,
   approvalStatus: String,
 
+  // VERIFICATION DOCUMENTS (vendors, riders, pickers)
+  documents: [{
+    type: { type: String, required: true },   // e.g. 'food_hygiene', 'photo_id', 'driving_licence'
+    label: { type: String, required: true },  // Display label
+    url: { type: String, required: true },    // Cloudinary URL
+    publicId: { type: String },               // Cloudinary public ID
+    uploadedAt: { type: Date, default: Date.now }
+  }],
+
   // TIMESTAMPS
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now }

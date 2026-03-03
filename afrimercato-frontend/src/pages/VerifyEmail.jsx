@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
 import { useAuth } from '../context/AuthContext'
+import { apiCall } from '../services/api'
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams()
@@ -11,6 +12,7 @@ export default function VerifyEmail() {
 
   const [status, setStatus] = useState('verifying') // verifying | success | error
   const [message, setMessage] = useState('')
+  const [resendStatus, setResendStatus] = useState('idle') // idle | sending | sent | error
 
   useEffect(() => {
     if (!token) {
@@ -70,6 +72,21 @@ export default function VerifyEmail() {
     }
   }
 
+  const handleResend = async () => {
+    if (!isAuthenticated) {
+      // Not logged in — send to login so they get a session first
+      navigate('/login?redirect=/verify-email')
+      return
+    }
+    setResendStatus('sending')
+    try {
+      await apiCall('/auth/resend-verification', { method: 'POST' })
+      setResendStatus('sent')
+    } catch {
+      setResendStatus('error')
+    }
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-2xl p-8">
@@ -108,15 +125,26 @@ export default function VerifyEmail() {
               <h2 className="text-xl font-bold text-gray-900 mb-2">Verification Failed</h2>
               <p className="text-gray-600 mb-6">{message}</p>
               <div className="space-y-3">
+                {/* Resend verification email — POST /api/auth/resend-verification */}
+                <button
+                  onClick={handleResend}
+                  disabled={resendStatus === 'sending' || resendStatus === 'sent'}
+                  className="block w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors disabled:opacity-60"
+                >
+                  {resendStatus === 'sending' ? 'Sending...'
+                    : resendStatus === 'sent' ? '✓ New link sent — check your inbox'
+                    : resendStatus === 'error' ? 'Failed to send — try again'
+                    : 'Resend Verification Email'}
+                </button>
                 <Link
                   to="/login"
-                  className="block w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors"
+                  className="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors text-center"
                 >
                   Go to Login
                 </Link>
                 <button
                   onClick={() => window.location.reload()}
-                  className="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                  className="block w-full bg-white border border-gray-300 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
                 >
                   Try Again
                 </button>
@@ -124,15 +152,6 @@ export default function VerifyEmail() {
             </>
           )}
         </div>
-
-        {/* Help Text */}
-        {status === 'error' && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Need help?</strong> If your verification link has expired, please log in and request a new verification email from your profile.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )

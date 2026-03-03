@@ -66,7 +66,22 @@ const orderSchema = new mongoose.Schema({
     cancelled: Date
   },
 
-  // Cancellation info
+  // Status history (populated by vendorController.updateOrderStatus)
+  statusHistory: [{
+    status: String,
+    timestamp: { type: Date, default: Date.now },
+    note: String,
+    updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  }],
+
+  // Cancellation info — nested object set by vendor/admin
+  cancellation: {
+    cancelledBy: String,  // 'vendor' | 'customer' | 'admin'
+    reason: String,
+    cancelledAt: Date
+  },
+
+  // Legacy flat cancellation fields (kept for backward compatibility)
   cancellationReason: String,
   cancelledBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 

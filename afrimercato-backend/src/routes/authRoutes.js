@@ -274,4 +274,14 @@ router.get('/google', authController.googleAuthStart);
 // ==============================================
 router.get('/google/callback', authController.googleAuthCallback);
 
+// ==============================================
+// GET /api/auth/facebook - Initiate Facebook OAuth
+// ==============================================
+router.get('/facebook', authController.facebookAuthStart);
+
+// ==============================================
+// GET /api/auth/facebook/callback - Facebook OAuth callback
+// ==============================================
+router.get('/facebook/callback', authController.facebookAuthCallback);
+
 module.exports = router;

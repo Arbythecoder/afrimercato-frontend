@@ -475,3 +475,47 @@ exports.googleAuthCallback = (req, res, next) => {
     }
   })(req, res, next);
 };
+
+// =================================================================
+// @route   GET /api/auth/facebook
+// @desc    Initiate Facebook OAuth
+// @access  Public
+// =================================================================
+exports.facebookAuthStart = (req, res, next) => {
+  if (!process.env.FACEBOOK_APP_ID) {
+    return res.status(501).json({ success: false, message: 'Facebook OAuth is not configured' });
+  }
+  const passport = require('passport');
+  passport.authenticate('facebook', { scope: ['email', 'public_profile'], session: false })(req, res, next);
+};
+
+// =================================================================
+// @route   GET /api/auth/facebook/callback
+// @desc    Facebook OAuth callback
+// @access  Public
+// =================================================================
+exports.facebookAuthCallback = (req, res, next) => {
+  const passport = require('passport');
+  const frontendUrl = (process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3000').replace(/\/+$/, '');
+
+  passport.authenticate('facebook', { session: false }, (err, user, info) => {
+    if (err) {
+      console.error(`[OAUTH_FAIL] ${new Date().toISOString()} | Facebook error: ${err.message || err}`);
+      return res.redirect(`${frontendUrl}/oauth/callback?error=facebook_auth_failed&details=server_error`);
+    }
+    if (!user) {
+      console.error(`[OAUTH_FAIL] ${new Date().toISOString()} | Facebook no user | Info: ${JSON.stringify(info)}`);
+      return res.redirect(`${frontendUrl}/oauth/callback?error=facebook_auth_failed&details=no_user`);
+    }
+
+    try {
+      const token = generateAccessToken({ id: user._id, roles: user.roles, email: user.email });
+      const refreshToken = generateRefreshToken();
+
+      res.redirect(`${frontendUrl}/oauth/callback?token=${encodeURIComponent(token)}&refreshToken=${encodeURIComponent(refreshToken)}&provider=facebook`);
+    } catch (tokenErr) {
+      console.error(`[OAUTH_TOKEN_FAIL] ${new Date().toISOString()} | Facebook user: ${user.email} | Error: ${tokenErr.message}`);
+      res.redirect(`${frontendUrl}/oauth/callback?error=server_error`);
+    }
+  })(req, res, next);
+};

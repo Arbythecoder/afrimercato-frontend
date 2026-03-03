@@ -117,6 +117,13 @@ const productSchema = new mongoose.Schema({
     default: {}
   },
 
+  // DIETARY / ALLERGEN INFO
+  dietaryInfo: {
+    type: [String],
+    enum: ['halal', 'vegan', 'vegetarian', 'gluten-free', 'dairy-free', 'nut-free', 'organic'],
+    default: []
+  },
+
   // TIMESTAMPS
   createdAt: {
     type: Date,
