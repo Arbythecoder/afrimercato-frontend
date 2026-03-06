@@ -235,8 +235,10 @@ app.use('/uploads', (req, res, next) => {
 // Swagger API Documentation
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'Afrimercato API Documentation'
+  customSiteTitle: 'Afrimercato API'
 }));
+// Raw spec for Postman/Insomnia import
+app.get('/api-docs/swagger.json', (req, res) => res.json(swaggerSpec));
 
 /**
  * @swagger
@@ -344,6 +346,11 @@ app.get('/api/status', (req, res) => {
 });
 
 // ======================= AUTHENTICATION ROUTES =======================
+// Apply brute-force rate limiter to login and register endpoints only
+app.use('/api/auth/login', authLimiter);
+app.use('/api/auth/register', authLimiter);
+app.use('/api/rider-auth/login', authLimiter);
+app.use('/api/picker-auth/login', authLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/otp', otpRoutes);
 app.use('/api/rider-auth', riderAuthRoutes);
