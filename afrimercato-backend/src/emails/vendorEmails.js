@@ -1,2 +1,0 @@
-// Stub service
-module.exports = {};
