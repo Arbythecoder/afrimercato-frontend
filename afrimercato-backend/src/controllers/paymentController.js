@@ -140,8 +140,8 @@ exports.createCheckoutSession = [ensureStripeConfigured, asyncHandler(async (req
         customerId: req.user.id,
         vendorId: order.vendor ? order.vendor.toString() : ''
       },
-      success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000'}/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
-      cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000'}/payment/cancel?order_id=${order._id}`
+      success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000'}/payment/verify?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
+      cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL || 'http://localhost:3000'}/checkout?cancelled=1&order_id=${order._id}`
     });
 
     // Update order with Stripe session ID

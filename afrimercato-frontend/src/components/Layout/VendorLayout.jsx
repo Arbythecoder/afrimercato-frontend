@@ -16,7 +16,7 @@ function VendorLayout({ children }) {
   const navigation = [
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Products', path: '/vendor/products', icon: '📦' },
-    { name: 'Orders', path: '/orders', icon: '🛒' },
+    { name: 'Orders', path: '/vendor/orders', icon: '🛒' },
     { name: 'Reports', path: '/reports', icon: '📈' },
     { name: 'Subscription', path: '/subscription', icon: '💳' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },

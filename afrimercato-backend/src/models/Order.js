@@ -11,6 +11,8 @@ const orderSchema = new mongoose.Schema({
   items: [{
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     vendor: { type: mongoose.Schema.Types.ObjectId, ref: 'Vendor', required: true },
+    name: { type: String },   // Snapshot of product name at time of order
+    unit: { type: String },   // e.g. 'kg', 'piece'
     quantity: Number,
     price: Number
   }],

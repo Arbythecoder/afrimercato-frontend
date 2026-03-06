@@ -88,14 +88,14 @@ router.get('/earnings', async (req, res) => {
     
     // Get all completed orders
     const completedOrders = await Order.find({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       status: 'delivered',
       paymentStatus: 'paid'
     }).select('pricing totalAmount createdAt');
     
     // Get pending orders (not yet delivered)
     const pendingOrders = await Order.find({
-      vendor: vendorId,
+      'items.vendor': vendorId,
       status: { $in: ['pending', 'confirmed', 'preparing', 'out_for_delivery'] },
       paymentStatus: 'paid'
     }).select('pricing totalAmount createdAt');

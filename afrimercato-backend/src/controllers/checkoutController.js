@@ -12,8 +12,17 @@ const { asyncHandler } = require('../middleware/errorHandler');
 const { sendOrderConfirmationEmail, sendNewOrderEmail } = require('../utils/emailService');
 const Notification = require('../models/Notification');
 
-// Initialize Stripe
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+// Initialize Stripe — guard against missing key to prevent server crash on startup
+let stripe = null;
+if (process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.length > 0) {
+  try {
+    stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  } catch (err) {
+    console.error('✗ Stripe init failed in checkoutController:', err.message);
+  }
+} else {
+  console.warn('⚠️  STRIPE_SECRET_KEY not set — card payments disabled in checkoutController');
+}
 
 // Helper to generate order number
 const generateOrderNumber = () => {
@@ -671,9 +680,9 @@ exports.initializePayment = asyncHandler(async (req, res) => {
   const { items, deliveryAddress, payment, pricing, repeatPurchaseFrequency } = req.body;
 
   // Validate Stripe configuration for card payments
-  if (payment?.method === 'card' && !process.env.STRIPE_SECRET_KEY) {
-    console.error('[PAYMENT_INIT_ERROR] STRIPE_SECRET_KEY not configured');
-    return res.status(500).json({
+  if (payment?.method === 'card' && !stripe) {
+    console.error('[PAYMENT_INIT_ERROR] Stripe not initialized — STRIPE_SECRET_KEY missing');
+    return res.status(503).json({
       success: false,
       message: 'Payment system not configured. Please contact support.',
       code: 'PAYMENT_NOT_CONFIGURED'
@@ -883,8 +892,8 @@ exports.initializePayment = asyncHandler(async (req, res) => {
           orderNumber: order.orderNumber,
           customerId: customer._id.toString()
         },
-        success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
-        cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/cancel?order_id=${order._id}`
+        success_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/payment/verify?session_id={CHECKOUT_SESSION_ID}&order_id=${order._id}`,
+        cancel_url: `${process.env.FRONTEND_URL || process.env.CLIENT_URL}/checkout?cancelled=1&order_id=${order._id}`
       });
 
       const timeoutPromise = new Promise((_, reject) =>

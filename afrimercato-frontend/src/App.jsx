@@ -130,7 +130,13 @@ function ProtectedRoute({ children, allowedRoles }) {
   
   if (allowedRoles && !allowedRoles.includes(role)) {
     // Redirect to appropriate dashboard based on actual role
-    const redirectPath = role === 'vendor' ? '/dashboard' : '/'
+    const roleDashboards = {
+      vendor: '/dashboard',
+      rider: '/rider/dashboard',
+      picker: '/picker/dashboard',
+      admin: '/admin/dashboard',
+    }
+    const redirectPath = roleDashboards[role] || '/'
     return <Navigate to={redirectPath} replace />
   }
   
@@ -209,18 +215,18 @@ function AppContent() {
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
 
-      {/* Rider Routes — layout adds bottom nav on main pages */}
-      <Route path="/rider/dashboard" element={isAuthenticated ? <RiderLayout><RiderDashboard /></RiderLayout> : <Navigate to="/login" />} />
-      <Route path="/rider/deliveries" element={isAuthenticated ? <RiderLayout><RiderDeliveries /></RiderLayout> : <Navigate to="/login" />} />
-      <Route path="/rider/delivery/:deliveryId" element={isAuthenticated ? <RiderDeliveryDetail /> : <Navigate to="/login" />} />
-      <Route path="/rider/earnings" element={isAuthenticated ? <RiderLayout><RiderEarnings /></RiderLayout> : <Navigate to="/login" />} />
-      <Route path="/rider/profile" element={isAuthenticated ? <RiderLayout><RiderProfile /></RiderLayout> : <Navigate to="/login" />} />
+      {/* Rider Routes — require rider role */}
+      <Route path="/rider/dashboard" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderDashboard /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/rider/deliveries" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderDeliveries /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/rider/delivery/:deliveryId" element={isAuthenticated && user?.role === 'rider' ? <RiderDeliveryDetail /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/rider/earnings" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderEarnings /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/rider/profile" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderProfile /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
-      {/* Picker Routes — layout adds bottom nav on main pages */}
-      <Route path="/picker/dashboard" element={isAuthenticated ? <PickerLayout><PickerDashboard /></PickerLayout> : <Navigate to="/login" />} />
-      <Route path="/picker/order/:orderId" element={isAuthenticated ? <PickerOrderFulfillment /> : <Navigate to="/login" />} />
-      <Route path="/picker/performance" element={isAuthenticated ? <PickerLayout><PickerPerformance /></PickerLayout> : <Navigate to="/login" />} />
-      <Route path="/picker/profile" element={isAuthenticated ? <PickerLayout><PickerProfile /></PickerLayout> : <Navigate to="/login" />} />
+      {/* Picker Routes — require picker role */}
+      <Route path="/picker/dashboard" element={isAuthenticated && user?.role === 'picker' ? <PickerLayout><PickerDashboard /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/order/:orderId" element={isAuthenticated && user?.role === 'picker' ? <PickerOrderFulfillment /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/performance" element={isAuthenticated && user?.role === 'picker' ? <PickerLayout><PickerPerformance /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/profile" element={isAuthenticated && user?.role === 'picker' ? <PickerLayout><PickerProfile /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
       <Route
         path="/login"
@@ -310,7 +316,7 @@ function AppContent() {
         }
       />
       <Route
-        path="/orders"
+        path="/vendor/orders"
         element={
           isAuthenticated ? (
             user?.role === 'vendor' ? (

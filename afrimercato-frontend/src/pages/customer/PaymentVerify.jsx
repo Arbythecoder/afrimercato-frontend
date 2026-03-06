@@ -1,11 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-
-const API_BASE_URL = (() => {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
-  const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-  return import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
-})()
+import { apiCall } from '../../services/api'
 
 function PaymentVerify() {
   const navigate = useNavigate()
@@ -20,7 +15,6 @@ function PaymentVerify() {
 
   const verifyPayment = async () => {
     const sessionId = searchParams.get('session_id')
-    const orderId = searchParams.get('order_id')
 
     if (!sessionId) {
       setStatus('failed')
@@ -29,25 +23,20 @@ function PaymentVerify() {
     }
 
     try {
-      const response = await fetch(`${API_BASE_URL}/api/payment/stripe/verify/${sessionId}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('afrimercato_token')}`
-        }
-      })
+      // FIX: use /payments (plural) + use apiCall for token refresh support
+      const data = await apiCall(`/payments/stripe/verify/${sessionId}`, { timeout: 15000 })
 
-      const data = await response.json()
-
-      if (data.success && data.data.status === 'success') {
+      // FIX: backend returns paymentStatus: 'paid', not status: 'success'
+      if (data.success && data.data?.paymentStatus === 'paid') {
         setStatus('success')
         setOrderData(data.data)
-        // Clear pending order ID
         localStorage.removeItem('pending_order_id')
       } else {
         setStatus('failed')
         setError(data.message || 'Payment verification failed')
       }
     } catch (err) {
-      console.error('Verification error:', err)
+      if (import.meta.env.DEV) console.error('Verification error:', err)
       setStatus('failed')
       setError('Failed to verify payment. Please contact support.')
     }
@@ -77,22 +66,22 @@ function PaymentVerify() {
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Payment Successful!</h2>
           <p className="text-gray-600 mb-6">Your order has been confirmed and is being processed.</p>
 
-          {orderData && (
+          {orderData?.order && (
             <div className="bg-gray-50 rounded-xl p-4 mb-6 text-left">
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Order Number:</span>
-                <span className="font-semibold">{orderData.orderNumber}</span>
+                <span className="font-semibold">{orderData.order.orderNumber}</span>
               </div>
               <div className="flex justify-between mb-2">
                 <span className="text-gray-600">Amount Paid:</span>
-                <span className="font-semibold text-green-600">£{orderData.amount?.toFixed(2)}</span>
+                <span className="font-semibold text-green-600">£{Number(orderData.order.total || 0).toFixed(2)}</span>
               </div>
             </div>
           )}
 
           <div className="space-y-3">
             <button
-              onClick={() => navigate(`/order/${orderData?.orderId}`)}
+              onClick={() => navigate(`/order-confirmation/${orderData?.order?.id || ''}`)}
               className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:shadow-lg transition"
             >
               View Order Details

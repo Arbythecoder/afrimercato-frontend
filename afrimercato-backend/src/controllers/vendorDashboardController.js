@@ -58,24 +58,24 @@ exports.getDashboard = asyncHandler(async (req, res) => {
     recentOrders,
     monthlyRevenue
   ] = await Promise.all([
-    Order.countDocuments({ vendor: vendorId }),
+    Order.countDocuments({ 'items.vendor': vendorId }),
     Product.countDocuments({ vendor: vendorId, isActive: true }),
     Order.aggregate([
-      { $match: { vendor: vendorId, status: { $ne: 'cancelled' } } },
+      { $match: { 'items.vendor': vendorId, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]),
-    Order.countDocuments({ vendor: vendorId, status: 'pending' }),
-    Order.countDocuments({ vendor: vendorId, status: 'completed' }),
-    Order.countDocuments({ vendor: vendorId, status: 'cancelled' }),
+    Order.countDocuments({ 'items.vendor': vendorId, status: 'pending' }),
+    Order.countDocuments({ 'items.vendor': vendorId, status: 'completed' }),
+    Order.countDocuments({ 'items.vendor': vendorId, status: 'cancelled' }),
     Order.aggregate([
-      { $match: { vendor: vendorId, status: { $ne: 'cancelled' } } },
+      { $match: { 'items.vendor': vendorId, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, avg: { $avg: '$totalAmount' } } }
     ]),
     Product.find({ vendor: vendorId, isActive: true })
       .sort({ reviews: -1, rating: -1 })
       .limit(5)
       .select('name price rating reviews stock'),
-    Order.find({ vendor: vendorId })
+    Order.find({ 'items.vendor': vendorId })
       .sort({ createdAt: -1 })
       .limit(10)
       .populate('customer', 'name email')
@@ -206,8 +206,7 @@ exports.getSalesReport = asyncHandler(async (req, res) => {
   const startDate = new Date(year || new Date().getFullYear(), (month || new Date().getMonth()), 1);
   const endDate = new Date(startDate.getFullYear(), startDate.getMonth() + 1, 0);
 
-  const orders = await Order.find({
-    vendor: vendorId,
+  const orders = await Order.find({ 'items.vendor': vendorId,
     createdAt: { $gte: startDate, $lte: endDate },
     status: { $ne: 'cancelled' }
   })
@@ -356,13 +355,13 @@ exports.getOrdersByStatus = asyncHandler(async (req, res) => {
   const skip = (page - 1) * limit;
 
   const [orders, total] = await Promise.all([
-    Order.find({ vendor: vendorId, status })
+    Order.find({ 'items.vendor': vendorId, status })
       .populate('customer', 'name email phone')
       .populate('items.product', 'name')
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit)),
-    Order.countDocuments({ vendor: vendorId, status })
+    Order.countDocuments({ 'items.vendor': vendorId, status })
   ]);
 
   res.status(200).json({
@@ -501,22 +500,22 @@ exports.getPerformanceMetrics = asyncHandler(async (req, res) => {
     averageRating,
     completionRate
   ] = await Promise.all([
-    Order.countDocuments({ vendor: vendorId, createdAt: { $gte: thirtyDaysAgo } }),
-    Order.countDocuments({ vendor: vendorId, createdAt: { $lt: thirtyDaysAgo } }),
+    Order.countDocuments({ 'items.vendor': vendorId, createdAt: { $gte: thirtyDaysAgo } }),
+    Order.countDocuments({ 'items.vendor': vendorId, createdAt: { $lt: thirtyDaysAgo } }),
     Order.aggregate([
-      { $match: { vendor: vendorId, createdAt: { $gte: thirtyDaysAgo }, status: { $ne: 'cancelled' } } },
+      { $match: { 'items.vendor': vendorId, createdAt: { $gte: thirtyDaysAgo }, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]),
     Order.aggregate([
-      { $match: { vendor: vendorId, createdAt: { $lt: thirtyDaysAgo }, status: { $ne: 'cancelled' } } },
+      { $match: { 'items.vendor': vendorId, createdAt: { $lt: thirtyDaysAgo }, status: { $ne: 'cancelled' } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]),
     Order.aggregate([
-      { $match: { vendor: vendorId } },
+      { $match: { 'items.vendor': vendorId } },
       { $group: { _id: null, avg: { $avg: '$items.0.rating' } } }
     ]),
     Order.aggregate([
-      { $match: { vendor: vendorId } },
+      { $match: { 'items.vendor': vendorId } },
       { $facet: {
         completed: [{ $match: { status: 'completed' } }, { $count: 'count' }],
         total: [{ $count: 'count' }]
@@ -621,7 +620,7 @@ async function getMonthlyRevenue(vendorId) {
     const data = await Order.aggregate([
       {
         $match: {
-          vendor: vendorId,
+          'items.vendor': vendorId,
           createdAt: { $gte: start, $lte: end },
           status: { $ne: 'cancelled' }
         }
@@ -651,11 +650,11 @@ async function getGrowthTrends(vendorId) {
 
   const [weekRevenue, monthRevenue] = await Promise.all([
     Order.aggregate([
-      { $match: { vendor: vendorId, createdAt: { $gte: weekAgo } } },
+      { $match: { 'items.vendor': vendorId, createdAt: { $gte: weekAgo } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]),
     Order.aggregate([
-      { $match: { vendor: vendorId, createdAt: { $gte: monthAgo } } },
+      { $match: { 'items.vendor': vendorId, createdAt: { $gte: monthAgo } } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ])
   ]);
@@ -668,8 +667,7 @@ async function getGrowthTrends(vendorId) {
 }
 
 async function getOrderMetrics(vendorId, start, end, period) {
-  const orders = await Order.find({
-    vendor: vendorId,
+  const orders = await Order.find({ 'items.vendor': vendorId,
     createdAt: { $gte: start, $lte: end }
   });
 
@@ -686,7 +684,7 @@ async function getRevenueMetrics(vendorId, start, end, period) {
   const data = await Order.aggregate([
     {
       $match: {
-        vendor: vendorId,
+        'items.vendor': vendorId,
         createdAt: { $gte: start, $lte: end },
         status: { $ne: 'cancelled' }
       }
@@ -713,8 +711,7 @@ async function getRevenueMetrics(vendorId, start, end, period) {
 }
 
 async function getCustomerMetrics(vendorId, start, end) {
-  const orders = await Order.find({
-    vendor: vendorId,
+  const orders = await Order.find({ 'items.vendor': vendorId,
     createdAt: { $gte: start, $lte: end }
   }).distinct('customer');
 

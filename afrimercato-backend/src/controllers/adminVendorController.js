@@ -68,9 +68,9 @@ exports.getVendorDetails = async (req, res) => {
     }
 
     // Get vendor statistics
-    const totalOrders = await Order.countDocuments({ vendor: vendorId });
+    const totalOrders = await Order.countDocuments({ 'items.vendor': vendorId });
     const totalRevenue = await Order.aggregate([
-      { $match: { vendor: vendor._id, status: 'delivered' } },
+      { $match: { 'items.vendor': vendor._id, status: 'delivered' } },
       { $group: { _id: null, total: { $sum: '$totalAmount' } } }
     ]);
 
@@ -622,7 +622,7 @@ exports.getVendorReports = async (req, res) => {
     }
 
     // Get order statistics
-    const orders = await Order.find({ vendor: vendorId });
+    const orders = await Order.find({ 'items.vendor': vendorId });
 
     const totalOrders = orders.length;
     const totalRevenue = orders

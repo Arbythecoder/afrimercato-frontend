@@ -774,7 +774,7 @@ exports.getDashboardChartData = asyncHandler(async (req, res) => {
   const orders = await Order.aggregate([
     {
       $match: {
-        vendor: vendorId,
+        'items.vendor': vendorId,
         status: { $ne: 'cancelled' },
         createdAt: { $gte: startDate, $lte: endDate }
       }
@@ -1328,7 +1328,7 @@ exports.getOrders = asyncHandler(async (req, res) => {
       item.vendor && item.vendor.toString() === req.vendor._id.toString()
     );
     const filteredCount = orderObj.items.length;
-    if (import.meta?.env?.DEV || process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === 'development') {
       console.log(`[VENDOR FILTER] Order ${order.orderNumber}: ${originalCount} items → ${filteredCount} items (Vendor: ${req.vendor._id})`);
     }
     // Recalculate total for vendor's items only
@@ -1636,7 +1636,7 @@ exports.getRevenueAnalytics = asyncHandler(async (req, res) => {
   const revenueData = await Order.aggregate([
     {
       $match: {
-        vendor: vendorId,
+        'items.vendor': vendorId,
         status: { $ne: 'cancelled' },
         createdAt: { $gte: dateRange }
       }
@@ -1670,8 +1670,9 @@ exports.getProductAnalytics = asyncHandler(async (req, res) => {
   const vendorId = req.vendor._id;
 
   const productStats = await Order.aggregate([
-    { $match: { vendor: vendorId, status: { $ne: 'cancelled' } } },
+    { $match: { 'items.vendor': vendorId, status: { $ne: 'cancelled' } } },
     { $unwind: '$items' },
+    { $match: { 'items.vendor': vendorId } },
     {
       $group: {
         _id: '$items.product',
@@ -1755,7 +1756,7 @@ exports.getSalesReport = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
 
   const matchStage = {
-    vendor: vendorId,
+    'items.vendor': vendorId,
     status: { $ne: 'cancelled' }
   };
 
@@ -1850,7 +1851,7 @@ exports.getOrdersReport = asyncHandler(async (req, res) => {
   const vendorId = req.vendor._id;
   const { startDate, endDate } = req.query;
 
-  const matchStage = { vendor: vendorId };
+  const matchStage = { 'items.vendor': vendorId };
 
   if (startDate && endDate) {
     matchStage.createdAt = {
@@ -1895,7 +1896,7 @@ exports.getRevenueReport = asyncHandler(async (req, res) => {
   const { startDate, endDate } = req.query;
 
   const matchStage = {
-    vendor: vendorId,
+    'items.vendor': vendorId,
     status: { $in: ['delivered', 'completed'] }
   };
 
