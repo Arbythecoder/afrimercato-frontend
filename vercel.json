@@ -1,5 +1,5 @@
 {
-  "buildCommand": "cd afrimercato-frontend && npm install && npm run build",
+  "buildCommand": "cd afrimercato-frontend && npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "afrimercato-frontend/dist",
   "installCommand": "echo 'skip root install'",
   "rewrites": [
