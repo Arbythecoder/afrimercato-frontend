@@ -7,8 +7,15 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors } from '../../services/api'
 
-// Fallback stores shown while API loads or if no data
-const FALLBACK_STORES = []
+// Fallback stores shown while API loads or if no real vendors exist in DB yet
+const FALLBACK_STORES = [
+  { id: 'f1', _isSample: true, storeName: 'Green Valley Farms', category: 'Fresh Produce', logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.8, location: { city: 'London' }, isActive: true },
+  { id: 'f2', _isSample: true, storeName: 'African Spice Market', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.9, location: { city: 'London' }, isActive: true },
+  { id: 'f3', _isSample: true, storeName: 'Lagos Kitchen Store', category: 'Nigerian Foods', logo: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600', rating: 4.9, location: { city: 'London' }, isActive: true },
+  { id: 'f4', _isSample: true, storeName: 'Tropical Fruits Hub', category: 'Exotic Fruits', logo: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600', rating: 4.8, location: { city: 'Manchester' }, isActive: true },
+  { id: 'f5', _isSample: true, storeName: 'Handsworth African Foods', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=600', rating: 4.7, location: { city: 'Birmingham' }, isActive: true },
+  { id: 'f6', _isSample: true, storeName: 'Bristol African Store', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=600', rating: 4.7, location: { city: 'Bristol' }, isActive: true },
+]
 
 export default function ClientLandingPage() {
   const navigate = useNavigate()
@@ -122,9 +129,13 @@ export default function ClientLandingPage() {
         const response = await getFeaturedVendors(9)
         if (response.success && response.data && response.data.length > 0) {
           setStores(response.data)
+        } else {
+          // No real vendors yet — show fallback sample stores
+          setStores(FALLBACK_STORES)
         }
       } catch {
-        // Keep fallback stores on error
+        // API unreachable — show fallback sample stores
+        setStores(FALLBACK_STORES)
       } finally {
         setStoresLoading(false)
       }
@@ -899,7 +910,8 @@ function StoreCard({ store, index, navigate }) {
   const isOpen = store.isOpen !== undefined ? store.isOpen : store.isActive !== false
 
   const handleClick = () => {
-    if (store.slug) navigate(`/store/${store.slug}`)
+    if (store._isSample) navigate('/stores')
+    else if (store.slug) navigate(`/store/${store.slug}`)
     else if (store._id) navigate(`/store/${store._id}`)
   }
 

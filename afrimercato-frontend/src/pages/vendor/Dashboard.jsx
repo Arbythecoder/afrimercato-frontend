@@ -839,7 +839,7 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
-            <Link to="/orders" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>
+            <Link to="/vendor/orders" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>
           </div>
           <div className="space-y-4">
             {(stats?.recentOrders || []).slice(0, 5).map((order) => (
@@ -884,7 +884,7 @@ function Dashboard() {
           </div>
         </Link>
 
-        <Link to="/orders" className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+        <Link to="/vendor/orders" className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity"></div>
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
           {pendingOrders > 0 && (
