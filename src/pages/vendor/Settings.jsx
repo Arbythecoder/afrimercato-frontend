@@ -482,6 +482,47 @@ function Settings() {
             </button>
           </div>
 
+          {/* My Store Link */}
+          {vendorProfile.slug && (
+            <div className="bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 rounded-xl p-5">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 text-lg">
+                  🔗
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-gray-900 mb-1">Your Store Link</h3>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Share this link with your customers so they can browse your store directly.
+                  </p>
+                  <div className="flex items-center gap-2 bg-white border border-green-300 rounded-lg px-4 py-2">
+                    <span className="text-sm text-green-700 font-mono flex-1 truncate">
+                      {`${window.location.origin}/store/${vendorProfile.slug}`}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard.writeText(`${window.location.origin}/store/${vendorProfile.slug}`)
+                          .then(() => success('Store link copied to clipboard!'))
+                          .catch(() => warning('Could not copy — please copy manually'))
+                      }}
+                      className="flex-shrink-0 px-3 py-1 text-xs font-semibold bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                    >
+                      Copy
+                    </button>
+                    <a
+                      href={`/store/${vendorProfile.slug}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-shrink-0 px-3 py-1 text-xs font-semibold bg-white border border-green-600 text-green-700 rounded-md hover:bg-green-50 transition-colors"
+                    >
+                      Preview
+                    </a>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Store Information</h2>
 
@@ -577,23 +618,43 @@ function Settings() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Street Address</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Street Address *</label>
                 <input
                   type="text"
                   value={vendorProfile.address?.street || ''}
-                  onChange={(e) => handleVendorChange('address.street', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    handleVendorChange('address.street', e.target.value)
+                    if (validationErrors.street) setValidationErrors(prev => ({ ...prev, street: undefined }))
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                    validationErrors.street ? 'border-red-500 bg-red-50' : vendorProfile.address?.street?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                  }`}
+                  placeholder="e.g., 12 Brixton Road"
                 />
+                {validationErrors.street
+                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.street}</p>
+                  : vendorProfile.address?.street?.trim() && <p className="text-green-600 text-sm mt-1">Looks good!</p>
+                }
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">City</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">City *</label>
                 <input
                   type="text"
                   value={vendorProfile.address?.city || ''}
-                  onChange={(e) => handleVendorChange('address.city', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    handleVendorChange('address.city', e.target.value)
+                    if (validationErrors.city) setValidationErrors(prev => ({ ...prev, city: undefined }))
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                    validationErrors.city ? 'border-red-500 bg-red-50' : vendorProfile.address?.city?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                  }`}
+                  placeholder="e.g., London"
                 />
+                {validationErrors.city
+                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.city}</p>
+                  : vendorProfile.address?.city?.trim() && <p className="text-green-600 text-sm mt-1">Looks good!</p>
+                }
               </div>
 
               <div>
@@ -611,14 +672,19 @@ function Settings() {
 
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
-                  {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode' : 'Postal/Zip Code'}
+                  {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode *' : 'Postal/Zip Code *'}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={vendorProfile.address?.postalCode || ''}
-                    onChange={(e) => handleVendorChange('address.postalCode', e.target.value.toUpperCase())}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                    onChange={(e) => {
+                      handleVendorChange('address.postalCode', e.target.value.toUpperCase())
+                      if (validationErrors.postalCode) setValidationErrors(prev => ({ ...prev, postalCode: undefined }))
+                    }}
+                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                      validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() && !validationErrors.postalCode ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
                     placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
                   />
                   {vendorProfile.address?.country === 'United Kingdom' && (
@@ -647,9 +713,14 @@ function Settings() {
                     </button>
                   )}
                 </div>
-                {vendorProfile.address?.country === 'United Kingdom' && (
-                  <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
-                )}
+                {validationErrors.postalCode
+                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.postalCode}</p>
+                  : vendorProfile.address?.postalCode?.trim()
+                    ? <p className="text-green-600 text-sm mt-1">Valid postcode!</p>
+                    : vendorProfile.address?.country === 'United Kingdom' && (
+                        <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
+                      )
+                }
               </div>
 
               <div>

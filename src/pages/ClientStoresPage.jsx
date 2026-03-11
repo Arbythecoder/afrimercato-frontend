@@ -6,15 +6,32 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { searchVendorsByLocation } from '../services/api'
+import { searchVendorsByLocation, getFeaturedVendors } from '../services/api'
+
+// Sample stores shown immediately while backend wakes up
+const SAMPLE_STORES = [
+  { id: 1, name: 'Sahel Spice House', storeName: 'Sahel Spice House', location: 'London', hours: '08:00am - 08:00pm', rating: 4.9, deliveryTime: '30-45 min', distance: '0.3km', image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 2, name: 'Baobab Organics', storeName: 'Baobab Organics', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '0.5km', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 3, name: "Mama Ade's Kitchen", storeName: "Mama Ade's Kitchen", location: 'London', hours: '06:00am - 08:00pm', rating: 4.9, deliveryTime: '20-35 min', distance: '0.7km', image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 4, name: 'Calabash & Co', storeName: 'Calabash & Co', location: 'London', hours: '08:00am - 10:00pm', rating: 4.7, deliveryTime: '30-50 min', distance: '1.2km', image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 5, name: 'Fresh Roots Produce', storeName: 'Fresh Roots Produce', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '1.5km', image: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 6, name: 'Cheetham Hill Market', storeName: 'Cheetham Hill Market', location: 'Manchester', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '30-45 min', distance: '0.8km', image: 'https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 7, name: 'Soho Road African Foods', storeName: 'Soho Road African Foods', location: 'Birmingham', hours: '07:00am - 09:00pm', rating: 4.7, deliveryTime: '25-40 min', distance: '0.4km', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 8, name: 'Stapleton Road Market', storeName: 'Stapleton Road Market', location: 'Bristol', hours: '08:00am - 08:00pm', rating: 4.8, deliveryTime: '30-50 min', distance: '0.6km', image: 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 9, name: 'Harehills African Grocers', storeName: 'Harehills African Grocers', location: 'Leeds', hours: '07:00am - 09:00pm', rating: 4.6, deliveryTime: '25-40 min', distance: '1.1km', image: 'https://images.unsplash.com/photo-1599909533681-74d488b9dddf?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 10, name: 'Granby Street Market', storeName: 'Granby Street Market', location: 'Liverpool', hours: '08:00am - 08:00pm', rating: 4.7, deliveryTime: '30-45 min', distance: '0.9km', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 11, name: 'Sharrow African Market', storeName: 'Sharrow African Market', location: 'Sheffield', hours: '07:00am - 09:00pm', rating: 4.5, deliveryTime: '30-50 min', distance: '1.4km', image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 12, name: 'Govanhill African Foods', storeName: 'Govanhill African Foods', location: 'Glasgow', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '35-50 min', distance: '2.1km', image: 'https://images.unsplash.com/photo-1513530534585-c7b1394c6d51?w=600&auto=format&fit=crop', _isSample: true },
+]
 
 export default function ClientStoresPage() {
   const [searchParams] = useSearchParams()
   const location = searchParams.get('location') || ''
   const navigate = useNavigate()
 
-  const [stores, setStores] = useState([])
-  const [loading, setLoading] = useState(true)
+  const [stores, setStores] = useState(SAMPLE_STORES)
+  const [loading, setLoading] = useState(false)
+  const [loadingRealStores, setLoadingRealStores] = useState(true)
   const [searchLocation, setSearchLocation] = useState(location)
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
@@ -40,28 +57,50 @@ export default function ClientStoresPage() {
   }, [searchLocation])
 
   useEffect(() => {
+    // Show sample stores immediately so users never see a blank spinner
+    if (!location.trim()) {
+      setStores(SAMPLE_STORES)
+      setLoading(false)
+    }
+    // Silently load real data in background
     fetchStores()
-  }, [location])
+  }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStores = async () => {
     try {
-      setLoading(true)
-      const response = await searchVendorsByLocation(location, 50)
-
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
-        setStores(response.data.vendors)
+      if (!location.trim()) {
+        // No location — load ALL real vendors from DB
+        const response = await getFeaturedVendors(50)
+        if (response.success && response.data?.length > 0) {
+          // Normalise field names for the store card
+          const vendors = response.data.map(v => ({
+            ...v,
+            name: v.storeName,
+            image: v.logo,
+            location: v.location?.city || v.location || 'United Kingdom',
+          }))
+          setStores(vendors)
+        }
+        // else keep sample stores
+        setLoadingRealStores(false)
       } else {
-        // No real stores found — show demo stores filtered by search location
-        setStores(getSampleStores(location))
+        // Location search — show spinner
+        setLoading(true)
+        const response = await searchVendorsByLocation(location, 50)
+        if (response.success && response.data?.vendors?.length > 0) {
+          setStores(response.data.vendors)
+        } else {
+          setStores([])
+        }
       }
     } catch (error) {
       if (import.meta.env.DEV) {
-        console.warn('[STORE_SEARCH_FAIL]', location, error.message)
+        console.warn('[STORE_FETCH_FAIL]', error.message)
       }
-      // API failed — show demo stores so customers always see content
-      setStores(getSampleStores(location))
+      // keep sample stores on error
     } finally {
       setLoading(false)
+      setLoadingRealStores(false)
     }
   }
 
@@ -73,218 +112,37 @@ export default function ClientStoresPage() {
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
       } else {
-        setStores(getSampleStores(location))
+        setStores([])
       }
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[EXPAND_SEARCH_FAIL]', error.message)
       }
-      setStores(getSampleStores(location))
+      setStores([])
     } finally {
       setLoading(false)
     }
   }
 
   const browseAllStores = async () => {
+    setStores(SAMPLE_STORES)
+    setSearchLocation('')
     try {
       setLoading(true)
       const response = await searchVendorsByLocation('', 500)
 
       if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
         setStores(response.data.vendors)
-        setSearchLocation('')
-      } else {
-        setStores(getSampleStores(''))
-        setSearchLocation('')
       }
+      // else keep sample stores
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[BROWSE_ALL_FAIL]', error.message)
       }
-      setStores(getSampleStores(''))
-      setSearchLocation('')
+      // keep sample stores on error
     } finally {
       setLoading(false)
     }
-  }
-
-  const getSampleStores = (searchLocation) => {
-    // Sample stores with unique string IDs for demo purposes
-    // These will be replaced by real vendor data from the API
-    const allStores = [
-      {
-        _id: "sample-mama-nkechi-african-mart",
-        name: "Mama Nkechi African Mart",
-        storeName: "Mama Nkechi African Mart",
-        image: "https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80",
-        hours: "07:00am - 10:00pm",
-        location: "London, Peckham",
-        distance: "0.3km",
-        deliveryTime: "25 mins",
-        priceRange: "£5-£200",
-        rating: 4.9,
-        isOpen: true,
-        deliveryFee: "Free over £50",
-        miles: "0.5 miles",
-        methods: ["Delivery", "Pickup", "In-Store"],
-        verified: true,
-        category: "African Groceries",
-        tags: ["African", "Halal", "Fresh Produce"],
-        description: "Authentic Nigerian, Ghanaian & Caribbean groceries. Fresh yams, plantain, palm oil & more."
-      },
-      {
-        _id: "sample-sahara-foods-spices",
-        name: "Sahara Foods & Spices",
-        storeName: "Sahara Foods & Spices",
-        image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
-        hours: "08:00am - 09:00pm",
-        location: "Manchester, Cheetham Hill",
-        distance: "1.2km",
-        deliveryTime: "30 mins",
-        priceRange: "£3-£150",
-        rating: 4.8,
-        isOpen: true,
-        deliveryFee: "£3.99",
-        miles: "1.8 miles",
-        methods: ["Delivery", "Pickup"],
-        verified: true,
-        category: "African & Middle Eastern",
-        tags: ["Spices", "Halal", "Organic"],
-        description: "Traditional African spices, seasonings, and fresh produce from trusted suppliers."
-      },
-      {
-        _id: "sample-afrotaste-groceries",
-        name: "AfroTaste Groceries",
-        storeName: "AfroTaste Groceries",
-        image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
-        hours: "06:00am - 11:00pm",
-        location: "Birmingham, Sparkbrook",
-        distance: "0.8km",
-        deliveryTime: "20 mins",
-        priceRange: "£2-£100",
-        rating: 4.7,
-        isOpen: true,
-        deliveryFee: "£2.99",
-        miles: "1.2 miles",
-        methods: ["Delivery", "Pickup", "In-Store"],
-        verified: true,
-        category: "Nigerian Specialties",
-        tags: ["Fresh Produce", "Frozen Foods", "Authentic"],
-        description: "Fresh Nigerian ingredients, frozen fish, stockfish, and authentic seasonings."
-      },
-      {
-        _id: "sample-accra-fresh-market",
-        name: "Accra Fresh Market",
-        storeName: "Accra Fresh Market",
-        image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=800&q=80",
-        hours: "09:00am - 08:00pm",
-        location: "Leeds, Harehills",
-        distance: "2.1km",
-        deliveryTime: "35 mins",
-        priceRange: "£5-£180",
-        rating: 4.6,
-        isOpen: true,
-        deliveryFee: "£4.50",
-        miles: "3.2 miles",
-        methods: ["Delivery", "Pickup"],
-        verified: true,
-        category: "Ghanaian Specialties",
-        tags: ["Fresh", "Authentic", "Traditional"],
-        description: "Ghanaian specialty foods, kenkey, banku flour, shito, and palm soup base."
-      },
-      {
-        _id: "sample-zobo-suya-corner",
-        name: "Zobo & Suya Corner",
-        storeName: "Zobo & Suya Corner",
-        image: "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=800&q=80",
-        hours: "10:00am - 09:00pm",
-        location: "Bristol, St Paul's",
-        distance: "1.5km",
-        deliveryTime: "40 mins",
-        priceRange: "£8-£120",
-        rating: 4.5,
-        isOpen: true,
-        deliveryFee: "£3.50",
-        miles: "2.3 miles",
-        methods: ["Delivery", "In-Store"],
-        verified: true,
-        category: "West African Delights",
-        tags: ["Nigerian", "Grilled", "Beverages"],
-        description: "Authentic Nigerian suya spices, zobo drinks, and West African delicacies."
-      },
-      {
-        _id: "sample-naija-pantry-uk",
-        name: "Naija Pantry UK",
-        storeName: "Naija Pantry UK",
-        image: "https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=800&q=80",
-        hours: "07:00am - 10:00pm",
-        location: "Leicester, Highfields",
-        distance: "0.6km",
-        deliveryTime: "25 mins",
-        priceRange: "£4-£200",
-        rating: 4.8,
-        isOpen: true,
-        deliveryFee: "Free over £40",
-        miles: "0.9 miles",
-        methods: ["Delivery", "Pickup", "In-Store"],
-        verified: true,
-        category: "Nigerian Essentials",
-        tags: ["Fresh Produce", "Halal", "Frozen Foods"],
-        description: "Your one-stop shop for Nigerian essentials. Fresh yams, stockfish, palm oil & more."
-      },
-      {
-        _id: "sample-afro-caribbean-delights",
-        name: "Afro Caribbean Delights",
-        storeName: "Afro Caribbean Delights",
-        image: "https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=800&q=80",
-        hours: "06:00am - 10:00pm",
-        location: "Liverpool, Toxteth",
-        distance: "1.0km",
-        deliveryTime: "30 mins",
-        priceRange: "£3-£150",
-        rating: 4.7,
-        isOpen: true,
-        deliveryFee: "£2.99",
-        miles: "1.5 miles",
-        methods: ["Delivery", "Pickup"],
-        verified: true,
-        category: "Caribbean & African",
-        tags: ["Caribbean", "African", "Jerk Seasoning"],
-        description: "Best of Caribbean & African cuisine. Jerk seasoning, ackee, callaloo, plantain & more."
-      },
-      {
-        _id: "sample-east-african-emporium",
-        name: "East African Emporium",
-        storeName: "East African Emporium",
-        image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=800&q=80",
-        hours: "08:00am - 09:00pm",
-        location: "Sheffield, Burngreave",
-        distance: "1.8km",
-        deliveryTime: "35 mins",
-        priceRange: "£5-£100",
-        rating: 4.4,
-        isOpen: true,
-        deliveryFee: "£3.99",
-        miles: "2.7 miles",
-        methods: ["Delivery", "In-Store"],
-        verified: true,
-        category: "East African Specialties",
-        tags: ["Ethiopian", "Kenyan", "Somali"],
-        description: "East African groceries. Injera, teff flour, berbere, ugali, and nyama choma spices."
-      }
-    ]
-
-    if (searchLocation) {
-      const q = searchLocation.toLowerCase()
-      const filtered = allStores.filter(store =>
-        store.location.toLowerCase().includes(q) ||
-        store.name.toLowerCase().includes(q) ||
-        (store.category || '').toLowerCase().includes(q) ||
-        (store.tags || []).some(t => t.toLowerCase().includes(q))
-      )
-      return filtered.length > 0 ? filtered : allStores
-    }
-    return allStores
   }
 
   // Apply filter/sort logic to stores
@@ -446,15 +304,17 @@ export default function ClientStoresPage() {
               </div>
 
               <div className="hidden lg:block">
-                <div className="relative bg-[#F5A623] rounded-2xl p-4 overflow-hidden shadow-2xl">
-                  <img
-                    src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"
-                    alt="Fresh produce"
-                    className="w-full h-64 object-cover rounded-xl"
-                  />
+                <div className="relative bg-gradient-to-br from-afri-green-dark to-afri-green rounded-2xl p-4 overflow-hidden shadow-2xl">
+                  <div className="w-full h-64 rounded-xl flex items-center justify-center">
+                    <div className="text-center text-white/90">
+                      <div className="text-7xl mb-3">🛒</div>
+                      <p className="font-bold text-lg">African Groceries</p>
+                      <p className="text-sm text-white/70">Delivered to your door</p>
+                    </div>
+                  </div>
                   <div className="absolute bottom-6 left-6 bg-white rounded-xl px-4 py-2 shadow-lg">
-                    <p className="text-xs text-gray-500">Avg. delivery</p>
-                    <p className="font-bold text-[#00897B]">25–40 mins</p>
+                    <p className="text-xs text-gray-500">Avg. Delivery Time</p>
+                    <p className="font-bold text-[#00897B]">ADT 25–40 mins</p>
                   </div>
                 </div>
               </div>
@@ -527,44 +387,46 @@ export default function ClientStoresPage() {
                   }`}
                 >
                   {tab}
-                  {(tab === 'pickers' || tab === 'riders') && (
-                    <span className="ml-1.5 text-xs opacity-75">(Soon)</span>
-                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Coming Soon for Pickers/Riders */}
+          {/* Sign up CTA for Pickers/Riders */}
           {(activeTab === 'pickers' || activeTab === 'riders') && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-16 px-4"
             >
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full mb-6">
-                <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-100 rounded-full mb-6">
+                {activeTab === 'pickers' ? (
+                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 13h12L19 8" />
+                  </svg>
+                ) : (
+                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {activeTab === 'pickers' ? 'Pickers Directory Coming Soon!' : 'Riders Directory Coming Soon!'}
+                {activeTab === 'pickers' ? 'Become a Picker' : 'Become a Rider'}
               </h3>
-              <p className="text-gray-600 max-w-md mx-auto mb-6">
-                {activeTab === 'pickers' 
-                  ? 'Our picker network is being built. Soon you\'ll be able to browse and connect with order pickers in your area.'
-                  : 'Our delivery partner network is expanding. Soon you\'ll be able to see rider availability and track deliveries in real-time.'}
+              <p className="text-gray-600 max-w-md mx-auto mb-8">
+                {activeTab === 'pickers'
+                  ? 'Join our picker network and earn money helping pack and prepare orders for customers in your area.'
+                  : 'Join our delivery network and earn money delivering African groceries to customers near you.'}
               </p>
-              <p className="text-sm text-gray-500 mb-8">Expected launch: Q2 2026</p>
-              <button
-                onClick={() => setActiveTab('stores')}
-                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-6 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
+              <Link
+                to={activeTab === 'pickers' ? '/register?role=picker' : '/register?role=rider'}
+                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-8 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
               >
-                Browse Stores Instead
+                {activeTab === 'pickers' ? 'Sign Up as a Picker' : 'Sign Up as a Rider'}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </button>
+              </Link>
             </motion.div>
           )}
 
@@ -611,6 +473,17 @@ export default function ClientStoresPage() {
             </div>
           )}
 
+          {/* Loading banner — shown while real stores are being fetched from the backend */}
+          {loadingRealStores && (
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 text-sm text-amber-800">
+              <svg className="animate-spin h-4 w-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              <span>Finding live stores near you — real stores will appear in a few seconds…</span>
+            </div>
+          )}
+
           {/* Store Cards Grid */}
           {!loading && activeTab === 'stores' && filteredStores.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -620,8 +493,10 @@ export default function ClientStoresPage() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
+                  whileHover={store._isSample ? {} : { y: -8 }}
                   onClick={() => {
+                    // Sample store — not yet live, do nothing
+                    if (store._isSample) return
                     // Store vendor data in sessionStorage for the storefront to use
                     const vendorId = store._id || store.id
                     sessionStorage.setItem(`vendor_${vendorId}`, JSON.stringify({
@@ -636,22 +511,30 @@ export default function ClientStoresPage() {
                     }))
                     navigate(`/store/${vendorId}`)
                   }}
-                  className="bg-white rounded-2xl shadow-lg hover:shadow-xl overflow-hidden cursor-pointer transition-all border border-gray-100"
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all border border-gray-100 ${store._isSample ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl cursor-pointer'}`}
                 >
                   {/* Store Image - 16:9 aspect ratio */}
                   <div className="relative w-full aspect-video bg-gray-200 overflow-hidden">
-                    <img
-                      src={store.image || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'}
-                      alt={store.name || store.storeName || 'African Grocery Store'}
-                      className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                      loading="lazy"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
-                      }}
-                    />
-                    {/* Price Range Badge */}
-                    <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
-                      Shop from {store.priceRange || '£10-£500'}
+                    {store.image || store.logo ? (
+                      <img
+                        src={store.image || store.logo}
+                        alt={store.name || store.storeName || 'African Grocery Store'}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        loading="lazy"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-afri-green to-afri-green-dark"
+                      style={{ display: (store.image || store.logo) ? 'none' : 'flex' }}
+                    >
+                      <span className="text-5xl font-bold text-white/80">
+                        {(store.name || store.storeName || store.businessName || 'S').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    {/* Price Range / Coming Soon Badge */}
+                    <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${store._isSample ? 'bg-yellow-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-700'}`}>
+                      {store._isSample ? 'Coming Soon' : `Shop from ${store.priceRange || '£10-£500'}`}
                     </div>
                     {/* Rating & Open Badge */}
                     <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md flex items-center gap-1 ${
@@ -691,7 +574,7 @@ export default function ClientStoresPage() {
                       <span>•</span>
                       <span>{store.deliveryFee || '£25'} Deliveries</span>
                       <span>•</span>
-                      <span>{store.deliveryTime || '30 mins'}</span>
+                      <span>ADT {store.deliveryTime || '30 mins'}</span>
                     </div>
 
                     {/* Rating Stars */}

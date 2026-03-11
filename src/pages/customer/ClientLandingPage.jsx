@@ -7,56 +7,14 @@ import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors } from '../../services/api'
 
-// Fallback stores shown while API loads or if no data
+// Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
-  {
-    id: 1,
-    storeName: "Mama Nkechi African Mart",
-    image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?w=800&q=80",
-    hours: "06:00am - 09:00pm",
-    location: "Peckham, London",
-    distance: "0.1km",
-    deliveryTime: "25 mins",
-    priceRange: "£10-£500",
-    rating: 4.8,
-    isOpen: true,
-    deliveryFee: "Free over £50",
-    category: "Nigerian & Ghanaian",
-    methods: ["Shopping", "Pickup", "Delivery"],
-    slug: null
-  },
-  {
-    id: 2,
-    storeName: "Sahara Foods & Spices",
-    image: "https://images.unsplash.com/photo-1588964895597-cfccd6e2dbf9?w=800&q=80",
-    hours: "06:00am - 08:00pm",
-    location: "Moss Side, Manchester",
-    distance: "1.2km",
-    deliveryTime: "30 mins",
-    priceRange: "£10-£500",
-    rating: 4.9,
-    isOpen: true,
-    deliveryFee: "£3.99",
-    category: "African & Middle Eastern",
-    methods: ["In-Shopping", "Delivery"],
-    slug: null
-  },
-  {
-    id: 3,
-    storeName: "AfroTaste Groceries",
-    image: "https://images.unsplash.com/photo-1583258292688-d0213dc5a3a8?w=800&q=80",
-    hours: "06:00am - 10:00pm",
-    location: "Sparkbrook, Birmingham",
-    distance: "0.8km",
-    deliveryTime: "20 mins",
-    priceRange: "£5-£200",
-    rating: 4.7,
-    isOpen: true,
-    deliveryFee: "Free over £40",
-    category: "West African Specialties",
-    methods: ["Shopping", "Delivery"],
-    slug: null
-  }
+  { id: 'f1', _isSample: true, storeName: 'Green Valley Farms', category: 'Fresh Produce', logo: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.8, location: { city: 'London' }, isActive: true },
+  { id: 'f2', _isSample: true, storeName: 'African Spice Market', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.9, location: { city: 'London' }, isActive: true },
+  { id: 'f3', _isSample: true, storeName: 'Lagos Kitchen Store', category: 'Nigerian Foods', logo: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600', rating: 4.9, location: { city: 'London' }, isActive: true },
+  { id: 'f4', _isSample: true, storeName: 'Tropical Fruits Hub', category: 'Exotic Fruits', logo: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600', rating: 4.8, location: { city: 'Manchester' }, isActive: true },
+  { id: 'f5', _isSample: true, storeName: 'Handsworth African Foods', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=600', rating: 4.7, location: { city: 'Birmingham' }, isActive: true },
+  { id: 'f6', _isSample: true, storeName: 'Bristol African Store', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=600', rating: 4.7, location: { city: 'Bristol' }, isActive: true },
 ]
 
 export default function ClientLandingPage() {
@@ -65,6 +23,7 @@ export default function ClientLandingPage() {
   const [priceTag, setPriceTag] = useState('all')
   const [shoppingMethod, setShoppingMethod] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showJoinDropdown, setShowJoinDropdown] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
 
@@ -83,12 +42,24 @@ export default function ClientLandingPage() {
 
   // Detect scroll for nav styling
   useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20)
+    const handleScroll = () => setIsScrolled(window.scrollY > 10)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
-  // Live location autocomplete via OpenStreetMap Nominatim
+  // Static UK fallback locations for when LocationIQ is unavailable
+  const UK_CITIES = [
+    'London', 'Manchester', 'Birmingham', 'Leeds', 'Sheffield',
+    'Bristol', 'Liverpool', 'Leicester', 'Edinburgh', 'Glasgow',
+    'Coventry', 'Bradford', 'Nottingham', 'Southampton', 'Cardiff',
+    'Peckham, London', 'Brixton, London', 'Tottenham, London',
+    'East Ham, London', 'Hackney, London', 'Lewisham, London',
+    'Croydon, London', 'Southwark, London', 'Newham, London',
+    'Moss Side, Manchester', 'Handsworth, Birmingham', 'Chapeltown, Leeds',
+    'Sparkbrook, Birmingham', 'Toxteth, Liverpool',
+  ]
+
+  // Live location autocomplete — LocationIQ with static UK fallback
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
 
@@ -98,11 +69,24 @@ export default function ClientLandingPage() {
       return
     }
 
+    // Static fallback filter (instant)
+    const staticMatches = UK_CITIES.filter(c =>
+      c.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 6)
+
+    const locationIQKey = import.meta.env.VITE_LOCATIONIQ_TOKEN
+
+    // If no API key, use static list only
+    if (!locationIQKey) {
+      setLocationSuggestions(staticMatches)
+      return
+    }
+
     debounceRef.current = setTimeout(async () => {
       setLocationLoading(true)
       try {
         const params = new URLSearchParams({
-          key: import.meta.env.VITE_LOCATIONIQ_TOKEN,
+          key: locationIQKey,
           q: query,
           limit: '6',
           countrycodes: 'gb,ie',
@@ -112,8 +96,8 @@ export default function ClientLandingPage() {
         })
         const res = await fetch(`https://api.locationiq.com/v1/autocomplete?${params}`)
         const data = await res.json()
-        if (!Array.isArray(data)) {
-          setLocationSuggestions([])
+        if (!Array.isArray(data) || data.length === 0) {
+          setLocationSuggestions(staticMatches)
           return
         }
         const suggestions = data
@@ -125,9 +109,11 @@ export default function ClientLandingPage() {
             return item.display_name?.split(',').slice(0, 2).join(',').trim() || ''
           })
           .filter(Boolean)
-        setLocationSuggestions([...new Set(suggestions)])
+        // If API returned data but mapping produced nothing, use static fallback
+        setLocationSuggestions(suggestions.length > 0 ? [...new Set(suggestions)] : staticMatches)
       } catch {
-        setLocationSuggestions([])
+        // API failed — fall back to static list
+        setLocationSuggestions(staticMatches)
       } finally {
         setLocationLoading(false)
       }
@@ -144,9 +130,13 @@ export default function ClientLandingPage() {
         const response = await getFeaturedVendors(9)
         if (response.success && response.data && response.data.length > 0) {
           setStores(response.data)
+        } else {
+          // No real vendors yet — show fallback sample stores
+          setStores(FALLBACK_STORES)
         }
       } catch {
-        // Keep fallback stores on error
+        // API unreachable — show fallback sample stores
+        setStores(FALLBACK_STORES)
       } finally {
         setStoresLoading(false)
       }
@@ -185,7 +175,7 @@ export default function ClientLandingPage() {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-transparent'
+          isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-white/80 backdrop-blur-sm'
         }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -211,16 +201,54 @@ export default function ClientLandingPage() {
               <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
                 Log in
               </Link>
-              <Link
-                to="/register"
-                className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
-              >
-                <span className="hidden sm:inline">Sign Up</span>
-                <span className="sm:hidden">Join</span>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </Link>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowJoinDropdown(v => !v)}
+                  onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
+                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
+                >
+                  <span className="hidden sm:inline">Join</span>
+                  <span className="sm:hidden">Join</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showJoinDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    <Link
+                      to="/register?role=customer"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors"
+                    >
+                      <span className="text-lg">🛒</span>
+                      <div>
+                        <div className="font-semibold text-sm">Customer</div>
+                        <div className="text-xs text-gray-400">Shop & order</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/register?role=vendor"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                    >
+                      <span className="text-lg">🏪</span>
+                      <div>
+                        <div className="font-semibold text-sm">Vendor</div>
+                        <div className="text-xs text-gray-400">Sell your products</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/register?role=rider"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                    >
+                      <span className="text-lg">🚴</span>
+                      <div>
+                        <div className="font-semibold text-sm">Rider</div>
+                        <div className="text-xs text-gray-400">Deliver & earn</div>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile Menu */}
               <button
@@ -263,7 +291,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           HERO SECTION
           ============================================ */}
-      <section className="relative pt-20 sm:pt-24 pb-12 overflow-x-clip">
+      <section className="relative pt-28 sm:pt-32 pb-12 overflow-x-clip">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
 
@@ -605,7 +633,7 @@ export default function ClientLandingPage() {
             <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3"
             >
               African Online Store In the United Kingdom
@@ -613,7 +641,7 @@ export default function ClientLandingPage() {
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
+              viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.1 }}
               className="text-gray-600 max-w-2xl mx-auto"
             >
@@ -670,7 +698,7 @@ export default function ClientLandingPage() {
                   </button>
                 ))}
                 <Link
-                  to="/register?role=vendor"
+                  to="/partner"
                   className="flex items-center gap-2 px-4 py-2 border border-[#00897B] text-[#00897B] rounded-full font-medium text-sm hover:bg-[#00897B] hover:text-white transition-all"
                 >
                   + Onboard your store
@@ -729,7 +757,7 @@ export default function ClientLandingPage() {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6"
           >
             Why Afrimercato Exists
@@ -737,7 +765,7 @@ export default function ClientLandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.1 }}
             className="text-gray-600 text-lg leading-relaxed space-y-4"
           >
@@ -755,7 +783,7 @@ export default function ClientLandingPage() {
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.3 }}
             className="mt-8"
           >
@@ -777,7 +805,7 @@ export default function ClientLandingPage() {
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-12"
           >
             Who It's For
@@ -792,8 +820,8 @@ export default function ClientLandingPage() {
                 key={card.title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
+                viewport={{ once: true, amount: 0.2 }}
+                transition={{ delay: 0.15 + index * 0.15 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
               >
                 <div className={`bg-gradient-to-r ${card.color} p-6`}>
@@ -815,13 +843,13 @@ export default function ClientLandingPage() {
       <section className="py-16 sm:py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }}>
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }}>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
               <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
                 To be the digital home where African and local businesses thrive — connecting stores, customers, and communities worldwide.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ delay: 0.15 }}>
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ delay: 0.15 }}>
               <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
               <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
                 Afrimercato empowers local and international merchants to sell, fulfil, and grow through a fair, flexible, and trusted marketplace.
@@ -831,7 +859,7 @@ export default function ClientLandingPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
+            viewport={{ once: true, amount: 0.2 }}
             transition={{ delay: 0.3 }}
             className="mt-10 pt-8 border-t border-white/20 text-center"
           >
@@ -900,6 +928,34 @@ export default function ClientLandingPage() {
         </div>
       </footer>
 
+      {/* Sticky bottom CTA bar — fixed while scrolling */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {['👩🏾','👨🏿','👩🏽'].map((e,i) => (
+                <div key={i} className="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-sm">{e}</div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-600 font-medium hidden sm:block">
+              Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors across the UK & Ireland
+            </p>
+            <p className="text-sm text-gray-600 font-medium sm:hidden">
+              <span className="font-bold text-gray-900">4,320+</span> Vendors
+            </p>
+          </div>
+          <Link
+            to="/register?role=vendor"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
+          >
+            Partner With Us
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
+      </div>
+
       <style>{`
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         .animate-spin-slow { animation: spin-slow 10s linear infinite; }
@@ -921,7 +977,8 @@ function StoreCard({ store, index, navigate }) {
   const isOpen = store.isOpen !== undefined ? store.isOpen : store.isActive !== false
 
   const handleClick = () => {
-    if (store.slug) navigate(`/store/${store.slug}`)
+    if (store._isSample) navigate('/stores')
+    else if (store.slug) navigate(`/store/${store.slug}`)
     else if (store._id) navigate(`/store/${store._id}`)
   }
 
@@ -929,8 +986,8 @@ function StoreCard({ store, index, navigate }) {
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      transition={{ delay: index * 0.1 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ delay: 0.1 + index * 0.12 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       onClick={handleClick}
       className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"

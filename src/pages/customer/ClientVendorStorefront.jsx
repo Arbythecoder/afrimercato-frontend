@@ -6,7 +6,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getVendorById, getVendorProductsByVendorId, getVendorBySlug, cartAPI } from '../../services/api'
+import { getVendorProductsByVendorId, cartAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { getProductImage } from '../../utils/defaultImages'
 import { checkVendorLock, checkMinimumOrder } from '../../utils/cartVendorLock'
@@ -352,7 +352,7 @@ export default function ClientVendorStorefront() {
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                 </svg>
-                Deliveries in {vendor?.deliveryTime || '20 mins'}
+                ADT {vendor?.deliveryTime || '20 mins'}
               </span>
               <span className="flex items-center gap-1">
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -365,16 +365,24 @@ export default function ClientVendorStorefront() {
         </div>
       </header>
 
-      {/* Hero Section - Exact client design */}
-      <section className="bg-gradient-to-r from-[#E8F5E9] to-[#FFF8E1] py-12 relative overflow-hidden">
+      {/* Hero Section */}
+      <section className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] py-14 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             {/* Left Side */}
             <div>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-sm font-semibold text-afri-green-light uppercase tracking-widest mb-2"
+              >
+                Welcome to
+              </motion.p>
               <motion.h1
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="text-4xl sm:text-5xl font-bold text-gray-900 mb-2"
+                transition={{ delay: 0.05 }}
+                className="text-4xl sm:text-5xl font-black text-white mb-2 leading-tight"
               >
                 {vendor?.storeName || vendor?.businessName || 'African Store'}
               </motion.h1>
@@ -382,7 +390,7 @@ export default function ClientVendorStorefront() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-2xl text-[#00897B] font-semibold mb-4"
+                className="text-2xl text-afri-yellow font-semibold mb-3"
               >
                 Got You.
               </motion.p>
@@ -390,9 +398,9 @@ export default function ClientVendorStorefront() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
-                className="text-lg text-gray-600 mb-6"
+                className="text-base text-gray-300 mb-5"
               >
-                Save up to 60% off on your first order
+                Save up to 60% off on your first order · Authentic African groceries delivered
               </motion.p>
 
               {/* Minimum Order Display */}
@@ -401,43 +409,68 @@ export default function ClientVendorStorefront() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.3 }}
-                  className="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 px-4 py-2 rounded-lg mb-4"
+                  className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-2 rounded-lg mb-5"
                 >
-                  <span className="text-blue-600 font-semibold text-sm">
+                  <span className="text-white font-semibold text-sm">
                     📦 Minimum order: £{vendor.deliverySettings.minimumOrderValue.toFixed(2)}
                   </span>
                 </motion.div>
               )}
 
-              <div className="flex flex-wrap gap-3">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.35 }}
+                className="flex flex-wrap gap-3"
+              >
                 <button
                   onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="bg-[#F5A623] hover:bg-[#e09520] text-white px-8 py-3 rounded-lg font-bold transition-all shadow-md"
+                  className="bg-afri-green hover:bg-afri-green-dark text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-afri-green/30"
                 >
-                  Shop Now
+                  Shop Now →
                 </button>
                 <Link
                   to="/stores"
-                  className="bg-white hover:bg-gray-50 text-[#00897B] border border-[#00897B] px-6 py-3 rounded-lg font-semibold transition-all"
+                  className="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-3 rounded-xl font-semibold transition-all"
                 >
                   Browse More Stores
                 </Link>
-              </div>
+              </motion.div>
+
+              {/* ADT badge */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.5 }}
+                className="flex items-center gap-4 mt-6"
+              >
+                <div className="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 rounded-full text-sm text-white/80">
+                  <span className="w-2 h-2 rounded-full bg-afri-green animate-pulse"></span>
+                  ADT {vendor?.deliveryTime || '20 mins'}
+                </div>
+                {vendor?.rating && (
+                  <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 px-3 py-1.5 rounded-full text-sm text-white/80">
+                    ⭐ {vendor.rating} rating
+                  </div>
+                )}
+              </motion.div>
             </div>
 
-            {/* Right Side - Image */}
-            <div className="hidden lg:block">
+            {/* Right Side - Image with overlay */}
+            <div className="hidden lg:block relative">
               <img
                 src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"
                 alt="Fresh produce"
-                className="w-full h-64 object-cover rounded-2xl shadow-xl"
+                className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80"
               />
+              <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent to-[#1A1A1A]/40" />
             </div>
           </div>
         </div>
 
-        {/* Background decoration */}
-        <div className="absolute top-0 right-0 w-64 h-64 bg-[#E8F5E9] rounded-full blur-3xl opacity-50"></div>
+        {/* Background decorations */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-afri-green/10 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-64 h-64 bg-afri-yellow-dark/10 rounded-full blur-3xl pointer-events-none"></div>
       </section>
 
       {/* Category Navigation */}
@@ -483,25 +516,38 @@ export default function ClientVendorStorefront() {
 
         {/* Featured Categories */}
         <div className="mb-12">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xl font-bold text-gray-900">Shop by Category</h2>
+            {selectedCategory !== 'All' && (
+              <button onClick={() => setSelectedCategory('All')} className="text-sm text-afri-green font-semibold hover:underline">
+                View all →
+              </button>
+            )}
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {CATEGORIES.map((cat, index) => (
-              <motion.div
-                key={cat.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                className="bg-white rounded-2xl p-4 shadow-md hover:shadow-lg cursor-pointer transition-all text-center"
-              >
-                <img
-                  src={cat.image}
-                  alt={cat.name}
-                  className="w-24 h-24 mx-auto object-cover rounded-xl mb-3"
-                />
-                <p className="text-xs text-gray-500 mb-1">{cat.items} Items in Store</p>
-                <h3 className="font-bold text-gray-900 mb-1">{cat.name}</h3>
-                <p className="text-sm text-gray-600">From {cat.price}</p>
-              </motion.div>
-            ))}
+            {CATEGORIES.map((cat, index) => {
+              const isActive = selectedCategory === cat.name
+              const realCount = products.filter(p => p.category === cat.name).length
+              return (
+                <motion.button
+                  key={cat.name}
+                  onClick={() => { setSelectedCategory(cat.name); document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' }) }}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  className={`bg-white rounded-2xl p-4 shadow-md hover:shadow-lg cursor-pointer transition-all text-center border-2 ${isActive ? 'border-afri-green ring-2 ring-afri-green/20' : 'border-transparent'}`}
+                >
+                  <img
+                    src={cat.image}
+                    alt={cat.name}
+                    className="w-24 h-24 mx-auto object-cover rounded-xl mb-3"
+                  />
+                  <p className="text-xs text-gray-500 mb-1">{realCount > 0 ? realCount : cat.items} Items</p>
+                  <h3 className={`font-bold mb-1 ${isActive ? 'text-afri-green' : 'text-gray-900'}`}>{cat.name}</h3>
+                  <p className="text-sm text-gray-600">From {cat.price}</p>
+                </motion.button>
+              )
+            })}
           </div>
         </div>
 

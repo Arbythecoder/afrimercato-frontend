@@ -67,7 +67,7 @@ const refreshAccessToken = async () => {
 };
 
 // Generic API call function with automatic token refresh
-const apiCall = async (endpoint, options = {}, isRetry = false) => {
+export const apiCall = async (endpoint, options = {}, isRetry = false) => {
   // Enforce a request timeout using AbortController to avoid hanging the UI
   const controller = new AbortController();
   const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 10000;
@@ -438,11 +438,13 @@ export const getEvents = async () => {
 // LOCATION SEARCH
 export const searchVendorsByLocation = async (location, radius = 50) => {
   // FIX: Backend expects 'postcode' or 'locationText', not 'location'
-  const params = new URLSearchParams({ 
+  const params = new URLSearchParams({
     locationText: location,
-    radiusKm: radius 
+    radiusKm: radius
   });
-  return apiCall(`/locations/search-vendors?${params}`);
+  // 8s timeout: backend geocoding caps at 5s internally, so 8s is enough to get
+  // a real result or the graceful-timeout JSON — faster fallback than 10s default
+  return apiCall(`/locations/search-vendors?${params}`, { timeout: 8000 });
 };
 
 export const geocodeLocation = async (query) => {

@@ -16,14 +16,9 @@ import {
   CalendarDaysIcon,
   HeartIcon
 } from '@heroicons/react/24/outline'
-import { isFeatureEnabled } from '../config/features'
 
 export default function PartnerWithUs() {
   const [activeTab, setActiveTab] = useState('all')
-
-  // MVP feature checks
-  const riderEnabled = isFeatureEnabled('RIDER_REGISTRATION')
-  const pickerEnabled = isFeatureEnabled('PICKER_REGISTRATION')
 
   // Partner types with their unique benefits
   const partnerTypes = [
@@ -51,8 +46,7 @@ export default function PartnerWithUs() {
       ],
       cta: 'Start Selling Today',
       ctaLink: '/register?role=vendor',
-      image: 'https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=600&q=80',
-      enabled: true
+      emoji: '🏪'
     },
     {
       id: 'rider',
@@ -76,11 +70,10 @@ export default function PartnerWithUs() {
         { icon: ShieldCheckIcon, text: 'Insurance coverage included' },
         { icon: DevicePhoneMobileIcon, text: 'Easy-to-use rider app' }
       ],
-      cta: riderEnabled ? 'Start Delivering' : 'Coming Q2 2026',
+      cta: 'Start Delivering',
       ctaLink: '/register?role=rider',
-      image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=600&q=80',
-      enabled: riderEnabled,
-      comingSoon: !riderEnabled
+      gradient2: 'from-[#F5A623] to-[#FF8A00]',
+      emoji: '🛵'
     },
     {
       id: 'picker',
@@ -104,11 +97,10 @@ export default function PartnerWithUs() {
         { icon: SparklesIcon, text: 'Performance bonuses' },
         { icon: ShieldCheckIcon, text: 'Full training provided' }
       ],
-      cta: pickerEnabled ? 'Start Picking' : 'Coming Q2 2026',
+      cta: 'Start Picking',
       ctaLink: '/register?role=picker',
-      image: 'https://images.unsplash.com/photo-1601599561213-832382fd07ba?w=600&q=80',
-      enabled: pickerEnabled,
-      comingSoon: !pickerEnabled
+      gradient2: 'from-[#6366F1] to-[#4F46E5]',
+      emoji: '📦'
     }
   ]
 
@@ -296,43 +288,24 @@ export default function PartnerWithUs() {
                       ))}
                     </div>
 
-                    {/* CTA Button - Disabled for coming soon features */}
-                    {partner.comingSoon ? (
-                      <div className="space-y-3">
-                        <div className="inline-flex items-center gap-2 bg-gray-100 text-gray-500 px-8 py-4 rounded-xl font-bold text-lg cursor-not-allowed">
-                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                          </svg>
-                          {partner.cta}
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          🚀 Registration opening soon! Sign up as a customer to get notified.
-                        </p>
-                      </div>
-                    ) : (
-                      <Link
-                        to={partner.ctaLink}
-                        className={`inline-flex items-center gap-2 bg-gradient-to-r ${partner.gradient} text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105`}
-                      >
-                        {partner.cta}
-                        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                        </svg>
-                      </Link>
-                    )}
+                    {/* CTA Button */}
+                    <Link
+                      to={partner.ctaLink}
+                      className={`inline-flex items-center gap-2 bg-gradient-to-r ${partner.gradient} text-white px-8 py-4 rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all hover:scale-105`}
+                    >
+                      {partner.cta}
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                      </svg>
+                    </Link>
                   </div>
 
-                  {/* Image Side */}
+                  {/* Visual Side */}
                   <div className={`relative h-64 lg:h-auto min-h-[300px] ${index % 2 === 1 ? 'lg:order-1' : ''}`}>
-                    <div className={`absolute inset-0 bg-gradient-to-br ${partner.gradient} opacity-90`}></div>
-                    <img
-                      src={partner.image}
-                      alt={partner.title}
-                      className="w-full h-full object-cover mix-blend-overlay"
-                    />
+                    <div className={`absolute inset-0 bg-gradient-to-br ${partner.gradient} rounded-r-2xl`}></div>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center text-white p-8">
-                        <partner.icon className="w-20 h-20 mx-auto mb-4 opacity-80" />
+                        <div className="text-8xl mb-4">{partner.emoji}</div>
                         <p className="text-2xl sm:text-3xl font-bold">{partner.subtitle}</p>
                       </div>
                     </div>

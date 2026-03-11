@@ -1,14 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { useAuth } from '../context/AuthContext'
+import { apiCall } from '../services/api'
 
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { checkAuth, user, isAuthenticated } = useAuth()
   const token = searchParams.get('token')
 
   const [status, setStatus] = useState('verifying') // verifying | success | error
   const [message, setMessage] = useState('')
+  const [resendStatus, setResendStatus] = useState('idle') // idle | sending | sent | error
 
   useEffect(() => {
     if (!token) {
@@ -33,8 +37,31 @@ export default function VerifyEmail() {
       if (data.success) {
         setStatus('success')
         setMessage('Your email has been verified successfully!')
-        // Redirect to login after 3 seconds
-        setTimeout(() => navigate('/login'), 3000)
+
+        // Refresh auth so the user object picks up emailVerified: true
+        // then redirect to the right place after a short delay
+        setTimeout(async () => {
+          if (isAuthenticated) {
+            await checkAuth()
+
+            // If they were mid-checkout, send them back there
+            const checkoutRedirect = localStorage.getItem('checkout_redirect')
+            if (checkoutRedirect === 'true') {
+              localStorage.removeItem('checkout_redirect')
+              navigate('/checkout')
+              return
+            }
+
+            const role = user?.role || user?.roles?.[0] || 'customer'
+            if (role === 'vendor') navigate('/vendor/dashboard')
+            else if (role === 'rider') navigate('/rider/dashboard')
+            else if (role === 'picker') navigate('/picker/dashboard')
+            else if (role === 'admin') navigate('/admin/dashboard')
+            else navigate('/')
+          } else {
+            navigate('/login')
+          }
+        }, 2000)
       } else {
         setStatus('error')
         setMessage(data.message || 'Verification failed')
@@ -42,6 +69,21 @@ export default function VerifyEmail() {
     } catch (error) {
       setStatus('error')
       setMessage('An error occurred during verification. Please try again.')
+    }
+  }
+
+  const handleResend = async () => {
+    if (!isAuthenticated) {
+      // Not logged in — send to login so they get a session first
+      navigate('/login?redirect=/verify-email')
+      return
+    }
+    setResendStatus('sending')
+    try {
+      await apiCall('/auth/resend-verification', { method: 'POST' })
+      setResendStatus('sent')
+    } catch {
+      setResendStatus('error')
     }
   }
 
@@ -73,7 +115,7 @@ export default function VerifyEmail() {
               <CheckCircleIcon className="w-16 h-16 text-green-600 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-gray-900 mb-2">Email Verified!</h2>
               <p className="text-gray-600 mb-6">{message}</p>
-              <p className="text-sm text-gray-500">Redirecting to login...</p>
+              <p className="text-sm text-gray-500">Redirecting to your dashboard...</p>
             </>
           )}
 
@@ -83,15 +125,26 @@ export default function VerifyEmail() {
               <h2 className="text-xl font-bold text-gray-900 mb-2">Verification Failed</h2>
               <p className="text-gray-600 mb-6">{message}</p>
               <div className="space-y-3">
+                {/* Resend verification email — POST /api/auth/resend-verification */}
+                <button
+                  onClick={handleResend}
+                  disabled={resendStatus === 'sending' || resendStatus === 'sent'}
+                  className="block w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors disabled:opacity-60"
+                >
+                  {resendStatus === 'sending' ? 'Sending...'
+                    : resendStatus === 'sent' ? '✓ New link sent — check your inbox'
+                    : resendStatus === 'error' ? 'Failed to send — try again'
+                    : 'Resend Verification Email'}
+                </button>
                 <Link
                   to="/login"
-                  className="block w-full bg-green-600 text-white py-3 rounded-xl font-bold hover:bg-green-700 transition-colors"
+                  className="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors text-center"
                 >
                   Go to Login
                 </Link>
                 <button
                   onClick={() => window.location.reload()}
-                  className="block w-full bg-gray-100 text-gray-700 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                  className="block w-full bg-white border border-gray-300 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
                 >
                   Try Again
                 </button>
@@ -99,15 +152,6 @@ export default function VerifyEmail() {
             </>
           )}
         </div>
-
-        {/* Help Text */}
-        {status === 'error' && (
-          <div className="mt-6 p-4 bg-blue-50 rounded-xl border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Need help?</strong> If your verification link has expired, please log in and request a new verification email from your profile.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   )

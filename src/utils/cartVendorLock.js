@@ -4,56 +4,12 @@
  */
 
 /**
- * Check if adding a product from a different vendor requires cart clearing
- * @param {Object} product - Product to add (must have vendor field)
- * @param {Array} currentCart - Current cart items
- * @returns {Object} { needsConfirmation: boolean, currentVendorId: string, currentVendorName: string, newVendorId: string, newVendorName: string }
+ * Check if adding a product from a different vendor requires cart clearing.
+ * Multi-vendor cart is always enabled — customers can shop from multiple stores.
  */
-export const checkVendorLock = (product, currentCart) => {
-  // Feature flag: Multi-vendor cart enabled
-  const multiVendorEnabled = import.meta.env.VITE_MULTI_VENDOR_CART === 'true'
-  
-  if (multiVendorEnabled) {
-    // Allow items from multiple vendors
-    return { needsConfirmation: false }
-  }
-
-  // If cart is empty, no conflict
-  if (!currentCart || currentCart.length === 0) {
-    return { needsConfirmation: false }
-  }
-
-  // Get vendor info from the product being added
-  const newVendorId = product.vendor?._id || product.vendor?.id || product.vendorId || product.vendor
-  const newVendorName = product.vendor?.storeName || product.vendor?.businessName || product.storeName || 'Unknown Store'
-
-  // Get vendor info from first item in cart
-  const firstCartItem = currentCart[0]
-  const currentVendorId = firstCartItem.vendor?._id || firstCartItem.vendor?.id || firstCartItem.vendorId || firstCartItem.vendor
-  const currentVendorName = firstCartItem.vendor?.storeName || firstCartItem.vendor?.businessName || firstCartItem.storeName || 'Current Store'
-
-  // If no vendor info available, allow (for backward compatibility)
-  if (!newVendorId || !currentVendorId) {
-    return { needsConfirmation: false }
-  }
-
-  // Convert to strings for comparison
-  const newVendorStr = String(newVendorId)
-  const currentVendorStr = String(currentVendorId)
-
-  // If vendors match, no conflict
-  if (newVendorStr === currentVendorStr) {
-    return { needsConfirmation: false }
-  }
-
-  // Different vendors - need confirmation
-  return {
-    needsConfirmation: true,
-    currentVendorId: currentVendorStr,
-    currentVendorName,
-    newVendorId: newVendorStr,
-    newVendorName
-  }
+// eslint-disable-next-line no-unused-vars
+export const checkVendorLock = (_product, _currentCart) => {
+  return { needsConfirmation: false }
 }
 
 /**

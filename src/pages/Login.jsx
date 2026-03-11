@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 
 function Login() {
   const navigate = useNavigate()
+  const location = useLocation()
   const { login } = useAuth()
+  // Success message passed via navigation state (e.g. after password reset)
+  const successMessage = location.state?.message || ''
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -49,14 +52,8 @@ function Login() {
           return
         }
 
-        // Only customer accounts proceed to checkout
-        const cart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-        if (cart.length > 0) {
-          navigate('/checkout')
-          return
-        }
-        // Cart is empty — fall through to home page
-        navigate('/')
+        // Always return to checkout — backend cart is the source of truth
+        navigate('/checkout')
         return
       }
 
@@ -90,7 +87,7 @@ function Login() {
           break
         case 'customer':
         default:
-          navigate('/')
+          navigate('/cart')
           break
       }
     } else {
@@ -177,8 +174,19 @@ function Login() {
             Sign in as Customer, Vendor, Rider, or Picker
           </motion.p>
 
+          {successMessage && (
+            <motion.div
+              className="bg-green-50 border-l-4 border-green-500 p-4 mb-6 rounded"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.3 }}
+            >
+              <p className="text-green-700 text-sm font-medium">✓ {successMessage}</p>
+            </motion.div>
+          )}
+
           {error && (
-            <motion.div 
+            <motion.div
               className="bg-red-50 border-l-4 border-red-500 p-4 mb-6 rounded"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}

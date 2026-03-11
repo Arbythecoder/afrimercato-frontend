@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
 // Helper: check if user has customer role (supports both roles array and role string)
@@ -15,7 +15,7 @@ const isCustomerRole = (user) => {
 
 function Checkout() {
   const navigate = useNavigate()
-  const { isAuthenticated, user, logout } = useAuth()
+  const { isAuthenticated, user, logout, login } = useAuth()
 
   // Stable reference to avoid re-triggering effects when user object ref changes
   const isCustomer = useMemo(() => isCustomerRole(user), [user?.role, user?.roles, user?.primaryRole])
@@ -25,6 +25,13 @@ function Checkout() {
   const [loading, setLoading] = useState(false)
   const [cartLoading, setCartLoading] = useState(true)
   const [vendor, setVendor] = useState(null)
+
+  // Auth modal state — shown when user reaches checkout without being logged in
+  const [showAuthModal, setShowAuthModal] = useState(false)
+  const [authEmail, setAuthEmail] = useState('')
+  const [authPassword, setAuthPassword] = useState('')
+  const [authLoading, setAuthLoading] = useState(false)
+  const [authError, setAuthError] = useState('')
 
   // Repurchase state — non-blocking, optional UX
   const [repurchaseItems, setRepurchaseItems] = useState([])
@@ -55,8 +62,8 @@ function Checkout() {
       setCartLoading(true)
 
       if (!isAuthenticated) {
-        localStorage.setItem('checkout_redirect', 'true')
-        navigate('/login')
+        setShowAuthModal(true)
+        setCartLoading(false)
         return
       }
 
@@ -160,6 +167,29 @@ function Checkout() {
     loadRepurchaseItems()
   }, [isAuthenticated, isCustomer])
 
+  // Pre-fill delivery address from user profile — non-blocking, runs once on mount
+  useEffect(() => {
+    if (!isAuthenticated || !isCustomer) return
+    const prefillAddress = async () => {
+      try {
+        const res = await userAPI.getProfile()
+        const profile = res?.data || res
+        if (!profile) return
+        setAddress(prev => ({
+          fullName:     prev.fullName     || profile.name  || '',
+          phone:        prev.phone        || profile.phone || '',
+          street:       prev.street       || (profile.addresses?.[0]?.street)  || '',
+          city:         prev.city         || (profile.addresses?.[0]?.city)    || '',
+          postcode:     prev.postcode     || (profile.addresses?.[0]?.postcode) || '',
+          instructions: prev.instructions || ''
+        }))
+      } catch {
+        // Non-blocking — ignore silently if profile fetch fails
+      }
+    }
+    prefillAddress()
+  }, [isAuthenticated, isCustomer])
+
   // Fetch vendor data when cart loads
   useEffect(() => {
     const fetchVendorData = async () => {
@@ -204,9 +234,42 @@ function Checkout() {
     fetchVendorData()
   }, [cart])
 
+  // Coupon state
+  const [couponCode, setCouponCode] = useState('')
+  const [coupon, setCoupon] = useState(null)
+  const [couponLoading, setCouponLoading] = useState(false)
+  const [couponError, setCouponError] = useState('')
+
+  const applyCoupon = async () => {
+    if (!couponCode.trim()) return
+    setCouponLoading(true)
+    setCouponError('')
+    try {
+      const res = await checkoutAPI.validateCoupon?.(couponCode.trim().toUpperCase())
+      if (res?.success && res?.data) {
+        setCoupon({ code: couponCode.trim().toUpperCase(), ...res.data })
+      } else {
+        setCouponError(res?.message || 'Invalid coupon code')
+      }
+    } catch (err) {
+      if (err?.status === 501 || err?.message?.includes('501')) {
+        setCouponError('Coupon feature coming soon')
+      } else {
+        setCouponError(err?.message || 'Invalid or expired coupon')
+      }
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const deliveryFee = cartTotal >= 50 ? 0 : 5
-  const total = cartTotal + deliveryFee
+  const couponDiscount = coupon
+    ? coupon.type === 'percent'
+      ? parseFloat(((cartTotal * coupon.discount) / 100).toFixed(2))
+      : parseFloat(coupon.discount || 0)
+    : 0
+  const total = cartTotal + deliveryFee - couponDiscount
 
   const handleAddressSubmit = (e) => {
     e.preventDefault()
@@ -236,8 +299,10 @@ function Checkout() {
         pricing: {
           subtotal: cartTotal,
           deliveryFee,
+          discount: couponDiscount,
           total
         },
+        ...(coupon && { couponCode: coupon.code }),
         ...(repeatPurchaseFrequency && { repeatPurchaseFrequency })
       }
 
@@ -395,6 +460,118 @@ function Checkout() {
               ← Go Back
             </button>
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Sign-in gate — shown when user hits checkout without being logged in
+  if (showAuthModal && !isAuthenticated) {
+    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'}/api/auth/google`
+
+    const handleAuthLogin = async (e) => {
+      e.preventDefault()
+      setAuthError('')
+      setAuthLoading(true)
+      try {
+        const result = await login(authEmail, authPassword)
+        if (!result.success) {
+          setAuthError(result.message || 'Incorrect email or password.')
+        }
+        // On success isAuthenticated flips → loadCart effect re-runs automatically
+      } catch {
+        setAuthError('Something went wrong. Please try again.')
+      } finally {
+        setAuthLoading(false)
+      }
+    }
+
+    return (
+      <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
+        <div className="max-w-md w-full">
+          {/* Cart reminder */}
+          <div className="text-center mb-6">
+            <span className="text-5xl">🛒</span>
+            <h1 className="text-2xl font-bold text-gray-900 mt-3 mb-1">Almost there!</h1>
+            <p className="text-gray-500 text-sm">Sign in to complete your order</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            {/* Google */}
+            <a
+              href={GOOGLE_URL}
+              className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition mb-5"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Continue with Google
+            </a>
+
+            <div className="relative mb-5">
+              <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+              <div className="relative flex justify-center text-sm"><span className="px-3 bg-white text-gray-400">or sign in with email</span></div>
+            </div>
+
+            {authError && (
+              <div className="bg-red-50 border-l-4 border-red-500 p-3 rounded mb-4">
+                <p className="text-red-700 text-sm">{authError}</p>
+              </div>
+            )}
+
+            <form onSubmit={handleAuthLogin} className="space-y-4">
+              <input
+                type="email"
+                required
+                placeholder="Email address"
+                value={authEmail}
+                onChange={e => { setAuthEmail(e.target.value); setAuthError('') }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+              />
+              <input
+                type="password"
+                required
+                placeholder="Password"
+                value={authPassword}
+                onChange={e => { setAuthPassword(e.target.value); setAuthError('') }}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+              />
+              <button
+                type="submit"
+                disabled={authLoading}
+                className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {authLoading ? (
+                  <svg className="animate-spin h-5 w-5 mx-auto text-white" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                ) : 'Sign In'}
+              </button>
+            </form>
+
+            <p className="text-center text-sm text-gray-500 mt-5">
+              No account?{' '}
+              <a
+                href="/register"
+                onClick={() => localStorage.setItem('checkout_redirect', 'true')}
+                className="text-green-600 hover:text-green-700 font-medium"
+              >
+                Create one free →
+              </a>
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            className="mt-4 w-full text-gray-400 hover:text-gray-600 text-sm py-2 transition"
+          >
+            ← Back to cart
+          </button>
         </div>
       </div>
     )
@@ -873,6 +1050,42 @@ function Checkout() {
                 })}
               </div>
 
+              {/* Coupon input */}
+              <div className="border-t pt-4 mb-4">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Promo Code</p>
+                {coupon ? (
+                  <div className="flex items-center justify-between bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                    <div>
+                      <p className="text-sm font-bold text-green-700">{coupon.code}</p>
+                      <p className="text-xs text-green-600">
+                        {coupon.type === 'percent' ? `${coupon.discount}% off` : `£${coupon.discount} off`}
+                      </p>
+                    </div>
+                    <button onClick={() => { setCoupon(null); setCouponCode('') }} className="text-green-600 hover:text-red-500 text-xs font-semibold">Remove</button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={couponCode}
+                      onChange={e => { setCouponCode(e.target.value.toUpperCase()); setCouponError('') }}
+                      onKeyDown={e => e.key === 'Enter' && applyCoupon()}
+                      placeholder="Enter code"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    />
+                    <button
+                      type="button"
+                      onClick={applyCoupon}
+                      disabled={couponLoading || !couponCode.trim()}
+                      className="px-3 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 disabled:opacity-50 transition"
+                    >
+                      {couponLoading ? '…' : 'Apply'}
+                    </button>
+                  </div>
+                )}
+                {couponError && <p className="text-xs text-red-600 mt-1">{couponError}</p>}
+              </div>
+
               {/* Pricing */}
               <div className="border-t pt-4 space-y-2">
                 <div className="flex justify-between text-gray-700">
@@ -885,6 +1098,12 @@ function Checkout() {
                 </div>
                 {cartTotal >= 50 && (
                   <p className="text-xs text-green-600">🎉 Free delivery on orders over £50</p>
+                )}
+                {couponDiscount > 0 && (
+                  <div className="flex justify-between text-green-600 font-semibold">
+                    <span>Discount ({coupon.code})</span>
+                    <span>-£{couponDiscount.toFixed(2)}</span>
+                  </div>
                 )}
                 
                 {/* Minimum Order Check */}

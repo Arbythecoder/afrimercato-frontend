@@ -13,9 +13,7 @@ import {
   Phone,
   Calendar
 } from 'lucide-react';
-import axios from 'axios';
-
-const API_URL = (import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev') + '/api';
+import { apiCall } from '../../services/api';
 
 /**
  * Vendor Management Page
@@ -39,13 +37,12 @@ function VendorManagement() {
   const fetchVendors = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('afrimercato_token');
-      const { data } = await axios.get(`${API_URL}/admin/vendors`, {
-        params: { status: filter, search: searchQuery },
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      setVendors(data.data);
+      const params = new URLSearchParams();
+      if (filter !== 'all') params.set('status', filter);
+      if (searchQuery) params.set('search', searchQuery);
+      const query = params.toString() ? `?${params.toString()}` : '';
+      const data = await apiCall(`/admin/vendors${query}`);
+      setVendors(data?.data || []);
     } catch (err) {
       console.error('Failed to fetch vendors:', err);
     } finally {
@@ -58,15 +55,14 @@ function VendorManagement() {
 
     try {
       setProcessing(true);
-      const token = localStorage.getItem('afrimercato_token');
       const endpoint = modalAction === 'approve' ? 'approve' :
-                      modalAction === 'reject' ? 'reject' : 'suspend';
+                       modalAction === 'reject'  ? 'reject'  : 'suspend';
 
-      await axios.put(
-        `${API_URL}/admin/vendors/${selectedVendor._id}/${endpoint}`,
-        { note: actionNote, reason: actionNote },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+      // Backend expects POST (not PUT) — adminVendorRoutes.js lines 18-20
+      await apiCall(`/admin/vendors/${selectedVendor._id}/${endpoint}`, {
+        method: 'POST',
+        body: JSON.stringify({ note: actionNote, reason: actionNote })
+      });
 
       setShowModal(false);
       setActionNote('');
@@ -74,7 +70,7 @@ function VendorManagement() {
       fetchVendors();
     } catch (err) {
       console.error('Action failed:', err);
-      alert(err.response?.data?.message || 'Action failed');
+      alert(err?.message || 'Action failed. Please try again.');
     } finally {
       setProcessing(false);
     }

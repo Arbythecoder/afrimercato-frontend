@@ -219,7 +219,7 @@ function Orders() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-afri-gray-900">
-                      £{order.pricing?.total?.toFixed(2) || '0.00'}
+                      £{(order.vendorTotal ?? order.totalAmount ?? 0).toFixed(2)}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -246,10 +246,10 @@ function Orders() {
       )}
 
       {/* Pagination */}
-      {pagination.pages > 1 && (
+      {(pagination.totalPages ?? pagination.pages ?? 0) > 1 && (
         <div className="mt-6 flex justify-center">
           <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
-            {[...Array(pagination.pages)].map((_, i) => (
+            {[...Array(pagination.totalPages ?? pagination.pages)].map((_, i) => (
               <button
                 key={i}
                 onClick={() => setFilters({ ...filters, page: i + 1 })}

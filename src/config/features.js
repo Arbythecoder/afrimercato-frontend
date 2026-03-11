@@ -19,28 +19,28 @@ export const FEATURES = {
   VENDOR_PRODUCTS: true,
   VENDOR_ORDERS: true,
   
-  // ==================== RIDER FEATURES (DISABLED) ====================
-  RIDER_REGISTRATION: false,
-  RIDER_LOGIN: false,
-  RIDER_DASHBOARD: false,
-  RIDER_DELIVERIES: false,
-  RIDER_EARNINGS: false,
+  // ==================== RIDER FEATURES ====================
+  RIDER_REGISTRATION: true,
+  RIDER_LOGIN: true,
+  RIDER_DASHBOARD: true,
+  RIDER_DELIVERIES: true,
+  RIDER_EARNINGS: true,
   RIDER_TRACKING: false,
-  
-  // ==================== PICKER FEATURES (DISABLED) ====================
-  PICKER_REGISTRATION: false,
-  PICKER_LOGIN: false,
-  PICKER_DASHBOARD: false,
-  PICKER_ORDERS: false,
-  PICKER_EARNINGS: false,
-  
-  // ==================== ADMIN FEATURES (DISABLED) ====================
-  ADMIN_DASHBOARD: false,
-  ADMIN_VENDOR_MANAGEMENT: false,
-  ADMIN_CUSTOMER_MANAGEMENT: false,
-  ADMIN_RIDER_MANAGEMENT: false,
-  ADMIN_PICKER_MANAGEMENT: false,
-  ADMIN_ANALYTICS: false,
+
+  // ==================== PICKER FEATURES ====================
+  PICKER_REGISTRATION: true,
+  PICKER_LOGIN: true,
+  PICKER_DASHBOARD: true,
+  PICKER_ORDERS: true,
+  PICKER_EARNINGS: true,
+
+  // ==================== ADMIN FEATURES ====================
+  ADMIN_DASHBOARD: true,
+  ADMIN_VENDOR_MANAGEMENT: true,
+  ADMIN_CUSTOMER_MANAGEMENT: true,
+  ADMIN_RIDER_MANAGEMENT: true,
+  ADMIN_PICKER_MANAGEMENT: true,
+  ADMIN_ANALYTICS: true,
   
   // ==================== PAYMENT FEATURES (PARTIAL) ====================
   PAYMENT_BASIC: true,
