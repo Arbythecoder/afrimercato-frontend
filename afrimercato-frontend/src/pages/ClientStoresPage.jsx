@@ -387,44 +387,46 @@ export default function ClientStoresPage() {
                   }`}
                 >
                   {tab}
-                  {(tab === 'pickers' || tab === 'riders') && (
-                    <span className="ml-1.5 text-xs opacity-75">(Soon)</span>
-                  )}
                 </button>
               ))}
             </div>
           </div>
 
-          {/* Coming Soon for Pickers/Riders */}
+          {/* Sign up CTA for Pickers/Riders */}
           {(activeTab === 'pickers' || activeTab === 'riders') && (
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="text-center py-16 px-4"
             >
-              <div className="inline-flex items-center justify-center w-20 h-20 bg-amber-100 rounded-full mb-6">
-                <svg className="w-10 h-10 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-100 rounded-full mb-6">
+                {activeTab === 'pickers' ? (
+                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 13h12L19 8" />
+                  </svg>
+                ) : (
+                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
               </div>
               <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                {activeTab === 'pickers' ? 'Pickers Directory Coming Soon!' : 'Riders Directory Coming Soon!'}
+                {activeTab === 'pickers' ? 'Become a Picker' : 'Become a Rider'}
               </h3>
-              <p className="text-gray-600 max-w-md mx-auto mb-6">
-                {activeTab === 'pickers' 
-                  ? 'Our picker network is being built. Soon you\'ll be able to browse and connect with order pickers in your area.'
-                  : 'Our delivery partner network is expanding. Soon you\'ll be able to see rider availability and track deliveries in real-time.'}
+              <p className="text-gray-600 max-w-md mx-auto mb-8">
+                {activeTab === 'pickers'
+                  ? 'Join our picker network and earn money helping pack and prepare orders for customers in your area.'
+                  : 'Join our delivery network and earn money delivering African groceries to customers near you.'}
               </p>
-              <p className="text-sm text-gray-500 mb-8">Expected launch: Q2 2026</p>
-              <button
-                onClick={() => setActiveTab('stores')}
-                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-6 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
+              <Link
+                to={activeTab === 'pickers' ? '/register?role=picker' : '/register?role=rider'}
+                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-8 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
               >
-                Browse Stores Instead
+                {activeTab === 'pickers' ? 'Sign Up as a Picker' : 'Sign Up as a Rider'}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
-              </button>
+              </Link>
             </motion.div>
           )}
 
