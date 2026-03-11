@@ -618,23 +618,43 @@ function Settings() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Street Address</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Street Address *</label>
                 <input
                   type="text"
                   value={vendorProfile.address?.street || ''}
-                  onChange={(e) => handleVendorChange('address.street', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    handleVendorChange('address.street', e.target.value)
+                    if (validationErrors.street) setValidationErrors(prev => ({ ...prev, street: undefined }))
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                    validationErrors.street ? 'border-red-500 bg-red-50' : vendorProfile.address?.street?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                  }`}
+                  placeholder="e.g., 12 Brixton Road"
                 />
+                {validationErrors.street
+                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.street}</p>
+                  : vendorProfile.address?.street?.trim() && <p className="text-green-600 text-sm mt-1">Looks good!</p>
+                }
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">City</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">City *</label>
                 <input
                   type="text"
                   value={vendorProfile.address?.city || ''}
-                  onChange={(e) => handleVendorChange('address.city', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => {
+                    handleVendorChange('address.city', e.target.value)
+                    if (validationErrors.city) setValidationErrors(prev => ({ ...prev, city: undefined }))
+                  }}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                    validationErrors.city ? 'border-red-500 bg-red-50' : vendorProfile.address?.city?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                  }`}
+                  placeholder="e.g., London"
                 />
+                {validationErrors.city
+                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.city}</p>
+                  : vendorProfile.address?.city?.trim() && <p className="text-green-600 text-sm mt-1">Looks good!</p>
+                }
               </div>
 
               <div>
@@ -652,14 +672,19 @@ function Settings() {
 
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
-                  {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode' : 'Postal/Zip Code'}
+                  {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode *' : 'Postal/Zip Code *'}
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
                     value={vendorProfile.address?.postalCode || ''}
-                    onChange={(e) => handleVendorChange('address.postalCode', e.target.value.toUpperCase())}
-                    className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                    onChange={(e) => {
+                      handleVendorChange('address.postalCode', e.target.value.toUpperCase())
+                      if (validationErrors.postalCode) setValidationErrors(prev => ({ ...prev, postalCode: undefined }))
+                    }}
+                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                      validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() && !validationErrors.postalCode ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
                     placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
                   />
                   {vendorProfile.address?.country === 'United Kingdom' && (
@@ -688,9 +713,14 @@ function Settings() {
                     </button>
                   )}
                 </div>
-                {vendorProfile.address?.country === 'United Kingdom' && (
-                  <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
-                )}
+                {validationErrors.postalCode
+                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.postalCode}</p>
+                  : vendorProfile.address?.postalCode?.trim()
+                    ? <p className="text-green-600 text-sm mt-1">Valid postcode!</p>
+                    : vendorProfile.address?.country === 'United Kingdom' && (
+                        <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
+                      )
+                }
               </div>
 
               <div>
