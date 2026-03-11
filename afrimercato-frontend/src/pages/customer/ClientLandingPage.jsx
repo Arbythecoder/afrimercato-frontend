@@ -23,6 +23,7 @@ export default function ClientLandingPage() {
   const [priceTag, setPriceTag] = useState('all')
   const [shoppingMethod, setShoppingMethod] = useState('all')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [showJoinDropdown, setShowJoinDropdown] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
 
@@ -200,16 +201,54 @@ export default function ClientLandingPage() {
               <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
                 Log in
               </Link>
-              <Link
-                to="/register"
-                className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
-              >
-                <span className="hidden sm:inline">Sign Up</span>
-                <span className="sm:hidden">Join</span>
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                </svg>
-              </Link>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowJoinDropdown(v => !v)}
+                  onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
+                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
+                >
+                  <span className="hidden sm:inline">Join</span>
+                  <span className="sm:hidden">Join</span>
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showJoinDropdown && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                    <Link
+                      to="/register?role=customer"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors"
+                    >
+                      <span className="text-lg">🛒</span>
+                      <div>
+                        <div className="font-semibold text-sm">Customer</div>
+                        <div className="text-xs text-gray-400">Shop & order</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/register?role=vendor"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                    >
+                      <span className="text-lg">🏪</span>
+                      <div>
+                        <div className="font-semibold text-sm">Vendor</div>
+                        <div className="text-xs text-gray-400">Sell your products</div>
+                      </div>
+                    </Link>
+                    <Link
+                      to="/register?role=rider"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                    >
+                      <span className="text-lg">🚴</span>
+                      <div>
+                        <div className="font-semibold text-sm">Rider</div>
+                        <div className="text-xs text-gray-400">Deliver & earn</div>
+                      </div>
+                    </Link>
+                  </div>
+                )}
+              </div>
 
               {/* Mobile Menu */}
               <button
@@ -888,6 +927,34 @@ export default function ClientLandingPage() {
           </div>
         </div>
       </footer>
+
+      {/* Sticky bottom CTA bar — fixed while scrolling */}
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3">
+        <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex -space-x-2">
+              {['👩🏾','👨🏿','👩🏽'].map((e,i) => (
+                <div key={i} className="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-sm">{e}</div>
+              ))}
+            </div>
+            <p className="text-sm text-gray-600 font-medium hidden sm:block">
+              Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors across the UK & Ireland
+            </p>
+            <p className="text-sm text-gray-600 font-medium sm:hidden">
+              <span className="font-bold text-gray-900">4,320+</span> Vendors
+            </p>
+          </div>
+          <Link
+            to="/register?role=vendor"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
+          >
+            Partner With Us
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </Link>
+        </div>
+      </div>
 
       <style>{`
         @keyframes spin-slow { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
