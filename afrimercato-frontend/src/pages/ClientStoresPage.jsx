@@ -1,0 +1,735 @@
+/**
+ * AFRIMERCATO - Store Marketplace Page
+ * Matches client's design from three.jpg exactly
+ */
+
+import { useState, useEffect } from 'react'
+import { useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { motion } from 'framer-motion'
+import { searchVendorsByLocation, getFeaturedVendors } from '../services/api'
+
+// Sample stores shown immediately while backend wakes up
+const SAMPLE_STORES = [
+  { id: 1, name: 'Sahel Spice House', storeName: 'Sahel Spice House', location: 'London', hours: '08:00am - 08:00pm', rating: 4.9, deliveryTime: '30-45 min', distance: '0.3km', image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 2, name: 'Baobab Organics', storeName: 'Baobab Organics', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '0.5km', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 3, name: "Mama Ade's Kitchen", storeName: "Mama Ade's Kitchen", location: 'London', hours: '06:00am - 08:00pm', rating: 4.9, deliveryTime: '20-35 min', distance: '0.7km', image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 4, name: 'Calabash & Co', storeName: 'Calabash & Co', location: 'London', hours: '08:00am - 10:00pm', rating: 4.7, deliveryTime: '30-50 min', distance: '1.2km', image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 5, name: 'Fresh Roots Produce', storeName: 'Fresh Roots Produce', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '1.5km', image: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 6, name: 'Cheetham Hill Market', storeName: 'Cheetham Hill Market', location: 'Manchester', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '30-45 min', distance: '0.8km', image: 'https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 7, name: 'Soho Road African Foods', storeName: 'Soho Road African Foods', location: 'Birmingham', hours: '07:00am - 09:00pm', rating: 4.7, deliveryTime: '25-40 min', distance: '0.4km', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 8, name: 'Stapleton Road Market', storeName: 'Stapleton Road Market', location: 'Bristol', hours: '08:00am - 08:00pm', rating: 4.8, deliveryTime: '30-50 min', distance: '0.6km', image: 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 9, name: 'Harehills African Grocers', storeName: 'Harehills African Grocers', location: 'Leeds', hours: '07:00am - 09:00pm', rating: 4.6, deliveryTime: '25-40 min', distance: '1.1km', image: 'https://images.unsplash.com/photo-1599909533681-74d488b9dddf?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 10, name: 'Granby Street Market', storeName: 'Granby Street Market', location: 'Liverpool', hours: '08:00am - 08:00pm', rating: 4.7, deliveryTime: '30-45 min', distance: '0.9km', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 11, name: 'Sharrow African Market', storeName: 'Sharrow African Market', location: 'Sheffield', hours: '07:00am - 09:00pm', rating: 4.5, deliveryTime: '30-50 min', distance: '1.4km', image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&auto=format&fit=crop', _isSample: true },
+  { id: 12, name: 'Govanhill African Foods', storeName: 'Govanhill African Foods', location: 'Glasgow', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '35-50 min', distance: '2.1km', image: 'https://images.unsplash.com/photo-1513530534585-c7b1394c6d51?w=600&auto=format&fit=crop', _isSample: true },
+]
+
+export default function ClientStoresPage() {
+  const [searchParams] = useSearchParams()
+  const location = searchParams.get('location') || ''
+  const navigate = useNavigate()
+
+  const [stores, setStores] = useState(SAMPLE_STORES)
+  const [loading, setLoading] = useState(false)
+  const [loadingRealStores, setLoadingRealStores] = useState(true)
+  const [searchLocation, setSearchLocation] = useState(location)
+  const [activeTab, setActiveTab] = useState('stores')
+  const [activeFilter, setActiveFilter] = useState('nearby')
+  const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [locationSuggestions, setLocationSuggestions] = useState([])
+
+  // HOTFIX: Real-time location suggestions to make search feel "alive"
+  const popularLocations = [
+    'London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol',
+    'Liverpool', 'Peckham', 'Brixton', 'Tottenham', 'East Ham',
+    'Hackney', 'Lewisham', 'Croydon', 'Southwark', 'Newham'
+  ]
+
+  useEffect(() => {
+    if (searchLocation.trim().length > 0) {
+      const filtered = popularLocations.filter(loc =>
+        loc.toLowerCase().includes(searchLocation.toLowerCase())
+      )
+      setLocationSuggestions(filtered.slice(0, 5))
+    } else {
+      setLocationSuggestions(popularLocations.slice(0, 5))
+    }
+  }, [searchLocation])
+
+  useEffect(() => {
+    // Show sample stores immediately so users never see a blank spinner
+    if (!location.trim()) {
+      setStores(SAMPLE_STORES)
+      setLoading(false)
+    }
+    // Silently load real data in background
+    fetchStores()
+  }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const fetchStores = async () => {
+    try {
+      if (!location.trim()) {
+        // No location — load ALL real vendors from DB
+        const response = await getFeaturedVendors(50)
+        if (response.success && response.data?.length > 0) {
+          // Normalise field names for the store card
+          const vendors = response.data.map(v => ({
+            ...v,
+            name: v.storeName,
+            image: v.logo,
+            location: v.location?.city || v.location || 'United Kingdom',
+          }))
+          setStores(vendors)
+        }
+        // else keep sample stores
+        setLoadingRealStores(false)
+      } else {
+        // Location search — show spinner
+        setLoading(true)
+        const response = await searchVendorsByLocation(location, 50)
+        if (response.success && response.data?.vendors?.length > 0) {
+          setStores(response.data.vendors)
+        } else {
+          setStores([])
+        }
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('[STORE_FETCH_FAIL]', error.message)
+      }
+      // keep sample stores on error
+    } finally {
+      setLoading(false)
+      setLoadingRealStores(false)
+    }
+  }
+
+  const expandSearchRadius = async (newRadius = 100) => {
+    try {
+      setLoading(true)
+      const response = await searchVendorsByLocation(location, newRadius)
+
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
+      } else {
+        setStores([])
+      }
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('[EXPAND_SEARCH_FAIL]', error.message)
+      }
+      setStores([])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const browseAllStores = async () => {
+    setStores(SAMPLE_STORES)
+    setSearchLocation('')
+    try {
+      setLoading(true)
+      const response = await searchVendorsByLocation('', 500)
+
+      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+        setStores(response.data.vendors)
+      }
+      // else keep sample stores
+    } catch (error) {
+      if (import.meta.env.DEV) {
+        console.warn('[BROWSE_ALL_FAIL]', error.message)
+      }
+      // keep sample stores on error
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Apply filter/sort logic to stores
+  const getFilteredStores = () => {
+    if (!stores || stores.length === 0) return []
+
+    let filtered = [...stores]
+
+    switch (activeFilter) {
+      case 'top':
+        // Sort by rating descending
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      case 'featured':
+        // Show only verified/high-rated stores (4.7+)
+        filtered = filtered
+          .filter((s) => s.verified !== false && (s.rating || 0) >= 4.5)
+          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+        break
+      case 'nearby':
+      default:
+        // Sort by distance (parse km string)
+        filtered.sort((a, b) => {
+          const distA = parseFloat(a.distance) || 999
+          const distB = parseFloat(b.distance) || 999
+          return distA - distB
+        })
+        break
+    }
+
+    return filtered
+  }
+
+  const filteredStores = getFilteredStores()
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchLocation.trim()) {
+      navigate(`/stores?location=${encodeURIComponent(searchLocation)}`)
+    }
+  }
+
+  return (
+    <div className="min-h-screen bg-[#F8F8F8]">
+      {/* Navigation */}
+      <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <Link to="/" className="flex items-center">
+              <img src="/logo.svg" alt="Afrimercato" className="h-8 w-auto" />
+            </Link>
+
+            {/* Nav Links */}
+            <div className="hidden md:flex items-center gap-6">
+              <Link to="/" className="text-gray-600 hover:text-gray-900 font-medium">Home</Link>
+              <Link to="/stores" className="text-[#00897B] font-medium">Stores</Link>
+              <Link to="/partner" className="text-gray-600 hover:text-gray-900 font-medium">Partner With Us</Link>
+            </div>
+
+            {/* Auth Buttons */}
+            <div className="flex items-center gap-3">
+              <Link to="/login" className="text-gray-700 hover:text-gray-900 font-medium">Log in</Link>
+              <Link
+                to="/register"
+                className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-full font-semibold transition-all"
+              >
+                Sign Up
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero — full when no search, compact when results are showing */}
+      {!location || loading ? (
+        <section className="bg-gradient-to-br from-[#00897B] via-[#00695C] to-[#004D40] py-12">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-2 gap-8 items-center">
+              <div>
+                <motion.h1
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="text-3xl sm:text-4xl font-bold text-white mb-3"
+                >
+                  African Groceries,<br />
+                  <span className="text-[#F5A623]">Delivered Across the UK</span>
+                </motion.h1>
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="text-green-100 mb-6"
+                >
+                  Search by city, postcode, or store name to find authentic African stores near you.
+                </motion.p>
+
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="flex gap-2 mb-6">
+                  <div className="flex-1 relative">
+                    <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-3 shadow-md">
+                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                      </svg>
+                      <input
+                        type="text"
+                        value={searchLocation}
+                        onChange={(e) => setSearchLocation(e.target.value)}
+                        onFocus={() => setShowLocationDropdown(true)}
+                        onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                        placeholder="City, postcode, or store name…"
+                        className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400"
+                      />
+                    </div>
+                    {showLocationDropdown && locationSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
+                        {locationSuggestions.map((loc, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => {
+                              setSearchLocation(loc)
+                              setShowLocationDropdown(false)
+                              navigate(`/stores?location=${encodeURIComponent(loc)}`)
+                            }}
+                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                          >
+                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                            <span className="text-gray-700">{loc}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    type="submit"
+                    className="bg-[#F5A623] hover:bg-[#E59400] text-white px-6 py-3 rounded-lg font-bold shadow-md transition-all"
+                  >
+                    Search
+                  </button>
+                </form>
+
+                <div className="flex items-center gap-3">
+                  <div className="flex -space-x-2">
+                    {['👩🏾', '👨🏿', '👩🏽'].map((e, i) => (
+                      <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-white flex items-center justify-center text-sm">{e}</div>
+                    ))}
+                  </div>
+                  <span className="bg-white/20 border border-white/30 px-3 py-1 rounded-full text-sm font-medium text-white">
+                    4,320+ Vendors across the UK
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden lg:block">
+                <div className="relative bg-gradient-to-br from-afri-green-dark to-afri-green rounded-2xl p-4 overflow-hidden shadow-2xl">
+                  <div className="w-full h-64 rounded-xl flex items-center justify-center">
+                    <div className="text-center text-white/90">
+                      <div className="text-7xl mb-3">🛒</div>
+                      <p className="font-bold text-lg">African Groceries</p>
+                      <p className="text-sm text-white/70">Delivered to your door</p>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-6 left-6 bg-white rounded-xl px-4 py-2 shadow-lg">
+                    <p className="text-xs text-gray-500">Avg. Delivery Time</p>
+                    <p className="font-bold text-[#00897B]">ADT 25–40 mins</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : (
+        /* Compact bar shown once stores are displaying */
+        <section className="bg-white border-b shadow-sm py-3">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-gray-700">
+                <svg className="w-5 h-5 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                <span className="font-semibold text-gray-900">{filteredStores.length} store{filteredStores.length !== 1 ? 's' : ''}</span>
+                <span className="text-gray-500">near <span className="text-[#00897B] font-medium">{location}</span></span>
+              </div>
+              <form onSubmit={handleSearch} className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
+                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                  </svg>
+                  <input
+                    type="text"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                    placeholder="Search different location…"
+                    className="bg-transparent outline-none text-sm text-gray-900 placeholder-gray-400 w-48"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                >
+                  Go
+                </button>
+                <button
+                  type="button"
+                  onClick={() => navigate('/stores')}
+                  className="text-sm text-gray-500 hover:text-gray-700 underline"
+                >
+                  Clear
+                </button>
+              </form>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Meet Our Partners Section */}
+      <section className="py-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
+            Meet Our <span className="text-[#F5A623]">Partners</span>
+          </h2>
+
+          {/* Tabs: Stores | Pickers | Riders */}
+          <div className="flex justify-center mb-6">
+            <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full">
+              {['stores', 'pickers', 'riders'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-6 py-2 rounded-full font-medium text-sm capitalize transition-all ${
+                    activeTab === tab
+                      ? 'bg-[#00897B] text-white'
+                      : 'text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Sign up CTA for Pickers/Riders */}
+          {(activeTab === 'pickers' || activeTab === 'riders') && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16 px-4"
+            >
+              <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-100 rounded-full mb-6">
+                {activeTab === 'pickers' ? (
+                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 13h12L19 8" />
+                  </svg>
+                ) : (
+                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                )}
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                {activeTab === 'pickers' ? 'Become a Picker' : 'Become a Rider'}
+              </h3>
+              <p className="text-gray-600 max-w-md mx-auto mb-8">
+                {activeTab === 'pickers'
+                  ? 'Join our picker network and earn money helping pack and prepare orders for customers in your area.'
+                  : 'Join our delivery network and earn money delivering African groceries to customers near you.'}
+              </p>
+              <Link
+                to={activeTab === 'pickers' ? '/register?role=picker' : '/register?role=rider'}
+                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-8 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
+              >
+                {activeTab === 'pickers' ? 'Sign Up as a Picker' : 'Sign Up as a Rider'}
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </Link>
+            </motion.div>
+          )}
+
+          {/* Filter Tabs - Only show for stores */}
+          {activeTab === 'stores' && (
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div className="flex flex-wrap items-center gap-4">
+              {[
+                { id: 'nearby', label: 'Stores near by' },
+                { id: 'top', label: 'Top stores' },
+                { id: 'featured', label: 'Featured stores' }
+              ].map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`font-medium pb-1 transition-colors ${
+                    activeFilter === filter.id
+                      ? 'text-[#00897B] border-b-2 border-[#00897B]'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <Link
+                to="/partner"
+                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium text-sm"
+              >
+                Onboard your store
+              </Link>
+              <span className="text-[#00897B] font-medium">See All Stores</span>
+            </div>
+          </div>
+          )}
+
+          {/* Loading State */}
+          {loading && activeTab === 'stores' && (
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00897B] mx-auto"></div>
+              <p className="text-gray-600 mt-4">Finding stores...</p>
+            </div>
+          )}
+
+          {/* Loading banner — shown while real stores are being fetched from the backend */}
+          {loadingRealStores && (
+            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 text-sm text-amber-800">
+              <svg className="animate-spin h-4 w-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+              </svg>
+              <span>Finding live stores near you — real stores will appear in a few seconds…</span>
+            </div>
+          )}
+
+          {/* Store Cards Grid */}
+          {!loading && activeTab === 'stores' && filteredStores.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStores.map((store, index) => (
+                <motion.div
+                  key={store._id || store.id || index}
+                  initial={{ opacity: 0, y: 30 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  whileHover={store._isSample ? {} : { y: -8 }}
+                  onClick={() => {
+                    // Sample store — not yet live, do nothing
+                    if (store._isSample) return
+                    // Store vendor data in sessionStorage for the storefront to use
+                    const vendorId = store._id || store.id
+                    sessionStorage.setItem(`vendor_${vendorId}`, JSON.stringify({
+                      storeName: store.name || store.storeName || store.businessName,
+                      businessName: store.businessName || store.name || store.storeName,
+                      phone: store.phone || '+44 20 7123 4567',
+                      deliveryTime: store.deliveryTime || '30 mins',
+                      location: store.location,
+                      rating: store.rating,
+                      image: store.image || store.logo,
+                      description: store.description
+                    }))
+                    navigate(`/store/${vendorId}`)
+                  }}
+                  className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all border border-gray-100 ${store._isSample ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl cursor-pointer'}`}
+                >
+                  {/* Store Image - 16:9 aspect ratio */}
+                  <div className="relative w-full aspect-video bg-gray-200 overflow-hidden">
+                    {store.image || store.logo ? (
+                      <img
+                        src={store.image || store.logo}
+                        alt={store.name || store.storeName || 'African Grocery Store'}
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                        loading="lazy"
+                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex' }}
+                      />
+                    ) : null}
+                    <div
+                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-afri-green to-afri-green-dark"
+                      style={{ display: (store.image || store.logo) ? 'none' : 'flex' }}
+                    >
+                      <span className="text-5xl font-bold text-white/80">
+                        {(store.name || store.storeName || store.businessName || 'S').charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    {/* Price Range / Coming Soon Badge */}
+                    <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${store._isSample ? 'bg-yellow-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-700'}`}>
+                      {store._isSample ? 'Coming Soon' : `Shop from ${store.priceRange || '£10-£500'}`}
+                    </div>
+                    {/* Rating & Open Badge */}
+                    <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md flex items-center gap-1 ${
+                      store.isOpen !== false ? 'bg-green-500 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                      <span>{store.rating || 4.5}</span>
+                      <span>{store.isOpen !== false ? 'Open' : 'Closed'}</span>
+                    </div>
+                  </div>
+
+                  {/* Store Info */}
+                  <div className="p-5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-lg font-bold text-gray-900">
+                        {store.name || store.storeName || store.businessName}
+                      </h3>
+                      {store.verified !== false && (
+                        <svg className="w-5 h-5 text-green-500" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
+                        </svg>
+                      )}
+                    </div>
+
+                    <p className="text-sm text-gray-600 mb-1">
+                      Available: {store.hours || '06:00am - 09:00pm'}
+                    </p>
+                    <p className="text-sm text-gray-600 mb-3">
+                      Location: {store.location || 'United Kingdom'}
+                    </p>
+
+                    {/* Delivery Info */}
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-3">
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      </svg>
+                      <span>{store.distance || '0.1km'}</span>
+                      <span>•</span>
+                      <span>{store.deliveryFee || '£25'} Deliveries</span>
+                      <span>•</span>
+                      <span>ADT {store.deliveryTime || '30 mins'}</span>
+                    </div>
+
+                    {/* Rating Stars */}
+                    <div className="flex items-center gap-1 mb-3">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <svg
+                          key={star}
+                          className={`w-4 h-4 ${star <= Math.floor(store.rating || 4.5) ? 'text-yellow-400' : 'text-gray-300'}`}
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
+                        </svg>
+                      ))}
+                    </div>
+
+                    {/* Shopping Methods */}
+                    <div className="flex flex-wrap gap-1">
+                      {(store.methods || ['Shopping', 'In-Shopping', 'Delivery']).map((method) => (
+                        <span
+                          key={method}
+                          className="px-2 py-1 bg-gray-100 text-gray-600 rounded text-xs font-medium"
+                        >
+                          {method}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+
+          {/* Empty State - No Stores Found (Like Uber Eats/Just Eat) */}
+          {!loading && activeTab === 'stores' && filteredStores.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center py-16 bg-white rounded-2xl shadow-lg"
+            >
+              <div className="max-w-md mx-auto px-6">
+                {/* Icon */}
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <svg className="w-10 h-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+
+                {/* Message */}
+                <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                  {searchLocation ? `No stores in ${searchLocation}` : 'No stores found'}
+                </h3>
+                <p className="text-gray-600 mb-8">
+                  {searchLocation 
+                    ? `We haven't reached ${searchLocation} yet, but we're expanding! Try one of these options:`
+                    : 'Try searching for a specific location or browse all available stores.'}
+                </p>
+
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {/* Expand Search */}
+                  {searchLocation && (
+                    <button
+                      onClick={() => expandSearchRadius(100)}
+                      className="w-full flex items-center justify-center gap-2 bg-[#00897B] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#00695C] transition-all shadow-md hover:shadow-lg"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                      </svg>
+                      Expand search area
+                    </button>
+                  )}
+
+                  {/* Browse All Stores */}
+                  <button
+                    onClick={browseAllStores}
+                    className="w-full flex items-center justify-center gap-2 bg-white border-2 border-[#00897B] text-[#00897B] px-6 py-3 rounded-xl font-semibold hover:bg-[#E0F2F1] transition-all"
+                  >
+                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                    Browse all stores
+                  </button>
+
+                  {/* Try Different Location */}
+                  <div className="pt-4 border-t">
+                    <p className="text-sm text-gray-500 mb-3">Try a different location:</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {['London', 'Manchester', 'Birmingham', 'Dublin', 'Liverpool', 'Bristol'].map(city => (
+                        <button
+                          key={city}
+                          onClick={() => {
+                            setSearchLocation(city)
+                            navigate(`/stores?location=${city}`)
+                          }}
+                          className="px-4 py-2 bg-gray-100 text-gray-700 rounded-full text-sm font-medium hover:bg-gray-200 transition-colors"
+                        >
+                          {city}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Notify Me Option */}
+                {searchLocation && (
+                  <div className="mt-8 pt-6 border-t">
+                    <p className="text-sm text-gray-600 mb-3">
+                      Want to know when we launch in {searchLocation}?
+                    </p>
+                    <button className="text-[#00897B] font-semibold hover:underline text-sm">
+                      Notify me when available →
+                    </button>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-[#1a1a1a] text-white py-12 mt-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div>
+              <h4 className="font-bold mb-4">Afrimercato</h4>
+              <p className="text-gray-400 text-sm">Fresh African groceries delivered across the UK.</p>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Company</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li><Link to="/" className="hover:text-yellow-500">Home</Link></li>
+                <li><Link to="/stores" className="hover:text-yellow-500">Stores</Link></li>
+                <li><Link to="/partner" className="hover:text-yellow-500">Partner With Us</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Cities</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li><button onClick={() => navigate('/stores?location=London')} className="hover:text-yellow-500">London</button></li>
+                <li><button onClick={() => navigate('/stores?location=Manchester')} className="hover:text-yellow-500">Manchester</button></li>
+                <li><button onClick={() => navigate('/stores?location=Birmingham')} className="hover:text-yellow-500">Birmingham</button></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-bold mb-4">Contact</h4>
+              <p className="text-gray-400 text-sm">info@afrimercato.co.uk</p>
+            </div>
+          </div>
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
+            <p>© 2024 Afrimercato. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  )
+}

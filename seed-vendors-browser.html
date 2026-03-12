@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AfriMercato - Seed Production Vendors</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        .status.info {
+            background: #e3f2fd;
+            color: #1976d2;
+            border-left: 4px solid #1976d2;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+            border-left: 4px solid #388e3c;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+            border-left: 4px solid #c62828;
+        }
+
+        .status.warning {
+            background: #fff3e0;
+            color: #f57c00;
+            border-left: 4px solid #f57c00;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            width: 100%;
+            margin-bottom: 15px;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .logs {
+            background: #f5f5f5;
+            border-radius: 10px;
+            padding: 20px;
+            max-height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 5px;
+            border-radius: 3px;
+        }
+
+        .log-entry.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .log-entry.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .log-entry.info {
+            color: #1976d2;
+        }
+
+        .credentials {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        .credentials h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .credential-item {
+            background: white;
+            padding: 12px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌍 AfriMercato Vendor Seeder</h1>
+        <p class="subtitle">Populate your production database with demo vendors</p>
+
+        <div id="status" class="status info">
+            Ready to seed vendors to production database
+        </div>
+
+        <button id="seedBtn" onclick="seedVendors()">
+            🚀 Seed Production Vendors
+        </button>
+
+        <button id="checkBtn" onclick="checkVendors()" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
+            🔍 Check Existing Vendors
+        </button>
+
+        <div id="spinner" class="spinner hidden"></div>
+
+        <div id="logs" class="logs hidden"></div>
+
+        <div id="credentials" class="credentials hidden">
+            <h3>📧 Login Credentials</h3>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://afrimercato-backend-production-0329.up.railway.app/api';
+        let logs = [];
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            logs.push({ message: `[${timestamp}] ${message}`, type });
+            updateLogs();
+        }
+
+        function updateLogs() {
+            const logsDiv = document.getElementById('logs');
+            logsDiv.classList.remove('hidden');
+            logsDiv.innerHTML = logs.map(l =>
+                `<div class="log-entry ${l.type}">${l.message}</div>`
+            ).join('');
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function setStatus(message, type = 'info') {
+            const statusDiv = document.getElementById('status');
+            statusDiv.className = `status ${type}`;
+            statusDiv.textContent = message;
+        }
+
+        function showSpinner(show) {
+            document.getElementById('spinner').classList.toggle('hidden', !show);
+            document.getElementById('seedBtn').disabled = show;
+            document.getElementById('checkBtn').disabled = show;
+        }
+
+        async function seedVendors() {
+            logs = [];
+            setStatus('🚀 Seeding vendors...', 'info');
+            showSpinner(true);
+            log('Starting vendor seeding process...', 'info');
+
+            try {
+                log('Calling: POST /api/admin/seed-vendors', 'info');
+
+                const response = await fetch(`${API_BASE}/admin/seed-vendors`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setStatus('✅ Vendors seeded successfully!', 'success');
+                    log('✅ Seeding completed successfully!', 'success');
+                    log(`📊 Vendors created: ${data.data.vendorsCreated}`, 'success');
+                    log(`📊 Vendors skipped: ${data.data.vendorsSkipped}`, 'info');
+                    log(`📊 Products created: ${data.data.productsCreated}`, 'success');
+
+                    // Show credentials
+                    if (data.data.credentials) {
+                        const credDiv = document.getElementById('credentials');
+                        credDiv.classList.remove('hidden');
+                        credDiv.innerHTML = '<h3>📧 Login Credentials</h3>' +
+                            data.data.credentials.map(c =>
+                                `<div class="credential-item">
+                                    <strong>${c.email}</strong> / ${c.password}
+                                </div>`
+                            ).join('');
+                    }
+                } else {
+                    setStatus('⚠️ Seeding completed with issues', 'warning');
+                    log(`⚠️ ${data.message}`, 'error');
+                    if (data.error) {
+                        log(`Error details: ${data.error}`, 'error');
+                    }
+                }
+            } catch (error) {
+                setStatus(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Network error: ${error.message}`, 'error');
+                log('💡 Possible causes:', 'info');
+                log('   1. Railway deployment in progress', 'info');
+                log('   2. Admin endpoint not yet available', 'info');
+                log('   3. Network connectivity issue', 'info');
+            } finally {
+                showSpinner(false);
+            }
+        }
+
+        async function checkVendors() {
+            logs = [];
+            setStatus('🔍 Checking vendors...', 'info');
+            showSpinner(true);
+            log('Checking existing vendors...', 'info');
+
+            try {
+                log('Calling: GET /api/admin/check-vendors', 'info');
+
+                const response = await fetch(`${API_BASE}/admin/check-vendors`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                log(`Response status: ${response.status}`, response.ok ? 'success' : 'error');
+
+                const data = await response.json();
+
+                if (data.success) {
+                    setStatus(`✅ Found ${data.data.vendorsFound} vendors`, 'success');
+                    log(`✅ Users found: ${data.data.usersFound}`, 'success');
+                    log(`✅ Vendors found: ${data.data.vendorsFound}`, 'success');
+
+                    if (data.data.vendors && data.data.vendors.length > 0) {
+                        data.data.vendors.forEach((v, i) => {
+                            log(`${i + 1}. ${v.storeName} - ${v.email} - ${v.city} ${v.isVerified ? '✅' : '❌'}`, 'info');
+                        });
+
+                        // Show product counts
+                        if (data.data.productCounts) {
+                            log('', 'info');
+                            log('Product Counts:', 'info');
+                            data.data.productCounts.forEach(p => {
+                                log(`  ${p.storeName}: ${p.productCount} products`, 'info');
+                            });
+                        }
+                    } else {
+                        log('⚠️ No demo vendors found in database', 'warning');
+                        log('💡 Click "Seed Production Vendors" to create them', 'info');
+                    }
+                } else {
+                    setStatus('⚠️ Failed to check vendors', 'warning');
+                    log(`⚠️ ${data.message}`, 'error');
+                }
+            } catch (error) {
+                setStatus(`❌ Error: ${error.message}`, 'error');
+                log(`❌ Network error: ${error.message}`, 'error');
+            } finally {
+                showSpinner(false);
+            }
+        }
+
+        // Auto-check on load
+        window.addEventListener('load', () => {
+            log('🌐 Connected to: ' + API_BASE, 'info');
+            log('💡 Ready to seed vendors!', 'info');
+        });
+    </script>
+</body>
+</html>

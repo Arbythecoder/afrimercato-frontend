@@ -1,0 +1,222 @@
+/**
+ * SLUG RESOLUTION DEMO
+ * 
+ * This HTML page demonstrates the new slug-based vendor resolution system.
+ * Open this in a browser to test store navigation patterns.
+ */
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Afrimercato - Slug Resolution Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #00897B;
+        }
+        .test-link {
+            display: inline-block;
+            background: #00897B;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 6px;
+            margin: 10px 10px 10px 0;
+            font-weight: 500;
+        }
+        .test-link:hover {
+            background: #00695C;
+        }
+        .api-test {
+            background: #e3f2fd;
+            border-left-color: #1976d2;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 14px;
+        }
+        .status { 
+            display: inline-block; 
+            padding: 4px 8px; 
+            border-radius: 4px; 
+            font-size: 12px; 
+            font-weight: 600;
+        }
+        .status.implemented { background: #d4edda; color: #155724; }
+        .status.testing { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+    <h1>🏪 Afrimercato Slug Resolution System</h1>
+    <p><span class="status implemented">IMPLEMENTED</span> Vendor stores can now be accessed via SEO-friendly URLs!</p>
+    
+    <div class="test-section">
+        <h2>🔗 Frontend Store Navigation</h2>
+        <p>Test these store links to verify slug resolution works:</p>
+        
+        <!-- Assuming frontend is running on localhost:3000 -->
+        <a href="http://localhost:3000/store/sample-accra-fresh-market" class="test-link">
+            🇬🇭 Accra Fresh Market (Slug)
+        </a>
+        <a href="http://localhost:3000/store/sample-mama-nkechi-african-mart" class="test-link">
+            🇳🇬 Mama Nkechi (Slug)
+        </a>
+        <a href="http://localhost:3000/store/sample-sahara-foods-spices" class="test-link">
+            🌶️ Sahara Foods (Slug)
+        </a>
+        
+        <h3>✨ What should happen:</h3>
+        <ol>
+            <li><strong>Frontend detects slug format</strong> (not 24-char ObjectId)</li>
+            <li><strong>Calls slug resolution API</strong> <code>/api/vendors/slug/sample-accra-fresh-market</code></li>
+            <li><strong>Gets ObjectId back</strong> and uses it for products/orders/location calls</li>
+            <li><strong>Store page loads normally</strong> with correct vendor data</li>
+        </ol>
+    </div>
+
+    <div class="test-section api-test">
+        <h2>🔧 Backend API Testing</h2>
+        <p>Test the new slug resolution endpoint directly:</p>
+        
+        <h3>Endpoint: GET /api/vendors/slug/{slug}</h3>
+        <pre>
+# Test with curl (replace localhost:8080 with your backend URL)
+curl "http://localhost:8080/api/vendors/slug/sample-accra-fresh-market"
+
+# Expected response:
+{
+  "success": true,
+  "data": {
+    "_id": "60f1b2b8e1b2c3d4e5f6a7b8",
+    "id": "60f1b2b8e1b2c3d4e5f6a7b8",
+    "storeName": "Accra Fresh Market",
+    "slug": "accra-fresh-market",
+    "logo": "...",
+    "rating": 4.6,
+    "reviews": 89
+  }
+}
+        </pre>
+
+        <h3>Endpoint: GET /api/products/vendor/{vendorId}</h3>
+        <p><span class="status implemented">ENHANCED</span> Now supports both ObjectId and slug formats:</p>
+        <pre>
+# These should all work:
+curl "http://localhost:8080/api/products/vendor/60f1b2b8e1b2c3d4e5f6a7b8"  # ObjectId
+curl "http://localhost:8080/api/products/vendor/sample-accra-fresh-market"   # Slug
+        </pre>
+    </div>
+
+    <div class="test-section">
+        <h2>🛠️ Implementation Details</h2>
+        
+        <h3>Backend Changes:</h3>
+        <ul>
+            <li>✅ Added <code>slug</code> field to Vendor model with auto-generation</li>
+            <li>✅ Created <code>GET /api/vendors/slug/:slug</code> resolution endpoint</li>
+            <li>✅ Enhanced <code>/api/products/vendor/:vendorId</code> to accept slugs</li>
+            <li>✅ Added slug to featured vendors response</li>
+        </ul>
+
+        <h3>Frontend Changes:</h3>
+        <ul>
+            <li>✅ Updated <code>ClientVendorStorefront.jsx</code> with slug detection</li>
+            <li>✅ Updated <code>Checkout.jsx</code> vendor resolution</li>
+            <li>✅ Updated <code>ShoppingCart.jsx</code> vendor resolution</li>
+            <li>✅ Added <code>getVendorBySlug()</code> API function</li>
+        </ul>
+
+        <h3>Benefits:</h3>
+        <ul>
+            <li>🔍 <strong>SEO-friendly URLs:</strong> <code>/store/accra-fresh-market</code> vs <code>/store/60f1b2b8e1b2c3d4e5f6a7b8</code></li>
+            <li>🔗 <strong>Shareable links:</strong> Easy to remember and share</li>
+            <li>⚡ <strong>Backward compatible:</strong> Existing ObjectId links still work</li>
+            <li>🛡️ <strong>Error resilient:</strong> Graceful fallbacks for edge cases</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>🧪 Manual Test Steps</h2>
+        <ol>
+            <li><strong>Start backend:</strong> Ensure server is running on port 8080</li>
+            <li><strong>Start frontend:</strong> Ensure React app is running on port 3000</li>
+            <li><strong>Visit stores page:</strong> <a href="http://localhost:3000/stores">localhost:3000/stores</a></li>
+            <li><strong>Click any store</strong> (they use slug IDs like "sample-accra-fresh-market")</li>
+            <li><strong>Verify store loads:</strong> Should show products and vendor info</li>
+            <li><strong>Check Network tab:</strong> Should see calls to <code>/api/vendors/slug/...</code></li>
+            <li><strong>Add to cart:</strong> Verify checkout and cart still work</li>
+        </ol>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Test Results</h2>
+        <p><span class="status testing">TESTING</span> Use this section to record your test results:</p>
+        
+        <h3>Store Navigation:</h3>
+        <ul>
+            <li>☐ Slug-based store URLs load correctly</li>
+            <li>☐ Vendor info displays properly</li>
+            <li>☐ Product listings show up</li>
+            <li>☐ No "Invalid _id" errors in console</li>
+        </ul>
+
+        <h3>Shopping Flow:</h3>
+        <ul>
+            <li>☐ Add products to cart works</li>
+            <li>☐ Shopping cart shows correct vendor</li>
+            <li>☐ Checkout process completes</li>
+            <li>☐ Order history displays properly</li>
+        </ul>
+
+        <h3>API Endpoints:</h3>
+        <ul>
+            <li>☐ <code>/api/vendors/slug/:slug</code> returns vendor data</li>
+            <li>☐ <code>/api/products/vendor/:slug</code> returns products</li>
+            <li>☐ Error handling works for invalid slugs</li>
+        </ul>
+    </div>
+
+    <script>
+        // Simple frontend testing
+        async function testAPI() {
+            const baseURL = 'http://localhost:8080/api';
+            
+            console.group('🧪 API Testing');
+            
+            try {
+                console.log('Testing slug resolution...');
+                const response = await fetch(`${baseURL}/vendors/slug/sample-accra-fresh-market`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    console.log('✅ Slug resolution works:', data);
+                } else {
+                    console.log('❌ Slug resolution failed:', data);
+                }
+            } catch (error) {
+                console.log('❌ Network error:', error);
+            }
+            
+            console.groupEnd();
+        }
+        
+        // Auto-test when page loads
+        document.addEventListener('DOMContentLoaded', testAPI);
+    </script>
+</body>
+</html>
