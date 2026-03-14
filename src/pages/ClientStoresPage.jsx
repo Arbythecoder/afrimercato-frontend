@@ -8,30 +8,32 @@ import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { searchVendorsByLocation, getFeaturedVendors } from '../services/api'
 
-// Sample stores shown immediately while backend wakes up
-const SAMPLE_STORES = [
-  { id: 1, name: 'Sahel Spice House', storeName: 'Sahel Spice House', location: 'London', hours: '08:00am - 08:00pm', rating: 4.9, deliveryTime: '30-45 min', distance: '0.3km', image: 'https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 2, name: 'Baobab Organics', storeName: 'Baobab Organics', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '0.5km', image: 'https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 3, name: "Mama Ade's Kitchen", storeName: "Mama Ade's Kitchen", location: 'London', hours: '06:00am - 08:00pm', rating: 4.9, deliveryTime: '20-35 min', distance: '0.7km', image: 'https://images.unsplash.com/photo-1528825871115-3581a5387919?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 4, name: 'Calabash & Co', storeName: 'Calabash & Co', location: 'London', hours: '08:00am - 10:00pm', rating: 4.7, deliveryTime: '30-50 min', distance: '1.2km', image: 'https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 5, name: 'Fresh Roots Produce', storeName: 'Fresh Roots Produce', location: 'London', hours: '07:00am - 09:00pm', rating: 4.8, deliveryTime: '25-40 min', distance: '1.5km', image: 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 6, name: 'Cheetham Hill Market', storeName: 'Cheetham Hill Market', location: 'Manchester', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '30-45 min', distance: '0.8km', image: 'https://images.unsplash.com/photo-1583119022894-919a68a3d0e3?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 7, name: 'Soho Road African Foods', storeName: 'Soho Road African Foods', location: 'Birmingham', hours: '07:00am - 09:00pm', rating: 4.7, deliveryTime: '25-40 min', distance: '0.4km', image: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 8, name: 'Stapleton Road Market', storeName: 'Stapleton Road Market', location: 'Bristol', hours: '08:00am - 08:00pm', rating: 4.8, deliveryTime: '30-50 min', distance: '0.6km', image: 'https://images.unsplash.com/photo-1544943910-4c1dc44aab44?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 9, name: 'Harehills African Grocers', storeName: 'Harehills African Grocers', location: 'Leeds', hours: '07:00am - 09:00pm', rating: 4.6, deliveryTime: '25-40 min', distance: '1.1km', image: 'https://images.unsplash.com/photo-1599909533681-74d488b9dddf?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 10, name: 'Granby Street Market', storeName: 'Granby Street Market', location: 'Liverpool', hours: '08:00am - 08:00pm', rating: 4.7, deliveryTime: '30-45 min', distance: '0.9km', image: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 11, name: 'Sharrow African Market', storeName: 'Sharrow African Market', location: 'Sheffield', hours: '07:00am - 09:00pm', rating: 4.5, deliveryTime: '30-50 min', distance: '1.4km', image: 'https://images.unsplash.com/photo-1565680018434-b513d5e5fd47?w=600&auto=format&fit=crop', _isSample: true },
-  { id: 12, name: 'Govanhill African Foods', storeName: 'Govanhill African Foods', location: 'Glasgow', hours: '08:00am - 08:00pm', rating: 4.6, deliveryTime: '35-50 min', distance: '2.1km', image: 'https://images.unsplash.com/photo-1513530534585-c7b1394c6d51?w=600&auto=format&fit=crop', _isSample: true },
-]
+function StoreCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
+      <div className="w-full aspect-video bg-gray-200" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="h-4 bg-gray-200 rounded w-2/3" />
+        <div className="flex gap-2 pt-2">
+          <div className="h-6 bg-gray-200 rounded-full w-20" />
+          <div className="h-6 bg-gray-200 rounded-full w-16" />
+          <div className="h-6 bg-gray-200 rounded-full w-20" />
+        </div>
+      </div>
+    </div>
+  )
+}
 
 export default function ClientStoresPage() {
   const [searchParams] = useSearchParams()
   const location = searchParams.get('location') || ''
   const navigate = useNavigate()
 
-  const [stores, setStores] = useState(SAMPLE_STORES)
-  const [loading, setLoading] = useState(false)
-  const [loadingRealStores, setLoadingRealStores] = useState(true)
+  const [stores, setStores] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [loadingRealStores, setLoadingRealStores] = useState(false)
   const [searchLocation, setSearchLocation] = useState(location)
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
@@ -57,22 +59,15 @@ export default function ClientStoresPage() {
   }, [searchLocation])
 
   useEffect(() => {
-    // Show sample stores immediately so users never see a blank spinner
-    if (!location.trim()) {
-      setStores(SAMPLE_STORES)
-      setLoading(false)
-    }
-    // Silently load real data in background
     fetchStores()
   }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const fetchStores = async () => {
+    setLoading(true)
     try {
       if (!location.trim()) {
-        // No location — load ALL real vendors from DB
         const response = await getFeaturedVendors(50)
         if (response.success && response.data?.length > 0) {
-          // Normalise field names for the store card
           const vendors = response.data.map(v => ({
             ...v,
             name: v.storeName,
@@ -80,12 +75,10 @@ export default function ClientStoresPage() {
             location: v.location?.city || v.location || 'United Kingdom',
           }))
           setStores(vendors)
+        } else {
+          setStores([])
         }
-        // else keep sample stores
-        setLoadingRealStores(false)
       } else {
-        // Location search — show spinner
-        setLoading(true)
         const response = await searchVendorsByLocation(location, 50)
         if (response.success && response.data?.vendors?.length > 0) {
           setStores(response.data.vendors)
@@ -94,13 +87,10 @@ export default function ClientStoresPage() {
         }
       }
     } catch (error) {
-      if (import.meta.env.DEV) {
-        console.warn('[STORE_FETCH_FAIL]', error.message)
-      }
-      // keep sample stores on error
+      if (import.meta.env.DEV) console.warn('[STORE_FETCH_FAIL]', error.message)
+      setStores([])
     } finally {
       setLoading(false)
-      setLoadingRealStores(false)
     }
   }
 
@@ -125,24 +115,8 @@ export default function ClientStoresPage() {
   }
 
   const browseAllStores = async () => {
-    setStores(SAMPLE_STORES)
     setSearchLocation('')
-    try {
-      setLoading(true)
-      const response = await searchVendorsByLocation('', 500)
-
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
-        setStores(response.data.vendors)
-      }
-      // else keep sample stores
-    } catch (error) {
-      if (import.meta.env.DEV) {
-        console.warn('[BROWSE_ALL_FAIL]', error.message)
-      }
-      // keep sample stores on error
-    } finally {
-      setLoading(false)
-    }
+    navigate('/stores')
   }
 
   // Apply filter/sort logic to stores
@@ -465,22 +439,10 @@ export default function ClientStoresPage() {
           </div>
           )}
 
-          {/* Loading State */}
+          {/* Skeleton loading */}
           {loading && activeTab === 'stores' && (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00897B] mx-auto"></div>
-              <p className="text-gray-600 mt-4">Finding stores...</p>
-            </div>
-          )}
-
-          {/* Loading banner — shown while real stores are being fetched from the backend */}
-          {loadingRealStores && (
-            <div className="flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 mb-5 text-sm text-amber-800">
-              <svg className="animate-spin h-4 w-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-              </svg>
-              <span>Finding live stores near you — real stores will appear in a few seconds…</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => <StoreCardSkeleton key={i} />)}
             </div>
           )}
 
@@ -493,10 +455,8 @@ export default function ClientStoresPage() {
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  whileHover={store._isSample ? {} : { y: -8 }}
+                  whileHover={{ y: -8 }}
                   onClick={() => {
-                    // Sample store — not yet live, do nothing
-                    if (store._isSample) return
                     // Store vendor data in sessionStorage for the storefront to use
                     const vendorId = store._id || store.id
                     sessionStorage.setItem(`vendor_${vendorId}`, JSON.stringify({
@@ -511,7 +471,7 @@ export default function ClientStoresPage() {
                     }))
                     navigate(`/store/${vendorId}`)
                   }}
-                  className={`bg-white rounded-2xl shadow-lg overflow-hidden transition-all border border-gray-100 ${store._isSample ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-xl cursor-pointer'}`}
+                  className="bg-white rounded-2xl shadow-lg overflow-hidden transition-all border border-gray-100 hover:shadow-xl cursor-pointer"
                 >
                   {/* Store Image - 16:9 aspect ratio */}
                   <div className="relative w-full aspect-video bg-gray-200 overflow-hidden">
@@ -532,9 +492,9 @@ export default function ClientStoresPage() {
                         {(store.name || store.storeName || store.businessName || 'S').charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    {/* Price Range / Coming Soon Badge */}
-                    <div className={`absolute top-3 left-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${store._isSample ? 'bg-yellow-500 text-white' : 'bg-white/90 backdrop-blur-sm text-gray-700'}`}>
-                      {store._isSample ? 'Coming Soon' : `Shop from ${store.priceRange || '£10-£500'}`}
+                    {/* Price Range Badge */}
+                    <div className="absolute top-3 left-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md bg-white/90 backdrop-blur-sm text-gray-700">
+                      {`Shop from ${store.priceRange || '£10-£500'}`}
                     </div>
                     {/* Rating & Open Badge */}
                     <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md flex items-center gap-1 ${

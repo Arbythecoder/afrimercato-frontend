@@ -49,70 +49,76 @@ export const AuthProvider = ({ children }) => {
     checkAuth()
   }, [])
 
+  // Silently refresh access token using httpOnly cookie — no page reload required
+  const silentRefresh = async () => {
+    try {
+      const response = await apiCall('/auth/refresh', { method: 'POST' })
+      if (response?.success && response.data?.token) {
+        localStorage.setItem('afrimercato_token', response.data.token)
+        const normalizedUser = normalizeUserRoles(response.data.user)
+        localStorage.setItem('afrimercato_role', normalizedUser.role)
+        localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
+        setUser(normalizedUser)
+        setIsAuthenticated(true)
+        return true
+      }
+    } catch {
+      // Refresh cookie expired or missing — user must log in again
+    }
+    return false
+  }
+
   const checkAuth = async () => {
     const token = localStorage.getItem('afrimercato_token')
 
-    // Dev logging
-    if (import.meta.env.DEV) {
-      console.log('🔐 Auth Check:', {
-        hasToken: !!token,
-        isAuth: isAuthenticated
-      })
+    if (!token) {
+      // No access token — try silent refresh via httpOnly refresh cookie
+      const refreshed = await silentRefresh()
+      if (!refreshed) {
+        setLoading(false)
+        return
+      }
+      setLoading(false)
+      return
     }
 
-    if (token) {
-      // Decode token to check expiry
-      const decoded = decodeToken(token)
+    const decoded = decodeToken(token)
 
-      if (decoded && decoded.id && decoded.exp * 1000 > Date.now()) {
-        // Token is valid, validate with backend
-        try {
-          const response = await authAPI.me() // Use /api/auth/me endpoint
-          
-          if (response && response.success) {
-            const normalizedUser = normalizeUserRoles(response.data)
-            setUser(normalizedUser)
+    if (!decoded || !decoded.id || decoded.exp * 1000 <= Date.now()) {
+      // Access token expired — try silent refresh before logging out
+      const refreshed = await silentRefresh()
+      if (!refreshed) hardLogout()
+      setLoading(false)
+      return
+    }
+
+    // Token looks valid — confirm with backend
+    try {
+      const response = await authAPI.me()
+      if (response?.success) {
+        const normalizedUser = normalizeUserRoles(response.data)
+        setUser(normalizedUser)
+        setIsAuthenticated(true)
+        localStorage.setItem('afrimercato_role', normalizedUser.role)
+        localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
+      } else {
+        hardLogout()
+      }
+    } catch (error) {
+      if (error.code === 'AUTH_EXPIRED' || error.status === 401) {
+        const refreshed = await silentRefresh()
+        if (!refreshed) hardLogout()
+      } else {
+        // Server/network error — keep session alive from cache
+        const cachedUserJson = localStorage.getItem('afrimercato_user')
+        if (cachedUserJson) {
+          try {
+            setUser(normalizeUserRoles(JSON.parse(cachedUserJson)))
             setIsAuthenticated(true)
-            
-            // Update localStorage with standard keys
-            localStorage.setItem('afrimercato_role', normalizedUser.role)
-            localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
-            
-            if (import.meta.env.DEV) {
-              console.log('✅ Auth validated:', normalizedUser.role)
-            }
-          } else {
-            // Token invalid - hard logout
+          } catch {
             hardLogout()
-          }
-        } catch (error) {
-          // Only invalidate session on definitive auth rejections (expired/invalid token).
-          // Network timeouts, 503s, and server errors should NOT log the user out —
-          // the token may be perfectly valid but the server is cold-starting.
-          if (error.code === 'AUTH_EXPIRED' || error.status === 401) {
-            hardLogout()
-          } else {
-            if (import.meta.env.DEV) {
-              console.warn('[AuthContext] Auth check failed (server/network):', error.message)
-            }
-            // Fall back to cached user so the session survives a brief server hiccup
-            const cachedUserJson = localStorage.getItem('afrimercato_user')
-            if (cachedUserJson) {
-              try {
-                const parsed = JSON.parse(cachedUserJson)
-                const normalizedUser = normalizeUserRoles(parsed)
-                setUser(normalizedUser)
-                setIsAuthenticated(true)
-              } catch {
-                // Corrupted cache — clear and force re-login next visit
-                hardLogout()
-              }
-            }
           }
         }
-      } else {
-        // Token expired or invalid - hard logout
-        hardLogout()
       }
     }
 
@@ -124,20 +130,17 @@ export const AuthProvider = ({ children }) => {
       const response = await authAPI.login({ email, password })
 
       if (response && response.success) {
-        const { token, user, refreshToken } = response.data
+        const { token, user } = response.data
         const normalizedUser = normalizeUserRoles(user)
-        
-        // Store in localStorage with standard keys
+
+        // Access token in localStorage — refresh token lives in httpOnly cookie (set by server)
         localStorage.setItem('afrimercato_token', token)
         localStorage.setItem('afrimercato_role', normalizedUser.role)
         localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
-        if (refreshToken) {
-          localStorage.setItem('afrimercato_refresh_token', refreshToken)
-        }
-        
+
         setUser(normalizedUser)
         setIsAuthenticated(true)
-        
+
         if (import.meta.env.DEV) {
           console.log('🔑 Login success:', normalizedUser.role)
         }
@@ -196,7 +199,7 @@ export const AuthProvider = ({ children }) => {
       }
 
       if (response && response.success) {
-        const { token, user, refreshToken } = response.data
+        const { token, user } = response.data
         const normalizedUser = normalizeUserRoles(user)
 
         // Vendors must verify their email before being logged in
@@ -207,13 +210,10 @@ export const AuthProvider = ({ children }) => {
           return { success: true, user: normalizedUser, requiresVerification: true }
         }
 
-        // Store in localStorage with standard keys
+        // Access token in localStorage — refresh token lives in httpOnly cookie (set by server)
         localStorage.setItem('afrimercato_token', token)
         localStorage.setItem('afrimercato_role', normalizedUser.role)
         localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
-        if (refreshToken) {
-          localStorage.setItem('afrimercato_refresh_token', refreshToken)
-        }
 
         setUser(normalizedUser)
         setIsAuthenticated(true)
@@ -238,6 +238,9 @@ export const AuthProvider = ({ children }) => {
   }
 
   const hardLogout = (roleType = null) => {
+    // Ask server to clear httpOnly refresh cookie
+    apiCall('/auth/logout', { method: 'POST' }).catch(() => {})
+
     // Clear ALL auth tokens (use standard keys only)
     localStorage.removeItem('afrimercato_token')
     localStorage.removeItem('afrimercato_refresh_token')

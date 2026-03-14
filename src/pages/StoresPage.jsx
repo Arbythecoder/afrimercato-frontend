@@ -4,6 +4,27 @@ import { motion } from 'framer-motion'
 import { MapPinIcon, StarIcon, ClockIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid'
 import { searchVendorsByLocation } from '../services/api'
 
+function StoreCardSkeleton() {
+  return (
+    <div className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden animate-pulse">
+      <div className="h-48 bg-gray-200" />
+      <div className="p-5 space-y-3">
+        <div className="h-5 bg-gray-200 rounded w-3/4" />
+        <div className="h-4 bg-gray-200 rounded w-1/3" />
+        <div className="h-4 bg-gray-200 rounded w-1/2" />
+        <div className="flex gap-2">
+          <div className="h-6 bg-gray-200 rounded-full w-16" />
+          <div className="h-6 bg-gray-200 rounded-full w-20" />
+        </div>
+        <div className="flex justify-between pt-2 border-t">
+          <div className="h-4 bg-gray-200 rounded w-24" />
+          <div className="h-4 bg-gray-200 rounded w-16" />
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function StoresPage() {
   const [searchParams] = useSearchParams()
   const location = searchParams.get('location') || ''
@@ -36,75 +57,20 @@ export default function StoresPage() {
   }, [location])
 
   const fetchStores = async () => {
-    // No location — skip API call, show all sample stores immediately
-    if (!location.trim()) {
-      setStores(getSampleStores(''))
-      setLoading(false)
-      return
-    }
-
+    setLoading(true)
     try {
-      setLoading(true)
-      const response = await searchVendorsByLocation(location, 50)
-
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
+      const response = await searchVendorsByLocation(location || '', 50)
+      if (response.success && response.data?.vendors?.length > 0) {
         setStores(response.data.vendors)
       } else {
-        setStores(getSampleStores(location))
+        setStores([])
       }
     } catch (error) {
-      console.error('[STORE_SEARCH_FAIL]', location, error.message)
-      setStores(getSampleStores(location))
+      if (import.meta.env.DEV) console.error('[STORE_SEARCH_FAIL]', location, error.message)
+      setStores([])
     } finally {
       setLoading(false)
     }
-  }
-
-
-  const getSampleStores = (searchLoc) => {
-    // Sample stores with UK locations
-    const allStores = [
-      // London stores
-      { id: 1, name: 'Green Valley Farms', category: 'Fresh Produce', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.8, deliveryTime: '20-30 min', minOrder: '£10', tags: ['Vegetables', 'Fruits', 'Organic'], location: 'London', address: '123 High Street, London E1 6AN' },
-      { id: 2, name: 'African Spice Market', category: 'African Groceries', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.9, deliveryTime: '25-35 min', minOrder: '£15', tags: ['Spices', 'Grains', 'Authentic'], location: 'London', address: '45 Peckham High St, London SE15' },
-      { id: 3, name: 'Lagos Kitchen Store', category: 'Nigerian Foods', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600', rating: 4.9, deliveryTime: '25-35 min', minOrder: '£15', tags: ['Nigerian', 'Palm Oil', 'Cassava'], location: 'London', address: '78 Brixton Road, London SW9' },
-      { id: 4, name: 'Tropical Fruits Hub', category: 'Exotic Fruits', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600', rating: 4.8, deliveryTime: '20-30 min', minOrder: '£12', tags: ['Plantain', 'Mango', 'Yam'], location: 'London', address: '12 Ridley Road Market, London E8' },
-      { id: 5, name: 'Hackney Fresh Foods', category: 'Fresh Produce', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.7, deliveryTime: '20-30 min', minOrder: '£10', tags: ['Vegetables', 'Fruits'], location: 'London', address: 'Hackney Market, London E8 5RT' },
-
-      // Manchester stores
-      { id: 6, name: 'Manchester African Market', category: 'African Groceries', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.6, deliveryTime: '30-40 min', minOrder: '£12', tags: ['African', 'Spices', 'Grains'], location: 'Manchester', address: '34 Cheetham Hill Road, Manchester M8' },
-      { id: 7, name: 'Moss Side Grocers', category: 'Fresh Produce', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.5, deliveryTime: '25-35 min', minOrder: '£10', tags: ['Vegetables', 'Fruits'], location: 'Manchester', address: '56 Great Western Street, Manchester M14' },
-      { id: 8, name: 'Afro-Caribbean Store MCR', category: 'Caribbean Foods', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600', rating: 4.7, deliveryTime: '30-40 min', minOrder: '£15', tags: ['Caribbean', 'Plantain', 'Rice'], location: 'Manchester', address: '89 Princess Road, Manchester M14' },
-
-      // Birmingham stores
-      { id: 9, name: 'Handsworth African Foods', category: 'African Groceries', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.8, deliveryTime: '20-30 min', minOrder: '£10', tags: ['African', 'Fresh', 'Halal'], location: 'Birmingham', address: '23 Soho Road, Birmingham B21' },
-      { id: 10, name: 'Birmingham Tropical Market', category: 'Tropical Foods', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600', rating: 4.6, deliveryTime: '25-35 min', minOrder: '£12', tags: ['Plantain', 'Yam', 'Cassava'], location: 'Birmingham', address: '45 Stratford Road, Birmingham B11' },
-
-      // Bristol stores
-      { id: 11, name: 'Bristol African Store', category: 'African Groceries', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.7, deliveryTime: '30-40 min', minOrder: '£12', tags: ['African', 'Caribbean', 'Fresh'], location: 'Bristol', address: '12 Stapleton Road, Bristol BS5' },
-      { id: 12, name: 'St Pauls Fresh Market', category: 'Fresh Produce', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.5, deliveryTime: '25-35 min', minOrder: '£10', tags: ['Vegetables', 'Fruits'], location: 'Bristol', address: '34 Grosvenor Road, Bristol BS2' },
-
-      // Leeds stores
-      { id: 13, name: 'Leeds African Groceries', category: 'African Foods', image: 'https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600', rating: 4.6, deliveryTime: '30-40 min', minOrder: '£12', tags: ['African', 'Spices', 'Grains'], location: 'Leeds', address: '67 Harehills Lane, Leeds LS8' },
-      { id: 14, name: 'Chapeltown Fresh Foods', category: 'Fresh Produce', image: 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=600', rating: 4.5, deliveryTime: '25-35 min', minOrder: '£10', tags: ['Vegetables', 'Fruits'], location: 'Leeds', address: '89 Chapeltown Road, Leeds LS7' },
-
-      // Liverpool stores
-      { id: 15, name: 'Liverpool African Market', category: 'African Groceries', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?w=600', rating: 4.7, deliveryTime: '30-40 min', minOrder: '£15', tags: ['African', 'Caribbean', 'Halal'], location: 'Liverpool', address: '45 Granby Street, Liverpool L8' },
-      { id: 16, name: 'Toxteth Tropical Foods', category: 'Tropical Foods', image: 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600', rating: 4.6, deliveryTime: '25-35 min', minOrder: '£12', tags: ['Plantain', 'Yam'], location: 'Liverpool', address: '23 Upper Parliament Street, Liverpool L8' },
-    ]
-
-    const tagged = allStores.map(s => ({ ...s, _isSample: true }))
-
-    // Filter by location
-    if (searchLoc) {
-      const filtered = tagged.filter(store =>
-        store.location.toLowerCase().includes(searchLoc.toLowerCase()) ||
-        store.address.toLowerCase().includes(searchLoc.toLowerCase())
-      )
-      return filtered.length > 0 ? filtered : tagged.slice(0, 6)
-    }
-
-    return tagged
   }
 
   const handleSearch = (e) => {
@@ -215,15 +181,14 @@ export default function StoresPage() {
               {location ? `Stores in ${location}` : 'All Stores'}
             </h2>
             <p className="text-gray-600">
-              {loading ? 'Searching...' : stores.some(s => s._isSample) ? `${stores.length} stores coming soon` : `${stores.length} stores found`}
+              {loading ? 'Searching...' : stores.length > 0 ? `${stores.length} stores found` : 'No stores found'}
             </p>
           </div>
 
-          {/* Loading State */}
+          {/* Skeleton loading */}
           {loading && (
-            <div className="text-center py-12">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-              <p className="text-gray-600 mt-4">Finding stores...</p>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => <StoreCardSkeleton key={i} />)}
             </div>
           )}
 
@@ -231,7 +196,6 @@ export default function StoresPage() {
           {!loading && stores.length > 0 && (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {stores.map((store) => {
-                const isSample = store._isSample === true
                 const displayName = store.storeName || store.name
                 const displayAddress = typeof store.address === 'object'
                   ? `${store.address.street}, ${store.address.city}`
@@ -244,10 +208,7 @@ export default function StoresPage() {
                     key={store._id || store.id}
                     whileHover={{ y: -5 }}
                     className="bg-white rounded-2xl shadow-lg hover:shadow-xl border border-gray-100 overflow-hidden cursor-pointer transition-all"
-                    onClick={() => isSample
-                      ? navigate(`/partner?city=${encodeURIComponent(store.location || '')}`)
-                      : navigate(`/store/${store._id}`)
-                    }
+                    onClick={() => navigate(`/store/${store._id}`)}
                   >
                     {/* Store Image */}
                     <div className="relative h-48">
@@ -256,11 +217,6 @@ export default function StoresPage() {
                         <StarIcon className="w-4 h-4 text-yellow-500" />
                         <span className="font-bold text-gray-900">{displayRating}</span>
                       </div>
-                      {isSample && (
-                        <div className="absolute top-3 left-3 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full">
-                          Coming Soon
-                        </div>
-                      )}
                     </div>
 
                     {/* Store Info */}
@@ -292,7 +248,7 @@ export default function StoresPage() {
                           <span>ADT {store.deliveryTime || '30-45 min'}</span>
                         </div>
                         <div className="font-semibold text-gray-900">
-                          {isSample ? 'Register your store' : `Min. ${store.minOrder || store.minimumOrder || '£10'}`}
+                          {`Min. ${store.minOrder || store.minimumOrder || '£10'}`}
                         </div>
                       </div>
                     </div>
