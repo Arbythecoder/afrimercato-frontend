@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { vendorAPI } from '../../services/api'
 import OrderDetailsModal from '../../components/OrderFulfillment/OrderDetailsModal'
+import useVendorStore from '../../stores/useVendorStore'
 
 // Order status badge colors
 const statusColors = {
@@ -37,6 +38,7 @@ const statusNames = {
 }
 
 function Orders() {
+  const updateOrderStatusInStore = useVendorStore(s => s.updateOrderStatus)
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
@@ -96,10 +98,9 @@ function Orders() {
     try {
       const response = await vendorAPI.updateOrderStatus(orderId, { status: newStatus, note })
       if (response.success) {
-        // Refresh orders list
+        updateOrderStatusInStore(orderId, newStatus)
         fetchOrders()
         if (selectedOrder && selectedOrder._id === orderId) {
-          // Refetch the specific order to get updated data
           const updatedOrderResponse = await vendorAPI.getOrder(orderId)
           if (updatedOrderResponse.success) {
             setSelectedOrder(updatedOrderResponse.data.order)

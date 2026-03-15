@@ -52,7 +52,7 @@ export const AuthProvider = ({ children }) => {
   // Silently refresh access token using httpOnly cookie — no page reload required
   const silentRefresh = async () => {
     try {
-      const response = await apiCall('/auth/refresh', { method: 'POST' })
+      const response = await apiCall('/auth/refresh-token', { method: 'POST' })
       if (response?.success && response.data?.token) {
         localStorage.setItem('afrimercato_token', response.data.token)
         const normalizedUser = normalizeUserRoles(response.data.user)
@@ -237,7 +237,7 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const hardLogout = (roleType = null) => {
+  const hardLogout = () => {
     // Ask server to clear httpOnly refresh cookie
     apiCall('/auth/logout', { method: 'POST' }).catch(() => {})
 
@@ -280,8 +280,8 @@ export const AuthProvider = ({ children }) => {
     window.location.replace('/')
   }
 
-  const logout = (roleType = null) => {
-    hardLogout(roleType)
+  const logout = () => {
+    hardLogout()
   }
 
   // Used by OAuthCallback to set auth state after social login
