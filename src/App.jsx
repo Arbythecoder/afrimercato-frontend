@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate, useLocation, Link } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
+import { useVendorStore, useCustomerStore, useAdminStore } from './stores'
 import { lazy, Suspense, useState, useEffect } from 'react'
 import CookieConsent from './components/CookieConsent'
 import BetaBanner from './components/BetaBanner'
@@ -145,6 +146,18 @@ function ProtectedRoute({ children, allowedRoles }) {
 
 function AppContent() {
   const { isAuthenticated, user, loading } = useAuth()
+  const resetVendor = useVendorStore(s => s.reset)
+  const resetCustomer = useCustomerStore(s => s.reset)
+  const resetAdmin = useAdminStore(s => s.reset)
+
+  // Clear all role stores when user logs out
+  useEffect(() => {
+    if (!isAuthenticated) {
+      resetVendor()
+      resetCustomer()
+      resetAdmin()
+    }
+  }, [isAuthenticated])
 
   if (loading) {
     return (
