@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { MapPinIcon, StarIcon, ClockIcon, MagnifyingGlassIcon } from '@heroicons/react/24/solid'
-import { searchVendorsByLocation } from '../services/api'
+import { SUGGESTED_CITIES } from '../constants/locations'
+import useCustomerStore from '../stores/useCustomerStore'
+import { useState } from 'react'
 
 function StoreCardSkeleton() {
   return (
@@ -30,48 +32,19 @@ export default function StoresPage() {
   const location = searchParams.get('location') || ''
   const navigate = useNavigate()
 
-  const [stores, setStores] = useState([])
-  const [loading, setLoading] = useState(true)
+  const { stores, loading: { stores: loading }, fetchStores } = useCustomerStore()
   const [searchLocation, setSearchLocation] = useState(location)
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [isTyping, setIsTyping] = useState(false)
 
-  // UK cities for autocomplete
-  const ukCities = [
-    'London', 'Birmingham', 'Manchester', 'Leeds', 'Liverpool', 'Bristol',
-    'Sheffield', 'Edinburgh', 'Glasgow', 'Newcastle', 'Nottingham', 
-    'Leicester', 'Southampton', 'Cardiff', 'Belfast', 'Brighton',
-    'Hull', 'Bradford', 'Coventry', 'Wolverhampton'
-  ]
-
-  // Filter suggestions based on input
+  const cityNames = SUGGESTED_CITIES.map(c => c.name)
   const suggestions = searchLocation
-    ? ukCities.filter(city => 
-        city.toLowerCase().startsWith(searchLocation.toLowerCase())
-      )
+    ? cityNames.filter(city => city.toLowerCase().startsWith(searchLocation.toLowerCase()))
     : []
 
   useEffect(() => {
-    fetchStores()
-
+    fetchStores(location)
   }, [location])
-
-  const fetchStores = async () => {
-    setLoading(true)
-    try {
-      const response = await searchVendorsByLocation(location || '', 50)
-      if (response.success && response.data?.vendors?.length > 0) {
-        setStores(response.data.vendors)
-      } else {
-        setStores([])
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) console.error('[STORE_SEARCH_FAIL]', location, error.message)
-      setStores([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const handleSearch = (e) => {
     e.preventDefault()

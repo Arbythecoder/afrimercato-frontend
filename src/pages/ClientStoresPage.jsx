@@ -6,7 +6,8 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { searchVendorsByLocation, getFeaturedVendors } from '../services/api'
+import { SUGGESTED_CITIES } from '../constants/locations'
+import useCustomerStore from '../stores/useCustomerStore'
 
 function StoreCardSkeleton() {
   return (
@@ -31,87 +32,29 @@ export default function ClientStoresPage() {
   const location = searchParams.get('location') || ''
   const navigate = useNavigate()
 
-  const [stores, setStores] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [loadingRealStores, setLoadingRealStores] = useState(false)
+  const { stores, loading: { stores: loading }, fetchStores } = useCustomerStore()
   const [searchLocation, setSearchLocation] = useState(location)
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
-  const [locationSuggestions, setLocationSuggestions] = useState([])
 
-  // HOTFIX: Real-time location suggestions to make search feel "alive"
-  const popularLocations = [
-    'London', 'Manchester', 'Birmingham', 'Leeds', 'Bristol',
-    'Liverpool', 'Peckham', 'Brixton', 'Tottenham', 'East Ham',
-    'Hackney', 'Lewisham', 'Croydon', 'Southwark', 'Newham'
-  ]
+  const cityNames = SUGGESTED_CITIES.map(c => c.name)
+  const locationSuggestions = searchLocation.trim()
+    ? cityNames.filter(c => c.toLowerCase().includes(searchLocation.toLowerCase())).slice(0, 5)
+    : cityNames.slice(0, 5)
 
   useEffect(() => {
-    if (searchLocation.trim().length > 0) {
-      const filtered = popularLocations.filter(loc =>
-        loc.toLowerCase().includes(searchLocation.toLowerCase())
-      )
-      setLocationSuggestions(filtered.slice(0, 5))
-    } else {
-      setLocationSuggestions(popularLocations.slice(0, 5))
-    }
-  }, [searchLocation])
-
-  useEffect(() => {
-    fetchStores()
+    fetchStores(location)
   }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const fetchStores = async () => {
-    setLoading(true)
-    try {
-      if (!location.trim()) {
-        const response = await getFeaturedVendors(50)
-        if (response.success && response.data?.length > 0) {
-          const vendors = response.data.map(v => ({
-            ...v,
-            name: v.storeName,
-            image: v.logo,
-            location: v.location?.city || v.location || 'United Kingdom',
-          }))
-          setStores(vendors)
-        } else {
-          setStores([])
-        }
-      } else {
-        const response = await searchVendorsByLocation(location, 50)
-        if (response.success && response.data?.vendors?.length > 0) {
-          setStores(response.data.vendors)
-        } else {
-          setStores([])
-        }
-      }
-    } catch (error) {
-      if (import.meta.env.DEV) console.warn('[STORE_FETCH_FAIL]', error.message)
-      setStores([])
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const expandSearchRadius = async (newRadius = 100) => {
     try {
-      setLoading(true)
-      const response = await searchVendorsByLocation(location, newRadius)
-
-      if (response.success && response.data?.vendors && response.data.vendors.length > 0) {
-        setStores(response.data.vendors)
-      } else {
-        setStores([])
-      }
+      fetchStores(location)
     } catch (error) {
       if (import.meta.env.DEV) {
         console.warn('[EXPAND_SEARCH_FAIL]', error.message)
       }
-      setStores([])
-    } finally {
-      setLoading(false)
-    }
+    } catch { /* handled by store */ }
   }
 
   const browseAllStores = async () => {
