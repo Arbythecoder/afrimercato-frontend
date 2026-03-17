@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { apiCall } from '../../services/api'
 import { motion } from 'framer-motion'
 import { ArrowLeft, MapPin, Phone, Package, AlertTriangle, RefreshCw } from 'lucide-react'
+import DeliveryChat from '../../components/DeliveryChat'
+
+// Statuses where the rider is actively handling the delivery
+const CHAT_ACTIVE_STATUSES = ['accepted', 'picked_up', 'in_transit']
 
 // Map backend Delivery statuses to UI steps
 const STATUS_STEPS = [
@@ -28,6 +32,7 @@ function RiderDeliveryDetail() {
   const [loading, setLoading] = useState(true)
   const [actionLoading, setActionLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [showChat, setShowChat] = useState(false)
 
   const fetchDelivery = useCallback(async () => {
     setLoading(true)
@@ -280,6 +285,16 @@ function RiderDeliveryDetail() {
           </div>
         )}
 
+        {/* Chat with Customer */}
+        {CHAT_ACTIVE_STATUSES.includes(delivery.status) && (
+          <button
+            onClick={() => setShowChat(v => !v)}
+            className="w-full flex items-center justify-center gap-2 py-3 bg-white border-2 border-green-600 text-green-700 rounded-xl font-semibold hover:bg-green-50 transition"
+          >
+            💬 {showChat ? 'Hide Chat' : 'Chat with Customer'}
+          </button>
+        )}
+
         {/* Action Button */}
         {nextAction && delivery.status !== 'delivered' && (
           <motion.button
@@ -300,6 +315,17 @@ function RiderDeliveryDetail() {
           </div>
         )}
       </div>
+
+      {/* Floating delivery chat panel */}
+      {showChat && CHAT_ACTIVE_STATUSES.includes(delivery.status) && (
+        <div className="fixed bottom-6 right-4 z-50">
+          <DeliveryChat
+            orderId={delivery.order?._id || delivery.order?.id || delivery.orderId}
+            label="Chat with Customer"
+            onClose={() => setShowChat(false)}
+          />
+        </div>
+      )}
     </div>
   )
 }
