@@ -884,21 +884,21 @@ export default function ClientVendorStorefront() {
 // Product Card Component
 function ProductCard({ product, onAddToCart, isDiscount }) {
   const [added, setAdded] = useState(false)
+  const outOfStock = product.stock === 0 || product.inStock === false
 
   const handleAdd = () => {
+    if (outOfStock) return
     onAddToCart()
     setAdded(true)
     setTimeout(() => setAdded(false), 1000)
   }
 
-  // Use the utility function to get the correct image URL
-  // This handles both string arrays and object arrays from Cloudinary
   const imageUrl = getProductImage(product)
 
   return (
     <motion.div
-      whileHover={{ y: -5 }}
-      className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden"
+      whileHover={{ y: outOfStock ? 0 : -5 }}
+      className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden ${outOfStock ? 'opacity-60' : ''}`}
     >
       <div className="relative h-32 bg-gray-100">
         <img
@@ -909,7 +909,12 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
             e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200'
           }}
         />
-        {isDiscount && (
+        {outOfStock && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">Out of Stock</span>
+          </div>
+        )}
+        {!outOfStock && isDiscount && (
           <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">
             Sale
           </span>
@@ -950,13 +955,16 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
           </button>
           <button
             onClick={handleAdd}
+            disabled={outOfStock}
             className={`flex-1 py-1.5 rounded text-sm font-semibold transition ${
-              added
-                ? 'bg-green-500 text-white'
-                : 'bg-[#00897B] hover:bg-[#00695C] text-white'
+              outOfStock
+                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                : added
+                  ? 'bg-green-500 text-white'
+                  : 'bg-[#00897B] hover:bg-[#00695C] text-white'
             }`}
           >
-            {added ? '✓ Added' : 'Add'}
+            {outOfStock ? 'Unavailable' : added ? '✓ Added' : 'Add'}
           </button>
         </div>
       </div>

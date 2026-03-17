@@ -14,14 +14,14 @@ import {
   Calendar
 } from 'lucide-react';
 import { apiCall } from '../../services/api';
+import useAdminStore from '../../stores/useAdminStore';
 
 /**
  * Vendor Management Page
  * Admin interface to approve, reject, or suspend vendor stores
  */
 function VendorManagement() {
-  const [vendors, setVendors] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const { vendors, loading: { vendors: loading }, fetchVendors, approveVendor, suspendVendor } = useAdminStore();
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVendor, setSelectedVendor] = useState(null);
@@ -31,43 +31,31 @@ function VendorManagement() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    fetchVendors();
+    const params = {};
+    if (filter !== 'all') params.status = filter;
+    if (searchQuery) params.search = searchQuery;
+    fetchVendors(params);
   }, [filter, searchQuery]);
-
-  const fetchVendors = async () => {
-    try {
-      setLoading(true);
-      const params = new URLSearchParams();
-      if (filter !== 'all') params.set('status', filter);
-      if (searchQuery) params.set('search', searchQuery);
-      const query = params.toString() ? `?${params.toString()}` : '';
-      const data = await apiCall(`/admin/vendors${query}`);
-      setVendors(data?.data || []);
-    } catch (err) {
-      console.error('Failed to fetch vendors:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleAction = async () => {
     if (!selectedVendor || !modalAction) return;
-
     try {
       setProcessing(true);
-      const endpoint = modalAction === 'approve' ? 'approve' :
-                       modalAction === 'reject'  ? 'reject'  : 'suspend';
-
-      // Backend expects POST (not PUT) — adminVendorRoutes.js lines 18-20
-      await apiCall(`/admin/vendors/${selectedVendor._id}/${endpoint}`, {
-        method: 'POST',
-        body: JSON.stringify({ note: actionNote, reason: actionNote })
-      });
-
+      if (modalAction === 'approve') {
+        await approveVendor(selectedVendor._id);
+      } else if (modalAction === 'suspend') {
+        await suspendVendor(selectedVendor._id);
+      } else {
+        // reject — not in store yet, call directly
+        await apiCall(`/admin/vendors/${selectedVendor._id}/reject`, {
+          method: 'POST',
+          body: JSON.stringify({ note: actionNote, reason: actionNote })
+        });
+        fetchVendors();
+      }
       setShowModal(false);
       setActionNote('');
       setSelectedVendor(null);
-      fetchVendors();
     } catch (err) {
       console.error('Action failed:', err);
       alert(err?.message || 'Action failed. Please try again.');
