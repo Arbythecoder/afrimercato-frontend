@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext'
 function ProductReviews() {
   const { productId } = useParams()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, user } = useAuth()
   const [product, setProduct] = useState(null)
   const [reviews, setReviews] = useState([])
   const [stats, setStats] = useState(null)
@@ -20,6 +20,9 @@ function ProductReviews() {
   const [sortBy, setSortBy] = useState('recent')
   const [page, setPage] = useState(1)
   const [totalPages, setTotalPages] = useState(1)
+  const [replyingTo, setReplyingTo] = useState(null)
+  const [replyText, setReplyText] = useState('')
+  const [replySubmitting, setReplySubmitting] = useState(false)
 
   useEffect(() => {
     fetchProductAndReviews()
@@ -126,6 +129,27 @@ function ProductReviews() {
       }
     } catch (error) {
       console.error('Error:', error)
+    }
+  }
+
+  const isVendor = user?.role === 'vendor' || user?.roles?.includes('vendor')
+
+  const handleVendorReply = async (reviewId) => {
+    if (!replyText.trim()) return
+    setReplySubmitting(true)
+    try {
+      const res = await reviewAPI.vendorReply(reviewId, replyText.trim())
+      if (res.success) {
+        setReviews(reviews.map(r =>
+          r._id === reviewId ? { ...r, vendorResponse: res.data.vendorResponse } : r
+        ))
+        setReplyingTo(null)
+        setReplyText('')
+      }
+    } catch (err) {
+      console.error('Reply error:', err)
+    } finally {
+      setReplySubmitting(false)
     }
   }
 
@@ -361,7 +385,48 @@ function ProductReviews() {
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg border-l-4 border-afri-green">
                     <p className="text-sm font-semibold text-gray-700 mb-1">Vendor Response:</p>
                     <p className="text-sm text-gray-600">{review.vendorResponse.comment}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {review.vendorResponse.respondedAt && new Date(review.vendorResponse.respondedAt).toLocaleDateString('en-GB')}
+                    </p>
                   </div>
+                )}
+
+                {/* Vendor reply button (only visible to vendor, only if no reply yet) */}
+                {isVendor && !review.vendorResponse?.comment && (
+                  replyingTo === review._id ? (
+                    <div className="mt-4">
+                      <textarea
+                        value={replyText}
+                        onChange={e => setReplyText(e.target.value)}
+                        rows={3}
+                        maxLength={500}
+                        placeholder="Write your response to this review..."
+                        className="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-afri-green"
+                      />
+                      <div className="flex gap-2 mt-2">
+                        <button
+                          onClick={() => handleVendorReply(review._id)}
+                          disabled={replySubmitting || !replyText.trim()}
+                          className="px-4 py-1.5 bg-afri-green text-white rounded-lg text-sm font-medium disabled:opacity-50"
+                        >
+                          {replySubmitting ? 'Posting…' : 'Post Reply'}
+                        </button>
+                        <button
+                          onClick={() => { setReplyingTo(null); setReplyText('') }}
+                          className="px-4 py-1.5 border rounded-lg text-sm text-gray-600"
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => { setReplyingTo(review._id); setReplyText('') }}
+                      className="mt-3 text-xs text-afri-green hover:underline font-medium"
+                    >
+                      Reply to this review
+                    </button>
+                  )
                 )}
               </div>
             ))
