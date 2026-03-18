@@ -337,7 +337,7 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
             <div className="flex justify-center">
               <DeliveryChat
                 orderId={order._id}
-                label="Chat with Rider & Customer"
+                label="Order Chat"
               />
             </div>
           )}

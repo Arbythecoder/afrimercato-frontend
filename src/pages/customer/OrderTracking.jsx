@@ -4,7 +4,7 @@ import { orderAPI } from '../../services/api'
 import DeliveryChat from '../../components/DeliveryChat'
 
 // Statuses where the rider is actively on the way
-const CHAT_ACTIVE_STATUSES = ['rider_accepted', 'picked_up_by_rider', 'out_for_delivery']
+const CHAT_ACTIVE_STATUSES = ['confirmed', 'assigned_to_picker', 'picking', 'packed', 'ready_for_delivery', 'assigned_to_rider', 'rider_accepted', 'picked_up_by_rider', 'out_for_delivery']
 
 function OrderTracking() {
   const { orderId } = useParams()
