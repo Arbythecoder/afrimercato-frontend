@@ -34,7 +34,7 @@ function CustomerProfile() {
       const res = await orderAPI.getUserOrders()
       const orders = res?.data || res?.orders || []
       setRecentOrders(Array.isArray(orders) ? orders.slice(0, 3) : [])
-    } catch {
+    } catch (_e) {
       setRecentOrders([])
     } finally {
       setOrdersLoading(false)

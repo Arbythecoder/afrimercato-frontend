@@ -798,7 +798,12 @@ export const vendorAPI = {
   bulkUpdateStock,
   getDeliverySettings,
   updateDeliverySettings,
-  getEarnings: async () => apiCall('/vendor/dashboard/earnings')
+  getEarnings: async () => apiCall('/vendor/dashboard/earnings'),
+  getPayouts: async (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return apiCall(`/vendor/dashboard/payouts${qs ? '?' + qs : ''}`);
+  },
+  requestPayout: async (body) => apiCall('/vendor/dashboard/payouts/request', { method: 'POST', body: JSON.stringify(body) })
 };
 
 // =================================================================
@@ -967,6 +972,9 @@ export const canReviewProduct = async (productId) => {
   return apiCall(`/reviews/can-review/${productId}`);
 };
 
+export const toggleRepeatOrder = (orderId, frequency) =>
+  apiCall(`/customers/orders/${orderId}/repeat`, { method: 'POST', body: JSON.stringify({ frequency }) });
+
 export const reviewAPI = {
   submit: submitReview,
   getForProduct: getProductReviews,
@@ -974,7 +982,9 @@ export const reviewAPI = {
   update: updateReview,
   delete: deleteReview,
   markHelpful: markReviewHelpful,
-  canReview: canReviewProduct
+  canReview: canReviewProduct,
+  vendorReply: (reviewId, comment) =>
+    apiCall(`/reviews/${reviewId}/vendor-reply`, { method: 'PUT', body: JSON.stringify({ comment }) })
 };
 
 // =================================================================

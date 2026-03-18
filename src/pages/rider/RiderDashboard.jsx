@@ -73,7 +73,7 @@ function RiderDashboard() {
           setStats(prev => ({ ...prev, todayDeliveries: todayEntry.deliveries || 0, todayEarnings: parseFloat(todayEntry.earnings) || 0 }))
         }
       }
-    } catch {
+    } catch (_e) {
       setError('Failed to load. Tap retry.')
     } finally {
       setLoading(false)

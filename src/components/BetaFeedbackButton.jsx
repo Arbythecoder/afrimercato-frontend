@@ -14,7 +14,7 @@ export default function BetaFeedbackButton() {
     try {
       const userData = JSON.parse(user)
       return userData.role || 'guest'
-    } catch {
+    } catch (_e) {
       return 'guest'
     }
   }

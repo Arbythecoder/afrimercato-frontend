@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { orderAPI } from '../../services/api'
+import { orderAPI, toggleRepeatOrder } from '../../services/api'
 
 const reorderItems = (order, navigate, setReorderedId) => {
   if (!order?.items?.length) return
@@ -42,6 +42,7 @@ function OrderHistory() {
   const [filter, setFilter] = useState('all')
   const [search, setSearch] = useState('')
   const [reorderedId, setReorderedId] = useState(null)
+  const [repeatLoading, setRepeatLoading] = useState(null)
 
   useEffect(() => {
     fetchOrders()
@@ -196,6 +197,34 @@ function OrderHistory() {
                       >
                         {reorderedId === order._id ? '✓ Added!' : 'Reorder'}
                       </button>
+                      {['delivered', 'completed'].includes(order.status) && (
+                        <button
+                          onClick={async (e) => {
+                            e.stopPropagation()
+                            setRepeatLoading(order._id)
+                            try {
+                              const res = await toggleRepeatOrder(order._id, 'weekly')
+                              if (res.success) {
+                                setOrders(prev => prev.map(o =>
+                                  o._id === order._id
+                                    ? { ...o, repeatPurchase: { enabled: res.repeatEnabled, active: res.repeatEnabled } }
+                                    : o
+                                ))
+                              }
+                            } catch (_) {}
+                            setRepeatLoading(null)
+                          }}
+                          disabled={repeatLoading === order._id}
+                          title={order.repeatPurchase?.active ? 'Disable auto-repeat' : 'Enable weekly auto-repeat'}
+                          className={`text-sm px-3 py-1.5 rounded-lg font-semibold transition-all ${
+                            order.repeatPurchase?.active
+                              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                              : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          }`}
+                        >
+                          {repeatLoading === order._id ? '...' : order.repeatPurchase?.active ? '🔁 Auto-on' : '🔁 Auto'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>

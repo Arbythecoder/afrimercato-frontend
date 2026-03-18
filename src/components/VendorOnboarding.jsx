@@ -11,6 +11,8 @@ const VendorOnboarding = ({ onComplete }) => {
   const [currentStep, setCurrentStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [lookingUpPostcode, setLookingUpPostcode] = useState(false)
+  const [postcodeError, setPostcodeError] = useState('')
   const logoInputRef = useRef(null)
   const colorThief = useRef(new ColorThief())
 
@@ -49,7 +51,7 @@ const VendorOnboarding = ({ onComplete }) => {
       street: '',
       city: '',
       state: '',
-      country: 'United Kingdom',
+      country: '',
       postalCode: ''
     },
 
@@ -86,6 +88,34 @@ const VendorOnboarding = ({ onComplete }) => {
     'Beauty & Health',
     'Household'
   ]
+
+  const lookupPostcode = async () => {
+    const postcode = formData.address.postalCode.trim().replace(/\s+/g, '')
+    if (!postcode) return
+    setLookingUpPostcode(true)
+    setPostcodeError('')
+    try {
+      const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
+      const data = await res.json()
+      if (data.status === 200 && data.result) {
+        setFormData(prev => ({
+          ...prev,
+          address: {
+            ...prev.address,
+            city: data.result.admin_district || data.result.parish || prev.address.city,
+            state: data.result.admin_county || data.result.region || prev.address.state,
+            country: prev.address.country || 'United Kingdom'
+          }
+        }))
+      } else {
+        setPostcodeError('Postcode not found. Please fill address manually.')
+      }
+    } catch (_e) {
+      setPostcodeError('Could not look up postcode. Please fill address manually.')
+    } finally {
+      setLookingUpPostcode(false)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -490,6 +520,35 @@ const VendorOnboarding = ({ onComplete }) => {
                   <p className="text-gray-600">Your business address</p>
                 </div>
 
+                {/* Postcode lookup */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Postal / ZIP Code *
+                  </label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="address.postalCode"
+                      value={formData.address.postalCode}
+                      onChange={handleChange}
+                      className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
+                      placeholder="e.g. SW1A 1AA"
+                    />
+                    <button
+                      type="button"
+                      onClick={lookupPostcode}
+                      disabled={lookingUpPostcode || !formData.address.postalCode.trim()}
+                      className="px-4 py-3 bg-afri-green text-white rounded-lg text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap"
+                    >
+                      {lookingUpPostcode ? 'Looking up…' : 'Find Address'}
+                    </button>
+                  </div>
+                  {postcodeError && (
+                    <p className="mt-1 text-xs text-amber-600">{postcodeError}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-400">UK postcode? Click "Find Address" to auto-fill city &amp; county.</p>
+                </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Street Address *
@@ -504,7 +563,7 @@ const VendorOnboarding = ({ onComplete }) => {
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       City *
@@ -521,7 +580,7 @@ const VendorOnboarding = ({ onComplete }) => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      County (Optional)
+                      County / State (Optional)
                     </label>
                     <input
                       type="text"
@@ -529,37 +588,23 @@ const VendorOnboarding = ({ onComplete }) => {
                       value={formData.address.state}
                       onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                      placeholder="e.g., Greater London, Essex, Kent"
+                      placeholder="e.g., Greater London, Lagos"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Country
+                      Country *
                     </label>
                     <input
                       type="text"
                       name="address.country"
                       value={formData.address.country}
                       onChange={handleChange}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition bg-gray-50"
-                      readOnly
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Postal Code
-                    </label>
-                    <input
-                      type="text"
-                      name="address.postalCode"
-                      value={formData.address.postalCode}
-                      onChange={handleChange}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
-                      placeholder="100001"
+                      placeholder="e.g. United Kingdom, Nigeria"
                     />
                   </div>
                 </div>

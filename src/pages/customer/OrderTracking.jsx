@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { orderAPI } from '../../services/api'
+import DeliveryChat from '../../components/DeliveryChat'
+
+// Statuses where the rider is actively on the way
+const CHAT_ACTIVE_STATUSES = ['rider_accepted', 'picked_up_by_rider', 'out_for_delivery']
 
 function OrderTracking() {
   const { orderId } = useParams()
@@ -9,6 +13,7 @@ function OrderTracking() {
   const [delivery, setDelivery] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+  const [showChat, setShowChat] = useState(false)
 
   useEffect(() => {
     const fetchOrderAndDelivery = async () => {
@@ -256,12 +261,13 @@ function OrderTracking() {
                 <div className="flex-1 pb-6">
                   <h3 className="font-semibold text-gray-900">Out for Delivery</h3>
                   <p className="text-sm text-gray-600">Rider is on the way</p>
-                  {delivery && (
-                    <div className="mt-2 bg-blue-50 rounded p-2">
-                      <p className="text-xs text-blue-700">
-                        📍 Rider location updating in real-time
-                      </p>
-                    </div>
+                  {CHAT_ACTIVE_STATUSES.includes(order.status) && (
+                    <button
+                      onClick={() => setShowChat(v => !v)}
+                      className="mt-3 flex items-center gap-2 px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition"
+                    >
+                      💬 {showChat ? 'Hide Chat' : 'Chat with Rider'}
+                    </button>
                   )}
                 </div>
               </div>
@@ -337,6 +343,17 @@ function OrderTracking() {
           )}
         </div>
       </div>
+
+      {/* Floating delivery chat panel */}
+      {showChat && CHAT_ACTIVE_STATUSES.includes(order.status) && (
+        <div className="fixed bottom-6 right-6 z-50">
+          <DeliveryChat
+            orderId={orderId}
+            label="Chat with Rider"
+            onClose={() => setShowChat(false)}
+          />
+        </div>
+      )}
     </div>
   )
 }

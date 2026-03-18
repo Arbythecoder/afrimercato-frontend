@@ -66,7 +66,7 @@ export default function AdminAuditLogs() {
       const res = await apiCall(`/admin/audit-logs?${params.toString()}`)
       setLogs(res?.data?.logs || res?.data?.auditLogs || [])
       setPagination(res?.data?.pagination || { total: 0, page: 1, pages: 1 })
-    } catch {
+    } catch (_e) {
       setError('Failed to load audit logs.')
     } finally {
       setLoading(false)

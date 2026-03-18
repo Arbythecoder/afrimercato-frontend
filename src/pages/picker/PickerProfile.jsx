@@ -44,7 +44,7 @@ export default function PickerProfile() {
             memberSince: d.createdAt || '',
           })
         }
-      } catch {
+      } catch (_e) {
         // fall back to auth context data silently
       } finally {
         setPageLoading(false)

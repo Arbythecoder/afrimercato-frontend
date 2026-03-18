@@ -34,7 +34,7 @@ function RiderEarnings() {
         setSummary({ totalEarnings: parseFloat(d.summary?.totalEarnings || 0), totalDeliveries: d.summary?.totalDeliveries || 0 })
         setHistory(d.deliveries || [])
       }
-    } catch {
+    } catch (_e) {
       setError('Failed to load earnings.')
     } finally {
       setLoading(false)

@@ -26,7 +26,7 @@ export default function AdminCustomerManagement() {
       const res = await apiCall(`/admin/customers${qs}`)
       setCustomers(res?.data?.customers || [])
       setPagination(res?.data?.pagination || {})
-    } catch {
+    } catch (_e) {
       setError('Failed to load customers.')
     } finally {
       setLoading(false)
@@ -46,7 +46,7 @@ export default function AdminCustomerManagement() {
       const url = action === 'delete' ? `/admin/customers/${customerId}` : `/admin/customers/${customerId}/${action}`
       await apiCall(url, { method })
       fetchCustomers()
-    } catch {
+    } catch (_e) {
       alert(`Failed to ${action} customer.`)
     } finally {
       setActionLoading(null)

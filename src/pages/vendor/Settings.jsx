@@ -20,6 +20,12 @@ const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'sat
 const countries = [
   { code: 'GB', name: 'United Kingdom', region: 'Europe', phoneCodes: ['+44'], postcodeFormat: 'UK Postcode (e.g., SW1A 1AA)' },
   { code: 'IE', name: 'Ireland', region: 'Europe', phoneCodes: ['+353'], postcodeFormat: 'Eircode (e.g., D02 AF30)' },
+  { code: 'NG', name: 'Nigeria', region: 'Africa', phoneCodes: ['+234'], postcodeFormat: '6-digit postcode' },
+  { code: 'GH', name: 'Ghana', region: 'Africa', phoneCodes: ['+233'], postcodeFormat: 'Postcode' },
+  { code: 'KE', name: 'Kenya', region: 'Africa', phoneCodes: ['+254'], postcodeFormat: '5-digit postcode' },
+  { code: 'ZA', name: 'South Africa', region: 'Africa', phoneCodes: ['+27'], postcodeFormat: '4-digit postcode' },
+  { code: 'US', name: 'United States', region: 'North America', phoneCodes: ['+1'], postcodeFormat: 'ZIP code (e.g., 10001)' },
+  { code: 'CA', name: 'Canada', region: 'North America', phoneCodes: ['+1'], postcodeFormat: 'Postal code (e.g., K1A 0A6)' },
 ]
 
 function Settings() {
@@ -190,22 +196,25 @@ function Settings() {
     return true
   }
 
-  // Validate UK/Ireland postcode
-  const validatePostcode = (postcode, country) => {
+  // Validate UK/Ireland postcode — lenient: just check plausible format
+  const validatePostcode = (postcode) => {
     if (!postcode) return false
+    const clean = postcode.replace(/\s/g, '').toUpperCase()
+    // Accept any 5-8 char alphanumeric that looks like a postcode
+    return /^[A-Z0-9]{4,8}$/.test(clean)
+  }
 
-    const cleanPostcode = postcode.replace(/\s/g, '').toUpperCase()
-
-    if (country === 'United Kingdom') {
-      // UK postcode format
-      const ukPattern = /^[A-Z]{1,2}\d{1,2}[A-Z]?\d[A-Z]{2}$/
-      return ukPattern.test(cleanPostcode)
-    } else if (country === 'Ireland') {
-      // Ireland Eircode format
-      const iePattern = /^[A-Z]\d{2}[A-Z0-9]{4}$/
-      return iePattern.test(cleanPostcode)
+  // Autocomplete suggestions using postcodes.io
+  const [postcodeSuggestions, setPostcodeSuggestions] = useState([])
+  const fetchPostcodeSuggestions = async (partial) => {
+    if (!partial || partial.length < 2) { setPostcodeSuggestions([]); return }
+    try {
+      const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(partial)}/autocomplete`)
+      const data = await res.json()
+      setPostcodeSuggestions(data.result || [])
+    } catch (_) {
+      setPostcodeSuggestions([])
     }
-    return false
   }
 
   const lookupPostcode = async () => {
@@ -217,10 +226,9 @@ function Settings() {
       return
     }
 
-    // Validate postcode format first
-    if (!validatePostcode(postcode, country)) {
-      warning(`Invalid ${country === 'United Kingdom' ? 'UK postcode' : 'Eircode'} format`)
-      return
+    // Soft-validate postcode format
+    if (!validatePostcode(postcode)) {
+      warning('Postcode format looks unusual. Please double-check it.')
     }
 
     try {
@@ -271,10 +279,7 @@ function Settings() {
       errors.alternativePhone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number`
     }
 
-    // Validate postcode
-    if (vendorProfile.address?.postalCode && !validatePostcode(vendorProfile.address.postalCode, country)) {
-      errors.postalCode = `Invalid ${country === 'United Kingdom' ? 'UK postcode' : 'Eircode'} format`
-    }
+    // Postcode format is only a soft warning — don't block save
 
     // Validate required fields
     if (!vendorProfile.storeName?.trim()) {
@@ -566,7 +571,7 @@ function Settings() {
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   Primary Phone *
                   <span className="text-xs font-normal text-gray-500 ml-2">
-                    {vendorProfile.address?.country === 'Ireland' ? '(e.g., +353 85 123 4567 or 085 123 4567)' : '(e.g., +44 7700 900000 or 07700 900000)'}
+                    (include country code, e.g. +44, +234)
                   </span>
                 </label>
                 <input
@@ -581,7 +586,7 @@ function Settings() {
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
                     validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
-                  placeholder={vendorProfile.address?.country === 'Ireland' ? '+353 85 123 4567' : '+44 7700 900000'}
+                  placeholder="+44 7700 900000 or +234 800 555 0001"
                 />
                 {validationErrors.phone && (
                   <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.phone}</p>
@@ -604,7 +609,7 @@ function Settings() {
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
                     validationErrors.alternativePhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
-                  placeholder={vendorProfile.address?.country === 'Ireland' ? '+353 85 123 4567' : '+44 7700 900000'}
+                  placeholder="+44 7700 900000 or +234 800 555 0002"
                 />
                 {validationErrors.alternativePhone && (
                   <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.alternativePhone}</p>
@@ -675,18 +680,39 @@ function Settings() {
                   {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode *' : 'Postal/Zip Code *'}
                 </label>
                 <div className="flex gap-2">
+                  <div className="flex-1 relative">
                   <input
                     type="text"
                     value={vendorProfile.address?.postalCode || ''}
                     onChange={(e) => {
-                      handleVendorChange('address.postalCode', e.target.value.toUpperCase())
+                      const val = e.target.value.toUpperCase()
+                      handleVendorChange('address.postalCode', val)
                       if (validationErrors.postalCode) setValidationErrors(prev => ({ ...prev, postalCode: undefined }))
+                      fetchPostcodeSuggestions(val)
                     }}
-                    className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                      validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() && !validationErrors.postalCode ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    onBlur={() => setTimeout(() => setPostcodeSuggestions([]), 200)}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
+                      validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
                     }`}
                     placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
                   />
+                  {postcodeSuggestions.length > 0 && (
+                    <ul className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-y-auto">
+                      {postcodeSuggestions.map(pc => (
+                        <li
+                          key={pc}
+                          onMouseDown={() => {
+                            handleVendorChange('address.postalCode', pc)
+                            setPostcodeSuggestions([])
+                          }}
+                          className="px-4 py-2 hover:bg-afri-green hover:text-white cursor-pointer text-sm"
+                        >
+                          {pc}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  </div>
                   {vendorProfile.address?.country === 'United Kingdom' && (
                     <button
                       type="button"

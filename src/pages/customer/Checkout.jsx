@@ -39,6 +39,27 @@ function Checkout() {
   const [repurchaseError, setRepurchaseError] = useState(false)
   const [emailVerificationError, setEmailVerificationError] = useState(false)
   const [resendingEmail, setResendingEmail] = useState(false)
+  const [lookingUpPostcode, setLookingUpPostcode] = useState(false)
+
+  const lookupPostcode = async () => {
+    const postcode = address.postcode.trim().replace(/\s+/g, '')
+    if (!postcode) return
+    setLookingUpPostcode(true)
+    try {
+      const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
+      const data = await res.json()
+      if (data.status === 200 && data.result) {
+        setAddress(prev => ({
+          ...prev,
+          city: data.result.admin_district || data.result.parish || prev.city
+        }))
+      }
+    } catch (_e) {
+      // silent fail — user can fill manually
+    } finally {
+      setLookingUpPostcode(false)
+    }
+  }
 
   // Address form
   const [address, setAddress] = useState({
@@ -144,7 +165,7 @@ function Checkout() {
           // Cache to localStorage for fallback
           try {
             localStorage.setItem('afrimercato_last_order_items', JSON.stringify(items))
-          } catch { /* localStorage full — ignore */ }
+          } catch (_e) { /* localStorage full — ignore */ }
         }
       } catch (error) {
         // Backend failed — try localStorage fallback
@@ -154,7 +175,7 @@ function Checkout() {
           if (cached.length > 0) {
             setRepurchaseItems(cached.slice(0, 5))
           }
-        } catch { /* corrupt cache — ignore */ }
+        } catch (_e) { /* corrupt cache — ignore */ }
 
         if (import.meta.env.DEV) {
           console.warn('Repurchase load failed (non-blocking):', error.message)
@@ -183,7 +204,7 @@ function Checkout() {
           postcode:     prev.postcode     || (profile.addresses?.[0]?.postcode) || '',
           instructions: prev.instructions || ''
         }))
-      } catch {
+      } catch (_e) {
         // Non-blocking — ignore silently if profile fetch fails
       }
     }
@@ -322,7 +343,7 @@ function Checkout() {
               images: item.images
             }))
           ))
-        } catch { /* localStorage full — ignore */ }
+        } catch (_e) { /* localStorage full — ignore */ }
 
         localStorage.removeItem('afrimercato_cart')
         localStorage.removeItem('repeatPurchaseFrequency')
@@ -368,11 +389,9 @@ function Checkout() {
       if (msg.includes('timed out')) {
         alert('The server is taking longer than expected. Please try again.')
       } else {
-        alert('Failed to place order. Please try again.')
+        alert(msg || 'Failed to place order. Please try again.')
       }
-      if (import.meta.env.DEV) {
-        console.error('Order error:', error)
-      }
+      console.error('Order error:', error)
     } finally {
       setLoading(false)
     }
@@ -479,7 +498,7 @@ function Checkout() {
           setAuthError(result.message || 'Incorrect email or password.')
         }
         // On success isAuthenticated flips → loadCart effect re-runs automatically
-      } catch {
+      } catch (_e) {
         setAuthError('Something went wrong. Please try again.')
       } finally {
         setAuthLoading(false)
@@ -742,15 +761,25 @@ function Checkout() {
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Postcode *
                       </label>
-                      <input
-                        type="text"
-                        required
-                        autoComplete="postal-code"
-                        value={address.postcode}
-                        onChange={(e) => setAddress({ ...address, postcode: e.target.value.toUpperCase() })}
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
-                        placeholder="SW1A 1AA"
-                      />
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          required
+                          autoComplete="postal-code"
+                          value={address.postcode}
+                          onChange={(e) => setAddress({ ...address, postcode: e.target.value.toUpperCase() })}
+                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
+                          placeholder="SW1A 1AA"
+                        />
+                        <button
+                          type="button"
+                          onClick={lookupPostcode}
+                          disabled={lookingUpPostcode || !address.postcode.trim()}
+                          className="px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap min-h-[44px]"
+                        >
+                          {lookingUpPostcode ? '…' : 'Find'}
+                        </button>
+                      </div>
                     </div>
                   </div>
 

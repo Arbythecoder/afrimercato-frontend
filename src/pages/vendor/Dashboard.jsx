@@ -60,7 +60,7 @@ function Dashboard() {
       })
       const data = await res.json()
       setVerifyMessage(data.message || 'Verification email sent! Check your inbox.')
-    } catch {
+    } catch (_e) {
       setVerifyMessage('Failed to send. Please try again.')
     } finally {
       setResendingVerify(false)
@@ -839,7 +839,7 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
-            <Link to="/vendor/orders" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>
+ 
           </div>
           <div className="space-y-4">
             {(stats?.recentOrders || []).slice(0, 5).map((order) => (

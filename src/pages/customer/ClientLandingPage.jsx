@@ -111,7 +111,7 @@ export default function ClientLandingPage() {
           .filter(Boolean)
         // If API returned data but mapping produced nothing, use static fallback
         setLocationSuggestions(suggestions.length > 0 ? [...new Set(suggestions)] : staticMatches)
-      } catch {
+      } catch (_e) {
         // API failed — fall back to static list
         setLocationSuggestions(staticMatches)
       } finally {
@@ -134,7 +134,7 @@ export default function ClientLandingPage() {
           // No real vendors yet — show fallback sample stores
           setStores(FALLBACK_STORES)
         }
-      } catch {
+      } catch (_e) {
         // API unreachable — show fallback sample stores
         setStores(FALLBACK_STORES)
       } finally {
@@ -340,19 +340,29 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-8 flex flex-wrap items-center gap-4"
+                className="mt-8 flex flex-wrap items-center gap-3"
               >
                 <Link
-                  to="/register?role=vendor"
+                  to="/stores"
                   className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
                 >
-                  Partner With Us
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Shop Now
+                </Link>
+
+                <Link
+                  to="/register?role=vendor"
+                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-semibold shadow transition-all text-base sm:text-lg"
+                >
+                  Sell on Afrimercato
                 </Link>
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative group"
+                  className="relative group hidden sm:block"
                 >
                   <div className="relative w-16 h-16 sm:w-20 sm:h-20">
                     <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 100 100">
@@ -374,13 +384,8 @@ export default function ClientLandingPage() {
                 </motion.button>
               </motion.div>
 
-              {/* Trust Indicator — contained here, outside parallax */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="mt-10 flex items-center gap-4"
-              >
+              {/* Trust Indicator — static, never moves */}
+              <div className="mt-5 flex items-center gap-4 shrink-0">
                 <div className="flex -space-x-3">
                   {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
                     <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">
@@ -394,7 +399,7 @@ export default function ClientLandingPage() {
                 <p className="text-gray-800 font-medium text-sm sm:text-base">
                   Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors
                 </p>
-              </motion.div>
+              </div>
             </div>
 
             {/* Right — Hero Image */}

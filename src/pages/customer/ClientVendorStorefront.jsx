@@ -58,7 +58,7 @@ export default function ClientVendorStorefront() {
     try {
       const savedCart = localStorage.getItem('afrimercato_cart')
       return savedCart ? JSON.parse(savedCart) : []
-    } catch {
+    } catch (_e) {
       return []
     }
   })

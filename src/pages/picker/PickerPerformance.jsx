@@ -72,7 +72,7 @@ function PickerPerformance() {
     try {
       const res = await apiCall('/pickers/stats')
       if (res?.data) setStats(res.data)
-    } catch {
+    } catch (_e) {
       setError('Failed to load performance data.')
     } finally {
       setLoading(false)

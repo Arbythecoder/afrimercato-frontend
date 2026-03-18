@@ -62,7 +62,7 @@ function PickerDashboard() {
       if (availableRes.status === 'fulfilled' && availableRes.value?.data) {
         setOrderQueue(availableRes.value.data.orders || [])
       }
-    } catch {
+    } catch (_e) {
       setError('Failed to load. Tap retry.')
     } finally {
       setLoading(false)
@@ -73,7 +73,7 @@ function PickerDashboard() {
     try {
       await apiCall(`/pickers/${orderId}/claim`, { method: 'POST' })
       navigate(`/picker/order/${orderId}`)
-    } catch {
+    } catch (_e) {
       alert('Failed to claim order. It may have already been taken.')
       fetchDashboardData()
     }
