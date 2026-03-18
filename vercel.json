@@ -2,6 +2,14 @@
   "installCommand": "npm install --legacy-peer-deps",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "build": {
+    "env": {
+      "VITE_STREAM_API_KEY": "brwg5et9g4et",
+      "VITE_API_URL": "https://afrimercato-backend.fly.dev",
+      "VITE_LAUNCH_DATE": "2026-02-22T00:00:00Z",
+      "VITE_LOCATIONIQ_TOKEN": "pk.8e3f10edc39ba9c7fbdfa56fe3d0c891"
+    }
+  },
   "rewrites": [
     {
       "source": "/(.*)",
