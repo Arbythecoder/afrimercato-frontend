@@ -384,13 +384,8 @@ export default function ClientLandingPage() {
                 </motion.button>
               </motion.div>
 
-              {/* Trust Indicator — contained here, outside parallax */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.8, duration: 0.6 }}
-                className="mt-10 flex items-center gap-4"
-              >
+              {/* Trust Indicator — static, never moves */}
+              <div className="mt-10 flex items-center gap-4 shrink-0">
                 <div className="flex -space-x-3">
                   {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
                     <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">
@@ -404,7 +399,7 @@ export default function ClientLandingPage() {
                 <p className="text-gray-800 font-medium text-sm sm:text-base">
                   Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors
                 </p>
-              </motion.div>
+              </div>
             </div>
 
             {/* Right — Hero Image */}
