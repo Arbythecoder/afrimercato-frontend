@@ -55,7 +55,7 @@ function RiderDeliveries() {
       } else {
         setDeliveries([])
       }
-    } catch {
+    } catch (_e) {
       setError('Failed to load deliveries.')
       setDeliveries([])
     } finally {
@@ -71,7 +71,7 @@ function RiderDeliveries() {
     try {
       await apiCall(`/riders/deliveries/${deliveryId}/${action}`, { method: 'POST' })
       fetchDeliveries()
-    } catch {
+    } catch (_e) {
       alert(`Failed to ${action} delivery. Please try again.`)
     } finally {
       setActionLoading(null)

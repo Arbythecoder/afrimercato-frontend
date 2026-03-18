@@ -124,7 +124,7 @@ function ShoppingCart() {
           try {
             await cartAPI.add(itemId, item.quantity)
             syncedCount++
-          } catch {
+          } catch (_e) {
             // individual item sync failure — keep in localStorage
           }
         }

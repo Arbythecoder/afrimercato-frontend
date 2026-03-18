@@ -6,7 +6,7 @@ const CART_KEY = 'afrimercato_cart'
 const loadCartFromStorage = () => {
   try {
     return JSON.parse(localStorage.getItem(CART_KEY) || '[]')
-  } catch {
+  } catch (_e) {
     return []
   }
 }

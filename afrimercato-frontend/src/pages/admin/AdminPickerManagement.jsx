@@ -27,7 +27,7 @@ export default function AdminPickerManagement() {
       const res = await apiCall(`/admin/pickers${qs}`)
       setPickers(res?.data?.pickers || [])
       setPagination(res?.data?.pagination || {})
-    } catch {
+    } catch (_e) {
       setError('Failed to load pickers.')
     } finally {
       setLoading(false)
@@ -44,7 +44,7 @@ export default function AdminPickerManagement() {
     try {
       await apiCall(`/admin/pickers/${pickerId}/${action}`, { method: 'POST' })
       fetchPickers()
-    } catch {
+    } catch (_e) {
       alert(`Failed to ${action} picker.`)
     } finally {
       setActionLoading(null)

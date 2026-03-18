@@ -111,7 +111,7 @@ export default function ClientLandingPage() {
           .filter(Boolean)
         // If API returned data but mapping produced nothing, use static fallback
         setLocationSuggestions(suggestions.length > 0 ? [...new Set(suggestions)] : staticMatches)
-      } catch {
+      } catch (_e) {
         // API failed — fall back to static list
         setLocationSuggestions(staticMatches)
       } finally {
@@ -134,7 +134,7 @@ export default function ClientLandingPage() {
           // No real vendors yet — show fallback sample stores
           setStores(FALLBACK_STORES)
         }
-      } catch {
+      } catch (_e) {
         // API unreachable — show fallback sample stores
         setStores(FALLBACK_STORES)
       } finally {

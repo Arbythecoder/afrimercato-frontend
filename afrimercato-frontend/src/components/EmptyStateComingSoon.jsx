@@ -20,7 +20,7 @@ export default function EmptyStateComingSoon({
       // Try backend API first, fallback to localStorage
       try {
         await onNotifyMe?.(email, location)
-      } catch {
+      } catch (_e) {
         // Fallback to localStorage
         const notifications = JSON.parse(localStorage.getItem('locationNotifications') || '[]')
         notifications.push({ email, location, timestamp: new Date().toISOString() })

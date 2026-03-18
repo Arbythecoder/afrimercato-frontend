@@ -62,7 +62,7 @@ export const AuthProvider = ({ children }) => {
         setIsAuthenticated(true)
         return true
       }
-    } catch {
+    } catch (_e) {
       // Refresh cookie expired or missing — user must log in again
     }
     return false
@@ -115,7 +115,7 @@ export const AuthProvider = ({ children }) => {
           try {
             setUser(normalizeUserRoles(JSON.parse(cachedUserJson)))
             setIsAuthenticated(true)
-          } catch {
+          } catch (_e) {
             hardLogout()
           }
         }
@@ -201,14 +201,6 @@ export const AuthProvider = ({ children }) => {
       if (response && response.success) {
         const { token, user } = response.data
         const normalizedUser = normalizeUserRoles(user)
-
-        // Vendors must verify their email before being logged in
-        if (normalizedUser.role === 'vendor') {
-          if (import.meta.env.DEV) {
-            console.log('📧 Vendor registered — awaiting email verification')
-          }
-          return { success: true, user: normalizedUser, requiresVerification: true }
-        }
 
         // Access token in localStorage — refresh token lives in httpOnly cookie (set by server)
         localStorage.setItem('afrimercato_token', token)

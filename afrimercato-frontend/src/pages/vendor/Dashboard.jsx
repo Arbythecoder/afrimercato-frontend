@@ -60,7 +60,7 @@ function Dashboard() {
       })
       const data = await res.json()
       setVerifyMessage(data.message || 'Verification email sent! Check your inbox.')
-    } catch {
+    } catch (_e) {
       setVerifyMessage('Failed to send. Please try again.')
     } finally {
       setResendingVerify(false)

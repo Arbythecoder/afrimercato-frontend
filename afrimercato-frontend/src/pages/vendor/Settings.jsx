@@ -20,6 +20,12 @@ const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'sat
 const countries = [
   { code: 'GB', name: 'United Kingdom', region: 'Europe', phoneCodes: ['+44'], postcodeFormat: 'UK Postcode (e.g., SW1A 1AA)' },
   { code: 'IE', name: 'Ireland', region: 'Europe', phoneCodes: ['+353'], postcodeFormat: 'Eircode (e.g., D02 AF30)' },
+  { code: 'NG', name: 'Nigeria', region: 'Africa', phoneCodes: ['+234'], postcodeFormat: '6-digit postcode' },
+  { code: 'GH', name: 'Ghana', region: 'Africa', phoneCodes: ['+233'], postcodeFormat: 'Postcode' },
+  { code: 'KE', name: 'Kenya', region: 'Africa', phoneCodes: ['+254'], postcodeFormat: '5-digit postcode' },
+  { code: 'ZA', name: 'South Africa', region: 'Africa', phoneCodes: ['+27'], postcodeFormat: '4-digit postcode' },
+  { code: 'US', name: 'United States', region: 'North America', phoneCodes: ['+1'], postcodeFormat: 'ZIP code (e.g., 10001)' },
+  { code: 'CA', name: 'Canada', region: 'North America', phoneCodes: ['+1'], postcodeFormat: 'Postal code (e.g., K1A 0A6)' },
 ]
 
 function Settings() {
@@ -565,7 +571,7 @@ function Settings() {
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   Primary Phone *
                   <span className="text-xs font-normal text-gray-500 ml-2">
-                    {vendorProfile.address?.country === 'Ireland' ? '(e.g., +353 85 123 4567 or 085 123 4567)' : '(e.g., +44 7700 900000 or 07700 900000)'}
+                    (include country code, e.g. +44, +234)
                   </span>
                 </label>
                 <input
@@ -580,7 +586,7 @@ function Settings() {
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
                     validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
-                  placeholder={vendorProfile.address?.country === 'Ireland' ? '+353 85 123 4567' : '+44 7700 900000'}
+                  placeholder="+44 7700 900000 or +234 800 555 0001"
                 />
                 {validationErrors.phone && (
                   <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.phone}</p>
@@ -603,7 +609,7 @@ function Settings() {
                   className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
                     validationErrors.alternativePhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
                   }`}
-                  placeholder={vendorProfile.address?.country === 'Ireland' ? '+353 85 123 4567' : '+44 7700 900000'}
+                  placeholder="+44 7700 900000 or +234 800 555 0002"
                 />
                 {validationErrors.alternativePhone && (
                   <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.alternativePhone}</p>

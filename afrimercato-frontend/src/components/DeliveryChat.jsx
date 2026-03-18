@@ -87,7 +87,7 @@ function DeliveryChat({ orderId, label = 'Chat with Rider', onClose }) {
     try {
       await channel.sendMessage({ text: input.trim() })
       setInput('')
-    } catch {
+    } catch (_e) {
       // message will retry on re-render; keep input so user can resend
     } finally {
       setSending(false)

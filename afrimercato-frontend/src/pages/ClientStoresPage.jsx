@@ -54,7 +54,7 @@ export default function ClientStoresPage() {
       if (import.meta.env.DEV) {
         console.warn('[EXPAND_SEARCH_FAIL]', error.message)
       }
-    } catch { /* handled by store */ }
+    }
   }
 
   const browseAllStores = async () => {

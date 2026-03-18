@@ -82,7 +82,7 @@ export default function VerifyEmail() {
     try {
       await apiCall('/auth/resend-verification', { method: 'POST' })
       setResendStatus('sent')
-    } catch {
+    } catch (_e) {
       setResendStatus('error')
     }
   }

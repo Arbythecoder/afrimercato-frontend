@@ -27,7 +27,7 @@ export default function AdminRiderManagement() {
       const res = await apiCall(`/admin/riders${qs}`)
       setRiders(res?.data?.riders || [])
       setPagination(res?.data?.pagination || {})
-    } catch {
+    } catch (_e) {
       setError('Failed to load riders.')
     } finally {
       setLoading(false)
@@ -44,7 +44,7 @@ export default function AdminRiderManagement() {
     try {
       await apiCall(`/admin/riders/${riderId}/${action}`, { method: 'POST' })
       fetchRiders()
-    } catch {
+    } catch (_e) {
       alert(`Failed to ${action} rider.`)
     } finally {
       setActionLoading(null)

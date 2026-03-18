@@ -48,7 +48,7 @@ function RiderProfile() {
             memberSince: d.createdAt || ''
           })
         }
-      } catch {
+      } catch (_e) {
         // fail silently — fall back to auth context data
       } finally {
         setPageLoading(false)

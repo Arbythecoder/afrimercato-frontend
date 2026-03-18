@@ -45,7 +45,7 @@ function PickerOrderFulfillment() {
             const found = (ordersRes?.data?.orders || []).find(o => (o.id || o._id) === orderId)
             setOrder(found || { id: orderId, orderNumber: orderId })
           }
-        } catch {
+        } catch (_e) {
           setError('Could not load this order. It may have already been claimed by someone else.')
         }
       } else {
@@ -71,7 +71,7 @@ function PickerOrderFulfillment() {
           ? { ...i, status: i.status === 'picked' ? 'pending' : 'picked', quantityPicked: i.quantityOrdered }
           : i
       ))
-    } catch {
+    } catch (_e) {
       alert('Failed to update item. Please try again.')
     } finally {
       setActionLoading(null)
@@ -93,7 +93,7 @@ function PickerOrderFulfillment() {
           ? { ...i, status: 'unavailable', unavailableReason: reason }
           : i
       ))
-    } catch {
+    } catch (_e) {
       alert('Failed to report issue. Please try again.')
     } finally {
       setActionLoading(null)
@@ -110,7 +110,7 @@ function PickerOrderFulfillment() {
     try {
       await apiCall(`/pickers/${orderId}/complete-packing`, { method: 'POST' })
       navigate('/picker/dashboard')
-    } catch {
+    } catch (_e) {
       alert('Failed to complete order. Please try again.')
     } finally {
       setCompleteLoading(false)

@@ -74,7 +74,7 @@ function OAuthCallback() {
               roles,
               role: roles[0] || 'customer'
             }
-          } catch {
+          } catch (_e) {
             // JWT decode failed — redirect as customer
             userData = { role: 'customer' }
           }

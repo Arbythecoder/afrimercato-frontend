@@ -54,11 +54,11 @@ function RiderDeliveryDetail() {
           } else {
             setError('Delivery not found or already completed.')
           }
-        } catch {
+        } catch (_e) {
           setError('Delivery not found.')
         }
       }
-    } catch {
+    } catch (_e) {
       setError('Failed to load delivery. Please try again.')
     } finally {
       setLoading(false)
