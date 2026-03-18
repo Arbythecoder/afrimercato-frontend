@@ -340,19 +340,29 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-8 flex flex-wrap items-center gap-4"
+                className="mt-8 flex flex-wrap items-center gap-3"
               >
                 <Link
-                  to="/register?role=vendor"
+                  to="/stores"
                   className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
                 >
-                  Partner With Us
+                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                  </svg>
+                  Shop Now
+                </Link>
+
+                <Link
+                  to="/register?role=vendor"
+                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-semibold shadow transition-all text-base sm:text-lg"
+                >
+                  Sell on Afrimercato
                 </Link>
 
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="relative group"
+                  className="relative group hidden sm:block"
                 >
                   <div className="relative w-16 h-16 sm:w-20 sm:h-20">
                     <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 100 100">

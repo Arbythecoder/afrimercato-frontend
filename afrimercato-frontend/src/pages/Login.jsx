@@ -152,7 +152,7 @@ function Login() {
 
         {/* Login Card */}
         <motion.div 
-          className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8"
+          className="bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-5 sm:p-8"
           initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.4, delay: 0.3 }}

@@ -290,7 +290,7 @@ function Register() {
           </motion.div>
 
           {/* Register Card */}
-          <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
+          <motion.div variants={itemVariants} className="bg-white rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
           <h2 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h2>
           <p className="text-gray-600 mb-6">
             {formData.role === 'vendor'  && 'Join thousands of vendors on Afrimercato'}
