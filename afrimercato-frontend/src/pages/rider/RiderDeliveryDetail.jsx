@@ -6,7 +6,7 @@ import { ArrowLeft, MapPin, Phone, Package, AlertTriangle, RefreshCw } from 'luc
 import DeliveryChat from '../../components/DeliveryChat'
 
 // Statuses where the rider is actively handling the delivery
-const CHAT_ACTIVE_STATUSES = ['accepted', 'picked_up', 'in_transit']
+const CHAT_ACTIVE_STATUSES = ['assigned_to_rider', 'rider_accepted', 'picked_up_by_rider', 'out_for_delivery', 'accepted', 'picked_up', 'in_transit']
 
 // Map backend Delivery statuses to UI steps
 const STATUS_STEPS = [

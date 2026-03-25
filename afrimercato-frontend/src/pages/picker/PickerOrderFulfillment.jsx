@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { apiCall } from '../../services/api'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowLeft, CheckCircle2, AlertTriangle, MapPin } from 'lucide-react'
+import DeliveryChat from '../../components/DeliveryChat'
 
 const ISSUE_OPTIONS = [
   { reason: 'out_of_stock',    label: 'Out of Stock',     desc: 'Item is not available',          icon: '📦' },
@@ -10,6 +11,8 @@ const ISSUE_OPTIONS = [
   { reason: 'wrong_item',      label: 'Wrong Item',       desc: "Can't find the correct item",    icon: '🔍' },
   { reason: 'partial_quantity',label: 'Partial Quantity', desc: 'Less stock than ordered',        icon: '⚖️' },
 ]
+
+const PICKER_CHAT_STATUSES = ['assigned_to_picker', 'picking', 'packed', 'ready_for_delivery', 'assigned_picker', 'picking', 'picked', 'packing']
 
 function PickerOrderFulfillment() {
   const { orderId } = useParams()
@@ -22,6 +25,7 @@ function PickerOrderFulfillment() {
   const [showIssueModal, setShowIssueModal] = useState(false)
   const [selectedItem, setSelectedItem] = useState(null)
   const [error, setError] = useState(null)
+  const [showChat, setShowChat] = useState(false)
 
   const fetchOrderItems = useCallback(async () => {
     setLoading(true)
@@ -332,6 +336,28 @@ function PickerOrderFulfillment() {
           }
         </motion.button>
       </div>
+
+      {/* Floating order chat */}
+      {orderId && (
+        <>
+          <button
+            onClick={() => setShowChat(v => !v)}
+            className="fixed bottom-24 right-5 z-40 bg-green-600 text-white rounded-full w-12 h-12 flex items-center justify-center shadow-lg hover:bg-green-700 transition-colors"
+            aria-label="Toggle chat"
+          >
+            💬
+          </button>
+          {showChat && (
+            <div className="fixed bottom-40 right-5 z-50">
+              <DeliveryChat
+                orderId={orderId}
+                label="Order Chat"
+                onClose={() => setShowChat(false)}
+              />
+            </div>
+          )}
+        </>
+      )}
 
       {/* Issue Modal */}
       <AnimatePresence>

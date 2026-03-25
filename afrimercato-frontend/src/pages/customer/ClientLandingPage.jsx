@@ -385,7 +385,7 @@ export default function ClientLandingPage() {
               </motion.div>
 
               {/* Trust Indicator — static, never moves */}
-              <div className="mt-10 flex items-center gap-4 shrink-0">
+              <div className="mt-5 flex items-center gap-4 shrink-0">
                 <div className="flex -space-x-3">
                   {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
                     <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">

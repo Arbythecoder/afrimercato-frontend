@@ -1,8 +1,8 @@
 // =================================================================
-// DELIVERY CHAT — Customer ↔ Rider real-time chat via GetStream.io
+// ORDER CHAT — All-party real-time chat via GetStream.io
 // =================================================================
-// Shown on OrderTracking (customer) and RiderDeliveryDetail (rider)
-// only when order status reaches out_for_delivery / in_transit.
+// Customer ↔ Vendor ↔ Picker ↔ Rider — one channel per order.
+// Shown contextually on each role's relevant order page.
 
 import { useState, useEffect, useRef } from 'react'
 import { StreamChat } from 'stream-chat'
@@ -47,7 +47,7 @@ function DeliveryChat({ orderId, label = 'Chat with Rider', onClose }) {
         await apiCall(`/chats/stream/channel/${orderId}`, { method: 'POST' })
 
         // 4. Watch the channel — opens WS subscription
-        const ch = streamClient.channel('messaging', `delivery-${orderId}`)
+        const ch = streamClient.channel('messaging', `order-${orderId}`)
         const state = await ch.watch()
 
         if (!mounted) return

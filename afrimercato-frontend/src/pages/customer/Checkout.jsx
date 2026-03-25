@@ -389,11 +389,9 @@ function Checkout() {
       if (msg.includes('timed out')) {
         alert('The server is taking longer than expected. Please try again.')
       } else {
-        alert('Failed to place order. Please try again.')
+        alert(msg || 'Failed to place order. Please try again.')
       }
-      if (import.meta.env.DEV) {
-        console.error('Order error:', error)
-      }
+      console.error('Order error:', error)
     } finally {
       setLoading(false)
     }

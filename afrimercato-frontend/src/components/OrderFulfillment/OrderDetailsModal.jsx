@@ -4,6 +4,7 @@ import PickerAssignment from './PickerAssignment'
 import OrderStatusControls from './OrderStatusControls'
 import OrderStatusTimeline from './OrderStatusTimeline'
 import RiderRating from './RiderRating'
+import DeliveryChat from '../DeliveryChat'
 
 // Order status badge colors using client theme
 const statusColors = {
@@ -130,6 +131,7 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
               { id: 'packing', label: 'Packing', icon: '📦', show: ['packing', 'picking', 'assigned_picker'].includes(order.status) },
               { id: 'picker', label: 'Picker', icon: '👤', show: ['pending', 'confirmed'].includes(order.status) },
               { id: 'rating', label: 'Rate Rider', icon: '⭐', show: ['delivered', 'completed'].includes(order.status) },
+              { id: 'chat', label: 'Chat', icon: '💬', show: !!order.rider },
             ].map((tab) => {
               if (tab.show === false || (tab.show && !tab.show)) return null
 
@@ -329,6 +331,15 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
               order={order}
               onRatingSubmitted={onRefresh}
             />
+          )}
+
+          {activeTab === 'chat' && (
+            <div className="flex justify-center">
+              <DeliveryChat
+                orderId={order._id}
+                label="Order Chat"
+              />
+            </div>
           )}
         </div>
 
