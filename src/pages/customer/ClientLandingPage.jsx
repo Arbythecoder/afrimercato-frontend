@@ -5,7 +5,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { getFeaturedVendors } from '../../services/api'
+import { getFeaturedVendors, joinWaitlist } from '../../services/api'
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -32,6 +32,11 @@ export default function ClientLandingPage() {
   const [activeFilter, setActiveFilter] = useState('nearby') // nearby | top | featured
   const [stores, setStores] = useState(FALLBACK_STORES)
   const [storesLoading, setStoresLoading] = useState(true)
+
+  // Waitlist
+  const [waitlistEmail, setWaitlistEmail] = useState('')
+  const [waitlistStatus, setWaitlistStatus] = useState('') // '' | 'loading' | 'success' | 'error'
+  const [waitlistMessage, setWaitlistMessage] = useState('')
 
   // Location autocomplete
   const [locationSuggestions, setLocationSuggestions] = useState([])
@@ -157,6 +162,27 @@ export default function ClientLandingPage() {
     e?.preventDefault()
     if (!location.trim()) return
     navigate(`/stores?location=${encodeURIComponent(location)}&price=${priceTag}&method=${shoppingMethod}`)
+  }
+
+  const handleWaitlistSubmit = async (e) => {
+    e.preventDefault()
+    if (!waitlistEmail.trim()) return
+    setWaitlistStatus('loading')
+    setWaitlistMessage('')
+    try {
+      const result = await joinWaitlist(waitlistEmail.trim())
+      if (result?.success) {
+        setWaitlistStatus('success')
+        setWaitlistMessage(result.message)
+        setWaitlistEmail('')
+      } else {
+        setWaitlistStatus('error')
+        setWaitlistMessage(result?.message || 'Something went wrong. Please try again.')
+      }
+    } catch (_e) {
+      setWaitlistStatus('error')
+      setWaitlistMessage('Something went wrong. Please try again.')
+    }
   }
 
   // Quick location select
@@ -871,6 +897,81 @@ export default function ClientLandingPage() {
             <p className="text-white/80 text-sm">
               We are currently in a guided testing phase to ensure speed, reliability, and strong foundations before scaling to new regions.
             </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* ============================================
+          WAITLIST
+          ============================================ */}
+      <section className="py-20 sm:py-24 bg-[#0a2e2a] relative overflow-hidden">
+        {/* decorative blobs */}
+        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
+          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00897B]/20 rounded-full blur-3xl" />
+          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl" />
+        </div>
+
+        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, amount: 0.3 }}
+            transition={{ duration: 0.5 }}
+          >
+            {/* eyebrow */}
+            <span className="inline-block bg-[#00897B]/30 text-[#4db6ac] text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+              Coming Soon
+            </span>
+
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
+              Be the first to know<br className="hidden sm:block" /> when we go live
+            </h2>
+            <p className="text-white/60 text-base sm:text-lg mb-10">
+              Join thousands of shoppers and vendors waiting for Afrimercato to launch across the UK.
+            </p>
+
+            {waitlistStatus === 'success' ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="flex flex-col items-center gap-3"
+              >
+                <div className="w-16 h-16 rounded-full bg-[#00897B]/20 flex items-center justify-center mb-2">
+                  <svg className="w-8 h-8 text-[#4db6ac]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <p className="text-white font-semibold text-lg">{waitlistMessage}</p>
+                <p className="text-white/50 text-sm">Keep an eye on your inbox.</p>
+              </motion.div>
+            ) : (
+              <form
+                onSubmit={handleWaitlistSubmit}
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-lg mx-auto"
+              >
+                <input
+                  type="email"
+                  required
+                  value={waitlistEmail}
+                  onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus(''); setWaitlistMessage('') }}
+                  placeholder="Enter your email address"
+                  className="flex-1 px-5 py-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-transparent transition text-sm sm:text-base"
+                />
+                <button
+                  type="submit"
+                  disabled={waitlistStatus === 'loading'}
+                  className="flex-shrink-0 bg-[#00897B] hover:bg-[#00695C] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-7 py-4 rounded-xl shadow-lg transition-all text-sm sm:text-base whitespace-nowrap"
+                >
+                  {waitlistStatus === 'loading' ? 'Joining…' : 'Join Waitlist'}
+                </button>
+              </form>
+            )}
+
+            {waitlistStatus === 'error' && (
+              <p className="mt-3 text-red-400 text-sm">{waitlistMessage}</p>
+            )}
+
+            <p className="mt-6 text-white/30 text-xs">No spam. We'll only email you when we launch.</p>
           </motion.div>
         </div>
       </section>

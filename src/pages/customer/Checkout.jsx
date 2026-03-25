@@ -493,9 +493,18 @@ function Checkout() {
       setAuthError('')
       setAuthLoading(true)
       try {
-        const result = await login(authEmail, authPassword)
+        const result = await login(authEmail, authPassword, { requiredRole: 'customer' })
         if (!result.success) {
-          setAuthError(result.message || 'Incorrect email or password.')
+          if (result.roleBlocked) {
+            const roleLabel = result.actualRole === 'vendor' ? 'Vendor'
+              : result.actualRole === 'rider' ? 'Rider'
+              : result.actualRole === 'picker' ? 'Picker'
+              : result.actualRole === 'admin' ? 'Admin'
+              : 'Non-Customer'
+            setAuthError(`This account is registered as a ${roleLabel}. Please use a customer account.`)
+          } else {
+            setAuthError(result.message || 'Incorrect email or password.')
+          }
         }
         // On success isAuthenticated flips → loadCart effect re-runs automatically
       } catch (_e) {

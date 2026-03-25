@@ -125,13 +125,24 @@ export const AuthProvider = ({ children }) => {
     setLoading(false)
   }
 
-  const login = async (email, password) => {
+  const login = async (email, password, { requiredRole } = {}) => {
     try {
       const response = await authAPI.login({ email, password })
 
       if (response && response.success) {
         const { token, user } = response.data
         const normalizedUser = normalizeUserRoles(user)
+
+        // Role gate — checked BEFORE committing auth state so the caller keeps
+        // the user on the current page and the session is never opened.
+        if (requiredRole && normalizedUser.role !== requiredRole) {
+          return {
+            success: false,
+            roleBlocked: true,
+            actualRole: normalizedUser.role,
+            message: `This account is registered as a ${normalizedUser.role}. Please use a customer account.`
+          }
+        }
 
         // Access token in localStorage — refresh token lives in httpOnly cookie (set by server)
         localStorage.setItem('afrimercato_token', token)
@@ -144,7 +155,7 @@ export const AuthProvider = ({ children }) => {
         if (import.meta.env.DEV) {
           console.log('🔑 Login success:', normalizedUser.role)
         }
-        
+
         return { success: true, user: normalizedUser }
       } else {
         return {

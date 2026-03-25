@@ -478,6 +478,13 @@ export const getFeaturedVendors = async (limit = 10) => {
   return apiCall(`/products/featured-vendors?limit=${limit}`);
 };
 
+export const joinWaitlist = async (email) => {
+  return apiCall('/waitlist', {
+    method: 'POST',
+    body: JSON.stringify({ email })
+  });
+};
+
 export const getAllProducts = async (filters = {}) => {
   const queryString = new URLSearchParams(filters).toString();
   return apiCall(`/products?${queryString}`);

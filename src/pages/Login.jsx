@@ -30,74 +30,69 @@ function Login() {
     setError('')
     setLoading(true)
 
-    const result = await login(formData.email, formData.password)
+    // Read before login() so we can pass requiredRole — the flag must be checked
+    // now because login() won't set auth state on a role mismatch (no redirect race).
+    const checkoutRedirect = localStorage.getItem('checkout_redirect') === 'true'
 
-    if (result.success) {
-      // Check if user was redirected from checkout
-      const checkoutRedirect = localStorage.getItem('checkout_redirect')
-      const userRole = result.user?.role || result.user?.primaryRole || 'customer'
+    const result = await login(
+      formData.email,
+      formData.password,
+      checkoutRedirect ? { requiredRole: 'customer' } : {}
+    )
 
-      if (checkoutRedirect === 'true') {
-        localStorage.removeItem('checkout_redirect')
-
-        // Block non-customer accounts from the checkout flow
-        if (userRole !== 'customer') {
-          const roleLabel = userRole === 'vendor' ? 'Vendor'
-            : userRole === 'rider' ? 'Rider'
-            : userRole === 'picker' ? 'Picker'
-            : userRole === 'admin' ? 'Admin'
-            : 'non-Customer'
-          setError(`This is a ${roleLabel} account. Shopping and checkout are only available for Customer accounts. Please register a separate Customer account to shop.`)
-          setLoading(false)
-          return
-        }
-
-        // Always return to checkout — backend cart is the source of truth
-        navigate('/checkout')
-        return
-      }
-
-      // Check vendor approval status
-      const approvalStatus = result.user?.approvalStatus
-
-      // If vendor with rejected approval, show error
-      if (userRole === 'vendor' && approvalStatus === 'rejected') {
-        setError('Your vendor account application was rejected. Please contact support.')
-        setLoading(false)
-        return
-      }
-
-      // UberEats-style: Allow pending vendors to access dashboard
-      // They can set up their store while waiting for approval
-      // Store will be hidden from customers until approved
-
-      // Route based on user role
-      switch (userRole) {
-        case 'admin':
-          navigate('/admin')
-          break
-        case 'vendor':
-          navigate('/dashboard')
-          break
-        case 'rider':
-          navigate('/rider/dashboard')
-          break
-        case 'picker':
-          navigate('/picker/dashboard')
-          break
-        case 'customer':
-        default:
-          navigate('/cart')
-          break
-      }
-    } else {
-      const msg = result.message || 'Login failed. Please try again.'
-      // Friendlier message for timeout errors (Fly.io cold start)
-      if (msg.includes('timed out') || msg.includes('timeout')) {
-        setError('Server is waking up — please try again in a few seconds.')
+    if (!result.success) {
+      if (result.roleBlocked) {
+        const roleLabel = result.actualRole === 'vendor' ? 'Vendor'
+          : result.actualRole === 'rider' ? 'Rider'
+          : result.actualRole === 'picker' ? 'Picker'
+          : result.actualRole === 'admin' ? 'Admin'
+          : 'Non-Customer'
+        setError(`This account is registered as a ${roleLabel}. Please use a customer account.`)
       } else {
-        setError(msg)
+        const msg = result.message || 'Login failed. Please try again.'
+        if (msg.includes('timed out') || msg.includes('timeout')) {
+          setError('Server is waking up — please try again in a few seconds.')
+        } else {
+          setError(msg)
+        }
       }
+      setLoading(false)
+      return
+    }
+
+    // Successful login — clean up checkout flag and route appropriately
+    if (checkoutRedirect) {
+      localStorage.removeItem('checkout_redirect')
+      navigate('/checkout')
+      return
+    }
+
+    const userRole = result.user?.role || result.user?.primaryRole || 'customer'
+    const approvalStatus = result.user?.approvalStatus
+
+    if (userRole === 'vendor' && approvalStatus === 'rejected') {
+      setError('Your vendor account application was rejected. Please contact support.')
+      setLoading(false)
+      return
+    }
+
+    switch (userRole) {
+      case 'admin':
+        navigate('/admin')
+        break
+      case 'vendor':
+        navigate('/dashboard')
+        break
+      case 'rider':
+        navigate('/rider/dashboard')
+        break
+      case 'picker':
+        navigate('/picker/dashboard')
+        break
+      case 'customer':
+      default:
+        navigate('/cart')
+        break
     }
 
     setLoading(false)
