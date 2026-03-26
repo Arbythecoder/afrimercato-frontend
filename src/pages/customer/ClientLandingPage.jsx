@@ -180,8 +180,13 @@ export default function ClientLandingPage() {
         setWaitlistMessage(result?.message || 'Something went wrong. Please try again.')
       }
     } catch (_e) {
-      setWaitlistStatus('error')
-      setWaitlistMessage('Something went wrong. Please try again.')
+      if (_e.status === 409) {
+        setWaitlistStatus('duplicate')
+        setWaitlistMessage(_e.message)
+      } else {
+        setWaitlistStatus('error')
+        setWaitlistMessage('Something went wrong. Please try again.')
+      }
     }
   }
 
@@ -965,6 +970,10 @@ export default function ClientLandingPage() {
                   {waitlistStatus === 'loading' ? 'Joining…' : 'Join Waitlist'}
                 </button>
               </form>
+            )}
+
+            {waitlistStatus === 'duplicate' && (
+              <p className="mt-3 text-green-400 text-sm">{waitlistMessage}</p>
             )}
 
             {waitlistStatus === 'error' && (
