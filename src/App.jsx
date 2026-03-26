@@ -101,7 +101,14 @@ function CheckoutAuthGuard() {
 // Helper component to redirect based on user role
 function RoleBasedRedirect() {
   const { user } = useAuth()
+  // Check roles array first to correctly handle multi-role users
+  // (e.g. a user with roles: ['vendor', 'picker'] should reach picker dashboard
+  //  when navigating to a picker-only route)
+  const roles = user?.roles || []
   const role = user?.role || user?.primaryRole || 'customer'
+
+  if (roles.includes('picker')) return <Navigate to="/picker/dashboard" replace />
+  if (roles.includes('rider')) return <Navigate to="/rider/dashboard" replace />
 
   switch (role) {
     case 'vendor':
@@ -242,11 +249,13 @@ function AppContent() {
       <Route path="/rider/earnings" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderEarnings /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
       <Route path="/rider/profile" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderProfile /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
-      {/* Picker Routes — require picker role */}
-      <Route path="/picker/dashboard" element={isAuthenticated && user?.role === 'picker' ? <PickerLayout><PickerDashboard /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
-      <Route path="/picker/order/:orderId" element={isAuthenticated && user?.role === 'picker' ? <PickerOrderFulfillment /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
-      <Route path="/picker/performance" element={isAuthenticated && user?.role === 'picker' ? <PickerLayout><PickerPerformance /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
-      <Route path="/picker/profile" element={isAuthenticated && user?.role === 'picker' ? <PickerLayout><PickerProfile /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      {/* Picker Routes — require picker role.
+          Check role OR roles array to handle multi-role users (e.g. roles: ['vendor', 'picker'])
+          where roles[0] may not be 'picker' but the user is still a valid picker. */}
+      <Route path="/picker/dashboard" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerDashboard /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/order/:orderId" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerOrderFulfillment /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/performance" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerPerformance /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/profile" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerProfile /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
       <Route
         path="/login"
