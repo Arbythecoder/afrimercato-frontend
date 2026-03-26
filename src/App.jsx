@@ -91,12 +91,6 @@ function LazyLoadingFallback() {
   )
 }
 
-// Sets checkout_redirect flag then sends unauthenticated users to login.
-// This ensures Login.jsx's role-gate fires even on direct /checkout navigation.
-function CheckoutAuthGuard() {
-  localStorage.setItem('checkout_redirect', 'true')
-  return <Navigate to="/login" replace />
-}
 
 // Helper component to redirect based on user role
 function RoleBasedRedirect() {
@@ -236,9 +230,7 @@ function AppContent() {
       />
 
       {/* Checkout & Order Routes */}
-      {/* Guard: unauthenticated users redirected to login. ShoppingCart already sets
-          checkout_redirect before navigating here, so the return trip is handled. */}
-      <Route path="/checkout" element={isAuthenticated ? <Checkout /> : <CheckoutAuthGuard />} />
+      <Route path="/checkout" element={<Checkout />} />
       <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
       <Route path="/track-order/:orderId" element={<OrderTracking />} />
 

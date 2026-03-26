@@ -660,13 +660,6 @@ function ShoppingCart() {
                       localStorage.removeItem('repeatPurchaseFrequency')
                     }
 
-                    // Redirect unauthenticated users to login, preserving checkout intent
-                    if (!isAuthenticated) {
-                      localStorage.setItem('checkout_redirect', 'true')
-                      navigate('/login')
-                      return
-                    }
-
                     navigate('/checkout')
                   }}
                   disabled={(() => {

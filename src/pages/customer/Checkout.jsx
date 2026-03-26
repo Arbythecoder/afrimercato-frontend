@@ -83,7 +83,12 @@ function Checkout() {
       setCartLoading(true)
 
       if (!isAuthenticated) {
-        setShowAuthModal(true)
+        const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        if (savedCart.length > 0) {
+          setCart(savedCart)
+        } else {
+          navigate('/stores')
+        }
         setCartLoading(false)
         return
       }
@@ -211,6 +216,14 @@ function Checkout() {
     prefillAddress()
   }, [isAuthenticated, isCustomer])
 
+  // After successful login during checkout, auto-advance to payment step
+  useEffect(() => {
+    if (isAuthenticated && showAuthModal) {
+      setShowAuthModal(false)
+      setStep(2)
+    }
+  }, [isAuthenticated])
+
   // Fetch vendor data when cart loads
   useEffect(() => {
     const fetchVendorData = async () => {
@@ -294,6 +307,10 @@ function Checkout() {
 
   const handleAddressSubmit = (e) => {
     e.preventDefault()
+    if (!isAuthenticated) {
+      setShowAuthModal(true)
+      return
+    }
     setStep(2)
   }
 
