@@ -345,7 +345,9 @@ function Checkout() {
       }
 
       // Use centralized API with 8s timeout + token refresh
+      console.log('[Checkout] Calling initializePayment — items:', orderData.items.length, 'total:', total)
       const data = await checkoutAPI.initializePayment(orderData)
+      console.log('[Checkout] initializePayment response — success:', data?.success, 'has payment url:', !!data?.data?.payment?.url)
 
       if (data.success) {
         // Cache current order items for future repurchase
@@ -366,12 +368,14 @@ function Checkout() {
         localStorage.removeItem('repeatPurchaseFrequency')
 
         if (payment.method === 'card' && data.data.payment?.url) {
+          console.log('[Checkout] Redirecting to Stripe hosted page:', data.data.payment.url)
           localStorage.setItem('pending_order_id', data.data.order._id)
           window.location.href = data.data.payment.url
         } else {
           navigate(`/order-confirmation/${data.data.order._id}`)
         }
       } else {
+        console.error('[Checkout] Order failed:', data?.message)
         alert('Order failed: ' + (data.message || 'Unknown error'))
       }
     } catch (error) {

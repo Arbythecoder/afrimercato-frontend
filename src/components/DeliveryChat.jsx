@@ -9,7 +9,11 @@ import { StreamChat } from 'stream-chat'
 import { apiCall } from '../services/api'
 
 // Singleton Stream client — one connection per browser session
-const streamClient = StreamChat.getInstance(import.meta.env.VITE_STREAM_API_KEY)
+const STREAM_KEY = import.meta.env.VITE_STREAM_API_KEY
+if (!STREAM_KEY && import.meta.env.DEV) {
+  console.error('[DeliveryChat] VITE_STREAM_API_KEY is not set. Chat will not work.')
+}
+const streamClient = STREAM_KEY ? StreamChat.getInstance(STREAM_KEY) : null
 
 /**
  * @param {string}   orderId   - MongoDB Order _id
@@ -31,6 +35,10 @@ function DeliveryChat({ orderId, label = 'Chat with Rider', onClose }) {
     let mounted = true
 
     const init = async () => {
+      if (!streamClient) {
+        if (mounted) setError('Chat is not configured (missing API key).')
+        return
+      }
       try {
         // 1. Get Stream user token from our backend
         const tokenRes = await apiCall('/chats/stream/token')
@@ -43,7 +51,7 @@ function DeliveryChat({ orderId, label = 'Chat with Rider', onClose }) {
           await streamClient.connectUser({ id: userId, name }, token)
         }
 
-        // 3. Ensure channel exists on Stream (backend creates it with both members)
+        // 3. Ensure channel exists on Stream (backend creates it with all members)
         await apiCall(`/chats/stream/channel/${orderId}`, { method: 'POST' })
 
         // 4. Watch the channel — opens WS subscription

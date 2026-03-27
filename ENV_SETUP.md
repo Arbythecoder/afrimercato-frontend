@@ -192,6 +192,19 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 openssl rand -hex 64
 ```
 
+### Stream Chat Secrets (required for in-app order chat)
+
+Get these from your [getstream.io](https://getstream.io) dashboard → App → API Credentials.
+
+```bash
+fly secrets set \
+  STREAM_API_KEY="your_stream_api_key" \
+  STREAM_API_SECRET="your_stream_api_secret"
+```
+
+Both values are required. The backend will throw `Stream API credentials not configured` on startup
+if either is missing, and all chat routes will return 500.
+
 ---
 
 ## Vercel Deployment (Frontend)
@@ -213,8 +226,9 @@ vercel env add VITE_API_URL production
    - **Name:** `VITE_API_URL`
    - **Value:** `https://afrimercato-backend.fly.dev`
    - **Environments:** Production, Preview, Development
-3. Click **Save**
-4. Redeploy for changes to take effect
+3. Also add `VITE_STREAM_API_KEY` (public API key from getstream.io — safe to expose in browser)
+4. Click **Save**
+5. Redeploy for changes to take effect
 
 ---
 
