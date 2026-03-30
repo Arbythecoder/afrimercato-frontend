@@ -30,18 +30,20 @@ export default function PickerProfile() {
         const res = await apiCall('/picker-auth/profile')
         if (res?.data) {
           const d = res.data
+          // Backend returns { data: { user: {...}, stats: {...} } }
+          const u = d.user || d
           setProfile(prev => ({
             ...prev,
-            name: d.name || prev.name,
-            email: d.email || prev.email,
-            phone: d.phone || prev.phone,
+            name: u.name || prev.name,
+            email: u.email || prev.email,
+            phone: u.phone || prev.phone,
           }))
           const s = d.stats || {}
           setStats({
-            totalPicked: s.totalPicked || s.totalOrders || 0,
-            completionRate: parseFloat(s.completionRate) || 0,
-            avgPickTime: s.avgPickTime || 0,
-            memberSince: d.createdAt || '',
+            totalPicked: s.totalOrders || 0,
+            completionRate: parseFloat(s.averageAccuracy) || 0,
+            avgPickTime: 0,
+            memberSince: u.createdAt || '',
           })
         }
       } catch (_e) {

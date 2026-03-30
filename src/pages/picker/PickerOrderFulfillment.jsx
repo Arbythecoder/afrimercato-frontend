@@ -12,8 +12,6 @@ const ISSUE_OPTIONS = [
   { reason: 'partial_quantity',label: 'Partial Quantity', desc: 'Less stock than ordered',        icon: '⚖️' },
 ]
 
-const PICKER_CHAT_STATUSES = ['assigned_to_picker', 'picking', 'packed', 'ready_for_delivery', 'assigned_picker', 'picking', 'picked', 'packing']
-
 function PickerOrderFulfillment() {
   const { orderId } = useParams()
   const navigate = useNavigate()
@@ -72,7 +70,7 @@ function PickerOrderFulfillment() {
       })
       setItems(prev => prev.map(i =>
         (i.id || i._id) === itemId
-          ? { ...i, status: i.status === 'picked' ? 'pending' : 'picked', quantityPicked: i.quantityOrdered }
+          ? { ...i, status: 'picked', quantityPicked: i.quantityOrdered }
           : i
       ))
     } catch (_e) {
