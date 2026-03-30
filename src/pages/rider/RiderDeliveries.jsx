@@ -134,7 +134,8 @@ function RiderDeliveries() {
             <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
               {deliveries.map((d, i) => {
                 const id = d.id || d._id
-                const st = STATUS_CONFIG[d.status] || STATUS_CONFIG.pending
+                const defaultStatus = filter === 'completed' ? 'delivered' : 'pending'
+                const st = STATUS_CONFIG[d.status] || STATUS_CONFIG[defaultStatus]
                 return (
                   <motion.div
                     key={id}
@@ -182,20 +183,30 @@ function RiderDeliveries() {
                       {filter === 'active' && (
                         <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                           <div className="flex items-center gap-3 text-xs text-gray-400">
+                            {d.order?.items?.length > 0 && <span className="flex items-center gap-1"><Package size={11} />{d.order.items.length} items</span>}
                             {d.distance && <span className="flex items-center gap-1"><Ruler size={11} />{d.distance} km</span>}
                             {d.estimatedDeliveryTime && <span className="flex items-center gap-1"><Clock size={11} />{new Date(d.estimatedDeliveryTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>}
                           </div>
                           <div className="flex items-center gap-2">
+                            {d.status === 'pending' && (
+                              <button
+                                onClick={e => handleAction(e, id, 'accept')}
+                                disabled={actionLoading === id + 'accept'}
+                                className="px-4 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl disabled:opacity-50"
+                              >
+                                {actionLoading === id + 'accept' ? '...' : 'Accept'}
+                              </button>
+                            )}
                             {d.status === 'accepted' && (
                               <button
                                 onClick={e => handleAction(e, id, 'start')}
                                 disabled={actionLoading === id + 'start'}
                                 className="px-4 py-1.5 bg-afri-green text-white text-xs font-bold rounded-xl disabled:opacity-50"
                               >
-                                {actionLoading === id + 'start' ? '...' : 'Start →'}
+                                {actionLoading === id + 'start' ? '...' : 'Confirm Pickup'}
                               </button>
                             )}
-                            {d.status === 'in_transit' && (
+                            {(d.status === 'picked_up' || d.status === 'in_transit') && (
                               <button
                                 onClick={e => handleAction(e, id, 'complete')}
                                 disabled={actionLoading === id + 'complete'}

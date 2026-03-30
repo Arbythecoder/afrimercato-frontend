@@ -16,6 +16,7 @@ function Register() {
     name: '',
     email: '',
     phone: '',
+    location: '',
     password: '',
     confirmPassword: '',
     role: ALL_ROLES.includes(roleFromUrl) ? roleFromUrl : 'customer',
@@ -376,6 +377,26 @@ function Register() {
                   placeholder="+44 7700 900000 or +353 85 123 4567"
                 />
                 <p className="text-xs text-gray-500 mt-1">UK: +44 7xxx xxxxxx | Ireland: +353 8x xxx xxxx</p>
+              </div>
+            )}
+
+            {/* Location — riders only: used to assign nearby deliveries */}
+            {formData.role === 'rider' && (
+              <div>
+                <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-2">
+                  Location (City / Postcode)
+                </label>
+                <input
+                  id="location"
+                  name="location"
+                  type="text"
+                  required
+                  value={formData.location}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
+                  placeholder="e.g. London, SE1 7PB"
+                />
+                <p className="text-xs text-gray-500 mt-1">Used to assign nearby deliveries to you</p>
               </div>
             )}
 

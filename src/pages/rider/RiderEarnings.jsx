@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { TrendingUp, Package, RefreshCw, ChevronRight } from 'lucide-react'
 
 const PERIODS = [
+  { id: 'today', label: 'Today',   days: 1 },
   { id: 'week',  label: '7 Days',  days: 7 },
   { id: 'month', label: '30 Days', days: 30 },
   { id: 'year',  label: '1 Year',  days: 365 },

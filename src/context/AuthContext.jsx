@@ -198,7 +198,7 @@ export const AuthProvider = ({ children }) => {
       } else if (userData.role === 'rider') {
         response = await apiCall('/rider-auth/register', {
           method: 'POST',
-          body: JSON.stringify({ name: userData.name, email: userData.email, phone: userData.phone, password: userData.password })
+          body: JSON.stringify({ name: userData.name, email: userData.email, phone: userData.phone, password: userData.password, location: userData.location })
         })
       } else if (userData.role === 'picker') {
         response = await apiCall('/picker-auth/register', {

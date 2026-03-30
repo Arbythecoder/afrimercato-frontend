@@ -15,6 +15,7 @@ function RiderProfile() {
     name: user?.name || '',
     email: user?.email || '',
     phone: user?.phone || '',
+    location: '',
     vehicleType: 'bicycle',
     licensePlate: ''
   })
@@ -37,6 +38,7 @@ function RiderProfile() {
             name: d.name || prev.name,
             email: d.email || prev.email,
             phone: d.phone || prev.phone,
+            location: d.location || prev.location,
             vehicleType: d.vehicleType || prev.vehicleType,
             licensePlate: d.licensePlate || prev.licensePlate
           }))
@@ -66,6 +68,7 @@ function RiderProfile() {
         body: JSON.stringify({
           name: profile.name,
           phone: profile.phone,
+          location: profile.location,
           vehicleType: profile.vehicleType,
           licensePlate: profile.licensePlate
         })
@@ -198,6 +201,16 @@ function RiderProfile() {
                     className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Location (City / Postcode)</label>
+                  <input
+                    type="text"
+                    value={profile.location}
+                    onChange={(e) => setProfile({ ...profile, location: e.target.value })}
+                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    placeholder="e.g. London, SE1"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={loading}
@@ -244,8 +257,13 @@ function RiderProfile() {
                   </div>
                 )}
 
-                <button className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark">
-                  Update Vehicle
+                <button
+                  type="button"
+                  onClick={handleProfileUpdate}
+                  disabled={loading}
+                  className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
+                >
+                  {loading ? 'Saving...' : 'Update Vehicle'}
                 </button>
               </div>
             )}

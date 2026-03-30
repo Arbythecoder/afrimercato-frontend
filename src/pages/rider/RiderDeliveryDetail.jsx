@@ -6,7 +6,7 @@ import { ArrowLeft, MapPin, Phone, Package, AlertTriangle, RefreshCw } from 'luc
 import DeliveryChat from '../../components/DeliveryChat'
 
 // Statuses where the rider is actively handling the delivery
-const CHAT_ACTIVE_STATUSES = ['assigned_to_rider', 'rider_accepted', 'picked_up_by_rider', 'out_for_delivery', 'accepted', 'picked_up', 'in_transit']
+const CHAT_ACTIVE_STATUSES = ['accepted', 'picked_up', 'in_transit']
 
 // Map backend Delivery statuses to UI steps
 const STATUS_STEPS = [
@@ -17,9 +17,11 @@ const STATUS_STEPS = [
 ]
 
 // What action button to show for each current status
-// Backend endpoints: POST /start (accepted→picked_up), POST /complete (picked_up|in_transit→delivered)
+// Backend endpoints: POST /accept (pending→accepted), POST /start (accepted→picked_up),
+// POST /complete (picked_up|in_transit→delivered)
 // There is no explicit /transit endpoint — in_transit is set automatically via /location/update.
 const NEXT_ACTION = {
+  pending:     { label: 'Accept Delivery',   action: 'accept',   color: 'bg-blue-600 hover:bg-blue-700' },
   accepted:    { label: 'Confirm Pickup',    action: 'start',    color: 'bg-afri-green hover:bg-afri-green-dark' },
   picked_up:   { label: 'Mark as Delivered', action: 'complete', color: 'bg-emerald-600 hover:bg-emerald-700' },
   in_transit:  { label: 'Mark as Delivered', action: 'complete', color: 'bg-emerald-600 hover:bg-emerald-700' },
