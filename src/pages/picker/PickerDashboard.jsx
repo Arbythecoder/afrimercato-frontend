@@ -9,6 +9,7 @@ const STATUS_COLORS = {
   assigned_to_picker: { badge: 'bg-amber-100 text-amber-700', stripe: 'bg-amber-400', label: 'Assigned' },
   picking:            { badge: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-500',  label: 'Picking' },
   packed:             { badge: 'bg-afri-green-pale text-afri-green-dark', stripe: 'bg-afri-green', label: 'Packed' },
+  ready_for_delivery: { badge: 'bg-purple-100 text-purple-700', stripe: 'bg-purple-500', label: 'Ready for Rider' },
 }
 
 function SkeletonCard() {

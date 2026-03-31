@@ -34,7 +34,12 @@ function PickerOrderFulfillment() {
         setItems(res.data.items || [])
         const ordersRes = await apiCall('/pickers/my-orders')
         const found = (ordersRes?.data?.orders || []).find(o => (o.id || o._id) === orderId)
-        setOrder(found || { id: orderId, orderNumber: orderId })
+        const foundOrder = found || { id: orderId, orderNumber: orderId }
+        setOrder(foundOrder)
+        // Transition order to 'picking' status if still assigned — sets startedAt for accurate timing
+        if (foundOrder.status === 'assigned_to_picker') {
+          await apiCall(`/pickers/${orderId}/start`, { method: 'POST' }).catch(() => {})
+        }
       }
     } catch (err) {
       if (err?.status === 404 || err?.message?.includes('404') || err?.message?.includes('not found')) {
@@ -46,6 +51,8 @@ function PickerOrderFulfillment() {
             const ordersRes = await apiCall('/pickers/my-orders')
             const found = (ordersRes?.data?.orders || []).find(o => (o.id || o._id) === orderId)
             setOrder(found || { id: orderId, orderNumber: orderId })
+            // Start picking after auto-claim
+            await apiCall(`/pickers/${orderId}/start`, { method: 'POST' }).catch(() => {})
           }
         } catch (_e) {
           setError('Could not load this order. It may have already been claimed by someone else.')
@@ -103,7 +110,7 @@ function PickerOrderFulfillment() {
   }
 
   const handleComplete = async () => {
-    const allHandled = items.every(i => ['picked', 'unavailable', 'substituted'].includes(i.status))
+    const allHandled = items.every(i => ['picked', 'unavailable', 'replaced'].includes(i.status))
     if (!allHandled) {
       alert('Please pick or report issues for all items before completing.')
       return
@@ -119,7 +126,7 @@ function PickerOrderFulfillment() {
     }
   }
 
-  const handledCount = items.filter(i => ['picked', 'unavailable', 'substituted'].includes(i.status)).length
+  const handledCount = items.filter(i => ['picked', 'unavailable', 'replaced'].includes(i.status)).length
   const totalItems = items.length
   const progress = totalItems > 0 ? (handledCount / totalItems) * 100 : 0
   const allDone = handledCount === totalItems && totalItems > 0
@@ -222,7 +229,7 @@ function PickerOrderFulfillment() {
             {items.map((item, idx) => {
               const itemId = item.id || item._id
               const isPicked = item.status === 'picked'
-              const isUnavailable = item.status === 'unavailable' || item.status === 'substituted'
+              const isUnavailable = item.status === 'unavailable' || item.status === 'replaced'
               const isHandled = isPicked || isUnavailable
               const isLoading = actionLoading === itemId
               const productName = item.product?.name || `Item ${idx + 1}`
