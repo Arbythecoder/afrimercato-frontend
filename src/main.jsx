@@ -81,12 +81,16 @@ class ErrorBoundary extends React.Component {
   }
 }
 
-// Register service worker for PWA + push notifications
-if ('serviceWorker' in navigator) {
+// Register service worker in production only — keeps dev HMR clean
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {
-      // SW registration failed silently — app still works
-    })
+    navigator.serviceWorker.register('/sw.js')
+      .then((reg) => {
+        console.log('[SW] Registered — scope:', reg.scope)
+      })
+      .catch((err) => {
+        console.warn('[SW] Registration failed:', err)
+      })
   })
 }
 
