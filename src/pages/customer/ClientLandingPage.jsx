@@ -427,9 +427,6 @@ export default function ClientLandingPage() {
                     +4K
                   </div>
                 </div>
-                <p className="text-gray-800 font-medium text-sm sm:text-base">
-                  Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors
-                </p>
               </div>
             </div>
 
@@ -1052,12 +1049,6 @@ export default function ClientLandingPage() {
                 <div key={i} className="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-sm">{e}</div>
               ))}
             </div>
-            <p className="text-sm text-gray-600 font-medium hidden sm:block">
-              Trusted by <span className="font-bold text-gray-900">4,320+</span> Vendors across the UK & Ireland
-            </p>
-            <p className="text-sm text-gray-600 font-medium sm:hidden">
-              <span className="font-bold text-gray-900">4,320+</span> Vendors
-            </p>
           </div>
           <Link
             to="/register?role=vendor"

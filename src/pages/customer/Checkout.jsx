@@ -213,12 +213,14 @@ function Checkout() {
         const res = await userAPI.getProfile()
         const profile = res?.data || res
         if (!profile) return
+        // Prefer the address marked isDefault; fall back to first in array
+        const savedAddr = profile.addresses?.find(a => a.isDefault) || profile.addresses?.[0]
         setAddress(prev => ({
           fullName:     prev.fullName     || profile.name  || '',
           phone:        prev.phone        || profile.phone || '',
-          street:       prev.street       || (profile.addresses?.[0]?.street)  || '',
-          city:         prev.city         || (profile.addresses?.[0]?.city)    || '',
-          postcode:     prev.postcode     || (profile.addresses?.[0]?.postcode) || '',
+          street:       prev.street       || savedAddr?.street   || '',
+          city:         prev.city         || savedAddr?.city     || '',
+          postcode:     prev.postcode     || savedAddr?.postcode || '',
           instructions: prev.instructions || ''
         }))
       } catch (_e) {
@@ -381,6 +383,16 @@ function Checkout() {
 
         localStorage.removeItem('afrimercato_cart')
         localStorage.removeItem('repeatPurchaseFrequency')
+
+        // Fire-and-forget: persist delivery address back to profile for next checkout
+        if (isAuthenticated && address.street) {
+          userAPI.saveDefaultAddress({
+            street:   address.street,
+            city:     address.city,
+            postcode: address.postcode,
+            label:    'Home'
+          }).catch(() => { /* non-critical — never blocks checkout */ })
+        }
 
         if (payment.method === 'card' && data.data.payment?.url) {
           console.log('[Checkout] Redirecting to Stripe hosted page:', data.data.payment.url)

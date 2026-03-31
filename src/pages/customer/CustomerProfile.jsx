@@ -18,6 +18,11 @@ function CustomerProfile() {
   })
 
   const [addresses, setAddresses] = useState([])
+  const [showAddressForm, setShowAddressForm] = useState(false)
+  const [editingAddressId, setEditingAddressId] = useState(null)
+  const [addressForm, setAddressForm] = useState({ label: 'Home', street: '', city: '', postcode: '' })
+  const [addressFormLoading, setAddressFormLoading] = useState(false)
+
   const [passwords, setPasswords] = useState({
     current: '',
     new: '',
@@ -108,6 +113,43 @@ function CustomerProfile() {
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Failed to delete account. Please contact support.' })
       setDeleteLoading(false)
+    }
+  }
+
+  const openAddAddress = () => {
+    setEditingAddressId(null)
+    setAddressForm({ label: 'Home', street: '', city: '', postcode: '' })
+    setShowAddressForm(true)
+  }
+
+  const openEditAddress = (addr) => {
+    setEditingAddressId(addr._id)
+    setAddressForm({ label: addr.label || 'Home', street: addr.street || '', city: addr.city || '', postcode: addr.postcode || '' })
+    setShowAddressForm(true)
+  }
+
+  const handleAddressSave = async (e) => {
+    e.preventDefault()
+    setAddressFormLoading(true)
+    try {
+      let response
+      if (editingAddressId) {
+        response = await userAPI.updateAddress(editingAddressId, addressForm)
+      } else {
+        response = await userAPI.addAddress({ ...addressForm, isDefault: addresses.length === 0 })
+      }
+      if (response?.success) {
+        setMessage({ type: 'success', text: editingAddressId ? 'Address updated!' : 'Address added!' })
+        setShowAddressForm(false)
+        await fetchProfile()
+      } else {
+        setMessage({ type: 'error', text: response?.message || 'Failed to save address' })
+      }
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to save address' })
+    } finally {
+      setAddressFormLoading(false)
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     }
   }
 
@@ -264,27 +306,110 @@ function CustomerProfile() {
             {/* Addresses Tab */}
             {activeTab === 'addresses' && (
               <div className="space-y-4">
-                {addresses.length === 0 ? (
-                  <p className="text-gray-500 text-center py-8">No saved addresses</p>
-                ) : (
-                  addresses.map((addr, i) => (
-                    <div key={i} className="p-4 border rounded-lg">
-                      <div className="flex justify-between">
-                        <div>
-                          <p className="font-semibold">{addr.label || 'Address'}</p>
-                          <p className="text-gray-600">{addr.street}</p>
-                          <p className="text-gray-600">{addr.city}, {addr.postcode}</p>
-                        </div>
+                {addresses.length === 0 && !showAddressForm && (
+                  <p className="text-gray-500 text-center py-8">No saved addresses yet</p>
+                )}
+
+                {addresses.map((addr) => (
+                  <div key={addr._id} className="p-4 border rounded-lg">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="font-semibold">{addr.label || 'Address'}</p>
+                        <p className="text-gray-600">{addr.street}</p>
+                        <p className="text-gray-600">{addr.city}, {addr.postcode}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
                         {addr.isDefault && (
-                          <span className="text-xs bg-afri-green text-white px-2 py-1 rounded h-fit">Default</span>
+                          <span className="text-xs bg-afri-green text-white px-2 py-1 rounded">Default</span>
                         )}
+                        <button
+                          type="button"
+                          onClick={() => openEditAddress(addr)}
+                          className="text-sm text-afri-green hover:underline"
+                        >
+                          Edit
+                        </button>
                       </div>
                     </div>
-                  ))
+                  </div>
+                ))}
+
+                {showAddressForm ? (
+                  <form onSubmit={handleAddressSave} className="border rounded-lg p-4 space-y-4 bg-gray-50">
+                    <h3 className="font-semibold text-gray-800">
+                      {editingAddressId ? 'Edit Address' : 'New Address'}
+                    </h3>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Label</label>
+                      <input
+                        type="text"
+                        value={addressForm.label}
+                        onChange={e => setAddressForm({ ...addressForm, label: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                        placeholder="Home, Work…"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Street *</label>
+                      <input
+                        type="text"
+                        required
+                        value={addressForm.street}
+                        onChange={e => setAddressForm({ ...addressForm, street: e.target.value })}
+                        className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                        placeholder="123 High Street"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                        <input
+                          type="text"
+                          required
+                          value={addressForm.city}
+                          onChange={e => setAddressForm({ ...addressForm, city: e.target.value })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                          placeholder="London"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Postcode *</label>
+                        <input
+                          type="text"
+                          required
+                          value={addressForm.postcode}
+                          onChange={e => setAddressForm({ ...addressForm, postcode: e.target.value })}
+                          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                          placeholder="SW1A 1AA"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex gap-3">
+                      <button
+                        type="submit"
+                        disabled={addressFormLoading}
+                        className="px-5 py-2 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
+                      >
+                        {addressFormLoading ? 'Saving…' : 'Save Address'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setShowAddressForm(false)}
+                        className="px-5 py-2 border rounded-lg text-gray-600 hover:bg-gray-100"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openAddAddress}
+                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-afri-green hover:text-afri-green"
+                  >
+                    + Add New Address
+                  </button>
                 )}
-                <button className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 hover:border-afri-green hover:text-afri-green">
-                  + Add New Address
-                </button>
               </div>
             )}
 

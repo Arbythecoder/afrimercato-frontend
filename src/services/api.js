@@ -603,6 +603,30 @@ export const changePassword = async (passwordData) => {
   });
 };
 
+// CUSTOMER ADDRESS MANAGEMENT
+export const addCustomerAddress = async (addressData) => {
+  return apiCall('/customers/addresses', {
+    method: 'POST',
+    body: JSON.stringify(addressData)
+  });
+};
+
+export const updateCustomerAddress = async (addressId, addressData) => {
+  return apiCall(`/customers/addresses/${addressId}`, {
+    method: 'PUT',
+    body: JSON.stringify(addressData)
+  });
+};
+
+// Upsert the default delivery address — updates existing default or creates one.
+// Called fire-and-forget after checkout so the next visit pre-fills automatically.
+export const saveDefaultAddress = async (addressData) => {
+  return apiCall('/customers/addresses/default', {
+    method: 'PUT',
+    body: JSON.stringify(addressData)
+  });
+};
+
 // ADMIN
 export const getAdminDashboard = async () => {
   return apiCall('/admin/dashboard');
@@ -1035,7 +1059,10 @@ export const checkoutAPI = {
 export const userAPI = {
   getProfile: getUserProfile,
   updateProfile: updateUserProfile,
-  changePassword
+  changePassword,
+  addAddress: addCustomerAddress,
+  updateAddress: updateCustomerAddress,
+  saveDefaultAddress
 };
 
 export const subscriptionAPI = {
