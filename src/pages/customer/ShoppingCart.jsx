@@ -253,6 +253,31 @@ function ShoppingCart() {
     window.dispatchEvent(new Event('cartUpdated'))
   }
 
+  const clearVendorItems = async (vendorId) => {
+    const vendorItems = cart.filter(item => {
+      const id = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
+      return String(id) === String(vendorId)
+    })
+    const updatedCart = cart.filter(item => {
+      const id = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
+      return String(id) !== String(vendorId)
+    })
+
+    setCart(updatedCart)
+
+    if (isAuthenticated) {
+      for (const item of vendorItems) {
+        if (isValidMongoId(item._id)) {
+          try { await cartAPI.remove(item._id) } catch (_e) { /* best effort */ }
+        }
+      }
+    } else {
+      localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+    }
+
+    window.dispatchEvent(new Event('cartUpdated'))
+  }
+
   const clearCart = async () => {
     setCart([])
 
@@ -440,9 +465,17 @@ function ShoppingCart() {
                         <span className="text-xl">🏪</span>
                         <span className="font-semibold">{vendorGroup.vendorName}</span>
                       </div>
-                      <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
-                        {vendorGroup.items.length} {vendorGroup.items.length === 1 ? 'item' : 'items'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm bg-white/20 px-3 py-1 rounded-full">
+                          {vendorGroup.items.length} {vendorGroup.items.length === 1 ? 'item' : 'items'}
+                        </span>
+                        <button
+                          onClick={() => clearVendorItems(vendorGroup.vendorId)}
+                          className="text-xs text-white/70 hover:text-white underline"
+                        >
+                          Remove store
+                        </button>
+                      </div>
                     </div>
 
                     {/* Vendor Items */}

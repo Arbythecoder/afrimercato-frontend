@@ -4,6 +4,18 @@ import { useAuth } from '../../context/AuthContext'
 import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 
+// Helper to group cart items by vendor (mirrors ShoppingCart logic)
+const groupCartByVendor = (cartItems) => {
+  const groups = {}
+  for (const item of cartItems) {
+    const vendorId = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
+    const vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || 'Unknown Store'
+    if (!groups[vendorId]) groups[vendorId] = { vendorId, vendorName, items: [] }
+    groups[vendorId].items.push(item)
+  }
+  return Object.values(groups)
+}
+
 // Helper: check if user has customer role (supports both roles array and role string)
 const isCustomerRole = (user) => {
   if (!user) return false
@@ -298,6 +310,8 @@ function Checkout() {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const deliveryFee = cartTotal >= 50 ? 0 : 5
+  // For multi-vendor carts, each vendor has their own minimum — don't block on a single vendor's value
+  const isMultiVendorCart = groupCartByVendor(cart).length > 1
   const couponDiscount = coupon
     ? coupon.type === 'percent'
       ? parseFloat(((cartTotal * coupon.discount) / 100).toFixed(2))
@@ -327,7 +341,8 @@ function Checkout() {
           name: item.name,
           price: item.price,
           quantity: item.quantity,
-          unit: item.unit || 'piece'
+          unit: item.unit || 'piece',
+          vendor: item.vendor?._id || item.vendor?.id || item.vendorId || null
         })),
         deliveryAddress: address,
         payment: {
@@ -921,15 +936,29 @@ function Checkout() {
                   </button>
                 </div>
 
-                {/* Order Items */}
+                {/* Order Items — grouped by vendor */}
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
-                  {cart.map((item) => (
-                    <div key={item._id} className="flex justify-between py-2">
-                      <span className="text-gray-700">{item.name} x {item.quantity}</span>
-                      <span className="font-semibold">£{(item.price * item.quantity).toFixed(2)}</span>
-                    </div>
-                  ))}
+                  {groupCartByVendor(cart).map((group) => {
+                    const groupSubtotal = group.items.reduce((s, i) => s + i.price * i.quantity, 0)
+                    return (
+                      <div key={group.vendorId} className="mb-4">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                          <span>🏪</span> {group.vendorName}
+                        </p>
+                        {group.items.map((item) => (
+                          <div key={item._id} className="flex justify-between py-1.5 pl-2">
+                            <span className="text-gray-700">{item.name} x {item.quantity}</span>
+                            <span className="font-semibold">£{(item.price * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                        <div className="flex justify-between text-sm text-gray-500 pl-2 pt-1 border-t border-gray-100">
+                          <span>{group.vendorName} subtotal</span>
+                          <span>£{groupSubtotal.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 {/* Repurchase Options Display */}
@@ -1045,13 +1074,13 @@ function Checkout() {
                     <button
                       type="submit"
                       disabled={loading || (() => {
-                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                         const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                         return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
                       })()}
                       className={`flex-1 py-3 rounded-lg font-bold transition min-h-[44px] ${
                         (() => {
-                          const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                          const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                           const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                           if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                             return 'bg-gray-300 text-gray-500 cursor-not-allowed'
@@ -1063,7 +1092,7 @@ function Checkout() {
                       }`}
                     >
                       {loading ? 'Placing Order...' : (() => {
-                        const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                        const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                         const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                         if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                           return `Add £${minCheck.shortfall.toFixed(2)} more`
@@ -1082,31 +1111,38 @@ function Checkout() {
             <div className="bg-white rounded-xl shadow-md p-6 sticky top-20">
               <h3 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h3>
 
-              {/* Items */}
+              {/* Items — grouped by vendor */}
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {cart.map((item) => {
-                  const imageUrl = item.images?.[0]
-                    ? (typeof item.images[0] === 'string' ? item.images[0] : item.images[0]?.url)
-                    : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80';
-                  return (
-                  <div key={item._id} className="flex gap-3">
-                    <img
-                      src={imageUrl}
-                      alt={item.name}
-                      loading="lazy"
-                      className="w-16 h-16 object-cover rounded"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
-                      }}
-                    />
-                    <div className="flex-1">
-                      <p className="font-semibold text-sm text-gray-900">{item.name}</p>
-                      <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                      <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
-                    </div>
+                {groupCartByVendor(cart).map((group) => (
+                  <div key={group.vendorId}>
+                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
+                      🏪 {group.vendorName}
+                    </p>
+                    {group.items.map((item) => {
+                      const imageUrl = item.images?.[0]
+                        ? (typeof item.images[0] === 'string' ? item.images[0] : item.images[0]?.url)
+                        : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                      return (
+                        <div key={item._id} className="flex gap-3 mb-2">
+                          <img
+                            src={imageUrl}
+                            alt={item.name}
+                            loading="lazy"
+                            className="w-16 h-16 object-cover rounded"
+                            onError={(e) => {
+                              e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                            }}
+                          />
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                            <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
+                          </div>
+                        </div>
+                      )
+                    })}
                   </div>
-                  )
-                })}
+                ))}
               </div>
 
               {/* Coupon input */}
@@ -1167,7 +1203,7 @@ function Checkout() {
                 
                 {/* Minimum Order Check */}
                 {(() => {
-                  const minimumOrderValue = vendor?.deliverySettings?.minimumOrderValue || 0
+                  const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                   const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                   
                   if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {

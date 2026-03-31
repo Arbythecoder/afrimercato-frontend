@@ -3,8 +3,20 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { orderAPI } from '../../services/api'
 import DeliveryChat from '../../components/DeliveryChat'
 
-// Statuses where the rider is actively on the way
-const CHAT_ACTIVE_STATUSES = ['confirmed', 'assigned_to_picker', 'picking', 'packed', 'ready_for_delivery', 'assigned_to_rider', 'rider_accepted', 'picked_up_by_rider', 'out_for_delivery']
+// Chat is only available when the rider is actively en route — SRS requirement
+const CHAT_ACTIVE_STATUSES = ['out-for-delivery']
+
+// Group order items by vendor for display
+const groupItemsByVendor = (items) => {
+  const groups = {}
+  for (const item of (items || [])) {
+    const vendorId = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
+    const vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || 'Store'
+    if (!groups[vendorId]) groups[vendorId] = { vendorId, vendorName, items: [] }
+    groups[vendorId].items.push(item)
+  }
+  return Object.values(groups)
+}
 
 function OrderTracking() {
   const { orderId } = useParams()
@@ -289,22 +301,36 @@ function OrderTracking() {
             </div>
           </div>
 
-          {/* Order Items */}
+          {/* Order Items — grouped by vendor */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
-            <div className="space-y-3">
-              {order.items?.map((item, index) => (
-                <div key={index} className="flex justify-between items-center pb-3 border-b last:border-b-0">
-                  <div>
-                    <p className="font-semibold text-gray-900">{item.name}</p>
-                    <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                  </div>
-                  <p className="font-semibold text-gray-900">
-                    £{(item.price * item.quantity).toFixed(2)}
+            {groupItemsByVendor(order.items).map((group) => {
+              const groupSubtotal = group.items.reduce((s, i) => s + i.price * i.quantity, 0)
+              return (
+                <div key={group.vendorId} className="mb-4">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
+                    <span>🏪</span> {group.vendorName}
                   </p>
+                  <div className="space-y-3 pl-2">
+                    {group.items.map((item, index) => (
+                      <div key={index} className="flex justify-between items-center pb-3 border-b last:border-b-0">
+                        <div>
+                          <p className="font-semibold text-gray-900">{item.name}</p>
+                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                        </div>
+                        <p className="font-semibold text-gray-900">
+                          £{(item.price * item.quantity).toFixed(2)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="flex justify-between text-sm text-gray-500 pl-2 pt-2">
+                    <span>{group.vendorName} subtotal</span>
+                    <span>£{groupSubtotal.toFixed(2)}</span>
+                  </div>
                 </div>
-              ))}
-            </div>
+              )
+            })}
             <div className="flex justify-between text-xl font-bold text-gray-900 border-t mt-4 pt-4">
               <span>Total</span>
               <span>£{order.pricing?.total?.toFixed(2)}</span>
