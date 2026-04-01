@@ -17,6 +17,7 @@ function Register() {
     email: '',
     phone: '',
     location: '',
+    storeName: '',
     password: '',
     confirmPassword: '',
     role: ALL_ROLES.includes(roleFromUrl) ? roleFromUrl : 'customer',
@@ -377,6 +378,26 @@ function Register() {
                   placeholder="+44 7700 900000 or +353 85 123 4567"
                 />
                 <p className="text-xs text-gray-500 mt-1">UK: +44 7xxx xxxxxx | Ireland: +353 8x xxx xxxx</p>
+              </div>
+            )}
+
+            {/* Store Name — vendors only */}
+            {formData.role === 'vendor' && (
+              <div>
+                <label htmlFor="storeName" className="block text-sm font-medium text-gray-700 mb-2">
+                  Store Name
+                </label>
+                <input
+                  id="storeName"
+                  name="storeName"
+                  type="text"
+                  required
+                  value={formData.storeName}
+                  onChange={handleChange}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition"
+                  placeholder="e.g. Mama's African Kitchen"
+                />
+                <p className="text-xs text-gray-500 mt-1">This is the name customers will see on your storefront</p>
               </div>
             )}
 

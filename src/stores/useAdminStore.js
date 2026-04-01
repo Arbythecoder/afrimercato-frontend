@@ -83,12 +83,17 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
+  // POST (not PATCH) — backend uses POST for all vendor actions
   approveVendor: async (vendorId) => {
     try {
-      const res = await apiCall(`/admin/vendors/${vendorId}/approve`, { method: 'PATCH' })
+      const res = await apiCall(`/admin/vendors/${vendorId}/approve`, { method: 'POST' })
       if (res?.success) {
         set(s => ({
-          vendors: s.vendors.map(v => v._id === vendorId ? { ...v, isApproved: true, status: 'active' } : v)
+          vendors: s.vendors.map(v =>
+            v._id === vendorId
+              ? { ...v, approvalStatus: 'approved', isActive: true }
+              : v
+          )
         }))
       }
       return res
@@ -97,12 +102,20 @@ const useAdminStore = create((set, get) => ({
     }
   },
 
-  suspendVendor: async (vendorId) => {
+  // POST (not PATCH) — backend uses POST for all vendor actions; reason is optional
+  suspendVendor: async (vendorId, reason) => {
     try {
-      const res = await apiCall(`/admin/vendors/${vendorId}/suspend`, { method: 'PATCH' })
+      const res = await apiCall(`/admin/vendors/${vendorId}/suspend`, {
+        method: 'POST',
+        body: JSON.stringify({ reason: reason || 'Suspended by admin' })
+      })
       if (res?.success) {
         set(s => ({
-          vendors: s.vendors.map(v => v._id === vendorId ? { ...v, status: 'suspended' } : v)
+          vendors: s.vendors.map(v =>
+            v._id === vendorId
+              ? { ...v, approvalStatus: 'suspended', isActive: false }
+              : v
+          )
         }))
       }
       return res

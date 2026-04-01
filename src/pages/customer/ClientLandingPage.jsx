@@ -307,8 +307,17 @@ export default function ClientLandingPage() {
                   <MobileNavLink to="/stores" onClick={() => setMobileMenuOpen(false)}>Stores</MobileNavLink>
                   <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About us</MobileNavLink>
                   <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
-                  <div className="pt-3 border-t">
-                    <Link to="/login" className="block py-3 text-center text-[#00897B] font-semibold" onClick={() => setMobileMenuOpen(false)}>
+                  <div className="pt-3 border-t space-y-1">
+                    <Link to="/register?role=customer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                      <span>🛒</span><span className="font-semibold text-sm">Join as Customer</span>
+                    </Link>
+                    <Link to="/register?role=vendor" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                      <span>🏪</span><span className="font-semibold text-sm">Join as Vendor</span>
+                    </Link>
+                    <Link to="/register?role=rider" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                      <span>🚴</span><span className="font-semibold text-sm">Join as Rider</span>
+                    </Link>
+                    <Link to="/login" className="block py-3 text-center text-[#00897B] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
                       Log in
                     </Link>
                   </div>

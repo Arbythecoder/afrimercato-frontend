@@ -62,6 +62,7 @@ const AdminPickerManagement = lazy(() => import('./pages/admin/AdminPickerManage
 const AdminCustomerManagement = lazy(() => import('./pages/admin/AdminCustomerManagement'))
 const AdminAuditLogs = lazy(() => import('./pages/admin/AdminAuditLogs'))
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
+const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'))
 const DeliverySettings = lazy(() => import('./pages/vendor/DeliverySettings'))
 const PaymentVerify = lazy(() => import('./pages/customer/PaymentVerify'))
 const CustomerSupport = lazy(() => import('./pages/customer/CustomerSupport'))
@@ -76,6 +77,7 @@ const ResetPassword = lazy(() => import('./pages/ResetPassword'))
 import VendorLayout from './components/Layout/VendorLayout'
 import RiderLayout from './components/Layout/RiderLayout'
 import PickerLayout from './components/Layout/PickerLayout'
+import AdminLayout from './components/Layout/AdminLayout'
 
 // Loading fallback for lazy-loaded pages
 function LazyLoadingFallback() {
@@ -401,105 +403,33 @@ function AppContent() {
         }
       />
 
-      {/* Admin Routes */}
-      <Route
-        path="/admin/dashboard"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <AdminDashboard />
+      {/* Admin Routes — all wrapped in AdminLayout for shared sidebar */}
+      {[
+        { path: '/admin/dashboard',  Page: AdminDashboard },
+        { path: '/admin/vendors',    Page: VendorManagement },
+        { path: '/admin/riders',     Page: AdminRiderManagement },
+        { path: '/admin/pickers',    Page: AdminPickerManagement },
+        { path: '/admin/customers',  Page: AdminCustomerManagement },
+        { path: '/admin/orders',     Page: AdminOrders },
+        { path: '/admin/audit-logs', Page: AdminAuditLogs },
+        { path: '/admin/analytics',  Page: AdminAnalytics },
+      ].map(({ path, Page }) => (
+        <Route
+          key={path}
+          path={path}
+          element={
+            !isAuthenticated ? (
+              <Navigate to="/login" replace />
+            ) : user?.role !== 'admin' ? (
+              <Navigate to="/" replace />
             ) : (
-              <Navigate to="/" />
+              <AdminLayout>
+                <Page />
+              </AdminLayout>
             )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-      <Route
-        path="/admin/vendors"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <VendorManagement />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-      <Route
-        path="/admin/riders"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <AdminRiderManagement />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-      <Route
-        path="/admin/pickers"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <AdminPickerManagement />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-      <Route
-        path="/admin/customers"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <AdminCustomerManagement />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-      <Route
-        path="/admin/audit-logs"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <AdminAuditLogs />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
-      <Route
-        path="/admin/analytics"
-        element={
-          isAuthenticated ? (
-            user?.role === 'admin' ? (
-              <AdminAnalytics />
-            ) : (
-              <Navigate to="/" />
-            )
-          ) : (
-            <Navigate to="/login" />
-          )
-        }
-      />
+          }
+        />
+      ))}
 
       {/* Vendor: Delivery Settings */}
       <Route

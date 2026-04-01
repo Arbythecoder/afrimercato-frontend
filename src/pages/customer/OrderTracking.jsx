@@ -362,7 +362,10 @@ function OrderTracking() {
               <p className="text-gray-600 mb-4">
                 How was your delivery experience?
               </p>
-              <button className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition">
+              <button
+                onClick={() => navigate(`/order/${orderId}`)}
+                className="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition"
+              >
                 Leave a Review
               </button>
             </div>

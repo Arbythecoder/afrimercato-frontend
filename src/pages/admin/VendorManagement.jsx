@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   MapPin,
   Mail,
-  Phone,
   Calendar
 } from 'lucide-react';
 import { apiCall } from '../../services/api';
@@ -29,6 +28,7 @@ function VendorManagement() {
   const [modalAction, setModalAction] = useState('');
   const [actionNote, setActionNote] = useState('');
   const [processing, setProcessing] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     const params = {};
@@ -44,7 +44,7 @@ function VendorManagement() {
       if (modalAction === 'approve') {
         await approveVendor(selectedVendor._id);
       } else if (modalAction === 'suspend') {
-        await suspendVendor(selectedVendor._id);
+        await suspendVendor(selectedVendor._id, actionNote);
       } else {
         // reject — not in store yet, call directly
         await apiCall(`/admin/vendors/${selectedVendor._id}/reject`, {
@@ -57,8 +57,7 @@ function VendorManagement() {
       setActionNote('');
       setSelectedVendor(null);
     } catch (err) {
-      console.error('Action failed:', err);
-      alert(err?.message || 'Action failed. Please try again.');
+      setActionError(err?.message || 'Action failed. Please try again.');
     } finally {
       setProcessing(false);
     }
@@ -67,6 +66,8 @@ function VendorManagement() {
   const openActionModal = (vendor, action) => {
     setSelectedVendor(vendor);
     setModalAction(action);
+    setActionError('');
+    setActionNote('');
     setShowModal(true);
   };
 
@@ -276,6 +277,12 @@ function VendorManagement() {
                     rows={4}
                   />
                 </div>
+
+                {actionError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3">
+                    <p className="text-red-700 text-sm">{actionError}</p>
+                  </div>
+                )}
 
                 <div className="flex gap-3">
                   <button

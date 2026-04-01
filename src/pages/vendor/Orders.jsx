@@ -43,6 +43,8 @@ function Orders() {
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState(null)
   const [showOrderModal, setShowOrderModal] = useState(false)
+  const [fetchError, setFetchError] = useState('')
+  const [updateError, setUpdateError] = useState('')
   const [filters, setFilters] = useState({
     status: '',
     search: '',
@@ -62,13 +64,16 @@ function Orders() {
   const fetchOrders = async () => {
     try {
       setLoading(true)
+      setFetchError('')
       const response = await vendorAPI.getOrders(filters)
       if (response.success) {
         setOrders(response.data.orders)
         setPagination(response.data.pagination)
+      } else {
+        setFetchError(response.message || 'Failed to load orders')
       }
     } catch (error) {
-      console.error('Error fetching orders:', error)
+      setFetchError(error.message || 'Failed to load orders')
     } finally {
       setLoading(false)
     }
@@ -95,6 +100,7 @@ function Orders() {
   }
 
   const updateOrderStatus = async (orderId, newStatus, note = '') => {
+    setUpdateError('')
     try {
       const response = await vendorAPI.updateOrderStatus(orderId, { status: newStatus, note })
       if (response.success) {
@@ -106,10 +112,11 @@ function Orders() {
             setSelectedOrder(updatedOrderResponse.data.order)
           }
         }
+      } else {
+        setUpdateError(response.message || 'Failed to update order status')
       }
     } catch (error) {
-      console.error('Error updating order status:', error)
-      alert(error.response?.data?.message || 'Failed to update order status')
+      setUpdateError(error.data?.message || error.message || 'Failed to update order status')
     }
   }
 
@@ -161,6 +168,22 @@ function Orders() {
           </div>
         </div>
       </div>
+
+      {/* Fetch error */}
+      {fetchError && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+          <p className="text-red-700 text-sm">{fetchError}</p>
+          <button onClick={fetchOrders} className="text-red-600 text-sm font-semibold hover:underline ml-4">Retry</button>
+        </div>
+      )}
+
+      {/* Update status error */}
+      {updateError && (
+        <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
+          <p className="text-red-700 text-sm">{updateError}</p>
+          <button onClick={() => setUpdateError('')} className="text-red-400 hover:text-red-600 ml-4 text-lg leading-none">&times;</button>
+        </div>
+      )}
 
       {/* Orders List */}
       {loading ? (

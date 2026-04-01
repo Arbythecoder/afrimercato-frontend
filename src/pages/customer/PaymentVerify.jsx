@@ -16,34 +16,32 @@ function PaymentVerify() {
   const verifyPayment = async () => {
     const sessionId = searchParams.get('session_id')
     const orderId   = searchParams.get('order_id')
-    console.log('[PaymentVerify] Starting verification — session_id:', sessionId, 'order_id:', orderId)
+    if (import.meta.env.DEV) console.log('[PaymentVerify] Starting verification — session_id:', sessionId, 'order_id:', orderId)
 
     if (!sessionId) {
-      console.error('[PaymentVerify] No session_id in URL params')
+      if (import.meta.env.DEV) console.error('[PaymentVerify] No session_id in URL params')
       setStatus('failed')
       setError('No payment session found')
       return
     }
 
     try {
-      console.log('[PaymentVerify] Calling /payments/stripe/verify/' + sessionId)
-      // FIX: use /payments (plural) + use apiCall for token refresh support
+      if (import.meta.env.DEV) console.log('[PaymentVerify] Calling /payments/stripe/verify/' + sessionId)
       const data = await apiCall(`/payments/stripe/verify/${sessionId}`, { timeout: 15000 })
-      console.log('[PaymentVerify] Verify response:', data?.success, '— paymentStatus:', data?.data?.paymentStatus)
+      if (import.meta.env.DEV) console.log('[PaymentVerify] Verify response:', data?.success, '— paymentStatus:', data?.data?.paymentStatus)
 
-      // FIX: backend returns paymentStatus: 'paid', not status: 'success'
       if (data.success && data.data?.paymentStatus === 'paid') {
-        console.log('[PaymentVerify] ✓ Payment confirmed for order:', data.data?.order?.orderNumber)
+        if (import.meta.env.DEV) console.log('[PaymentVerify] ✓ Payment confirmed for order:', data.data?.order?.orderNumber)
         setStatus('success')
         setOrderData(data.data)
         localStorage.removeItem('pending_order_id')
       } else {
-        console.warn('[PaymentVerify] ✗ Payment not confirmed — response:', data)
+        if (import.meta.env.DEV) console.warn('[PaymentVerify] ✗ Payment not confirmed — response:', data)
         setStatus('failed')
         setError(data.message || 'Payment verification failed')
       }
     } catch (err) {
-      console.error('[PaymentVerify] Verification error:', err.message, '— status:', err.status)
+      if (import.meta.env.DEV) console.error('[PaymentVerify] Verification error:', err.message, '— status:', err.status)
       setStatus('failed')
       setError('Failed to verify payment. Please contact support.')
     }
@@ -88,7 +86,7 @@ function PaymentVerify() {
 
           <div className="space-y-3">
             <button
-              onClick={() => navigate(`/order-confirmation/${orderData?.order?.id || ''}`)}
+              onClick={() => navigate(`/order-confirmation/${orderData?.order?._id || orderData?.order?.id || ''}`)}
               className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-xl font-semibold hover:shadow-lg transition"
             >
               View Order Details
