@@ -81,38 +81,57 @@ function Settings() {
   }, [])
 
   const fetchSettings = async () => {
-    try {
-      setLoading(true)
-      setLoadError(null)
-      const [vendorResponse, userResponse] = await Promise.all([
-        vendorAPI.getProfile(),
-        userAPI.getProfile(),
-      ])
+    setLoading(true)
+    setLoadError(null)
 
-      if (vendorResponse.success && vendorResponse.data?.vendor) {
-        // Merge with defaults to prevent undefined errors
-        setVendorProfile(prev => ({
-          ...prev,
-          ...vendorResponse.data.vendor,
-          address: {
-            ...prev.address,
-            ...vendorResponse.data.vendor.address
-          },
-          businessHours: {
-            ...prev.businessHours,
-            ...vendorResponse.data.vendor.businessHours
-          }
-        }))
-      }
-      if (userResponse.success && userResponse.data?.user) {
-        setUserProfile(userResponse.data.user)
+    // Vendor profile — critical, show error if it fails
+    let vendorResponse = null
+    try {
+      vendorResponse = await vendorAPI.getProfile()
+    } catch (err) {
+      console.error('Vendor profile load error:', err)
+      setLoadError(err.message || 'Failed to load vendor profile. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    if (vendorResponse?.success && vendorResponse.data) {
+      // Backend returns vendor data either at data.vendor or data directly
+      const vendorData = vendorResponse.data.vendor || vendorResponse.data
+      setVendorProfile(prev => ({
+        ...prev,
+        ...vendorData,
+        address: {
+          ...prev.address,
+          ...(vendorData.address || {})
+        },
+        businessHours: {
+          ...prev.businessHours,
+          ...(vendorData.businessHours || {})
+        }
+      }))
+    }
+
+    // User profile — non-critical, page still works without it
+    try {
+      const userResponse = await userAPI.getProfile()
+      if (userResponse?.success && userResponse.data) {
+        // Backend returns user either at data.user or data directly
+        const userData = userResponse.data.user || userResponse.data
+        if (userData && typeof userData === 'object') {
+          setUserProfile(prev => ({
+            name: userData.name || prev.name,
+            email: userData.email || prev.email,
+            phone: userData.phone || prev.phone,
+          }))
+        }
       }
     } catch (err) {
-      console.error('Error fetching settings:', err)
-      setLoadError(err.message || 'Failed to load settings. Please try again.')
-    } finally {
-      setLoading(false)
+      // Non-blocking — account tab shows editable fields but not pre-filled
+      console.error('User profile load error (non-blocking):', err)
     }
+
+    setLoading(false)
   }
   
   // LOADING GUARD: Show spinner while loading to prevent undefined errors
@@ -357,9 +376,11 @@ function Settings() {
       if (response.success) {
         success('Password changed successfully!')
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+      } else {
+        error(response.message || 'Failed to change password')
       }
     } catch (err) {
-      error(err.response?.data?.message || 'Failed to change password')
+      error(err.response?.data?.message || err.message || 'Failed to change password')
     } finally {
       setSaving(false)
     }
