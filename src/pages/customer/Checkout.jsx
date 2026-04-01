@@ -51,6 +51,8 @@ function Checkout() {
   const [repurchaseError, setRepurchaseError] = useState(false)
   const [emailVerificationError, setEmailVerificationError] = useState(false)
   const [resendingEmail, setResendingEmail] = useState(false)
+  const [resendMessage, setResendMessage] = useState('')
+  const [orderError, setOrderError] = useState('')
   const [lookingUpPostcode, setLookingUpPostcode] = useState(false)
 
   const lookupPostcode = async () => {
@@ -124,22 +126,35 @@ function Checkout() {
           }))
           setCart(backendCart)
         } else {
-          const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-          if (savedCart.length > 0) {
-            setCart(savedCart)
+          // After login, prefer the checkout cart backup so the cart survives the auth flow
+          const backupCart = localStorage.getItem('checkout_cart_backup')
+          if (backupCart) {
+            localStorage.removeItem('checkout_cart_backup')
+            setCart(JSON.parse(backupCart))
           } else {
-            navigate('/stores')
+            const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+            if (savedCart.length > 0) {
+              setCart(savedCart)
+            } else {
+              navigate('/stores')
+            }
           }
         }
       } catch (error) {
         if (import.meta.env.DEV) {
           console.warn('Cart load failed, using localStorage fallback:', error.message)
         }
-        const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-        if (savedCart.length > 0) {
-          setCart(savedCart)
+        const backupCart = localStorage.getItem('checkout_cart_backup')
+        if (backupCart) {
+          localStorage.removeItem('checkout_cart_backup')
+          setCart(JSON.parse(backupCart))
         } else {
-          navigate('/stores')
+          const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+          if (savedCart.length > 0) {
+            setCart(savedCart)
+          } else {
+            navigate('/stores')
+          }
         }
       } finally {
         setCartLoading(false)
@@ -324,6 +339,8 @@ function Checkout() {
   const handleAddressSubmit = (e) => {
     e.preventDefault()
     if (!isAuthenticated) {
+      localStorage.setItem('post_login_redirect', '/checkout')
+      localStorage.setItem('checkout_cart_backup', JSON.stringify(cart))
       setShowAuthModal(true)
       return
     }
@@ -362,9 +379,9 @@ function Checkout() {
       }
 
       // Use centralized API with 8s timeout + token refresh
-      console.log('[Checkout] Calling initializePayment — items:', orderData.items.length, 'total:', total)
+      if (import.meta.env.DEV) console.log('[Checkout] Calling initializePayment — items:', orderData.items.length, 'total:', total)
       const data = await checkoutAPI.initializePayment(orderData)
-      console.log('[Checkout] initializePayment response — success:', data?.success, 'has payment url:', !!data?.data?.payment?.url)
+      if (import.meta.env.DEV) console.log('[Checkout] initializePayment response — success:', data?.success, 'has payment url:', !!data?.data?.payment?.url)
 
       if (data.success) {
         // Cache current order items for future repurchase
@@ -395,19 +412,20 @@ function Checkout() {
         }
 
         if (payment.method === 'card' && data.data.payment?.url) {
-          console.log('[Checkout] Redirecting to Stripe hosted page:', data.data.payment.url)
+          if (import.meta.env.DEV) console.log('[Checkout] Redirecting to Stripe hosted page:', data.data.payment.url)
           localStorage.setItem('pending_order_id', data.data.order._id)
           window.location.href = data.data.payment.url
         } else {
           navigate(`/order-confirmation/${data.data.order._id}`)
         }
       } else {
-        console.error('[Checkout] Order failed:', data?.message)
-        alert('Order failed: ' + (data.message || 'Unknown error'))
+        if (import.meta.env.DEV) console.error('[Checkout] Order failed:', data?.message)
+        setOrderError(data.message || 'Order failed. Please try again.')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
       }
     } catch (error) {
       const msg = error.message || 'Failed to place order'
-      
+
       // Check for email verification error (kept for backward compatibility, though middleware removed)
       if (error.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
         setEmailVerificationError(true)
@@ -415,11 +433,11 @@ function Checkout() {
         return
       }
 
-      // HOTFIX: Better error messages for auth/permission issues
-      if (error.status === 401) {
-        alert('Your session has expired. Please log in again.')
+      // Session expired — redirect to login
+      if (error.status === 401 || error.code === 'AUTH_EXPIRED') {
+        setOrderError('Your session has expired. Please log in again.')
         localStorage.setItem('checkout_redirect', 'true')
-        navigate('/login')
+        setTimeout(() => navigate('/login'), 1500)
         return
       }
 
@@ -429,17 +447,19 @@ function Checkout() {
           setEmailVerificationError(true)
           window.scrollTo({ top: 0, behavior: 'smooth' })
         } else {
-          alert('Access denied. Please ensure you have a customer account and are logged in correctly.')
+          setOrderError('Access denied. Please ensure you have a customer account and are logged in correctly.')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         }
         return
       }
-      
+
       if (msg.includes('timed out')) {
-        alert('The server is taking longer than expected. Please try again.')
+        setOrderError('The server is taking longer than expected. Please try again.')
       } else {
-        alert(msg || 'Failed to place order. Please try again.')
+        setOrderError(msg || 'Failed to place order. Please try again.')
       }
-      console.error('Order error:', error)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      if (import.meta.env.DEV) console.error('Order error:', error)
     } finally {
       setLoading(false)
     }
@@ -447,24 +467,16 @@ function Checkout() {
 
   const handleResendVerification = async () => {
     setResendingEmail(true)
+    setResendMessage('')
     try {
-      const token = localStorage.getItem('token')
-      const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
-      })
-      const data = await response.json()
-      
+      const data = await apiCall('/auth/resend-verification', { method: 'POST' })
       if (data.success) {
-        alert('Verification email sent! Please check your inbox.')
+        setResendMessage('Verification email sent! Please check your inbox.')
       } else {
-        alert(data.message || 'Failed to send verification email')
+        setResendMessage(data.message || 'Failed to send verification email')
       }
-    } catch (error) {
-      alert('Failed to resend verification email. Please try again.')
+    } catch (_error) {
+      setResendMessage('Failed to resend verification email. Please try again.')
     } finally {
       setResendingEmail(false)
     }
@@ -542,17 +554,20 @@ function Checkout() {
       setAuthLoading(true)
       try {
         const result = await login(authEmail, authPassword, { requiredRole: 'customer' })
-        if (!result.success) {
-          if (result.roleBlocked) {
+        if (result.success) {
+          // Clean up redirect flag — we're already on checkout, no navigation needed
+          window._loginRedirect = null
+          setShowAuthModal(false)
+          setStep(2)
+        } else if (result.roleBlocked) {
             const roleLabel = result.actualRole === 'vendor' ? 'Vendor'
               : result.actualRole === 'rider' ? 'Rider'
               : result.actualRole === 'picker' ? 'Picker'
               : result.actualRole === 'admin' ? 'Admin'
               : 'Non-Customer'
             setAuthError(`This account is registered as a ${roleLabel}. Please use a customer account.`)
-          } else {
+        } else {
             setAuthError(result.message || 'Incorrect email or password.')
-          }
         }
         // On success isAuthenticated flips → loadCart effect re-runs automatically
       } catch (_e) {
@@ -714,6 +729,11 @@ function Checkout() {
                     Dismiss
                   </button>
                 </div>
+                {resendMessage && (
+                  <p className={`mt-2 text-sm font-medium ${resendMessage.includes('sent') ? 'text-green-700' : 'text-red-700'}`}>
+                    {resendMessage}
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -1074,11 +1094,27 @@ function Checkout() {
                   )}
                 </div>
 
+                {orderError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <div className="flex-1">
+                      <p className="text-red-700 text-sm font-medium">{orderError}</p>
+                    </div>
+                    <button onClick={() => setOrderError('')} className="text-red-400 hover:text-red-600">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                )}
+
                 <form onSubmit={handlePlaceOrder}>
                   <div className="flex gap-4">
                     <button
                       type="button"
-                      onClick={() => setStep(2)}
+                      onClick={() => { setStep(2); setOrderError('') }}
                       className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
                     >
                       ← Back

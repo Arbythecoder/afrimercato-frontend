@@ -156,6 +156,11 @@ export const AuthProvider = ({ children }) => {
           console.log('🔑 Login success:', normalizedUser.role)
         }
 
+        const redirect = localStorage.getItem('post_login_redirect')
+        if (redirect) {
+          localStorage.removeItem('post_login_redirect')
+          window._loginRedirect = redirect
+        }
         return { success: true, user: normalizedUser }
       } else {
         return {
@@ -183,15 +188,15 @@ export const AuthProvider = ({ children }) => {
           email: userData.email,
           phone: userData.phone || '+1234567890', // Default phone if not provided
           password: userData.password,
-          storeName: `${userData.name}'s Store`, // Default store name
+          storeName: userData.storeName || `${userData.name}'s Store`,
           storeDescription: 'Welcome to my store',
           category: 'groceries', // Default to groceries (valid category)
           address: {
             street: '123 Main Street',
-            city: 'Default City',
+            city: 'London',
             state: '',
             postalCode: '',
-            country: 'Nigeria'
+            country: 'United Kingdom'
           }
         }
         response = await registerVendorAPI(vendorData)
