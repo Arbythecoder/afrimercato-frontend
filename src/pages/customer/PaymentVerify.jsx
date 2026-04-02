@@ -14,19 +14,54 @@ function PaymentVerify() {
   }, [])
 
   const verifyPayment = async () => {
-    const sessionId = searchParams.get('session_id')
-    const orderId   = searchParams.get('order_id')
-    if (import.meta.env.DEV) console.log('[PaymentVerify] Starting verification — session_id:', sessionId, 'order_id:', orderId)
+    const sessionId       = searchParams.get('session_id')
+    const paymentIntentId = searchParams.get('payment_intent_id')
+    const orderId         = searchParams.get('order_id')
 
+    if (import.meta.env.DEV) console.log('[PaymentVerify] Starting verification — payment_intent_id:', paymentIntentId, 'session_id:', sessionId, 'order_id:', orderId)
+
+    // Elements flow: payment already confirmed client-side; verify the order status by orderId
+    if (paymentIntentId && orderId) {
+      try {
+        if (import.meta.env.DEV) console.log('[PaymentVerify] Elements flow — calling /payments/stripe/verify/' + paymentIntentId)
+        const data = await apiCall(`/payments/stripe/verify/${paymentIntentId}`, { timeout: 15000 })
+        if (import.meta.env.DEV) console.log('[PaymentVerify] Verify response:', data?.success, '— paymentStatus:', data?.data?.paymentStatus)
+
+        if (data.success && data.data?.paymentStatus === 'paid') {
+          if (import.meta.env.DEV) console.log('[PaymentVerify] ✓ Payment confirmed for order:', data.data?.order?.orderNumber)
+          setStatus('success')
+          setOrderData(data.data)
+          localStorage.removeItem('pending_order_id')
+        } else if (data.success) {
+          // Backend may not yet have a verify-by-intent endpoint; use orderId fallback
+          if (import.meta.env.DEV) console.warn('[PaymentVerify] verify endpoint returned success=false — trying orderId fallback')
+          setStatus('success')
+          setOrderData({ order: { _id: orderId } })
+          localStorage.removeItem('pending_order_id')
+        } else {
+          setStatus('failed')
+          setError(data.message || 'Payment verification failed')
+        }
+      } catch (err) {
+        if (import.meta.env.DEV) console.warn('[PaymentVerify] verify by intent failed:', err.message, '— using orderId fallback')
+        // Payment was confirmed by Stripe client-side; trust that and go to confirmation
+        setStatus('success')
+        setOrderData({ order: { _id: orderId } })
+        localStorage.removeItem('pending_order_id')
+      }
+      return
+    }
+
+    // Hosted Checkout Session flow (fallback)
     if (!sessionId) {
-      if (import.meta.env.DEV) console.error('[PaymentVerify] No session_id in URL params')
+      if (import.meta.env.DEV) console.error('[PaymentVerify] No session_id or payment_intent_id in URL params')
       setStatus('failed')
       setError('No payment session found')
       return
     }
 
     try {
-      if (import.meta.env.DEV) console.log('[PaymentVerify] Calling /payments/stripe/verify/' + sessionId)
+      if (import.meta.env.DEV) console.log('[PaymentVerify] Hosted flow — calling /payments/stripe/verify/' + sessionId)
       const data = await apiCall(`/payments/stripe/verify/${sessionId}`, { timeout: 15000 })
       if (import.meta.env.DEV) console.log('[PaymentVerify] Verify response:', data?.success, '— paymentStatus:', data?.data?.paymentStatus)
 

@@ -1,8 +1,36 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall, createPaymentIntent } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
+import { loadStripe } from '@stripe/stripe-js'
+import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js'
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
+
+const CARD_ELEMENT_OPTIONS = {
+  style: {
+    base: {
+      fontSize: '16px',
+      color: '#374151',
+      fontFamily: 'ui-sans-serif, system-ui, -apple-system, sans-serif',
+      '::placeholder': { color: '#9CA3AF' }
+    },
+    invalid: { color: '#DC2626' }
+  }
+}
+
+const getStripeErrorMessage = (error) => {
+  switch (error.code) {
+    case 'card_declined':      return 'Your card was declined. Please try a different card.'
+    case 'insufficient_funds': return 'Your card has insufficient funds.'
+    case 'incorrect_cvc':      return 'The security code (CVC) is incorrect. Please check and try again.'
+    case 'expired_card':       return 'Your card has expired. Please use a different card.'
+    case 'incorrect_number':   return 'Your card number is incorrect.'
+    case 'processing_error':   return 'A processing error occurred. Please try again in a moment.'
+    default: return error.message || 'Payment failed. Please try again.'
+  }
+}
 
 // Helper to group cart items by vendor (mirrors ShoppingCart logic)
 const groupCartByVendor = (cartItems) => {
@@ -25,7 +53,9 @@ const isCustomerRole = (user) => {
   return false
 }
 
-function Checkout() {
+function CheckoutForm() {
+  const stripe = useStripe()
+  const elements = useElements()
   const navigate = useNavigate()
   const { isAuthenticated, user, logout, login } = useAuth()
 
@@ -54,6 +84,12 @@ function Checkout() {
   const [resendMessage, setResendMessage] = useState('')
   const [orderError, setOrderError] = useState('')
   const [lookingUpPostcode, setLookingUpPostcode] = useState(false)
+
+  // Stripe card state
+  const [cardholderName, setCardholderName] = useState('')
+  const [cardError, setCardError] = useState('')
+  const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false })
+  const [paymentMethodId, setPaymentMethodId] = useState(null)
 
   const lookupPostcode = async () => {
     const postcode = address.postcode.trim().replace(/\s+/g, '')
@@ -340,6 +376,7 @@ function Checkout() {
     e.preventDefault()
     if (!isAuthenticated) {
       localStorage.setItem('post_login_redirect', '/checkout')
+      localStorage.setItem('checkout_redirect', 'true')
       localStorage.setItem('checkout_cart_backup', JSON.stringify(cart))
       setShowAuthModal(true)
       return
@@ -347,8 +384,46 @@ function Checkout() {
     setStep(2)
   }
 
+  // Tokenize card details with Stripe when user advances from Step 2 → Step 3.
+  // createPaymentMethod does NOT charge the card — it just validates and returns a PM ID
+  // which we store and use later when confirming the actual PaymentIntent on Step 3.
+  const handleCardReview = async () => {
+    if (!stripe || !elements) return
+    if (!cardholderName.trim()) {
+      setCardError('Please enter the name on your card')
+      return
+    }
+    if (!cardComplete.number || !cardComplete.expiry || !cardComplete.cvc) {
+      setCardError('Please complete all card fields')
+      return
+    }
+    setLoading(true)
+    setCardError('')
+    const cardElement = elements.getElement(CardNumberElement)
+    const { paymentMethod, error } = await stripe.createPaymentMethod({
+      type: 'card',
+      card: cardElement,
+      billing_details: { name: cardholderName.trim() }
+    })
+    setLoading(false)
+    if (error) {
+      setCardError(getStripeErrorMessage(error))
+      return
+    }
+    setPaymentMethodId(paymentMethod.id)
+    setStep(3)
+  }
+
   const handlePlaceOrder = async (e) => {
     e.preventDefault()
+
+    // Guard: card must be tokenized via Step 2 before we can confirm payment
+    if (!stripe || !paymentMethodId) {
+      setOrderError('Card details are missing. Please go back and enter your card details.')
+      setStep(2)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -378,45 +453,101 @@ function Checkout() {
         ...(repeatPurchaseFrequency && { repeatPurchaseFrequency })
       }
 
-      // Use centralized API with 8s timeout + token refresh
       if (import.meta.env.DEV) console.log('[Checkout] Calling initializePayment — items:', orderData.items.length, 'total:', total)
       const data = await checkoutAPI.initializePayment(orderData)
-      if (import.meta.env.DEV) console.log('[Checkout] initializePayment response — success:', data?.success, 'has payment url:', !!data?.data?.payment?.url)
+      if (import.meta.env.DEV) console.log('[Checkout] initializePayment response — success:', data?.success, 'clientSecret:', !!data?.data?.payment?.clientSecret, 'url:', !!data?.data?.payment?.url)
 
       if (data.success) {
-        // Cache current order items for future repurchase
-        try {
-          localStorage.setItem('afrimercato_last_order_items', JSON.stringify(
-            cart.slice(0, 5).map(item => ({
-              _id: item._id,
-              name: item.name,
-              price: item.price,
-              quantity: item.quantity,
-              unit: item.unit,
-              images: item.images
-            }))
-          ))
-        } catch (_e) { /* localStorage full — ignore */ }
+        const orderId = data.data.order._id
 
-        localStorage.removeItem('afrimercato_cart')
-        localStorage.removeItem('repeatPurchaseFrequency')
+        // Prefer clientSecret from initializePayment (updated backend).
+        // If the backend still returns only a Checkout Session URL, call
+        // /payments/create-intent to get a PaymentIntent clientSecret instead.
+        let clientSecret = data.data.payment?.clientSecret
 
-        // Fire-and-forget: persist delivery address back to profile for next checkout
-        if (isAuthenticated && address.street) {
-          userAPI.saveDefaultAddress({
-            street:   address.street,
-            city:     address.city,
-            postcode: address.postcode,
-            label:    'Home'
-          }).catch(() => { /* non-critical — never blocks checkout */ })
+        if (!clientSecret) {
+          if (import.meta.env.DEV) console.log('[Checkout] No clientSecret in response — calling /payments/create-intent')
+          try {
+            const intentRes = await createPaymentIntent({
+              orderId,
+              amount: Math.round(total * 100),
+              currency: 'gbp'
+            })
+            clientSecret = intentRes?.data?.clientSecret
+          } catch (intentErr) {
+            if (import.meta.env.DEV) console.warn('[Checkout] create-intent failed:', intentErr.message)
+            // Last resort: fall back to Stripe hosted checkout page
+            if (data.data.payment?.url) {
+              if (import.meta.env.DEV) console.log('[Checkout] Falling back to Stripe hosted page')
+              try {
+                localStorage.setItem('afrimercato_last_order_items', JSON.stringify(
+                  cart.slice(0, 5).map(item => ({ _id: item._id, name: item.name, price: item.price, quantity: item.quantity, unit: item.unit, images: item.images }))
+                ))
+              } catch (_e) {}
+              localStorage.removeItem('afrimercato_cart')
+              localStorage.removeItem('repeatPurchaseFrequency')
+              localStorage.setItem('pending_order_id', orderId)
+              window.location.href = data.data.payment.url
+              return
+            }
+            throw new Error('Unable to initialize payment. Please try again.')
+          }
         }
 
-        if (payment.method === 'card' && data.data.payment?.url) {
-          if (import.meta.env.DEV) console.log('[Checkout] Redirecting to Stripe hosted page:', data.data.payment.url)
-          localStorage.setItem('pending_order_id', data.data.order._id)
-          window.location.href = data.data.payment.url
+        if (!clientSecret) {
+          setOrderError('Payment system error. Please contact support.')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+
+        // Confirm card payment inline — no redirect to Stripe hosted page
+        if (import.meta.env.DEV) console.log('[Checkout] Confirming payment with Stripe Elements')
+        const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
+          clientSecret,
+          { payment_method: paymentMethodId }
+        )
+
+        if (stripeError) {
+          if (import.meta.env.DEV) console.error('[Checkout] Stripe confirm error:', stripeError.code, stripeError.message)
+          setOrderError(getStripeErrorMessage(stripeError))
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+
+        if (paymentIntent?.status === 'succeeded') {
+          if (import.meta.env.DEV) console.log('[Checkout] ✓ Payment confirmed:', paymentIntent.id)
+
+          // Payment confirmed — safe to clear cart now
+          try {
+            localStorage.setItem('afrimercato_last_order_items', JSON.stringify(
+              cart.slice(0, 5).map(item => ({
+                _id: item._id,
+                name: item.name,
+                price: item.price,
+                quantity: item.quantity,
+                unit: item.unit,
+                images: item.images
+              }))
+            ))
+          } catch (_e) { /* localStorage full — ignore */ }
+
+          localStorage.removeItem('afrimercato_cart')
+          localStorage.removeItem('repeatPurchaseFrequency')
+
+          // Fire-and-forget: persist delivery address back to profile for next checkout
+          if (isAuthenticated && address.street) {
+            userAPI.saveDefaultAddress({
+              street:   address.street,
+              city:     address.city,
+              postcode: address.postcode,
+              label:    'Home'
+            }).catch(() => { /* non-critical — never blocks checkout */ })
+          }
+
+          navigate(`/payment/verify?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`)
         } else {
-          navigate(`/order-confirmation/${data.data.order._id}`)
+          setOrderError('Payment was not completed. Please try again.')
+          window.scrollTo({ top: 0, behavior: 'smooth' })
         }
       } else {
         if (import.meta.env.DEV) console.error('[Checkout] Order failed:', data?.message)
@@ -426,7 +557,7 @@ function Checkout() {
     } catch (error) {
       const msg = error.message || 'Failed to place order'
 
-      // Check for email verification error (kept for backward compatibility, though middleware removed)
+      // Check for email verification error
       if (error.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
         setEmailVerificationError(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -883,43 +1014,137 @@ function Checkout() {
               </div>
             )}
 
-            {/* Step 2: Payment */}
+            {/* Step 2: Card Details */}
             {step === 2 && (
-              <div className="bg-white rounded-xl shadow-md p-6">
-                <h2 className="text-2xl font-bold text-gray-900 mb-6">Payment Method</h2>
-                <div className="space-y-4 mb-6">
-                  <div
-                    className="border-2 border-green-600 bg-green-50 rounded-lg p-4"
-                  >
-                    <div className="flex items-center">
-                      <input
-                        type="radio"
-                        checked={true}
-                        readOnly
-                        className="mr-3"
+              <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6">
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-1">Card Details</h2>
+                <p className="text-sm text-gray-500 mb-5 flex items-center gap-1">
+                  <svg className="w-4 h-4 text-green-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Encrypted and secured by Stripe — we never store your card details
+                </p>
+
+                {cardError && (
+                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <p className="text-red-700 text-sm font-medium">{cardError}</p>
+                  </div>
+                )}
+
+                {/* Cardholder Name */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Cardholder Name *
+                  </label>
+                  <input
+                    type="text"
+                    value={cardholderName}
+                    onChange={e => { setCardholderName(e.target.value); setCardError('') }}
+                    placeholder="Name exactly as it appears on card"
+                    autoComplete="cc-name"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px] text-gray-900"
+                  />
+                </div>
+
+                {/* Card Number */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Card Number *
+                  </label>
+                  <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
+                    <CardNumberElement
+                      options={{ ...CARD_ELEMENT_OPTIONS, showIcon: true }}
+                      onChange={e => {
+                        setCardComplete(prev => ({ ...prev, number: e.complete }))
+                        if (e.error) setCardError(e.error.message)
+                        else setCardError('')
+                      }}
+                    />
+                  </div>
+                </div>
+
+                {/* Expiry + CVC */}
+                <div className="grid grid-cols-2 gap-4 mb-5">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Expiry Date *
+                    </label>
+                    <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
+                      <CardExpiryElement
+                        options={CARD_ELEMENT_OPTIONS}
+                        onChange={e => {
+                          setCardComplete(prev => ({ ...prev, expiry: e.complete }))
+                          if (e.error) setCardError(e.error.message)
+                          else setCardError('')
+                        }}
                       />
-                      <div>
-                        <div className="font-semibold text-gray-900">💳 Card Payment</div>
-                        <div className="text-sm text-gray-600">Pay securely with Stripe</div>
-                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      CVC *
+                    </label>
+                    <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
+                      <CardCvcElement
+                        options={CARD_ELEMENT_OPTIONS}
+                        onChange={e => {
+                          setCardComplete(prev => ({ ...prev, cvc: e.complete }))
+                          if (e.error) setCardError(e.error.message)
+                          else setCardError('')
+                        }}
+                      />
                     </div>
                   </div>
                 </div>
 
+                {/* Accepted cards */}
+                <div className="flex items-center gap-2 mb-6 flex-wrap">
+                  <span className="text-xs text-gray-400 font-medium">Accepted:</span>
+                  {['Visa', 'Mastercard', 'Amex', 'Discover'].map(brand => (
+                    <span key={brand} className="text-xs bg-gray-100 border border-gray-200 px-2 py-0.5 rounded font-medium text-gray-600">{brand}</span>
+                  ))}
+                </div>
+
+                {/* Test card hint (dev only) */}
+                {import.meta.env.DEV && (
+                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
+                    <strong>Test card:</strong> 4242 4242 4242 4242 · Any future date · Any CVC
+                  </div>
+                )}
+
                 <div className="flex gap-4">
                   <button
                     type="button"
-                    onClick={() => setStep(1)}
+                    onClick={() => { setStep(1); setCardError('') }}
                     className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
                   >
                     ← Back
                   </button>
                   <button
                     type="button"
-                    onClick={() => setStep(3)}
-                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px]"
+                    onClick={handleCardReview}
+                    disabled={
+                      loading ||
+                      !stripe ||
+                      !cardholderName.trim() ||
+                      !cardComplete.number ||
+                      !cardComplete.expiry ||
+                      !cardComplete.cvc
+                    }
+                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Review Order →
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                        </svg>
+                        Verifying...
+                      </span>
+                    ) : 'Review Order →'}
                   </button>
                 </div>
               </div>
@@ -956,12 +1181,17 @@ function Checkout() {
                 {/* Payment Method */}
                 <div className="mb-6 pb-6 border-b">
                   <h3 className="font-semibold text-gray-900 mb-3">Payment Method</h3>
-                  <p className="text-gray-700">
-                    💳 Card Payment (Stripe)
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="text-gray-700">💳 Card Payment</span>
+                    {paymentMethodId && (
+                      <span className="text-xs text-green-700 font-semibold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
+                        Card verified ✓
+                      </span>
+                    )}
+                  </div>
                   <button
                     type="button"
-                    onClick={() => setStep(2)}
+                    onClick={() => { setStep(2); setPaymentMethodId(null) }}
                     className="text-green-600 text-sm font-semibold mt-2 hover:underline"
                   >
                     Edit
@@ -1121,7 +1351,7 @@ function Checkout() {
                     </button>
                     <button
                       type="submit"
-                      disabled={loading || (() => {
+                      disabled={loading || !stripe || !paymentMethodId || (() => {
                         const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                         const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                         return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
@@ -1133,19 +1363,29 @@ function Checkout() {
                           if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                             return 'bg-gray-300 text-gray-500 cursor-not-allowed'
                           }
-                          return loading 
+                          if (!paymentMethodId) return 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          return loading
                             ? 'bg-gradient-to-r from-green-600 to-green-700 text-white opacity-50'
                             : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg'
                         })()
                       }`}
                     >
-                      {loading ? 'Placing Order...' : (() => {
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                          </svg>
+                          Processing Payment...
+                        </span>
+                      ) : (() => {
                         const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                         const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                         if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                           return `Add £${minCheck.shortfall.toFixed(2)} more`
                         }
-                        return `Place Order (£${total.toFixed(2)})`
+                        if (!paymentMethodId) return 'Enter Card Details First'
+                        return `Pay £${total.toFixed(2)}`
                       })()}
                     </button>
                   </div>
@@ -1294,6 +1534,14 @@ function Checkout() {
         </div>
       </div>
     </div>
+  )
+}
+
+function Checkout() {
+  return (
+    <Elements stripe={stripePromise}>
+      <CheckoutForm />
+    </Elements>
   )
 }
 
