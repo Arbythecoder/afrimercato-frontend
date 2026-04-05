@@ -1025,6 +1025,22 @@ function CheckoutForm() {
                   Encrypted and secured by Stripe — we never store your card details
                 </p>
 
+                {/* Stripe not loaded — show spinner or error */}
+                {!stripe && (
+                  <div className="flex flex-col items-center justify-center py-10 gap-3 text-center">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-green-600"></div>
+                    <p className="text-sm text-gray-500">Loading secure payment form...</p>
+                    <p className="text-xs text-gray-400">
+                      If this takes more than 10 seconds,{' '}
+                      <button type="button" onClick={() => window.location.reload()} className="text-green-600 underline">
+                        refresh the page
+                      </button>
+                    </p>
+                  </div>
+                )}
+
+                {stripe && (<>
+
                 {cardError && (
                   <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
                     <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1147,6 +1163,7 @@ function CheckoutForm() {
                     ) : 'Review Order →'}
                   </button>
                 </div>
+                </>)}
               </div>
             )}
 

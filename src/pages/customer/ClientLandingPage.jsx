@@ -1017,6 +1017,7 @@ export default function ClientLandingPage() {
                 <li><Link to="/stores" className="hover:text-yellow-500 transition-colors">Stores</Link></li>
                 <li><Link to="/about" className="hover:text-yellow-500 transition-colors">About us</Link></li>
                 <li><Link to="/contact" className="hover:text-yellow-500 transition-colors">Contact us</Link></li>
+                <li><Link to="/feedback" className="hover:text-yellow-500 transition-colors">Share Feedback</Link></li>
                 <li><Link to="/register?role=vendor" className="hover:text-yellow-500 transition-colors">Partner With Us</Link></li>
                 <li><Link to="/privacy" className="hover:text-yellow-500 transition-colors">Privacy Policy</Link></li>
               </ul>

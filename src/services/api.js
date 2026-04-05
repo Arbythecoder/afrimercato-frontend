@@ -409,6 +409,13 @@ export const sendContactForm = async (contactData) => {
   });
 };
 
+export const submitFeedback = async (feedbackData) => {
+  return apiCall('/feedback', {
+    method: 'POST',
+    body: JSON.stringify(feedbackData)
+  });
+};
+
 export const requestCallback = async (callbackData) => {
   return apiCall('/contact/callback', {
     method: 'POST',

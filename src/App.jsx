@@ -28,6 +28,7 @@ const ClientStoresPage = lazy(() => import('./pages/ClientStoresPage'))
 const AboutUs = lazy(() => import('./pages/AboutUs'))
 const Delivery = lazy(() => import('./pages/Delivery'))
 const ContactUs = lazy(() => import('./pages/ContactUs'))
+const Feedback = lazy(() => import('./pages/Feedback'))
 const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'))
 const TermsOfService = lazy(() => import('./pages/TermsOfService'))
 const ClientVendorStorefront = lazy(() => import('./pages/customer/ClientVendorStorefront'))
@@ -198,6 +199,7 @@ function AppContent() {
       <Route path="/about" element={<AboutUs />} />
       <Route path="/delivery" element={<Delivery />} />
       <Route path="/contact" element={<ContactUs />} />
+      <Route path="/feedback" element={<Feedback />} />
 
       {/* GDPR Compliance Pages */}
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
