@@ -57,7 +57,7 @@ function CheckoutForm() {
   const stripe = useStripe()
   const elements = useElements()
   const navigate = useNavigate()
-  const { isAuthenticated, user, logout, login } = useAuth()
+  const { isAuthenticated, user, logout, login, loading: authChecking } = useAuth()
 
   // Stable reference to avoid re-triggering effects when user object ref changes
   const isCustomer = useMemo(() => isCustomerRole(user), [user?.role, user?.roles, user?.primaryRole])
@@ -133,6 +133,11 @@ function CheckoutForm() {
       setCartLoading(true)
 
       if (!isAuthenticated) {
+        // Don't navigate while auth is still being checked — cart might be on the backend
+        if (authChecking) {
+          setCartLoading(false)
+          return
+        }
         const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
         if (savedCart.length > 0) {
           setCart(savedCart)
@@ -198,7 +203,7 @@ function CheckoutForm() {
     }
 
     loadCart()
-  }, [isAuthenticated, isCustomer])
+  }, [isAuthenticated, isCustomer, authChecking])
 
   // Load repurchase items — NON-BLOCKING, never delays checkout
   useEffect(() => {
@@ -686,7 +691,17 @@ function CheckoutForm() {
       try {
         const result = await login(authEmail, authPassword, { requiredRole: 'customer' })
         if (result.success) {
-          // Clean up redirect flag — we're already on checkout, no navigation needed
+          // Immediately restore cart from backup — don't wait for loadCart effect re-run
+          const backupCart = localStorage.getItem('checkout_cart_backup')
+          if (backupCart) {
+            try {
+              const parsed = JSON.parse(backupCart)
+              if (parsed.length > 0) {
+                setCart(parsed)
+                localStorage.removeItem('checkout_cart_backup')
+              }
+            } catch (_e) {}
+          }
           window._loginRedirect = null
           setShowAuthModal(false)
           setStep(2)

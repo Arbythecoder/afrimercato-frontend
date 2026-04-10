@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { vendorAPI, userAPI } from '../../services/api'
 import Toast from '../../components/Notification/Toast'
 import { useToast } from '../../hooks/useToast'
@@ -29,6 +30,7 @@ const countries = [
 ]
 
 function Settings() {
+  const navigate = useNavigate()
   const { toasts, success, error, warning, removeToast } = useToast()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(true)
@@ -150,15 +152,23 @@ function Settings() {
   if (loadError) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
+        <div className="text-center max-w-sm">
           <h2 className="text-xl font-semibold text-red-600 mb-2">Failed to Load Settings</h2>
-          <p className="text-gray-600 mb-4">{loadError}</p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="bg-afri-green text-white px-4 py-2 rounded hover:bg-green-600"
-          >
-            Retry
-          </button>
+          <p className="text-gray-600 mb-6">{loadError}</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={fetchSettings}
+              className="bg-afri-green text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="text-gray-500 hover:text-gray-700 px-4 py-2 rounded border border-gray-300 hover:border-gray-400"
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     )
