@@ -41,24 +41,24 @@ export default function VendorSwitchModal({
 
           {/* Title */}
           <h2 className="text-2xl font-bold text-gray-900 text-center mb-3">
-            Switch Store?
+            Start Fresh Cart?
           </h2>
 
           {/* Message */}
           <div className="text-center mb-6">
             <p className="text-gray-700 mb-2">
-              Your cart contains items from <strong className="text-gray-900">{currentStoreName}</strong>
+              You have items from <strong className="text-gray-900">{currentStoreName}</strong> in your cart.
             </p>
             <p className="text-gray-600 text-sm">
-              To shop from <strong className="text-gray-900">{newStoreName}</strong>, your current cart will be cleared.
+              You can keep them and also add from <strong className="text-gray-900">{newStoreName}</strong>, or start a fresh cart.
             </p>
           </div>
 
-          {/* Warning */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 mb-6">
-            <p className="text-sm text-yellow-800 flex items-start gap-2">
-              <span className="text-lg">⚠️</span>
-              <span>You can only order from one store at a time. All items from {currentStoreName} will be removed.</span>
+          {/* Info */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-6">
+            <p className="text-sm text-blue-800 flex items-start gap-2">
+              <span className="text-lg">ℹ️</span>
+              <span>Multi-store shopping is supported — your cart will show items grouped by store at checkout.</span>
             </p>
           </div>
 
@@ -68,7 +68,7 @@ export default function VendorSwitchModal({
               onClick={onClose}
               className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition"
             >
-              Cancel
+              Keep Both
             </button>
             <button
               onClick={() => {
@@ -77,7 +77,7 @@ export default function VendorSwitchModal({
               }}
               className="flex-1 px-6 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition"
             >
-              Clear Cart & Switch
+              Clear &amp; Start Fresh
             </button>
           </div>
         </motion.div>

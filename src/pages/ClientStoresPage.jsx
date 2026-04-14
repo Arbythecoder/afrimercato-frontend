@@ -496,12 +496,12 @@ export default function ClientStoresPage() {
 
                 {/* Message */}
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
-                  {searchLocation ? `No stores in ${searchLocation}` : 'No stores found'}
+                  {searchLocation ? `No stores in ${searchLocation}` : 'No stores in your area yet'}
                 </h3>
                 <p className="text-gray-600 mb-8">
-                  {searchLocation 
+                  {searchLocation
                     ? `We haven't reached ${searchLocation} yet, but we're expanding! Try one of these options:`
-                    : 'Try searching for a specific location or browse all available stores.'}
+                    : 'No stores in your area yet — check back soon! Try searching a different city below.'}
                 </p>
 
                 {/* Action Buttons */}

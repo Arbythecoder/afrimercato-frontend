@@ -741,16 +741,33 @@ export default function ClientVendorStorefront() {
                 </div>
 
                 {/* Store Indicator in Cart */}
-                {cart.length > 0 && vendor && (
-                  <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-lg">🏪</span>
-                      <span className="text-gray-700">
-                        Cart Store: <strong className="text-gray-900">{vendor.storeName || vendor.businessName}</strong>
-                      </span>
+                {cart.length > 0 && (() => {
+                  const uniqueVendorIds = [...new Set(cart.map(item =>
+                    item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
+                  ))]
+                  if (uniqueVendorIds.length > 1) {
+                    return (
+                      <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="flex items-center gap-2 text-sm">
+                          <span className="text-lg">🏪</span>
+                          <span className="text-gray-700">
+                            Shopping from <strong className="text-gray-900">{uniqueVendorIds.length}</strong> stores
+                          </span>
+                        </div>
+                      </div>
+                    )
+                  }
+                  return vendor ? (
+                    <div className="mb-4 bg-green-50 border border-green-200 rounded-lg p-3">
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="text-lg">🏪</span>
+                        <span className="text-gray-700">
+                          Shopping from: <strong className="text-gray-900">{vendor.storeName || vendor.businessName}</strong>
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
+                  ) : null
+                })()}
 
                 {cart.length === 0 ? (
                   <div className="text-center py-12">

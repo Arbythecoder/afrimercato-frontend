@@ -691,14 +691,15 @@ function CheckoutForm() {
       try {
         const result = await login(authEmail, authPassword, { requiredRole: 'customer' })
         if (result.success) {
-          // Immediately restore cart from backup — don't wait for loadCart effect re-run
+          // Pre-set cart from backup immediately so the UI shows items without flicker.
+          // Do NOT remove the backup here — the loadCart effect (triggered by isAuthenticated
+          // changing) also needs it as a fallback to avoid navigating away to /stores.
           const backupCart = localStorage.getItem('checkout_cart_backup')
           if (backupCart) {
             try {
               const parsed = JSON.parse(backupCart)
               if (parsed.length > 0) {
                 setCart(parsed)
-                localStorage.removeItem('checkout_cart_backup')
               }
             } catch (_e) {}
           }

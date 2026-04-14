@@ -69,23 +69,37 @@ const useCustomerStore = create((set, get) => ({
     }
   },
 
-  // Stores
+  // Stores — uses same endpoint as homepage (/products/featured-vendors) so data is always in sync
   fetchStores: async (location = '') => {
     if (get().loading.stores) return
     set(s => ({ loading: { ...s.loading, stores: true }, error: { ...s.error, stores: null } }))
     try {
-      const endpoint = location ? `/vendors/public?location=${encodeURIComponent(location)}` : '/vendors/public'
-      const res = await apiCall(endpoint)
+      const res = await apiCall('/products/featured-vendors?limit=50')
       if (res?.success) {
-        const vendors = (res.data?.vendors || res.data || []).map(v => ({
+        let rawVendors = res.data?.vendors || res.data || []
+
+        // Client-side location filter when a location is specified
+        if (location) {
+          const loc = location.toLowerCase()
+          rawVendors = rawVendors.filter(v =>
+            (v.address?.city || v.location || '').toLowerCase().includes(loc) ||
+            (v.storeName || v.businessName || v.name || '').toLowerCase().includes(loc)
+          )
+        }
+
+        const vendors = rawVendors.map(v => ({
           _id: v._id,
-          name: v.storeName || v.name,
+          id: v._id,
+          name: v.storeName || v.businessName || v.name,
           location: v.address?.city || v.location || 'Unknown',
           category: v.category || 'groceries',
           rating: v.rating || 0,
           slug: v.slug,
-          image: v.storeImage || v.image || null,
-          isOpen: v.isOpen !== false
+          image: v.storeImage || v.logo || v.image || null,
+          isOpen: v.isOpen !== false,
+          deliveryTime: v.deliveryTime || '30 min',
+          deliveryFee: v.deliveryFee || null,
+          verified: v.verified !== false
         }))
         set({ stores: vendors })
       } else {
