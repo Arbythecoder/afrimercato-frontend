@@ -100,9 +100,19 @@ function Register() {
             navigate('/picker/dashboard', { replace: true })
             break
           case 'customer':
-          default:
-            navigate('/cart', { replace: true })
+          default: {
+            // If the user started checkout as a guest, send them back to complete it
+            const fromCheckout = localStorage.getItem('checkout_redirect') === 'true'
+              || localStorage.getItem('post_login_redirect') === '/checkout'
+            if (fromCheckout) {
+              localStorage.removeItem('checkout_redirect')
+              localStorage.removeItem('post_login_redirect')
+              navigate('/checkout', { replace: true })
+            } else {
+              navigate('/cart', { replace: true })
+            }
             break
+          }
         }
       } else {
         setError(result.message || 'Registration failed. Please try again.')

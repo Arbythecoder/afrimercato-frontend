@@ -117,8 +117,20 @@ function RoleBasedRedirect() {
     case 'admin':
       return <Navigate to="/admin/dashboard" replace />
     case 'customer':
-    default:
+    default: {
+      // If the user was mid-checkout when they registered/logged in, send them back there
+      const pendingRedirect = localStorage.getItem('post_login_redirect')
+      if (pendingRedirect) {
+        localStorage.removeItem('post_login_redirect')
+        return <Navigate to={pendingRedirect} replace />
+      }
+      const checkoutPending = localStorage.getItem('checkout_redirect') === 'true'
+      if (checkoutPending) {
+        localStorage.removeItem('checkout_redirect')
+        return <Navigate to="/checkout" replace />
+      }
       return <Navigate to="/" replace />
+    }
   }
 }
 

@@ -223,6 +223,12 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('afrimercato_role', normalizedUser.role)
         localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
 
+        // Preserve guest cart across registration so /checkout can restore it
+        const guestCart = localStorage.getItem('afrimercato_cart')
+        if (guestCart) {
+          localStorage.setItem('checkout_cart_backup', guestCart)
+        }
+
         setUser(normalizedUser)
         setIsAuthenticated(true)
 
