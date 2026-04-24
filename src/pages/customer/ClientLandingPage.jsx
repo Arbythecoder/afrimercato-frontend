@@ -6,6 +6,19 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors, joinWaitlist } from '../../services/api'
+import {
+  ShoppingCart,
+  Menu,
+  X as Close,
+  ChevronDown,
+  Search,
+  Store,
+  MapPin,
+  Tag,
+  ShoppingBag,
+  Globe,
+  ArrowRight
+} from 'lucide-react';
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -198,98 +211,46 @@ export default function ClientLandingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F5A623] dark:bg-gray-900">
+    <div className="min-h-screen bg-[#FDF8F0]">
       {/* ============================================
           NAVIGATION
           ============================================ */}
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-white/80 backdrop-blur-sm'
-        }`}
+        className={`sticky top-0 left-0 right-0 z-50 bg-white shadow-sm transition-all duration-300`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
             {/* Logo */}
-            <Link to="/" className="flex items-center group">
-              <img src="/logo.svg" alt="Afrimercato" className="h-8 sm:h-10 w-auto" />
+            <Link to="/" className="flex items-center">
+              <span className="font-black text-2xl text-[#1B4D3E] tracking-tight">Afrimercato</span>
             </Link>
 
             {/* Desktop Nav */}
-            <div className="hidden md:flex items-center">
-              <div className={`flex items-center gap-1 px-2 py-2 rounded-full ${
-                isScrolled ? 'bg-gray-100' : 'bg-white/90 backdrop-blur-sm'
-              } shadow-sm`}>
-                <NavLink href="/stores" active>Stores</NavLink>
-                <NavLink href="/about">About us</NavLink>
-                <NavLink href="/contact">Contact us</NavLink>
-              </div>
+            <div className="hidden md:flex items-center flex-1 justify-center">
+              <nav className="flex gap-8">
+                <Link to="/stores" className="text-gray-700 font-medium hover:text-[#1B4D3E] transition-colors">Stores</Link>
+                <Link to="/delivery" className="text-gray-700 font-medium hover:text-[#1B4D3E] transition-colors">Delivery</Link>
+                <Link to="/about" className="text-gray-700 font-medium hover:text-[#1B4D3E] transition-colors">About</Link>
+                <Link to="/contact" className="text-gray-700 font-medium hover:text-[#1B4D3E] transition-colors">Contact</Link>
+              </nav>
             </div>
 
-            {/* Sign Up / Login */}
-            <div className="flex items-center gap-3">
-              <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
-                Log in
+            {/* Auth Buttons */}
+            <div className="flex items-center gap-2">
+              <Link to="/login" className="hidden sm:inline-block border border-[#1B4D3E] text-[#1B4D3E] font-semibold px-5 py-2 rounded-full hover:bg-[#FDF8F0] transition-colors">Log in</Link>
+              <Link to="/register" className="inline-flex items-center gap-2 bg-[#1B4D3E] text-white font-semibold px-5 py-2 rounded-full shadow-sm hover:bg-[#163e32] transition-colors">
+                <ShoppingCart className="w-5 h-5" />
+                <span>Sign Up</span>
               </Link>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowJoinDropdown(v => !v)}
-                  onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
-                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
-                >
-                  <span className="hidden sm:inline">Join</span>
-                  <span className="sm:hidden">Join</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {showJoinDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    <Link
-                      to="/register?role=customer"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors"
-                    >
-                      <span className="text-lg">🛒</span>
-                      <div>
-                        <div className="font-semibold text-sm">Customer</div>
-                        <div className="text-xs text-gray-400">Shop & order</div>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/register?role=vendor"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
-                    >
-                      <span className="text-lg">🏪</span>
-                      <div>
-                        <div className="font-semibold text-sm">Vendor</div>
-                        <div className="text-xs text-gray-400">Sell your products</div>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/register?role=rider"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
-                    >
-                      <span className="text-lg">🚴</span>
-                      <div>
-                        <div className="font-semibold text-sm">Rider</div>
-                        <div className="text-xs text-gray-400">Deliver & earn</div>
-                      </div>
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-              {/* Mobile Menu */}
+              {/* Mobile Hamburger */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="md:hidden p-2 rounded-lg hover:bg-white/20"
+                className="md:hidden p-2 rounded-full hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#1B4D3E]"
+                aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
               >
-                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                    d={mobileMenuOpen ? "M6 18L18 6M6 6l12 12" : "M4 6h16M4 12h16M4 18h16"} />
-                </svg>
+                {mobileMenuOpen ? <Close className="w-7 h-7 text-[#1B4D3E]" /> : <Menu className="w-7 h-7 text-[#1B4D3E]" />}
               </button>
             </div>
           </div>
@@ -301,24 +262,17 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="md:hidden bg-white rounded-2xl mb-4 overflow-hidden shadow-xl"
+                className="md:hidden bg-white rounded-2xl mb-4 overflow-hidden shadow-xl border border-gray-100"
               >
                 <div className="p-4 space-y-2">
-                  <MobileNavLink to="/stores" onClick={() => setMobileMenuOpen(false)}>Stores</MobileNavLink>
-                  <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About us</MobileNavLink>
-                  <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
+                  <Link to="/stores" className="block px-4 py-3 text-gray-700 font-medium rounded-lg hover:bg-[#FDF8F0]" onClick={() => setMobileMenuOpen(false)}>Stores</Link>
+                  <Link to="/delivery" className="block px-4 py-3 text-gray-700 font-medium rounded-lg hover:bg-[#FDF8F0]" onClick={() => setMobileMenuOpen(false)}>Delivery</Link>
+                  <Link to="/about" className="block px-4 py-3 text-gray-700 font-medium rounded-lg hover:bg-[#FDF8F0]" onClick={() => setMobileMenuOpen(false)}>About</Link>
+                  <Link to="/contact" className="block px-4 py-3 text-gray-700 font-medium rounded-lg hover:bg-[#FDF8F0]" onClick={() => setMobileMenuOpen(false)}>Contact</Link>
                   <div className="pt-3 border-t space-y-1">
-                    <Link to="/register?role=customer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🛒</span><span className="font-semibold text-sm">Join as Customer</span>
-                    </Link>
-                    <Link to="/register?role=vendor" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🏪</span><span className="font-semibold text-sm">Join as Vendor</span>
-                    </Link>
-                    <Link to="/register?role=rider" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🚴</span><span className="font-semibold text-sm">Join as Rider</span>
-                    </Link>
-                    <Link to="/login" className="block py-3 text-center text-[#00897B] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
-                      Log in
+                    <Link to="/login" className="block w-full text-center border border-[#1B4D3E] text-[#1B4D3E] font-semibold px-4 py-2 rounded-full hover:bg-[#FDF8F0]" onClick={() => setMobileMenuOpen(false)}>Log in</Link>
+                    <Link to="/register" className="block w-full text-center bg-[#1B4D3E] text-white font-semibold px-4 py-2 rounded-full shadow-sm hover:bg-[#163e32] mt-2" onClick={() => setMobileMenuOpen(false)}>
+                      <span className="inline-flex items-center gap-2 justify-center"><ShoppingCart className="w-5 h-5" />Sign Up</span>
                     </Link>
                   </div>
                 </div>
@@ -331,112 +285,57 @@ export default function ClientLandingPage() {
       {/* ============================================
           HERO SECTION
           ============================================ */}
-      <section className="relative pt-28 sm:pt-32 pb-12 overflow-x-clip">
+      <section className="relative pt-28 sm:pt-32 pb-12 overflow-x-clip bg-[#FFB800]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-
-            {/* Left — no parallax to prevent content overlap */}
+            {/* Left — Hero Text */}
             <div className="relative z-10 pt-8 lg:pt-0">
+              {/* Badge */}
+              <div className="inline-flex items-center gap-2 bg-white text-[#1B4D3E] font-semibold rounded-full px-4 py-1.5 mb-6 text-sm shadow">
+                <Globe className="w-4 h-4" />
+                Now delivering across the UK
+              </div>
+              {/* Headline */}
               <motion.h1
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight"
+                className="font-black text-5xl sm:text-6xl xl:text-7xl text-[#1A1A1A] leading-[1.1] tracking-tight mb-6"
               >
-                We Help With the Shopping and Bring it to your{' '}
-                <span className="text-[#00897B] relative inline-block">
-                  "DoorStep"
-                  <motion.svg
-                    initial={{ pathLength: 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ delay: 1, duration: 0.8 }}
-                    className="absolute -bottom-2 left-0 w-full h-3"
-                    viewBox="0 0 200 12"
-                  >
-                    <motion.path
-                      d="M2 10C50 2 150 2 198 10"
-                      stroke="#00897B"
-                      strokeWidth="3"
-                      fill="none"
-                      strokeLinecap="round"
-                    />
-                  </motion.svg>
-                </span>
+                Shop African Stores,<br />
+                Delivered to Your <span className="text-[#1B4D3E] underline decoration-4 decoration-[#1B4D3E] underline-offset-4">Doorstep</span>
               </motion.h1>
-
+              {/* Subtext */}
               <motion.p
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3, duration: 0.6 }}
-                className="mt-6 text-lg sm:text-xl text-gray-700 dark:text-gray-300 max-w-xl leading-relaxed"
+                className="mt-4 text-lg text-gray-700 max-w-xl leading-relaxed"
               >
-                Experience the convenience of African and international groceries
-                delivered right to your door. Fresh produce, authentic flavors,
-                fast delivery across the UK.
+                Browse hundreds of African stores near you. Fresh groceries, spices, and more — delivered fast.
               </motion.p>
-
               {/* CTA Buttons */}
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-8 flex flex-wrap items-center gap-3"
+                className="mt-8 flex flex-wrap items-center gap-4"
               >
                 <Link
                   to="/stores"
-                  className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
+                  className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#163e32] text-white rounded-full px-8 py-4 font-bold shadow-xl transition-all text-lg"
                 >
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  Shop Now
+                  <Search className="w-5 h-5" />
+                  Find Stores Near You
                 </Link>
-
                 <Link
                   to="/register?role=vendor"
-                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-semibold shadow transition-all text-base sm:text-lg"
+                  className="inline-flex items-center gap-2 border-2 border-[#1B4D3E] text-[#1B4D3E] rounded-full px-8 py-4 font-bold bg-white hover:bg-[#FDF8F0] transition-all text-lg"
                 >
+                  <Store className="w-5 h-5" />
                   Sell on Afrimercato
                 </Link>
-
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="relative group hidden sm:block"
-                >
-                  <div className="relative w-16 h-16 sm:w-20 sm:h-20">
-                    <svg className="absolute inset-0 w-full h-full animate-spin-slow" viewBox="0 0 100 100">
-                      <defs>
-                        <path id="circlePath" d="M 50, 50 m -37, 0 a 37,37 0 1,1 74,0 a 37,37 0 1,1 -74,0" />
-                      </defs>
-                      <text className="text-[8px] sm:text-[9px] fill-gray-700 font-medium uppercase tracking-widest">
-                        <textPath href="#circlePath">Learn about us through this video •</textPath>
-                      </text>
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 bg-white rounded-full flex items-center justify-center shadow-lg group-hover:shadow-xl transition-shadow">
-                        <svg className="w-4 h-4 sm:w-5 sm:h-5 text-[#00897B] ml-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </motion.button>
               </motion.div>
-
-              {/* Trust Indicator — static, never moves */}
-              <div className="mt-5 flex items-center gap-4 shrink-0">
-                <div className="flex -space-x-3">
-                  {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
-                    <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">
-                      {emoji}
-                    </div>
-                  ))}
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-[3px] border-[#F5A623] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
-                    +4K
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right — Hero Image */}
@@ -449,106 +348,66 @@ export default function ClientLandingPage() {
               <div className="relative">
                 <img
                   src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=1200&q=90"
-                  alt="Fresh African groceries delivered"
-                  className="w-full h-[300px] sm:h-[400px] md:h-[450px] lg:h-[500px] xl:h-[560px] object-cover object-center rounded-3xl shadow-2xl"
-                  loading="eager"
-                  onError={(e) => {
-                    e.target.src = 'https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=1200&q=90'
-                    e.target.onerror = null
-                  }}
-                />
-
-                {/* Floating cards — desktop only */}
-                <motion.div
-                  animate={{ y: [0, -10, 0] }}
-                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-                  className="hidden md:block absolute top-10 left-0 lg:-left-4 bg-white rounded-2xl p-4 shadow-xl z-20"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                      <svg className="w-6 h-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                    </div>
-                    <div>
-                      <p className="font-bold text-gray-900">Fresh Daily</p>
-                      <p className="text-sm text-gray-600">Quality guaranteed</p>
-                    </div>
-                  </div>
-                </motion.div>
-
-                <motion.div
-                  animate={{ y: [0, 10, 0] }}
-                  transition={{ duration: 4, repeat: Infinity, ease: "easeInOut", delay: 1 }}
-                  className="hidden md:block absolute bottom-20 right-0 lg:-right-4 bg-white rounded-2xl p-4 shadow-xl z-20"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🚚</div>
-                    <div>
-                      <p className="font-bold text-gray-900">Fast Delivery</p>
-                      <p className="text-sm text-gray-600">20-30 minutes</p>
-                    </div>
-                  </div>
-                </motion.div>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* ============================================
-              SEARCH BAR
-              ============================================ */}
-          <motion.div
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.6, duration: 0.8 }}
-            className="relative z-20 mt-8 lg:mt-6"
-          >
-            <form onSubmit={handleFindStore} className="bg-white rounded-2xl sm:rounded-full shadow-2xl p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center">
-                {/* Location Input */}
-                <div className="flex-1 relative">
-                  <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
-                      onFocus={() => setShowLocationDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                      placeholder="Postcode, store name, location"
-                      className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-base sm:text-lg"
-                    />
-                  </div>
-
-                  <AnimatePresence>
-                    {showLocationDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                  <motion.div
+                    initial={{ opacity: 0, y: 50 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.8 }}
+                    className="relative z-20 mt-10"
+                  >
+                    <form onSubmit={handleFindStore} className="bg-white rounded-full shadow-xl px-2 py-2 flex flex-col sm:flex-row items-center gap-2 sm:gap-0">
+                      {/* Location */}
+                      <div className="flex items-center gap-2 px-4 py-3 flex-1">
+                        <MapPin className="w-5 h-5 text-[#1B4D3E]" />
+                        <input
+                          type="text"
+                          value={location}
+                          onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
+                          onFocus={() => setShowLocationDropdown(true)}
+                          onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                          placeholder="Enter postcode or area"
+                          className="flex-1 bg-transparent border-none outline-none text-[#1A1A1A] placeholder-gray-500 text-base sm:text-lg"
+                        />
+                      </div>
+                      <div className="hidden sm:block w-px h-8 bg-gray-200 mx-2"></div>
+                      {/* Price Range */}
+                      <div className="flex items-center gap-2 px-4 py-3">
+                        <Tag className="w-5 h-5 text-[#1B4D3E]" />
+                        <select
+                          value={priceTag}
+                          onChange={(e) => setPriceTag(e.target.value)}
+                          className="bg-transparent border-none outline-none text-[#1A1A1A] cursor-pointer text-base appearance-none"
+                        >
+                          <option value="all">Price range</option>
+                          <option value="budget">Budget</option>
+                          <option value="mid">Mid Range</option>
+                          <option value="premium">Premium</option>
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-gray-400 ml-[-20px] pointer-events-none" />
+                      </div>
+                      <div className="hidden sm:block w-px h-8 bg-gray-200 mx-2"></div>
+                      {/* Delivery or Pickup */}
+                      <div className="flex items-center gap-2 px-4 py-3">
+                        <ShoppingBag className="w-5 h-5 text-[#1B4D3E]" />
+                        <select
+                          value={shoppingMethod}
+                          onChange={(e) => setShoppingMethod(e.target.value)}
+                          className="bg-transparent border-none outline-none text-[#1A1A1A] cursor-pointer text-base appearance-none"
+                        >
+                          <option value="all">Delivery or Pickup</option>
+                          <option value="delivery">Delivery</option>
+                          <option value="pickup">Pickup</option>
+                          <option value="in-store">In-Store</option>
+                        </select>
+                        <ChevronDown className="w-4 h-4 text-gray-400 ml-[-20px] pointer-events-none" />
+                      </div>
+                      <button
+                        type="submit"
+                        className="bg-[#1B4D3E] hover:bg-[#163e32] text-white rounded-full px-8 py-3 font-bold flex items-center gap-2 ml-2 shadow-lg transition-all text-base whitespace-nowrap"
                       >
-                        <div className="p-3">
-                          {location.trim().length >= 2 ? (
-                            <>
-                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Suggestions</p>
-                              {locationLoading && (
-                                <div className="flex items-center gap-2 px-3 py-2.5 text-gray-400 text-sm">
-                                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                  </svg>
-                                  Searching...
-                                </div>
-                              )}
-                              {!locationLoading && locationSuggestions.length === 0 && (
-                                <p className="text-sm text-gray-400 px-3 py-2.5">No results found</p>
-                              )}
-                              {!locationLoading && locationSuggestions.map((suggestion) => (
-                                <button
-                                  key={suggestion}
+                        Find Store <ArrowRight className="w-5 h-5" />
+                      </button>
+                    </form>
+                  </motion.div>
                                   type="button"
                                   onClick={() => selectLocation(suggestion)}
                                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
