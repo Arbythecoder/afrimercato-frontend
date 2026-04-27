@@ -13,7 +13,7 @@ if (Test-Path $flyPath) {
         & $flyPath deploy --ha=false
         if ($LASTEXITCODE -eq 0) {
             Write-Host "SUCCESS: Backend deployed!" -ForegroundColor Green
-            Write-Host "URL: https://afrimercato-backend.fly.dev" -ForegroundColor Cyan
+            Write-Host "URL: http://localhost:8080" -ForegroundColor Cyan
             exit 0
         }
     } catch {

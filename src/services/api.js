@@ -1,7 +1,7 @@
 // API Base URL - uses environment variable with fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/api`
-  : 'https://afrimercato-backend.fly.dev/api';
+  : 'http://localhost:8080/api';
 
 if (import.meta.env.DEV) {
   console.log('API Base URL:', API_BASE_URL);
@@ -75,19 +75,21 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
 
   try {
     const url = `${API_BASE_URL}${endpoint}`;
-
     const config = {
+      ...options,
       headers: {
         ...options.headers
       },
       credentials: 'include',
-      signal: controller.signal,
-      ...options
+      signal: controller.signal
     };
 
-    // Only add Content-Type: application/json if body is NOT FormData
-    if (!(options.body instanceof FormData)) {
-      config.headers['Content-Type'] = 'application/json';
+    if (options.body instanceof FormData) {
+      delete config.headers['Content-Type'];
+    } else {
+      if (!config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
+      }
     }
 
     const token = localStorage.getItem('afrimercato_token');
@@ -278,19 +280,23 @@ export const getVendorProfile = async () => {
   return apiCall('/vendor/profile');
 };
 
-export const updateVendorProfile = async (profileData) => {
-  return apiCall('/vendor/profile', {
+export const setupVendorStore = async (data) => {
+  // Check if data is FormData (has files) or regular JSON
+  const isFormData = data instanceof FormData;
+
+  return apiCall('/vendor/profile/setup', {
     method: 'PUT',
-    body: JSON.stringify(profileData)
+    body: isFormData ? data : JSON.stringify(data),
+    headers: isFormData ? {} : { 'Content-Type': 'application/json' } 
   });
 };
 
-export const createVendorProfile = async (profileData) => {
-  return apiCall('/vendor/profile', {
-    method: 'POST',
-    body: JSON.stringify(profileData)
-  });
-};
+// export const createVendorProfile = async (profileData) => {
+//   return apiCall('/vendor/profile', {
+//     method: 'POST',
+//     body: JSON.stringify(profileData)
+//   });
+// };
 
 export const getVendorProducts = async (filters = {}) => {
   const queryString = new URLSearchParams(filters).toString();
@@ -813,8 +819,7 @@ export const updateDeliverySettings = async (data) => {
 
 export const vendorAPI = {
   getProfile: getVendorProfile,
-  updateProfile: updateVendorProfile,
-  createProfile: createVendorProfile,
+  updateProfile: setupVendorStore,
   getProducts: getVendorProducts,
   createProduct,
   updateProduct,

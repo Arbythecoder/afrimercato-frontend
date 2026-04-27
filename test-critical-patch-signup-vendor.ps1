@@ -10,7 +10,7 @@ Write-Host "  CRITICAL PATCH TEST - SIGNUP + VENDOR ISOLATION" -ForegroundColor 
 Write-Host "=======================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$BACKEND_URL = "https://afrimercato-backend.fly.dev"
+$BACKEND_URL = "http://localhost:8080"
 $FRONTEND_URL = "https://afrimercato.vercel.app"
 
 # Use local if testing locally

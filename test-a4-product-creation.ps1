@@ -10,7 +10,7 @@
 # - Image uploads work (test with URL)
 
 $ErrorActionPreference = "Stop"
-$baseUrl = "https://afrimercato-backend.fly.dev"
+$baseUrl = "http://localhost:8080"
 # $baseUrl = "http://localhost:5000"  # Uncomment for local testing
 
 Write-Host "==================================================================" -ForegroundColor Cyan

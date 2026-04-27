@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import NotificationDropdown from '../Notifications/NotificationDropdown'
+import { IoIosHourglass } from "react-icons/io";
+
 import { vendorAPI } from '../../services/api'
 
 function VendorLayout({ children }) {
@@ -116,7 +118,7 @@ function VendorLayout({ children }) {
                 </p>
                 <div className="space-y-2 text-sm text-yellow-700">
                   <p>✓ Your account has been created</p>
-                  <p>⏳ Verification in progress</p>
+                  <p><IoIosHourglass className='animate-bounce' /> Verification in progress</p>
                   <p className="text-xs text-yellow-600 mt-3">
                     Submitted: {vendorStatus?.submittedForReviewAt ? new Date(vendorStatus.submittedForReviewAt).toLocaleString() : new Date(vendorStatus?.createdAt).toLocaleString()}
                   </p>

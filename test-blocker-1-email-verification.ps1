@@ -3,7 +3,7 @@
 # ===============================================
 # PowerShell-safe curl.exe commands to test the full flow
 
-$API_URL = "https://afrimercato-backend.fly.dev/api"
+$API_URL = "http://localhost:8080/api"
 $FRONTEND_URL = "https://your-frontend.vercel.app"
 
 Write-Host "`n========================================" -ForegroundColor Cyan

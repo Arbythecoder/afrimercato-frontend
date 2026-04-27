@@ -3,7 +3,7 @@
 // =================================================================
 // This script tests the deployed backend to ensure everything works
 
-const API_URL = 'https://afrimercato-backend.fly.dev/api';
+const API_URL = 'http://localhost:8080/api';
 
 // Color codes for terminal output
 const colors = {
