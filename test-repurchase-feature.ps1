@@ -7,7 +7,7 @@ Write-Host "`n==================================================================
 Write-Host "REPURCHASE FEATURE TEST - BETA LAUNCH" -ForegroundColor Cyan
 Write-Host "==================================================================" -ForegroundColor Cyan
 
-$API_URL = "http://localhost:8080/api"
+$API_URL = "https://afrimercato-backend.fly.dev/api"
 
 Write-Host "`n📋 REPURCHASE FEATURE CHECKLIST:" -ForegroundColor Yellow
 Write-Host "`n[FRONTEND]" -ForegroundColor Cyan

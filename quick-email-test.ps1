@@ -1,7 +1,7 @@
 # QUICK EMAIL VERIFICATION TEST
 # Tests that unverified users cannot checkout
 
-$API_URL = "http://localhost:8080/api"
+$API_URL = "https://afrimercato-backend.fly.dev/api"
 
 Write-Host "`n===== EMAIL VERIFICATION TEST =====" -ForegroundColor Cyan
 

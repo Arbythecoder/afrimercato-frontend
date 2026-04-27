@@ -96,7 +96,7 @@ const fixImageUrl = (url) => {
   
   // Fix localhost URLs to use production backend
   if (url.includes('localhost:5000')) {
-    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+    const apiUrl = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
     // Remove /api from the API_URL if present
     const baseUrl = apiUrl.replace('/api', '')
     return url.replace('http://localhost:5000', baseUrl)

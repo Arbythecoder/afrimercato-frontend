@@ -7,7 +7,7 @@
 # 3. Earnings endpoint shows correct amounts
 # ===================================================
 
-$API_URL = "http://localhost:8080/api"
+$API_URL = "https://afrimercato-backend.fly.dev/api"
 
 Write-Host "`n=== BLOCKER 4: Commission Tracking Test ===" -ForegroundColor Cyan
 

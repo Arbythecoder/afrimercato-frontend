@@ -3,7 +3,7 @@
  * Google + Facebook OAuth — mirrors UberEats, Chowdeck, JustEat, Deliveroo
  */
 function SocialLoginButtons({ action = 'Sign in' }) {
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+  const API_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
 
   const handleGoogleLogin = () => {
     window.location.href = `${API_URL}/api/auth/google`

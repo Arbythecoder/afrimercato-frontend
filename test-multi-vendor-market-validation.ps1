@@ -7,7 +7,7 @@ Write-Host "MULTI-VENDOR CART + MARKET VALIDATION TESTS" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 Write-Host "TEST CONFIGURATION:" -ForegroundColor Yellow
-Write-Host "  Backend: http://localhost:8080"
+Write-Host "  Backend: https://afrimercato-backend.fly.dev"
 Write-Host "  Frontend: http://localhost:5173 (or deployed URL)"
 Write-Host "  Feature Flags:"
 Write-Host "    - VITE_MULTI_VENDOR_CART=true (frontend)"
@@ -182,7 +182,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 Write-Host "SWAGGER API TESTS" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
-Write-Host "Open Swagger: http://localhost:8080/api-docs`n" -ForegroundColor Yellow
+Write-Host "Open Swagger: https://afrimercato-backend.fly.dev/api-docs`n" -ForegroundColor Yellow
 
 Write-Host "TEST 1: Multi-vendor checkout" -ForegroundColor Magenta
 Write-Host "  Endpoint: POST /api/checkout/process"

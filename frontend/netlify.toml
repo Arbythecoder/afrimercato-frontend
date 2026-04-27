@@ -38,7 +38,7 @@
 # Uncomment if needed
 # [[redirects]]
 #   from = "/api/*"
-#   to = "http://localhost:8080/api/:splat"
+#   to = "https://afrimercato-backend.fly.dev/api/:splat"
 #   status = 200
 #   force = true
 

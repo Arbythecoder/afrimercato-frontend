@@ -323,7 +323,7 @@ function Login() {
               {/* Google Sign-In Button — must include /api prefix */}
               <button
                 type="button"
-                onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/auth/google` }}
+                onClick={() => { window.location.href = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'}/api/auth/google` }}
                 className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer pointer-events-auto"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">

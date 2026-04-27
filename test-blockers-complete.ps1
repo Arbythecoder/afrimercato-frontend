@@ -9,7 +9,7 @@ Write-Host "================================" -ForegroundColor Cyan
 
 # Test 1: Register new user
 Write-Host "`nTest 1.1: Register new user" -ForegroundColor Yellow
-$registerResponse = curl.exe -X POST "http://localhost:8080/api/auth/register" `
+$registerResponse = curl.exe -X POST "https://afrimercato-backend.fly.dev/api/auth/register" `
   -H "Content-Type: application/json" `
   -d '{"email":"blocker-test@example.com","password":"Test1234!","name":"Blocker Test","role":"customer"}' `
   -s
@@ -22,7 +22,7 @@ Write-Host "   Command: flyctl logs -a afrimercato-backend | Select-String 'veri
 
 # Test 2: Resend verification email
 Write-Host "`n`nTest 1.2: Resend verification email" -ForegroundColor Yellow
-$resendResponse = curl.exe -X POST "http://localhost:8080/api/auth/resend-verification" `
+$resendResponse = curl.exe -X POST "https://afrimercato-backend.fly.dev/api/auth/resend-verification" `
   -H "Content-Type: application/json" `
   -d '{"email":"blocker-test@example.com"}' `
   -s
@@ -55,7 +55,7 @@ Write-Host "BLOCKER 3: Location Search States" -ForegroundColor Cyan
 Write-Host "================================" -ForegroundColor Cyan
 
 Write-Host "`nTest 3.1: Search vendors by location (New York)" -ForegroundColor Yellow
-$locationResponse = curl.exe -X GET "http://localhost:8080/api/vendors/search-by-location?lat=40.7128&lon=-74.0060&radius=10" -s
+$locationResponse = curl.exe -X GET "https://afrimercato-backend.fly.dev/api/vendors/search-by-location?lat=40.7128&lon=-74.0060&radius=10" -s
 
 Write-Host "Response:" -ForegroundColor Green
 $locationResponse | ConvertFrom-Json | ConvertTo-Json -Depth 2
@@ -96,7 +96,7 @@ Write-Host "   Total Order: `$105.00" -ForegroundColor Gray
 
 Write-Host "`nℹ️  To test with real vendor token:" -ForegroundColor Yellow
 Write-Host '   $token = "YOUR_VENDOR_JWT"' -ForegroundColor Gray
-Write-Host '   curl.exe -X GET "http://localhost:8080/api/vendor/dashboard/earnings" -H "Authorization: Bearer $token"' -ForegroundColor Gray
+Write-Host '   curl.exe -X GET "https://afrimercato-backend.fly.dev/api/vendor/dashboard/earnings" -H "Authorization: Bearer $token"' -ForegroundColor Gray
 
 # ================================================================
 Write-Host "`n`n================================" -ForegroundColor Cyan

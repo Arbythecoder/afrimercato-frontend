@@ -68,7 +68,7 @@ function RealTimeOrderTracking({ orderId, onClose }) {
    * Connect to Socket.IO for real-time updates
    */
   const connectSocket = () => {
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
+    const API_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'
     const token = localStorage.getItem('afrimercato_token')
 
     socketRef.current = io(API_URL, {
