@@ -8,7 +8,7 @@ Write-Host "EMAIL VERIFICATION TEST - BETA LAUNCH CRITICAL" -ForegroundColor Cya
 Write-Host "==================================================================" -ForegroundColor Cyan
 
 # Configuration
-$API_URL = "https://afrimercato-backend.fly.dev/api"
+$API_URL = "https://afrimercato-backend-1.onrender.com/api"
 $testEmail = "test-unverified-$(Get-Random)@example.com"
 $testPassword = "TestPass123!"
 

@@ -38,7 +38,7 @@
 # Uncomment if needed
 # [[redirects]]
 #   from = "/api/*"
-#   to = "https://afrimercato-backend.fly.dev/api/:splat"
+#   to = "https://afrimercato-backend-1.onrender.com/api/:splat"
 #   status = 200
 #   force = true
 
