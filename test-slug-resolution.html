@@ -96,7 +96,7 @@
         <h3>Endpoint: GET /api/vendors/slug/{slug}</h3>
         <pre>
 # Test with curl (replace localhost:8080 with your backend URL)
-curl "http://localhost:8080/api/vendors/slug/sample-accra-fresh-market"
+curl "https://afrimercato-backend.fly.dev/api/vendors/slug/sample-accra-fresh-market"
 
 # Expected response:
 {
@@ -117,8 +117,8 @@ curl "http://localhost:8080/api/vendors/slug/sample-accra-fresh-market"
         <p><span class="status implemented">ENHANCED</span> Now supports both ObjectId and slug formats:</p>
         <pre>
 # These should all work:
-curl "http://localhost:8080/api/products/vendor/60f1b2b8e1b2c3d4e5f6a7b8"  # ObjectId
-curl "http://localhost:8080/api/products/vendor/sample-accra-fresh-market"   # Slug
+curl "https://afrimercato-backend.fly.dev/api/products/vendor/60f1b2b8e1b2c3d4e5f6a7b8"  # ObjectId
+curl "https://afrimercato-backend.fly.dev/api/products/vendor/sample-accra-fresh-market"   # Slug
         </pre>
     </div>
 
@@ -194,7 +194,7 @@ curl "http://localhost:8080/api/products/vendor/sample-accra-fresh-market"   # S
     <script>
         // Simple frontend testing
         async function testAPI() {
-            const baseURL = 'http://localhost:8080/api';
+            const baseURL = 'https://afrimercato-backend.fly.dev/api';
             
             console.group('🧪 API Testing');
             

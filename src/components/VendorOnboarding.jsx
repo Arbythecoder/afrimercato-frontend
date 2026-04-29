@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import ColorThief from 'colorthief'
 import { useAuth } from '../context/AuthContext'
-import { createVendorProfile } from '../services/api'
+import { setupVendorStore } from '../services/api'
 
 const VendorOnboarding = ({ onComplete }) => {
   const navigate = useNavigate()
@@ -239,56 +239,56 @@ const VendorOnboarding = ({ onComplete }) => {
   }
 
   const handleSubmit = async () => {
-    setLoading(true)
-    setError('')
+    setLoading(true);
+    setError('');
 
     try {
-      // Prepare data for API
-      const profileData = {
-        storeName: formData.storeName,
-        description: formData.description,
-        category: formData.category,
-        phone: formData.phone,
-        alternativePhone: formData.alternativePhone || undefined,
-        address: formData.address,
-        businessHours: formData.businessHours,
-        brandColors: formData.brandColors
+      const submitData = new FormData();
+
+      submitData.append('storeName', formData.storeName);
+      if (formData.description) submitData.append('description', formData.description);
+      if (formData.category) submitData.append('category', formData.category);
+      if (formData.phone) submitData.append('phone', formData.phone);
+      if (formData.alternativePhone) submitData.append('alternativePhone', formData.alternativePhone);
+      
+      if (formData.address) submitData.append('address', JSON.stringify(formData.address));
+      if (formData.businessHours) submitData.append('businessHours', JSON.stringify(formData.businessHours));
+      if (formData.brandColors) submitData.append('brandColors', JSON.stringify(formData.brandColors));
+
+      if (formData.logo) {
+        submitData.append('logo', formData.logo); 
+      }
+      
+      if (formData.coverImage) {
+        submitData.append('coverImage', formData.coverImage);
       }
 
-      console.log('Sending profile data:', JSON.stringify(profileData, null, 2))
+      console.log('Sending profile setup data...');
 
-      const response = await createVendorProfile(profileData)
+      const response = await setupVendorStore(submitData);
 
       if (response.success) {
-        // If logo was uploaded, upload it separately
-        if (formData.logo) {
-          // TODO: Upload logo to server
-          console.log('Logo upload will be implemented')
-        }
-
         if (onComplete) {
-          onComplete()
+          onComplete();
         } else {
-          navigate('/dashboard')
+          navigate('/dashboard');
         }
       } else {
-        setError(response.message || 'Failed to create vendor profile')
+        setError(response.message || 'Failed to complete store setup');
       }
     } catch (err) {
-      console.error('Onboarding error:', err)
+      console.error('Onboarding error:', err);
 
-      // Display detailed validation errors if available
       if (err.response?.data?.errors && Array.isArray(err.response.data.errors)) {
-        const errorMessages = err.response.data.errors.map(e => `• ${e.field}: ${e.message}`).join('\n')
-        setError(`Validation errors:\n${errorMessages}`)
-        console.error('Validation errors:', err.response.data.errors)
+        const errorMessages = err.response.data.errors.map(e => `• ${e.field}: ${e.message}`).join('\n');
+        setError(`Validation errors:\n${errorMessages}`);
       } else {
-        setError(err.response?.data?.message || err.message || 'Failed to create vendor profile')
+        setError(err.response?.data?.message || err.message || 'Failed to complete store setup');
       }
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const steps = [
     { number: 1, title: 'Store Info', icon: '🏪' },
