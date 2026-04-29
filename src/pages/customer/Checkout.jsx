@@ -682,7 +682,7 @@ function CheckoutForm() {
 
   // Sign-in gate — shown when user hits checkout without being logged in
   if (showAuthModal && !isAuthenticated) {
-    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.fly.dev'}/api/auth/google`
+    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend-1.onrender.com'}/api/auth/google`
 
     const handleAuthLogin = async (e) => {
       e.preventDefault()

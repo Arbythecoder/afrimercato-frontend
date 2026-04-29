@@ -3,7 +3,7 @@
  * Tests the new vendor slug resolution functionality
  */
 
-const API_BASE = 'https://afrimercato-backend.fly.dev/api'; // Change to deployed URL if testing production
+const API_BASE = 'https://afrimercato-backend-1.onrender.com/api'; // Change to deployed URL if testing production
 
 async function testSlugResolution() {
   console.log('🧪 Testing Vendor Slug Resolution...\n');

@@ -74,7 +74,7 @@ Write-Host "SWAGGER API TESTS" -ForegroundColor Cyan
 Write-Host "========================================`n" -ForegroundColor Cyan
 
 Write-Host "Open Swagger UI:" -ForegroundColor Yellow
-Write-Host "  URL: https://afrimercato-backend.fly.dev/api-docs`n"
+Write-Host "  URL: https://afrimercato-backend-1.onrender.com/api-docs`n"
 
 Write-Host "TEST 1: Add items to cart (multiple vendors)" -ForegroundColor Magenta
 Write-Host "  Endpoint: POST /api/cart/add"
