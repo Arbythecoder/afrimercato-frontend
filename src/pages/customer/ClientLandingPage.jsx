@@ -267,13 +267,13 @@ export default function ClientLandingPage() {
                   <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About us</MobileNavLink>
                   <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
                   <div className="pt-3 border-t space-y-1">
-                    <Link to="/register?role=customer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/register?role=customer" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
                       <ShoppingBag size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Customer</span>
                     </Link>
-                    <Link to="/register?role=vendor" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/register?role=vendor" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
                       <Store size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Vendor</span>
                     </Link>
-                    <Link to="/register?role=rider" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/register?role=rider" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
                       <Bike size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Rider</span>
                     </Link>
                     <Link to="/login" className="block py-3 text-center text-[#1B4D3E] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
@@ -300,7 +300,7 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight"
+                className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight"
               >
                 We Help With the Shopping and Bring it to your{' '}
                 <span className="text-[#00897B] relative inline-block">
@@ -339,11 +339,11 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-8 flex flex-wrap items-center gap-3"
+                className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
               >
                 <Link
                   to="/stores"
-                  className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-xl transition-all duration-200 text-base sm:text-lg"
+                  className="inline-flex items-center justify-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-xl transition-all duration-200 text-base sm:text-lg"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -353,7 +353,7 @@ export default function ClientLandingPage() {
 
                 <Link
                   to="/register?role=vendor"
-                  className="inline-flex items-center gap-2 border-2 border-[#1B4D3E] text-[#1B4D3E] hover:bg-[#1B4D3E] hover:text-white px-6 sm:px-7 py-3.5 sm:py-4 rounded-full font-semibold shadow transition-all duration-200 text-base sm:text-lg"
+                  className="inline-flex items-center justify-center gap-2 border-2 border-[#1B4D3E] text-[#1B4D3E] hover:bg-[#1B4D3E] hover:text-white w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-full font-semibold shadow transition-all duration-200 text-base sm:text-lg"
                 >
                   Sell on Afrimercato
                 </Link>
@@ -626,6 +626,7 @@ export default function ClientLandingPage() {
             >
               African Online Store In the United Kingdom
             </motion.h2>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
             <motion.p
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -641,6 +642,7 @@ export default function ClientLandingPage() {
           {/* Meet Our Partners */}
           <div className="text-center mb-8">
             <h3 className="text-xl font-semibold text-gray-900 mb-2">Meet Our Founding Partners</h3>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
             <p className="text-gray-500 text-sm mb-8">The people behind Afrimercato</p>
 
             {/* Founding partner profiles */}
@@ -696,26 +698,36 @@ export default function ClientLandingPage() {
               ))}
             </div>
 
+            {/* Section separator before community role tabs */}
+            <div className="w-full my-10 border-t border-gray-100" />
+            <h3 className="text-center text-2xl font-bold text-[#1A1A1A] mb-3">
+              Join Our Growing Community
+            </h3>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
+            <p className="text-center text-gray-500 mb-10">
+              Choose your role and start your journey
+            </p>
+
             {/* Role tabs: Stores | Pickers | Riders | Vendors */}
-            <div className="grid grid-cols-4 gap-3 sm:gap-6 mb-8 max-w-xs sm:max-w-sm mx-auto">
+            <div className="grid grid-cols-4 gap-4 sm:gap-8 mb-8 max-w-sm sm:max-w-md mx-auto">
               {[
-                { id: 'stores',  label: 'Stores',  Icon: ShoppingBasket, gradient: 'from-[#065F46] via-[#059669] to-[#34D399]', shadow: 'shadow-emerald-300' },
-                { id: 'pickers', label: 'Pickers', Icon: Package,        gradient: 'from-[#B45309] via-[#D97706] to-[#FBBF24]', shadow: 'shadow-amber-300' },
-                { id: 'riders',  label: 'Riders',  Icon: Zap,            gradient: 'from-[#5B21B6] via-[#7C3AED] to-[#A78BFA]', shadow: 'shadow-violet-300' },
+                { id: 'stores',  label: 'Stores',  Icon: Store,          gradient: 'from-[#1B4D3E] to-[#2D6A4F]',               shadow: 'shadow-green-300' },
+                { id: 'pickers', label: 'Pickers', Icon: ShoppingBasket, gradient: 'from-[#E53E3E] to-[#C53030]',               shadow: 'shadow-red-300' },
+                { id: 'riders',  label: 'Riders',  Icon: Zap,            gradient: 'from-[#FFB800] to-[#FF8C00]',               shadow: 'shadow-amber-300' },
                 { id: 'vendors', label: 'Vendors', Icon: Briefcase,      gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]', shadow: 'shadow-red-300' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActivePartnerTab(tab.id)}
-                  className="flex flex-col items-center gap-1.5 group"
+                  className="flex flex-col items-center gap-2 group"
                 >
-                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl ${
-                    activePartnerTab === tab.id ? `ring-4 ring-[#FFB800] scale-110 shadow-xl ${tab.shadow}` : ''
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center shadow-md transition-all duration-200 group-hover:scale-110 group-hover:shadow-xl ${
+                    activePartnerTab === tab.id ? `ring-4 ring-[#FFB800] ring-offset-2 scale-110 shadow-xl ${tab.shadow}` : ''
                   }`}>
-                    <tab.Icon size={20} color="white" strokeWidth={1.8} />
+                    <tab.Icon size={28} color="white" strokeWidth={1.8} />
                   </div>
-                  <span className={`font-semibold text-[10px] sm:text-xs transition-colors leading-tight ${activePartnerTab === tab.id ? 'text-[#1B4D3E]' : 'text-gray-500'}`}>
+                  <span className={`font-semibold text-sm transition-colors leading-tight ${activePartnerTab === tab.id ? 'text-[#1A1A1A]' : 'text-gray-500'}`}>
                     {tab.label}
                   </span>
                 </button>
@@ -804,12 +816,13 @@ export default function ClientLandingPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-10 shadow-lg text-center"
+            className="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-10 shadow-lg text-center border-l-4 border-[#FFB800]"
           >
             <Globe size={32} className="text-[#1B4D3E] mx-auto mb-4" />
-            <h2 className="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-6">
-              Why Afrimercato Exists
+            <h2 className="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-3">
+              Born from an African Story
             </h2>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full mb-4" />
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -853,11 +866,12 @@ export default function ClientLandingPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-12"
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-4"
           >
             Who It's For
           </motion.h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full mb-10" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {[
               { Icon: Store, title: 'Stores', message: 'You control your business, your delivery, your costs.', gradient: 'from-[#1B4D3E] to-[#2D6A4F]', link: '/register?role=vendor' },
               { Icon: Bike, title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', gradient: 'from-[#FFB800] to-[#FF8C00]', link: '/register?role=rider' },
@@ -890,7 +904,7 @@ export default function ClientLandingPage() {
           ============================================ */}
       <section className="py-12 sm:py-20 px-4 sm:px-6 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22]">
         <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -974,7 +988,7 @@ export default function ClientLandingPage() {
                   <button
                     type="submit"
                     disabled={waitlistStatus === 'loading'}
-                    className="flex-shrink-0 bg-[#1B4D3E] hover:bg-[#0D2B22] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-full transition-all whitespace-nowrap text-sm"
+                    className="flex-shrink-0 w-full sm:w-auto bg-[#1B4D3E] hover:bg-[#0D2B22] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-full transition-all whitespace-nowrap text-sm"
                   >
                     {waitlistStatus === 'loading' ? 'Joining...' : 'Join Waitlist'}
                   </button>
@@ -1001,7 +1015,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           FOOTER
           ============================================ */}
-      <footer id="contact" className="bg-[#1a1a1a] text-white py-12">
+      <footer id="contact" className="bg-[#1a1a1a] text-white py-12 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             {/* Contact Info */}
@@ -1159,8 +1173,8 @@ function StoreCard({ store, index, navigate }) {
 function PartnerCTA({ type }) {
   const config = {
     pickers: {
-      Icon: Package,
-      gradient: 'from-[#B45309] via-[#D97706] to-[#FBBF24]',
+      Icon: ShoppingBasket,
+      gradient: 'from-[#E53E3E] to-[#C53030]',
       title: 'Become a Picker',
       desc: 'Help fulfil orders in local African stores near you. Flexible hours, fair pay, and a growing network of stores to work with.',
       link: '/register?role=picker',
@@ -1168,7 +1182,7 @@ function PartnerCTA({ type }) {
     },
     riders: {
       Icon: Zap,
-      gradient: 'from-[#5B21B6] via-[#7C3AED] to-[#A78BFA]',
+      gradient: 'from-[#FFB800] to-[#FF8C00]',
       title: 'Become a Rider',
       desc: 'Deliver authentic African groceries to customers in your city. Set your own hours and earn on every delivery.',
       link: '/register?role=rider',
@@ -1222,7 +1236,7 @@ function MobileNavLink({ to, onClick, children }) {
     <Link
       to={to}
       onClick={onClick}
-      className="block py-3 px-4 text-gray-700 font-medium hover:bg-gray-50 rounded-xl transition-colors"
+      className="block py-4 px-4 text-gray-700 font-medium hover:bg-gray-50 rounded-xl transition-colors border-b border-gray-100"
     >
       {children}
     </Link>
