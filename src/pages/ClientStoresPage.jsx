@@ -597,7 +597,7 @@ export default function ClientStoresPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-            <p>© 2024 Afrimercato. All rights reserved.</p>
+            <p>© 2026 Afrimercato. All rights reserved.</p>
           </div>
         </div>
       </footer>

@@ -1065,7 +1065,7 @@ export default function ClientLandingPage() {
 
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
             <p>© 2026 Afrimercato</p>
-            <p>Designed By Arbythecoder</p>
+            <p>Designed by Arbythecoder</p>
             <p>All Rights Reserved.</p>
           </div>
         </div>
