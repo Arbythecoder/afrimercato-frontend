@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors, joinWaitlist } from '../../services/api'
-import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck } from 'lucide-react'
+import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck, Globe } from 'lucide-react'
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -233,54 +233,12 @@ export default function ClientLandingPage() {
               <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
                 Log in
               </Link>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowJoinDropdown(v => !v)}
-                  onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
-
-                >
-                  <span className="hidden sm:inline">Join</span>
-                  <span className="sm:hidden">Join</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {showJoinDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    <Link
-                      to="/register?role=customer"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors"
-                    >
-                      <ShoppingBag size={18} className="text-[#1B4D3E]" />
-                      <div>
-                        <div className="font-semibold text-sm">Customer</div>
-                        <div className="text-xs text-gray-400">Shop & order</div>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/register?role=vendor"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-t border-gray-50"
-                    >
-                      <Store size={18} className="text-[#1B4D3E]" />
-                      <div>
-                        <div className="font-semibold text-sm">Vendor</div>
-                        <div className="text-xs text-gray-400">Sell your products</div>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/register?role=rider"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-t border-gray-50"
-                    >
-                      <Bike size={18} className="text-[#1B4D3E]" />
-                      <div>
-                        <div className="font-semibold text-sm">Rider</div>
-                        <div className="text-xs text-gray-400">Deliver & earn</div>
-                      </div>
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <Link
+                to="/register"
+                className="flex items-center gap-1 bg-[#1B4D3E] text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-[#0D2B22] transition-all"
+              >
+                Join
+              </Link>
 
               {/* Mobile Menu */}
               <button
@@ -425,17 +383,6 @@ export default function ClientLandingPage() {
                 </motion.button>
               </motion.div>
 
-              {/* Trust Indicator — static, never moves */}
-              <div className="mt-5 flex items-center gap-4 shrink-0">
-                <div className="flex -space-x-3">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1B4D3E] border-[3px] border-[#FFB800] flex items-center justify-center text-white text-xs font-bold">A</div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#FFB800] border-[3px] border-[#FFB800] flex items-center justify-center text-white text-xs font-bold">B</div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#E53E3E] border-[3px] border-[#FFB800] flex items-center justify-center text-white text-xs font-bold">C</div>
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-[3px] border-[#FFB800] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
-                    +4K
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right — Hero Image */}
@@ -696,23 +643,26 @@ export default function ClientLandingPage() {
             <h3 className="text-xl font-semibold text-gray-900 mb-4">Meet Our Partners</h3>
 
             {/* Tabs: Stores | Pickers | Riders */}
-            <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full mb-6">
+            <div className="flex items-center justify-center gap-10 mb-6">
               {[
-                { id: 'stores', label: 'Stores' },
-                { id: 'pickers', label: 'Pickers' },
-                { id: 'riders', label: 'Riders' },
+                { id: 'stores', label: 'Stores', Icon: Store, gradient: 'from-[#1B4D3E] to-[#2D6A4F]' },
+                { id: 'pickers', label: 'Pickers', Icon: Package, gradient: 'from-[#FFB800] to-[#FF8C00]' },
+                { id: 'riders', label: 'Riders', Icon: Bike, gradient: 'from-[#1B4D3E] to-[#0D2B22]' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActivePartnerTab(tab.id)}
-                  className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
-                    activePartnerTab === tab.id
-                      ? 'bg-[#1B4D3E] text-white shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className="flex flex-col items-center gap-2 hover:scale-110 transition-all duration-200"
                 >
-                  {tab.label}
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center ${
+                    activePartnerTab === tab.id ? 'ring-4 ring-[#FFB800]' : ''
+                  }`}>
+                    <tab.Icon size={28} color="white" />
+                  </div>
+                  <span className={`font-semibold text-sm ${activePartnerTab === tab.id ? 'text-[#1B4D3E]' : 'text-gray-600'}`}>
+                    {tab.label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -794,46 +744,47 @@ export default function ClientLandingPage() {
           WHY AFRIMERCATO EXISTS
           ============================================ */}
       <section className="py-16 sm:py-20 bg-[#FDF8F0] dark:bg-gray-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6"
-          >
-            Why Afrimercato Exists
-          </motion.h2>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.1 }}
-            className="text-gray-600 text-lg leading-relaxed space-y-4"
+            className="max-w-2xl mx-auto bg-white rounded-3xl p-10 shadow-lg text-center"
           >
-            <p>
-              Afrimercato was born from a simple but powerful observation. A Nigerian living abroad
-              noticed how difficult it was for people outside Africa to reliably access authentic African goods.
-            </p>
-            <p>
-              Local stores struggled with visibility. Customers struggled with trust and convenience.
-              Delivery systems were fragmented, expensive, or unfair. Yet the demand was clear.
-              And the businesses were ready — they just lacked the right digital bridge.
-            </p>
-            <p className="text-[#00897B] font-semibold text-xl">Afrimercato is that bridge.</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8"
-          >
-            <Link to="/about" className="inline-flex items-center gap-2 text-[#00897B] font-semibold hover:underline">
-              Read our full story
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            <Globe size={32} className="text-[#1B4D3E] mx-auto mb-4" />
+            <h2 className="text-3xl font-black text-center text-gray-900 mb-6">
+              Why Afrimercato Exists
+            </h2>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.1 }}
+              className="text-gray-600 text-center leading-relaxed space-y-4"
+            >
+              <p>
+                Afrimercato was born from a simple but powerful observation. A Nigerian living abroad
+                noticed how difficult it was for people outside Africa to reliably access authentic African goods.
+              </p>
+              <p>
+                Local stores struggled with visibility. Customers struggled with trust and convenience.
+                Delivery systems were fragmented, expensive, or unfair. Yet the demand was clear.
+                And the businesses were ready. They just lacked the right digital bridge.
+              </p>
+              <p className="text-[#1B4D3E] font-semibold text-xl">Afrimercato is that bridge.</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.3 }}
+              className="mt-8"
+            >
+              <Link to="/about" className="inline-flex items-center gap-2 text-[#1B4D3E] font-semibold hover:underline">
+                Read our full story
+                <ArrowRight size={16} />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -853,9 +804,9 @@ export default function ClientLandingPage() {
           </motion.h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { Icon: Store, title: 'Stores', message: 'You control your business, your delivery, your costs.', gradient: 'from-[#1B4D3E] to-[#2D6A4F]' },
-              { Icon: Bike, title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', gradient: 'from-[#FFB800] to-[#FF8C00]' },
-              { Icon: ShoppingBag, title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', gradient: 'from-[#1B4D3E] to-[#0D2B22]' }
+              { Icon: Store, title: 'Stores', message: 'You control your business, your delivery, your costs.', gradient: 'from-[#1B4D3E] to-[#2D6A4F]', link: '/register?role=vendor' },
+              { Icon: Bike, title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', gradient: 'from-[#FFB800] to-[#FF8C00]', link: '/register?role=rider' },
+              { Icon: ShoppingBag, title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', gradient: 'from-[#1B4D3E] to-[#0D2B22]', link: '/register?role=customer' }
             ].map((card, index) => (
               <motion.div
                 key={card.title}
@@ -863,15 +814,16 @@ export default function ClientLandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: 0.15 + index * 0.15 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border border-gray-100 overflow-hidden p-8 flex flex-col items-center text-center"
               >
-                <div className={`bg-gradient-to-br ${card.gradient} p-8 flex items-center justify-center`}>
-                  <card.Icon size={48} color="white" />
+                <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${card.gradient} flex items-center justify-center mb-6`}>
+                  <card.Icon size={32} color="white" />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{card.message}</p>
-                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed mb-4">{card.message}</p>
+                <Link to={card.link} className="text-[#1B4D3E] text-sm font-semibold hover:underline flex items-center gap-1 mt-auto">
+                  Learn more <ArrowRight size={14} />
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -881,18 +833,31 @@ export default function ClientLandingPage() {
       {/* ============================================
           VISION & MISSION
           ============================================ */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
-              <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
-                To be the digital home where African and local businesses thrive — connecting stores, customers, and communities worldwide.
+      <section className="py-20 px-6 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22]">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid md:grid-cols-2 gap-8">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              className="bg-white rounded-2xl p-8 shadow-md border-l-4 border-[#FFB800]"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-3">Our Vision</p>
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">The Digital Home for African Commerce</h3>
+              <p className="text-gray-600 leading-relaxed">
+                To be the digital home where African and local businesses thrive, connecting stores, customers, and communities worldwide.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ delay: 0.15 }}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
-              <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.15 }}
+              className="bg-white rounded-2xl p-8 shadow-md border-l-4 border-[#FFB800]"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-3">Our Mission</p>
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Empowering Every Merchant</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Afrimercato empowers local and international merchants to sell, fulfil, and grow through a fair, flexible, and trusted marketplace.
               </p>
             </motion.div>
@@ -914,30 +879,24 @@ export default function ClientLandingPage() {
       {/* ============================================
           WAITLIST
           ============================================ */}
-      <section className="py-20 sm:py-24 bg-[#0a2e2a] relative overflow-hidden">
-        {/* decorative blobs */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00897B]/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 text-center">
+      <section className="py-8 px-4 bg-[#0a2e2a]">
+        <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.5 }}
+            className="bg-[#FFB800] rounded-3xl p-12 text-center"
           >
-            {/* eyebrow */}
-            <span className="inline-block bg-[#00897B]/30 text-[#4db6ac] text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+            <span className="inline-block bg-[#1B4D3E]/20 text-[#1B4D3E] text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
               Coming Soon
             </span>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-              Be the first to know<br className="hidden sm:block" /> when we go live
+            <h2 className="text-3xl font-black text-[#1A1A1A] leading-tight mb-3">
+              Be the first to know when we go live
             </h2>
-            <p className="text-white/60 text-base sm:text-lg mb-10">
-              Join thousands of shoppers and vendors waiting for Afrimercato to launch across the UK.
+            <p className="text-[#1B4D3E] font-medium mb-8">
+              Join shoppers and vendors waiting for Afrimercato to launch across the UK.
             </p>
 
             {waitlistStatus === 'success' ? (
@@ -946,46 +905,48 @@ export default function ClientLandingPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center gap-3"
               >
-                <div className="w-16 h-16 rounded-full bg-[#00897B]/20 flex items-center justify-center mb-2">
-                  <svg className="w-8 h-8 text-[#4db6ac]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <div className="w-16 h-16 rounded-full bg-[#1B4D3E]/20 flex items-center justify-center mb-2">
+                  <svg className="w-8 h-8 text-[#1B4D3E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white font-semibold text-lg">{waitlistMessage}</p>
-                <p className="text-white/50 text-sm">Keep an eye on your inbox.</p>
+                <p className="text-[#1A1A1A] font-semibold text-lg">{waitlistMessage}</p>
+                <p className="text-[#1B4D3E]/70 text-sm">Keep an eye on your inbox.</p>
               </motion.div>
             ) : (
               <form
                 onSubmit={handleWaitlistSubmit}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-lg mx-auto"
+                className="max-w-lg mx-auto"
               >
-                <input
-                  type="email"
-                  required
-                  value={waitlistEmail}
-                  onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus(''); setWaitlistMessage('') }}
-                  placeholder="Enter your email address"
-                  className="flex-1 px-5 py-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-transparent transition text-sm sm:text-base"
-                />
-                <button
-                  type="submit"
-                  disabled={waitlistStatus === 'loading'}
-                  className="flex-shrink-0 bg-[#1B4D3E] hover:bg-[#0D2B22] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-7 py-4 rounded-full shadow-lg transition-all duration-200 text-sm sm:text-base whitespace-nowrap"
-                >
-                  {waitlistStatus === 'loading' ? 'Joining…' : 'Join Waitlist'}
-                </button>
+                <div className="flex items-center gap-2 bg-white rounded-full p-2 shadow-xl">
+                  <input
+                    type="email"
+                    required
+                    value={waitlistEmail}
+                    onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus(''); setWaitlistMessage('') }}
+                    placeholder="Enter your email address"
+                    className="flex-1 bg-transparent px-4 py-2 border-none outline-none text-gray-900 placeholder-gray-400 text-sm sm:text-base"
+                  />
+                  <button
+                    type="submit"
+                    disabled={waitlistStatus === 'loading'}
+                    className="flex-shrink-0 bg-[#1B4D3E] hover:bg-[#0D2B22] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-full transition-all whitespace-nowrap text-sm"
+                  >
+                    {waitlistStatus === 'loading' ? 'Joining...' : 'Join Waitlist'}
+                  </button>
+                </div>
               </form>
             )}
 
             {waitlistStatus === 'duplicate' && (
-              <p className="mt-3 text-green-400 text-sm">{waitlistMessage}</p>
+              <p className="mt-3 text-[#1B4D3E] text-sm">{waitlistMessage}</p>
             )}
 
             {waitlistStatus === 'error' && (
-              <p className="mt-3 text-red-400 text-sm">{waitlistMessage}</p>
+              <p className="mt-3 text-red-700 text-sm">{waitlistMessage}</p>
             )}
 
-            <p className="mt-6 text-white/30 text-xs">No spam. We'll only email you when we launch.</p>
+            <p className="mt-6 text-[#1B4D3E]/60 text-xs">No spam. We'll only email you when we launch.</p>
           </motion.div>
         </div>
       </section>
