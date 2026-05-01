@@ -6,7 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors, joinWaitlist } from '../../services/api'
-import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck, Globe } from 'lucide-react'
+import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck, Globe, Zap, Briefcase, ShoppingBasket } from 'lucide-react'
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -615,7 +615,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           STORE MARKETPLACE SECTION
           ============================================ */}
-      <section className="bg-white dark:bg-gray-800 py-16 sm:py-20">
+      <section className="bg-white dark:bg-gray-800 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <motion.h2
@@ -640,27 +640,82 @@ export default function ClientLandingPage() {
 
           {/* Meet Our Partners */}
           <div className="text-center mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Meet Our Partners</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Meet Our Founding Partners</h3>
+            <p className="text-gray-500 text-sm mb-8">The people behind Afrimercato</p>
 
-            {/* Tabs: Stores | Pickers | Riders */}
-            <div className="flex items-center justify-center gap-10 mb-6">
+            {/* Founding partner profiles */}
+            <div className="flex items-center justify-center gap-6 sm:gap-12 mb-8 flex-wrap">
               {[
-                { id: 'stores', label: 'Stores', Icon: Store, gradient: 'from-[#1B4D3E] to-[#2D6A4F]' },
-                { id: 'pickers', label: 'Pickers', Icon: Package, gradient: 'from-[#FFB800] to-[#FF8C00]' },
-                { id: 'riders', label: 'Riders', Icon: Bike, gradient: 'from-[#1B4D3E] to-[#0D2B22]' },
+                {
+                  id: 'stores',
+                  name: 'Efezino',
+                  role: 'Founder & CEO',
+                  img: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=300&q=80',
+                },
+                {
+                  id: 'pickers',
+                  name: 'Chukwudi Obi',
+                  role: 'Co-Founder, Operations',
+                  img: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=300&q=80',
+                },
+                {
+                  id: 'riders',
+                  name: 'Emeka Adeyemi',
+                  role: 'Co-Founder, Technology',
+                  img: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=300&q=80',
+                },
+              ].map((partner) => (
+                <button
+                  key={partner.id}
+                  type="button"
+                  onClick={() => setActivePartnerTab(partner.id)}
+                  className="flex flex-col items-center gap-3 group"
+                >
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-110 ${
+                    activePartnerTab === partner.id
+                      ? 'border-[#FFB800] scale-105 shadow-xl'
+                      : 'border-white'
+                  }`}>
+                    <img
+                      src={partner.img}
+                      alt={partner.name}
+                      className="w-full h-full object-cover object-top"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&q=80'
+                        e.target.onerror = null
+                      }}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className={`font-bold text-sm ${activePartnerTab === partner.id ? 'text-[#1B4D3E]' : 'text-gray-800'}`}>
+                      {partner.name}
+                    </p>
+                    <p className="text-xs text-gray-500">{partner.role}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Role tabs: Stores | Pickers | Riders | Vendors */}
+            <div className="grid grid-cols-4 gap-3 sm:gap-6 mb-8 max-w-xs sm:max-w-sm mx-auto">
+              {[
+                { id: 'stores',  label: 'Stores',  Icon: ShoppingBasket, gradient: 'from-[#065F46] via-[#059669] to-[#34D399]', shadow: 'shadow-emerald-300' },
+                { id: 'pickers', label: 'Pickers', Icon: Package,        gradient: 'from-[#B45309] via-[#D97706] to-[#FBBF24]', shadow: 'shadow-amber-300' },
+                { id: 'riders',  label: 'Riders',  Icon: Zap,            gradient: 'from-[#5B21B6] via-[#7C3AED] to-[#A78BFA]', shadow: 'shadow-violet-300' },
+                { id: 'vendors', label: 'Vendors', Icon: Briefcase,      gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]', shadow: 'shadow-red-300' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActivePartnerTab(tab.id)}
-                  className="flex flex-col items-center gap-2 hover:scale-110 transition-all duration-200"
+                  className="flex flex-col items-center gap-1.5 group"
                 >
-                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center ${
-                    activePartnerTab === tab.id ? 'ring-4 ring-[#FFB800]' : ''
+                  <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center shadow-md transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl ${
+                    activePartnerTab === tab.id ? `ring-4 ring-[#FFB800] scale-110 shadow-xl ${tab.shadow}` : ''
                   }`}>
-                    <tab.Icon size={28} color="white" />
+                    <tab.Icon size={20} color="white" strokeWidth={1.8} />
                   </div>
-                  <span className={`font-semibold text-sm ${activePartnerTab === tab.id ? 'text-[#1B4D3E]' : 'text-gray-600'}`}>
+                  <span className={`font-semibold text-[10px] sm:text-xs transition-colors leading-tight ${activePartnerTab === tab.id ? 'text-[#1B4D3E]' : 'text-gray-500'}`}>
                     {tab.label}
                   </span>
                 </button>
@@ -729,7 +784,7 @@ export default function ClientLandingPage() {
           <div className="text-center mt-10">
             <Link
               to="/stores"
-              className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-lg"
+              className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base sm:text-lg"
             >
               View All Stores
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -749,10 +804,10 @@ export default function ClientLandingPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="max-w-2xl mx-auto bg-white rounded-3xl p-10 shadow-lg text-center"
+            className="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-10 shadow-lg text-center"
           >
             <Globe size={32} className="text-[#1B4D3E] mx-auto mb-4" />
-            <h2 className="text-3xl font-black text-center text-gray-900 mb-6">
+            <h2 className="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-6">
               Why Afrimercato Exists
             </h2>
             <motion.div
@@ -814,7 +869,7 @@ export default function ClientLandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: 0.15 + index * 0.15 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 border border-gray-100 overflow-hidden p-8 flex flex-col items-center text-center"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden p-6 sm:p-8 flex flex-col items-center text-center"
               >
                 <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${card.gradient} flex items-center justify-center mb-6`}>
                   <card.Icon size={32} color="white" />
@@ -833,14 +888,14 @@ export default function ClientLandingPage() {
       {/* ============================================
           VISION & MISSION
           ============================================ */}
-      <section className="py-20 px-6 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22]">
+      <section className="py-12 sm:py-20 px-4 sm:px-6 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22]">
         <div className="max-w-5xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.2 }}
-              className="bg-white rounded-2xl p-8 shadow-md border-l-4 border-[#FFB800]"
+              className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border-l-4 border-[#FFB800]"
             >
               <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-3">Our Vision</p>
               <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">The Digital Home for African Commerce</h3>
@@ -853,7 +908,7 @@ export default function ClientLandingPage() {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true, amount: 0.2 }}
               transition={{ delay: 0.15 }}
-              className="bg-white rounded-2xl p-8 shadow-md border-l-4 border-[#FFB800]"
+              className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border-l-4 border-[#FFB800]"
             >
               <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-3">Our Mission</p>
               <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Empowering Every Merchant</h3>
@@ -862,17 +917,6 @@ export default function ClientLandingPage() {
               </p>
             </motion.div>
           </div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.3 }}
-            className="mt-10 pt-8 border-t border-white/20 text-center"
-          >
-            <p className="text-white/80 text-sm">
-              We are currently in a guided testing phase to ensure speed, reliability, and strong foundations before scaling to new regions.
-            </p>
-          </motion.div>
         </div>
       </section>
 
@@ -886,13 +930,13 @@ export default function ClientLandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.5 }}
-            className="bg-[#FFB800] rounded-3xl p-12 text-center"
+            className="bg-[#FFB800] rounded-3xl p-6 sm:p-10 md:p-12 text-center"
           >
             <span className="inline-block bg-[#1B4D3E]/20 text-[#1B4D3E] text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
               Coming Soon
             </span>
 
-            <h2 className="text-3xl font-black text-[#1A1A1A] leading-tight mb-3">
+            <h2 className="text-2xl sm:text-3xl font-black text-[#1A1A1A] leading-tight mb-3">
               Be the first to know when we go live
             </h2>
             <p className="text-[#1B4D3E] font-medium mb-8">
@@ -918,14 +962,14 @@ export default function ClientLandingPage() {
                 onSubmit={handleWaitlistSubmit}
                 className="max-w-lg mx-auto"
               >
-                <div className="flex items-center gap-2 bg-white rounded-full p-2 shadow-xl">
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2 sm:bg-white sm:rounded-full sm:p-2 sm:shadow-xl">
                   <input
                     type="email"
                     required
                     value={waitlistEmail}
                     onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus(''); setWaitlistMessage('') }}
                     placeholder="Enter your email address"
-                    className="flex-1 bg-transparent px-4 py-2 border-none outline-none text-gray-900 placeholder-gray-400 text-sm sm:text-base"
+                    className="flex-1 bg-white sm:bg-transparent rounded-full sm:rounded-none px-5 py-4 sm:px-4 sm:py-2 border-none outline-none text-gray-900 placeholder-gray-400 text-sm shadow-lg sm:shadow-none"
                   />
                   <button
                     type="submit"
@@ -946,7 +990,10 @@ export default function ClientLandingPage() {
               <p className="mt-3 text-red-700 text-sm">{waitlistMessage}</p>
             )}
 
-            <p className="mt-6 text-[#1B4D3E]/60 text-xs">No spam. We'll only email you when we launch.</p>
+            <p className="mt-6 text-[#1B4D3E]/80 text-sm font-medium">
+              We are currently in a guided testing phase to ensure speed, reliability, and strong foundations before scaling to new regions.
+            </p>
+            <p className="mt-3 text-[#1B4D3E]/60 text-xs">No spam. We'll only email you when we launch.</p>
           </motion.div>
         </div>
       </section>
@@ -1004,7 +1051,7 @@ export default function ClientLandingPage() {
 
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
             <p>© 2026 Afrimercato</p>
-            <p>Designed By thedesignpygi</p>
+            <p>Designed By Arbythecoder</p>
             <p>All Rights Reserved.</p>
           </div>
         </div>
@@ -1113,37 +1160,44 @@ function PartnerCTA({ type }) {
   const config = {
     pickers: {
       Icon: Package,
-      gradient: 'from-[#FFB800] to-[#FF8C00]',
+      gradient: 'from-[#B45309] via-[#D97706] to-[#FBBF24]',
       title: 'Become a Picker',
       desc: 'Help fulfil orders in local African stores near you. Flexible hours, fair pay, and a growing network of stores to work with.',
       link: '/register?role=picker',
       cta: 'Sign Up as Picker'
     },
     riders: {
-      Icon: Bike,
-      gradient: 'from-[#1B4D3E] to-[#2D6A4F]',
+      Icon: Zap,
+      gradient: 'from-[#5B21B6] via-[#7C3AED] to-[#A78BFA]',
       title: 'Become a Rider',
       desc: 'Deliver authentic African groceries to customers in your city. Set your own hours and earn on every delivery.',
       link: '/register?role=rider',
       cta: 'Sign Up as Rider'
+    },
+    vendors: {
+      Icon: Briefcase,
+      gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]',
+      title: 'Become a Vendor',
+      desc: 'Open your African store online. No staff needed. Reach thousands of customers across the UK with zero upfront cost.',
+      link: '/register?role=vendor',
+      cta: 'Sign Up as Vendor'
     }
   }
   const c = config[type]
+  if (!c) return null
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center mb-6`}>
-        <c.Icon size={40} color="white" />
+    <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center px-4">
+      <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center mb-5 shadow-lg`}>
+        <c.Icon size={32} color="white" />
       </div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-3">{c.title}</h3>
-      <p className="text-gray-600 max-w-md mb-8">{c.desc}</p>
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">{c.title}</h3>
+      <p className="text-gray-600 max-w-sm sm:max-w-md mb-8 text-sm sm:text-base">{c.desc}</p>
       <Link
         to={c.link}
-        className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-lg"
+        className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base sm:text-lg"
       >
         {c.cta}
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-        </svg>
+        <ArrowRight size={18} />
       </Link>
     </div>
   )
