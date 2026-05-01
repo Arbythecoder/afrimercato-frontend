@@ -51,7 +51,7 @@ function CustomerDashboard() {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
       preparing: 'bg-orange-100 text-orange-800',
-      'out-for-delivery': 'bg-purple-100 text-purple-800',
+      'out-for-delivery': 'bg-[#FDF8F0] text-[#1B4D3E]',
       delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800'
     }
@@ -78,7 +78,7 @@ function CustomerDashboard() {
       title: 'Track Orders',
       description: 'Check delivery status',
       action: () => navigate('/orders'),
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-[#1B4D3E] to-[#0D2B22]'
     },
     {
       icon: '❤️',
@@ -160,7 +160,7 @@ function CustomerDashboard() {
 
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
+              <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
                 ⭐
               </div>
               <div className="text-right">
@@ -169,7 +169,7 @@ function CustomerDashboard() {
               </div>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-400 to-purple-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+              <div className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] h-2 rounded-full" style={{ width: '60%' }}></div>
             </div>
           </div>
         </div>

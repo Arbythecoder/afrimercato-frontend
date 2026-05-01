@@ -9,9 +9,9 @@ const STATUS_COLORS = {
   delivered:        'bg-emerald-100 text-emerald-700',
   pending:          'bg-amber-100 text-amber-700',
   confirmed:        'bg-blue-100 text-blue-700',
-  preparing:        'bg-purple-100 text-purple-700',
+  preparing:        'bg-[#FDF8F0] text-[#1B4D3E]',
   ready:            'bg-cyan-100 text-cyan-700',
-  out_for_delivery: 'bg-indigo-100 text-indigo-700',
+  out_for_delivery: 'bg-amber-50 text-[#1B4D3E]',
   cancelled:        'bg-red-100 text-red-600',
 }
 

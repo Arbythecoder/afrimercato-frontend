@@ -7,10 +7,10 @@ import useVendorStore from '../../stores/useVendorStore'
 const statusColors = {
   pending: 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900',
   confirmed: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
-  assigned_picker: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white',
-  picking: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white',
-  picked: 'bg-gradient-to-r from-purple-700 to-purple-800 text-white',
-  packing: 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white',
+  assigned_picker: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
+  picking: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
+  picked: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
+  packing: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
   ready_for_pickup: 'bg-gradient-to-r from-teal-500 to-teal-600 text-white',
   preparing: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white',
   ready: 'bg-gradient-to-r from-green-600 to-green-700 text-white',
@@ -247,7 +247,13 @@ function Orders() {
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${statusColors[order.status]}`}>
+                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                      order.status === 'pending' ? 'bg-amber-100 text-amber-800' :
+                      order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
+                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
+                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
+                      statusColors[order.status] || 'bg-gray-100 text-gray-800'
+                    }`}>
                       {statusNames[order.status]}
                     </span>
                   </td>

@@ -4,10 +4,10 @@ function Subscription() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Coming Soon Notice */}
-      <div className="bg-gradient-to-r from-blue-50 to-purple-50 border-2 border-blue-200 rounded-2xl p-8 mb-8 shadow-lg">
+      <div className="bg-gradient-to-r from-blue-50 to-[#FDF8F0] border-2 border-blue-200 rounded-2xl p-8 mb-8 shadow-lg">
         <div className="flex items-start gap-4">
           <div className="flex-shrink-0">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-3xl animate-pulse">
+            <div className="w-16 h-16 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-full flex items-center justify-center text-3xl animate-pulse">
               🚀
             </div>
           </div>
@@ -56,7 +56,7 @@ function Subscription() {
         </div>
 
         <div className="bg-white rounded-xl p-6 shadow-lg border-2 border-gray-100">
-          <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-3xl mb-4 mx-auto">
+          <div className="w-16 h-16 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-full flex items-center justify-center text-3xl mb-4 mx-auto">
             🎨
           </div>
           <h3 className="text-xl font-bold text-center text-afri-gray-900 mb-2">Custom Branding</h3>
