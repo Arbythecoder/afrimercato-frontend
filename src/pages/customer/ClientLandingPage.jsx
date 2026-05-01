@@ -6,6 +6,7 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors, joinWaitlist } from '../../services/api'
+import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck } from 'lucide-react'
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -237,7 +238,7 @@ export default function ClientLandingPage() {
                   type="button"
                   onClick={() => setShowJoinDropdown(v => !v)}
                   onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
-                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
+
                 >
                   <span className="hidden sm:inline">Join</span>
                   <span className="sm:hidden">Join</span>
@@ -249,9 +250,9 @@ export default function ClientLandingPage() {
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
                     <Link
                       to="/register?role=customer"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors"
                     >
-                      <span className="text-lg">🛒</span>
+                      <ShoppingBag size={18} className="text-[#1B4D3E]" />
                       <div>
                         <div className="font-semibold text-sm">Customer</div>
                         <div className="text-xs text-gray-400">Shop & order</div>
@@ -259,9 +260,9 @@ export default function ClientLandingPage() {
                     </Link>
                     <Link
                       to="/register?role=vendor"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-t border-gray-50"
                     >
-                      <span className="text-lg">🏪</span>
+                      <Store size={18} className="text-[#1B4D3E]" />
                       <div>
                         <div className="font-semibold text-sm">Vendor</div>
                         <div className="text-xs text-gray-400">Sell your products</div>
@@ -269,9 +270,9 @@ export default function ClientLandingPage() {
                     </Link>
                     <Link
                       to="/register?role=rider"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-t border-gray-50"
                     >
-                      <span className="text-lg">🚴</span>
+                      <Bike size={18} className="text-[#1B4D3E]" />
                       <div>
                         <div className="font-semibold text-sm">Rider</div>
                         <div className="text-xs text-gray-400">Deliver & earn</div>
@@ -308,16 +309,16 @@ export default function ClientLandingPage() {
                   <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About us</MobileNavLink>
                   <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
                   <div className="pt-3 border-t space-y-1">
-                    <Link to="/register?role=customer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🛒</span><span className="font-semibold text-sm">Join as Customer</span>
+                    <Link to="/register?role=customer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                      <ShoppingBag size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Customer</span>
                     </Link>
-                    <Link to="/register?role=vendor" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🏪</span><span className="font-semibold text-sm">Join as Vendor</span>
+                    <Link to="/register?role=vendor" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                      <Store size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Vendor</span>
                     </Link>
-                    <Link to="/register?role=rider" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🚴</span><span className="font-semibold text-sm">Join as Rider</span>
+                    <Link to="/register?role=rider" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors" onClick={() => setMobileMenuOpen(false)}>
+                      <Bike size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Rider</span>
                     </Link>
-                    <Link to="/login" className="block py-3 text-center text-[#00897B] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/login" className="block py-3 text-center text-[#1B4D3E] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
                       Log in
                     </Link>
                   </div>
@@ -384,7 +385,7 @@ export default function ClientLandingPage() {
               >
                 <Link
                   to="/stores"
-                  className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
+                  className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-xl transition-all duration-200 text-base sm:text-lg"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -394,7 +395,7 @@ export default function ClientLandingPage() {
 
                 <Link
                   to="/register?role=vendor"
-                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-semibold shadow transition-all text-base sm:text-lg"
+                  className="inline-flex items-center gap-2 border-2 border-[#1B4D3E] text-[#1B4D3E] hover:bg-[#1B4D3E] hover:text-white px-6 sm:px-7 py-3.5 sm:py-4 rounded-full font-semibold shadow transition-all duration-200 text-base sm:text-lg"
                 >
                   Sell on Afrimercato
                 </Link>
@@ -427,12 +428,10 @@ export default function ClientLandingPage() {
               {/* Trust Indicator — static, never moves */}
               <div className="mt-5 flex items-center gap-4 shrink-0">
                 <div className="flex -space-x-3">
-                  {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
-                    <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">
-                      {emoji}
-                    </div>
-                  ))}
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-[3px] border-[#F5A623] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#1B4D3E] border-[3px] border-[#FFB800] flex items-center justify-center text-white text-xs font-bold">A</div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#FFB800] border-[3px] border-[#FFB800] flex items-center justify-center text-white text-xs font-bold">B</div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#E53E3E] border-[3px] border-[#FFB800] flex items-center justify-center text-white text-xs font-bold">C</div>
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-[3px] border-[#FFB800] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
                     +4K
                   </div>
                 </div>
@@ -483,7 +482,7 @@ export default function ClientLandingPage() {
                   className="hidden md:block absolute bottom-20 right-0 lg:-right-4 bg-white rounded-2xl p-4 shadow-xl z-20"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🚚</div>
+                    <div className="w-12 h-12 bg-[#FFB800]/20 rounded-xl flex items-center justify-center"><Truck size={24} className="text-[#FFB800]" /></div>
                     <div>
                       <p className="font-bold text-gray-900">Fast Delivery</p>
                       <p className="text-sm text-gray-600">20-30 minutes</p>
@@ -630,7 +629,7 @@ export default function ClientLandingPage() {
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-full font-bold shadow-lg transition-all text-base whitespace-nowrap"
+                  className="bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base whitespace-nowrap"
                 >
                   Find Store
                 </motion.button>
@@ -709,7 +708,7 @@ export default function ClientLandingPage() {
                   onClick={() => setActivePartnerTab(tab.id)}
                   className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
                     activePartnerTab === tab.id
-                      ? 'bg-[#00897B] text-white shadow-sm'
+                      ? 'bg-[#1B4D3E] text-white shadow-sm'
                       : 'text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -732,7 +731,7 @@ export default function ClientLandingPage() {
                     onClick={() => setActiveFilter(f.id)}
                     className={`font-medium pb-1 transition-colors ${
                       activeFilter === f.id
-                        ? 'text-[#00897B] border-b-2 border-[#00897B]'
+                        ? 'text-[#1B4D3E] border-b-2 border-[#1B4D3E]'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -741,7 +740,7 @@ export default function ClientLandingPage() {
                 ))}
                 <Link
                   to="/partner"
-                  className="flex items-center gap-2 px-4 py-2 border border-[#00897B] text-[#00897B] rounded-full font-medium text-sm hover:bg-[#00897B] hover:text-white transition-all"
+                  className="flex items-center gap-2 px-4 py-2 border border-[#1B4D3E] text-[#1B4D3E] rounded-full font-medium text-sm hover:bg-[#1B4D3E] hover:text-white transition-all duration-200"
                 >
                   + Onboard your store
                 </Link>
@@ -749,7 +748,7 @@ export default function ClientLandingPage() {
             )}
 
             <div className="text-right mb-4">
-              <Link to="/stores" className="text-[#00897B] font-medium hover:underline">
+              <Link to="/stores" className="text-[#1B4D3E] font-medium hover:underline">
                 See All Stores →
               </Link>
             </div>
@@ -780,7 +779,7 @@ export default function ClientLandingPage() {
           <div className="text-center mt-10">
             <Link
               to="/stores"
-              className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
+              className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-lg"
             >
               View All Stores
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -794,7 +793,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           WHY AFRIMERCATO EXISTS
           ============================================ */}
-      <section className="py-16 sm:py-20 bg-white dark:bg-gray-800">
+      <section className="py-16 sm:py-20 bg-[#FDF8F0] dark:bg-gray-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -854,9 +853,9 @@ export default function ClientLandingPage() {
           </motion.h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {[
-              { icon: '🏪', title: 'Stores', message: 'You control your business, your delivery, your costs.', color: 'from-[#00897B] to-[#00695C]' },
-              { icon: '🚴', title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', color: 'from-[#F5A623] to-[#FF9800]' },
-              { icon: '🛒', title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', color: 'from-[#4285F4] to-[#1a73e8]' }
+              { Icon: Store, title: 'Stores', message: 'You control your business, your delivery, your costs.', gradient: 'from-[#1B4D3E] to-[#2D6A4F]' },
+              { Icon: Bike, title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', gradient: 'from-[#FFB800] to-[#FF8C00]' },
+              { Icon: ShoppingBag, title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', gradient: 'from-[#1B4D3E] to-[#0D2B22]' }
             ].map((card, index) => (
               <motion.div
                 key={card.title}
@@ -866,8 +865,8 @@ export default function ClientLandingPage() {
                 transition={{ delay: 0.15 + index * 0.15 }}
                 className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
               >
-                <div className={`bg-gradient-to-r ${card.color} p-6`}>
-                  <span className="text-4xl">{card.icon}</span>
+                <div className={`bg-gradient-to-br ${card.gradient} p-8 flex items-center justify-center`}>
+                  <card.Icon size={48} color="white" />
                 </div>
                 <div className="p-6">
                   <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
@@ -882,7 +881,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           VISION & MISSION
           ============================================ */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
+      <section className="py-16 sm:py-20 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] text-white">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-12">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }}>
@@ -971,7 +970,7 @@ export default function ClientLandingPage() {
                 <button
                   type="submit"
                   disabled={waitlistStatus === 'loading'}
-                  className="flex-shrink-0 bg-[#00897B] hover:bg-[#00695C] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-7 py-4 rounded-xl shadow-lg transition-all text-sm sm:text-base whitespace-nowrap"
+                  className="flex-shrink-0 bg-[#1B4D3E] hover:bg-[#0D2B22] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-7 py-4 rounded-full shadow-lg transition-all duration-200 text-sm sm:text-base whitespace-nowrap"
                 >
                   {waitlistStatus === 'loading' ? 'Joining…' : 'Join Waitlist'}
                 </button>
@@ -1004,9 +1003,9 @@ export default function ClientLandingPage() {
                 A fair, flexible marketplace connecting African stores, customers, and communities worldwide.
               </p>
               <div className="space-y-3 text-gray-400">
-                <p className="flex items-center gap-2"><span className="text-yellow-500">📞</span> +44 7778 285855</p>
-                <p className="flex items-center gap-2"><span className="text-yellow-500">📧</span> info@afrimercato.co.uk</p>
-                <p className="flex items-center gap-2"><span className="text-yellow-500">📍</span> Washington Ave, Manchester, United Kingdom.</p>
+                <p className="flex items-center gap-2"><Phone size={16} className="text-[#FFB800] flex-shrink-0" /> +44 7778 285855</p>
+                <p className="flex items-center gap-2"><Mail size={16} className="text-[#FFB800] flex-shrink-0" /> info@afrimercato.co.uk</p>
+                <p className="flex items-center gap-2"><MapPin size={16} className="text-[#FFB800] flex-shrink-0" /> Washington Ave, Manchester, United Kingdom.</p>
               </div>
             </div>
 
@@ -1051,23 +1050,18 @@ export default function ClientLandingPage() {
       </footer>
 
       {/* Sticky bottom CTA bar — fixed while scrolling */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#1B4D3E] shadow-lg px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {['👩🏾','👨🏿','👩🏽'].map((e,i) => (
-                <div key={i} className="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-sm">{e}</div>
-              ))}
-            </div>
+            <Store size={20} className="text-[#FFB800]" />
+            <span className="text-white text-sm font-medium hidden sm:block">Grow your business with Afrimercato</span>
           </div>
           <Link
             to="/register?role=vendor"
-            className="flex-shrink-0 inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-[#FFB800] hover:bg-[#FF8C00] text-[#1A1A1A] px-5 py-2.5 rounded-full font-bold text-sm shadow-md transition-all duration-200"
           >
+            <Store size={14} />
             Partner With Us
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
           </Link>
         </div>
       </div>
@@ -1106,7 +1100,7 @@ function StoreCard({ store, index, navigate }) {
       transition={{ delay: 0.1 + index * 0.12 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       onClick={handleClick}
-      className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
+      className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 [border-top:3px_solid_#FFB800] border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all duration-300"
     >
       <div className="relative aspect-video overflow-hidden bg-gray-100">
         <img
@@ -1122,8 +1116,8 @@ function StoreCard({ store, index, navigate }) {
         <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
           {store.priceRange || store.category || 'African Store'}
         </div>
-        <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${isOpen ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-          {rating} ★ {isOpen ? 'Open' : 'Closed'}
+        <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md flex items-center gap-1 ${isOpen ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
+          {rating} <Star size={12} className="fill-current" /> {isOpen ? 'Open' : 'Closed'}
         </div>
       </div>
 
@@ -1134,13 +1128,15 @@ function StoreCard({ store, index, navigate }) {
             <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
           </svg>
         </h3>
-        <p className="text-sm text-gray-500 mb-3">📍 {storeLocation}</p>
+        <p className="text-sm text-gray-500 mb-3 flex items-center gap-1"><MapPin size={14} className="text-[#FFB800] flex-shrink-0" /> {storeLocation}</p>
 
         <div className="flex items-center gap-1">
           {[1, 2, 3, 4, 5].map((star) => (
-            <svg key={star} className={`w-4 h-4 ${star <= Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
+            <Star
+              key={star}
+              size={14}
+              className={star <= Math.floor(rating) ? 'fill-[#FFB800] text-[#FFB800]' : 'fill-gray-300 text-gray-300'}
+            />
           ))}
           <span className="text-xs text-gray-500 ml-1">{rating}</span>
         </div>
@@ -1155,14 +1151,16 @@ function StoreCard({ store, index, navigate }) {
 function PartnerCTA({ type }) {
   const config = {
     pickers: {
-      icon: '📦',
+      Icon: Package,
+      gradient: 'from-[#FFB800] to-[#FF8C00]',
       title: 'Become a Picker',
       desc: 'Help fulfil orders in local African stores near you. Flexible hours, fair pay, and a growing network of stores to work with.',
       link: '/register?role=picker',
       cta: 'Sign Up as Picker'
     },
     riders: {
-      icon: '🏍️',
+      Icon: Bike,
+      gradient: 'from-[#1B4D3E] to-[#2D6A4F]',
       title: 'Become a Rider',
       desc: 'Deliver authentic African groceries to customers in your city. Set your own hours and earn on every delivery.',
       link: '/register?role=rider',
@@ -1172,12 +1170,14 @@ function PartnerCTA({ type }) {
   const c = config[type]
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-6xl mb-4">{c.icon}</div>
+      <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center mb-6`}>
+        <c.Icon size={40} color="white" />
+      </div>
       <h3 className="text-2xl font-bold text-gray-900 mb-3">{c.title}</h3>
       <p className="text-gray-600 max-w-md mb-8">{c.desc}</p>
       <Link
         to={c.link}
-        className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
+        className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-8 py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-lg"
       >
         {c.cta}
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -1194,7 +1194,7 @@ function NavLink({ href, children, active }) {
     <Link
       to={href}
       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-        active ? 'bg-[#00897B] text-white' : 'text-gray-800 hover:bg-white/50'
+        active ? 'bg-[#1B4D3E] text-white' : 'text-gray-800 hover:bg-white/50'
       }`}
     >
       {children}
