@@ -40,47 +40,32 @@ function Dashboard() {
   const [timeRange, setTimeRange] = useState('7d')
   const [animateCards, setAnimateCards] = useState(false)
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
+
+  const [isPendingApproval, setIsPendingApproval] = useState(false)
+  
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showConfetti, setShowConfetti] = useState(false)
-  const [resendingVerify, setResendingVerify] = useState(false)
-  const [verifyMessage, setVerifyMessage] = useState('')
-
-  const resendVerificationEmail = async () => {
-    setResendingVerify(true)
-    setVerifyMessage('')
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/resend-verification`, {
-        method: 'POST',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      })
-      const data = await res.json()
-      setVerifyMessage(data.message || 'Verification email sent! Check your inbox.')
-    } catch (_e) {
-      setVerifyMessage('Failed to send. Please try again.')
-    } finally {
-      setResendingVerify(false)
-    }
-  }
 
   useEffect(() => {
+    // Immediate check from context: If user object has a pending status, trigger the UI immediately.
+    // Adjust 'status' or 'vendorStatus' based on exactly what your backend returns in the user object.
+    if (user?.status === 'pending' || user?.vendorStatus === 'pending') {
+      setIsPendingApproval(true)
+      setLoading(false)
+      return
+    }
+
     fetchDashboardData()
     setTimeout(() => setAnimateCards(true), 100)
 
-    // Update time every minute
     const timer = setInterval(() => setCurrentTime(new Date()), 60000)
-
-    return () => {
-      clearInterval(timer)
-    }
-  }, [timeRange])
+    return () => clearInterval(timer)
+  }, [timeRange, user])
 
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
       
-      // Use Promise.allSettled to not fail entire dashboard if one API fails
-      // Add 5-second timeout to each API call
       const timeout = (promise, ms = 5000) => {
         return Promise.race([
           promise,
@@ -98,10 +83,8 @@ function Dashboard() {
       let hasError = false
       const errors = []
 
-      // Handle stats response
       if (statsResult.status === 'fulfilled' && statsResult.value?.success) {
         setStats(statsResult.value.data)
-        // Show confetti for good performance
         if (statsResult.value.data?.revenue?.trend > 10) {
           setShowConfetti(true)
           setTimeout(() => setShowConfetti(false), 3000)
@@ -109,22 +92,22 @@ function Dashboard() {
       } else {
         hasError = true
         errors.push('Dashboard stats')
-        console.error('Stats fetch failed:', statsResult.reason)
+        
+        // Check if the API explicitly rejected them because they are pending
+        if (statsResult.reason?.message?.toLowerCase().includes('pending')) {
+          setIsPendingApproval(true)
+        }
       }
 
-      // Handle chart response
       if (chartResult.status === 'fulfilled' && chartResult.value?.success) {
         setChartData(chartResult.value.data)
       } else {
         hasError = true
         errors.push('Chart data')
-        console.error('Chart fetch failed:', chartResult.reason)
       }
 
-      // Show partial error message if some calls failed
-      if (hasError && errors.length > 0) {
-        console.warn(`⚠️ Partial dashboard load: ${errors.join(', ')} failed to load`)
-        // DO NOT logout - just log the error
+      if (hasError && errors.length > 0 && !isPendingApproval) {
+        console.warn(`Partial dashboard load: ${errors.join(', ')} failed to load`)
       }
 
       setNeedsOnboarding(false)
@@ -132,8 +115,9 @@ function Dashboard() {
       console.error('Dashboard error:', error)
       if (error.message && error.message.includes('Vendor profile not found')) {
         setNeedsOnboarding(true)
+      } else if (error.message && error.message.toLowerCase().includes('pending')) {
+        setIsPendingApproval(true)
       }
-      // DO NOT logout on dashboard errors
     } finally {
       setLoading(false)
     }
@@ -141,7 +125,60 @@ function Dashboard() {
 
   const handleOnboardingComplete = () => {
     setNeedsOnboarding(false)
-    fetchDashboardData()
+    setIsPendingApproval(true) 
+  }
+
+  // RENDER: PENDING APPROVAL BLOCKER UI
+  if (isPendingApproval) {
+    return (
+      <div className="flex flex-col justify-center items-center h-[80vh]">
+        <div className="bg-white rounded-3xl shadow-xl p-10 max-w-lg w-full text-center border border-gray-100 transform transition-all hover:scale-[1.01] hover:shadow-2xl">
+          <div className="w-24 h-24 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <svg className="w-12 h-12 text-amber-500 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h2 className="text-3xl font-bold text-gray-900 mb-4 tracking-tight">Account Under Review</h2>
+          <div className="w-16 h-1 bg-gradient-to-r from-amber-400 to-amber-500 mx-auto rounded-full mb-6"></div>
+          <p className="text-gray-600 mb-6 text-lg leading-relaxed">
+            Your vendor account was created successfully! Our admin team is currently reviewing your details.
+          </p>
+          <div className="bg-gray-50 rounded-xl p-4 mb-8">
+            <p className="text-sm text-gray-500">
+              This process may take a little while. We will keep you updated and notify you via the email you registered with once your account has been verified.
+            </p>
+          </div>
+          <Link 
+            to="/" 
+            className="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl w-full"
+          >
+            Return to Home
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  // RENDER: ONBOARDING & LOADING
+  if (needsOnboarding && !loading) {
+    return <VendorOnboarding onComplete={handleOnboardingComplete} />
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+        <div className="relative mb-8">
+          <div className="w-24 h-24 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" style={{ animationDirection: 'reverse' }}></div>
+          </div>
+          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+            <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        </div>
+        <p className="text-gray-600 font-medium animate-pulse">Loading your dashboard...</p>
+      </div>
+    )
   }
 
   // Get greeting based on time of day
