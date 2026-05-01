@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
 import { motion } from 'framer-motion'
-import { Package, RefreshCw, Plus } from 'lucide-react'
+import { Package, RefreshCw, Plus, AlertTriangle } from 'lucide-react'
 
 const STATUS_COLORS = {
   assigned_to_picker: { badge: 'bg-amber-100 text-amber-700', stripe: 'bg-amber-400', label: 'Assigned' },
@@ -97,7 +97,7 @@ function PickerDashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-afri-gray-50 flex flex-col items-center justify-center gap-4 px-5">
-        <div className="text-5xl">⚠️</div>
+        <div className="text-5xl"><AlertTriangle size={40} /></div>
         <p className="text-gray-600 font-medium">{error}</p>
         <button onClick={fetchDashboardData} className="flex items-center gap-2 px-6 py-3 bg-afri-yellow-dark text-white rounded-2xl font-semibold">
           <RefreshCw size={16} /> Retry
@@ -119,7 +119,7 @@ function PickerDashboard() {
             <p className="text-white/80 text-sm font-medium">
               Good {new Date().getHours() < 12 ? 'morning' : 'afternoon'}
             </p>
-            <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Picker'} 👋</h1>
+            <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Picker'}</h1>
             <p className="text-white/70 text-sm mt-1">{stats.pendingOrders} active · {orderQueue.length} available</p>
           </div>
           <div className="bg-white/20 backdrop-blur-sm rounded-2xl px-4 py-2 text-right border border-white/20">

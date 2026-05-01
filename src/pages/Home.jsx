@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { MapPinIcon, MagnifyingGlassIcon, StarIcon, ClockIcon } from '@heroicons/react/24/solid'
 import { getFeaturedVendors } from '../services/api'
+import { ShoppingCart, Users, Leaf, Package, Truck } from 'lucide-react'
 
 export default function Home() {
   const navigate = useNavigate()
@@ -109,7 +110,7 @@ export default function Home() {
             {/* Logo */}
             <Link to="/" className="flex items-center space-x-2">
               <div className="w-9 h-9 bg-gradient-to-br from-green-600 to-yellow-500 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-lg">🛒</span>
+                <span className="text-white font-bold text-lg"><ShoppingCart size={18} /></span>
               </div>
               <span className="text-xl font-bold text-gray-900">
                 Afri<span className="text-green-600">Mercato</span>
@@ -214,7 +215,7 @@ export default function Home() {
                 transition={{ delay: 0.3 }}
                 className="mt-6 text-white/90 flex items-center justify-center lg:justify-start gap-2"
               >
-                <span className="text-2xl">👥</span>
+                <span className="text-2xl"><Users size={20} /></span>
                 <span className="font-semibold">Trusted by: <span className="text-yellow-300">4,320+ Vendors</span></span>
               </motion.div>
             </div>
@@ -323,11 +324,11 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4">
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {[
-              { icon: '🥬', name: 'Vegetables', color: 'bg-green-100 text-green-700' },
-              { icon: '🍌', name: 'Fruits', color: 'bg-yellow-100 text-yellow-700' },
-              { icon: '🥩', name: 'Meat & Fish', color: 'bg-red-100 text-red-700' },
+              { icon: <Leaf size={20} />, name: 'Vegetables', color: 'bg-green-100 text-green-700' },
+              { icon: <Package size={20} />, name: 'Fruits', color: 'bg-yellow-100 text-yellow-700' },
+              { icon: <Package size={20} />, name: 'Meat & Fish', color: 'bg-red-100 text-red-700' },
               { icon: '🥛', name: 'Dairy', color: 'bg-blue-100 text-blue-700' },
-              { icon: '🌶️', name: 'Spices', color: 'bg-orange-100 text-orange-700' },
+              { icon: <Package size={20} />, name: 'Spices', color: 'bg-orange-100 text-orange-700' },
               { icon: '🌾', name: 'Grains', color: 'bg-amber-100 text-amber-700' }
             ].map((cat, i) => (
               <button
@@ -471,8 +472,8 @@ export default function Home() {
           <div className="grid sm:grid-cols-3 gap-8">
             {[
               { num: 1, icon: '🔍', title: 'Find Stores Near You', desc: 'Enter your location and browse stores in your area' },
-              { num: 2, icon: '🛒', title: 'Add to Cart', desc: 'Choose products from multiple vendors in one order' },
-              { num: 3, icon: '🚚', title: 'Fast Delivery', desc: 'Get your groceries delivered same-day' }
+              { num: 2, icon: <ShoppingCart size={32} />, title: 'Add to Cart', desc: 'Choose products from multiple vendors in one order' },
+              { num: 3, icon: <Truck size={32} />, title: 'Fast Delivery', desc: 'Get your groceries delivered same-day' }
             ].map((step) => (
               <motion.div key={step.num} className="text-center" whileHover={{ y: -5 }}>
                 <div className="w-20 h-20 bg-gradient-to-br from-green-500 to-green-700 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">

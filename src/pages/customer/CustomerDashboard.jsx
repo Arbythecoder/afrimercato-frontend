@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
 
 function CustomerDashboard() {
   const navigate = useNavigate()
@@ -67,21 +68,21 @@ function CustomerDashboard() {
       color: 'from-blue-500 to-blue-600'
     },
     {
-      icon: '📍',
+      icon: <MapPin size={24} />,
       title: 'Find Vendors',
       description: 'Discover local stores',
       action: () => navigate('/vendors'),
       color: 'from-green-500 to-green-600'
     },
     {
-      icon: '📦',
+      icon: <Package size={24} />,
       title: 'Track Orders',
       description: 'Check delivery status',
       action: () => navigate('/orders'),
       color: 'from-[#1B4D3E] to-[#0D2B22]'
     },
     {
-      icon: '❤️',
+      icon: <Heart size={24} />,
       title: 'Wishlist',
       description: 'View saved items',
       action: () => navigate('/wishlist'),
@@ -105,7 +106,7 @@ function CustomerDashboard() {
       {/* Header */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8 animate-slideDown">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome Back! 👋</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome Back!</h1>
           <p className="text-afri-green-light">Here's what's happening with your orders</p>
         </div>
       </div>
@@ -116,7 +117,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                📦
+                <Package size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
@@ -131,7 +132,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                📊
+                <BarChart2 size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
@@ -146,7 +147,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '200ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                ❤️
+                <Heart size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
@@ -161,7 +162,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                ⭐
+                <Star size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.rewardPoints}</p>
@@ -209,7 +210,7 @@ function CustomerDashboard() {
 
             {recentOrders.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-6xl mb-4">📦</div>
+                <div className="text-6xl mb-4"><Package size={48} /></div>
                 <p className="text-gray-500 mb-4">No orders yet</p>
                 <button
                   onClick={() => navigate('/products')}
