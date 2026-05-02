@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { sendContactForm } from '../services/api'
+import { Mail, MapPin, Phone } from 'lucide-react'
 
 export default function ContactUs() {
   const [formData, setFormData] = useState({
@@ -46,19 +47,19 @@ export default function ContactUs() {
 
   const contactInfo = [
     {
-      icon: '📧',
+      icon: <Mail size={40} />,
       title: 'Email Us',
       content: 'info@afrimercato.co.uk',
       description: 'We reply within 24 hours'
     },
     {
-      icon: '📍',
+      icon: <MapPin size={40} />,
       title: 'Visit Us',
       content: 'Washington Ave, Manchester',
       description: 'United Kingdom'
     },
     {
-      icon: '📞',
+      icon: <Phone size={40} />,
       title: 'Call Us',
       content: '+44 161 123 4567',
       description: 'Mon-Fri, 9am-6pm'

@@ -366,7 +366,7 @@ export default function ClientVendorStorefront() {
       </header>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] py-14 relative overflow-hidden">
+      <section className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] py-14 relative overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-2 gap-8 items-center">
             {/* Left Side */}
@@ -390,7 +390,7 @@ export default function ClientVendorStorefront() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
-                className="text-2xl text-afri-yellow font-semibold mb-3"
+                className="text-2xl text-[#FFB800] font-semibold mb-3"
               >
                 Got You.
               </motion.p>
@@ -425,13 +425,13 @@ export default function ClientVendorStorefront() {
               >
                 <button
                   onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="bg-afri-green hover:bg-afri-green-dark text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-afri-green/30"
+                  className="bg-[#FFB800] hover:bg-[#E6A600] text-[#1B4D3E] px-8 py-3 rounded-full font-bold transition-all shadow-lg"
                 >
                   Shop Now →
                 </button>
                 <Link
                   to="/stores"
-                  className="bg-white/10 hover:bg-white/20 text-white border border-white/30 px-6 py-3 rounded-xl font-semibold transition-all"
+                  className="border-2 border-white text-white rounded-full px-8 py-3 font-semibold hover:bg-white/10 transition-all"
                 >
                   Browse More Stores
                 </Link>
@@ -477,16 +477,16 @@ export default function ClientVendorStorefront() {
       <div className="bg-white border-b sticky top-[104px] z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between py-4">
-            {/* Category Tabs */}
-            <div className="flex gap-6 overflow-x-auto">
+            {/* Category Pills */}
+            <div className="flex flex-wrap gap-2">
               {categoryTabs.map((cat) => (
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`whitespace-nowrap font-medium pb-2 transition-colors ${
+                  className={`whitespace-nowrap px-5 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${
                     selectedCategory === cat
-                      ? 'text-[#00897B] border-b-2 border-[#00897B]'
-                      : 'text-gray-600 hover:text-gray-900'
+                      ? 'bg-[#1B4D3E] text-white'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
                   {cat}
@@ -516,13 +516,16 @@ export default function ClientVendorStorefront() {
 
         {/* Featured Categories */}
         <div className="mb-12">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-900">Shop by Category</h2>
-            {selectedCategory !== 'All' && (
-              <button onClick={() => setSelectedCategory('All')} className="text-sm text-afri-green font-semibold hover:underline">
-                View all →
-              </button>
-            )}
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-[#1A1A1A]">Shop by Category</h2>
+              {selectedCategory !== 'All' && (
+                <button onClick={() => setSelectedCategory('All')} className="text-sm text-[#1B4D3E] font-semibold hover:underline">
+                  View all →
+                </button>
+              )}
+            </div>
+            <div className="w-12 h-1 bg-[#FFB800] mt-2 mb-6 rounded-full" />
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {CATEGORIES.map((cat, index) => {
@@ -553,8 +556,9 @@ export default function ClientVendorStorefront() {
 
         {/* Daily Best Sales */}
         <div id="products-section" className="mb-12">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Daily Best Sales</h2>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <h2 className="text-2xl font-bold text-[#1A1A1A]">Daily Best Sales</h2>
+          <div className="w-12 h-1 bg-[#FFB800] mt-2 mb-6 rounded-full" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.slice(0, 10).map((product, index) => (
               <ProductCard
                 key={product.id || product._id || index}
@@ -566,43 +570,43 @@ export default function ClientVendorStorefront() {
         </div>
 
         {/* Promotional Banners */}
-        <div className="grid md:grid-cols-3 gap-6 mb-12">
-          <div className="bg-gradient-to-r from-[#00897B] to-[#00695C] text-white p-6 rounded-2xl relative overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-12">
+          <div className="bg-gradient-to-r from-[#00897B] to-[#00695C] text-white p-6 rounded-2xl relative overflow-hidden min-h-[10rem]">
             <img
               src="https://images.unsplash.com/photo-1498837167922-ddd27525d352?w=200"
               alt="Fresh produce"
               className="absolute right-0 bottom-0 w-32 h-32 object-cover opacity-30"
             />
-            <h3 className="text-xl font-bold mb-2 relative z-10">Free delivery</h3>
+            <h3 className="text-2xl font-black mb-2 relative z-10">Free delivery</h3>
             <p className="mb-4 relative z-10">over £50</p>
-            <button className="bg-white text-[#00897B] px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition relative z-10">
+            <button className="border-2 border-white text-white px-4 py-2 rounded-full font-semibold hover:bg-white hover:text-[#1B4D3E] transition-all relative z-10">
               Shop Now →
             </button>
           </div>
 
-          <div className="bg-gradient-to-r from-[#F5A623] to-[#FF9800] text-white p-6 rounded-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#F5A623] to-[#FF9800] text-white p-6 rounded-2xl relative overflow-hidden min-h-[10rem]">
             <span className="absolute top-4 right-4 bg-white/20 px-2 py-1 rounded text-sm font-medium">60% off</span>
             <img
               src="https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=200"
               alt="Organic food"
               className="absolute right-0 bottom-0 w-32 h-32 object-cover opacity-30"
             />
-            <h3 className="text-xl font-bold mb-2 relative z-10">Organic Food</h3>
+            <h3 className="text-2xl font-black mb-2 relative z-10">Organic Food</h3>
             <p className="mb-4 relative z-10">Save up to 60% off on your first order</p>
-            <button className="bg-white text-[#F5A623] px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition relative z-10">
+            <button className="border-2 border-white text-white px-4 py-2 rounded-full font-semibold hover:bg-white hover:text-[#1B4D3E] transition-all relative z-10">
               Order Now →
             </button>
           </div>
 
-          <div className="bg-gradient-to-r from-[#00897B] to-[#00695C] text-white p-6 rounded-2xl relative overflow-hidden">
+          <div className="bg-gradient-to-r from-[#00897B] to-[#00695C] text-white p-6 rounded-2xl relative overflow-hidden min-h-[10rem]">
             <img
               src="https://images.unsplash.com/photo-1542838132-92c53300491e?w=200"
               alt="Free delivery"
               className="absolute right-0 bottom-0 w-32 h-32 object-cover opacity-30"
             />
-            <h3 className="text-xl font-bold mb-2 relative z-10">Free delivery</h3>
+            <h3 className="text-2xl font-black mb-2 relative z-10">Free delivery</h3>
             <p className="mb-4 relative z-10">Shop £50 get free delivery</p>
-            <button className="bg-white text-[#00897B] px-4 py-2 rounded-lg font-semibold hover:bg-gray-100 transition relative z-10">
+            <button className="border-2 border-white text-white px-4 py-2 rounded-full font-semibold hover:bg-white hover:text-[#1B4D3E] transition-all relative z-10">
               Shop Now →
             </button>
           </div>
@@ -611,7 +615,8 @@ export default function ClientVendorStorefront() {
         {/* Discounts Sales with Countdown */}
         <div className="mb-12">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-gray-900">Discounts Sales</h2>
+            <h2 className="text-2xl font-bold text-[#1A1A1A]">Discounts Sales</h2>
+            <div className="w-12 h-1 bg-[#FFB800] mt-2 rounded-full" />
             <div className="flex items-center gap-2 bg-[#00897B] text-white px-4 py-2 rounded-lg">
               <span className="text-sm">Expires in:</span>
               <span className="font-bold">
@@ -621,7 +626,7 @@ export default function ClientVendorStorefront() {
               </span>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {filteredProducts.slice(0, 10).map((product, index) => (
               <ProductCard
                 key={`discount-${product.id || product._id || index}`}
@@ -634,38 +639,6 @@ export default function ClientVendorStorefront() {
         </div>
       </div>
 
-      {/* Join Waitlist Section */}
-      <section className="relative py-16 overflow-hidden">
-        <div className="absolute inset-0 bg-[#F5A623]">
-          <svg className="absolute top-0 left-0 w-full" viewBox="0 0 1440 100" fill="none" preserveAspectRatio="none">
-            <path d="M0 50C240 100 480 0 720 50C960 100 1200 0 1440 50V0H0V50Z" fill="#F8F8F8"/>
-          </svg>
-        </div>
-
-        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 text-center py-8">
-          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-            Join the waitlist for Our App
-          </h2>
-          <p className="text-gray-700 mb-6 max-w-xl mx-auto">
-            Exciting things are coming your way! Be the first to experience the ultimate shopping
-            convenience with our upcoming app.
-          </p>
-
-          <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-            <input
-              type="email"
-              placeholder="Enter email address"
-              className="flex-1 px-5 py-3 rounded-full border-2 border-gray-200 focus:border-[#00897B] outline-none"
-            />
-            <button
-              type="submit"
-              className="bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-3 rounded-full font-bold transition-all"
-            >
-              Join List
-            </button>
-          </form>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="bg-[#1a1a1a] text-white py-12">
@@ -702,8 +675,8 @@ export default function ClientVendorStorefront() {
             </div>
           </div>
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
-            <p>© 2024 Afrimercato</p>
-            <p>Designed By thedesignpygi</p>
+            <p>© 2026 Afrimercato</p>
+            <p>Designed by Arbythecoder</p>
             <p>All Right Reserved.</p>
           </div>
         </div>
@@ -914,14 +887,14 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
 
   return (
     <motion.div
-      whileHover={{ y: outOfStock ? 0 : -5 }}
-      className={`bg-white rounded-xl shadow-md hover:shadow-lg transition-all overflow-hidden ${outOfStock ? 'opacity-60' : ''}`}
+      whileHover={{ y: outOfStock ? 0 : -4 }}
+      className={`group bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden ${outOfStock ? 'opacity-60' : ''}`}
     >
-      <div className="relative h-32 bg-gray-100">
+      <div className="relative overflow-hidden">
         <img
           src={imageUrl}
           alt={product.name}
-          className="w-full h-full object-cover"
+          className="h-44 w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
           onError={(e) => {
             e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200'
           }}
@@ -931,59 +904,46 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
             <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">Out of Stock</span>
           </div>
         )}
-        {!outOfStock && isDiscount && (
-          <span className="absolute top-2 right-2 bg-red-500 text-white px-2 py-0.5 rounded text-xs font-bold">
+        {!outOfStock && (isDiscount || product.originalPrice) && (
+          <span className="absolute top-3 left-3 bg-[#E53E3E] text-white text-xs font-bold px-2 py-1 rounded-full">
             Sale
           </span>
         )}
+        <button className="absolute top-3 right-3 bg-white rounded-full p-1.5 shadow-sm hover:bg-gray-50 transition">
+          <svg className="w-4 h-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+          </svg>
+        </button>
       </div>
 
       <div className="p-3">
-        <p className="text-xs text-gray-500 mb-1">{product.category || 'Vegetables'}</p>
-        <h3 className="font-semibold text-gray-900 text-sm mb-1 truncate">{product.name}</h3>
+        <p className="text-xs text-gray-400 uppercase tracking-wide mb-1">{product.category || 'Groceries'}</p>
+        <h3 className="font-semibold text-gray-900 text-sm mb-2 truncate">{product.name}</h3>
 
-        {/* Rating */}
-        <div className="flex items-center gap-0.5 mb-2">
-          {[...Array(5)].map((_, i) => (
-            <span key={i} className={`text-xs ${i < (product.rating || 4) ? 'text-yellow-400' : 'text-gray-300'}`}>
-              ★
-            </span>
-          ))}
-        </div>
-
-        {/* Price */}
-        <div className="flex items-center gap-2 mb-2">
+        <div className="flex items-center gap-2 mb-3">
           {product.originalPrice && (
-            <span className="text-xs text-gray-400 line-through">
+            <span className="text-sm text-gray-400 line-through">
               £{product.originalPrice.toFixed(2)}
             </span>
           )}
-          <span className="font-bold text-[#00B207]">
+          <span className="font-bold text-[#1B4D3E] text-lg">
             £{(product.price || 18.99).toFixed(2)}
           </span>
         </div>
 
-        {/* Add Button */}
-        <div className="flex items-center gap-2">
-          <button className="p-1.5 bg-gray-100 hover:bg-gray-200 rounded transition">
-            <svg className="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-            </svg>
-          </button>
-          <button
-            onClick={handleAdd}
-            disabled={outOfStock}
-            className={`flex-1 py-1.5 rounded text-sm font-semibold transition ${
-              outOfStock
-                ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
-                : added
-                  ? 'bg-green-500 text-white'
-                  : 'bg-[#00897B] hover:bg-[#00695C] text-white'
-            }`}
-          >
-            {outOfStock ? 'Unavailable' : added ? '✓ Added' : 'Add'}
-          </button>
-        </div>
+        <button
+          onClick={handleAdd}
+          disabled={outOfStock}
+          className={`w-full py-2.5 rounded-full text-sm font-semibold transition-all ${
+            outOfStock
+              ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+              : added
+                ? 'bg-green-500 text-white'
+                : 'bg-[#1B4D3E] hover:bg-[#0D2B22] text-white'
+          }`}
+        >
+          {outOfStock ? 'Unavailable' : added ? '✓ Added' : 'Add to Cart'}
+        </button>
       </div>
     </motion.div>
   )

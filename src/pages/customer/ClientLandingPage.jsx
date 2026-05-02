@@ -6,6 +6,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors, joinWaitlist } from '../../services/api'
+import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck, Globe, Zap, Briefcase, ShoppingBasket, Clock, Tag, Flame, Leaf, Coffee } from 'lucide-react'
+import { Star as PhStar, ShoppingCart as PhCart } from '@phosphor-icons/react'
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -17,6 +19,16 @@ const FALLBACK_STORES = [
   { id: 'f6', _isSample: true, storeName: 'Bristol African Store', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=600', rating: 4.7, location: { city: 'Bristol' }, isActive: true },
 ]
 
+const CATEGORIES = [
+  { id: 'all',       label: 'All Stores',    Icon: Store },
+  { id: 'groceries', label: 'Groceries',     Icon: ShoppingBag },
+  { id: 'fresh',     label: 'Fresh Produce', Icon: Leaf },
+  { id: 'spices',    label: 'Spices',        Icon: Flame },
+  { id: 'african',   label: 'African Food',  Icon: Globe },
+  { id: 'drinks',    label: 'Drinks',        Icon: Coffee },
+  { id: 'snacks',    label: 'Snacks',        Icon: Package },
+]
+
 export default function ClientLandingPage() {
   const navigate = useNavigate()
   const [location, setLocation] = useState('')
@@ -26,6 +38,7 @@ export default function ClientLandingPage() {
   const [showJoinDropdown, setShowJoinDropdown] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('all')
 
   // Partners section state
   const [activePartnerTab, setActivePartnerTab] = useState('stores') // stores | pickers | riders
@@ -232,54 +245,12 @@ export default function ClientLandingPage() {
               <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
                 Log in
               </Link>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setShowJoinDropdown(v => !v)}
-                  onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
-                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
-                >
-                  <span className="hidden sm:inline">Join</span>
-                  <span className="sm:hidden">Join</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {showJoinDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
-                    <Link
-                      to="/register?role=customer"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors"
-                    >
-                      <span className="text-lg">🛒</span>
-                      <div>
-                        <div className="font-semibold text-sm">Customer</div>
-                        <div className="text-xs text-gray-400">Shop & order</div>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/register?role=vendor"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
-                    >
-                      <span className="text-lg">🏪</span>
-                      <div>
-                        <div className="font-semibold text-sm">Vendor</div>
-                        <div className="text-xs text-gray-400">Sell your products</div>
-                      </div>
-                    </Link>
-                    <Link
-                      to="/register?role=rider"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
-                    >
-                      <span className="text-lg">🚴</span>
-                      <div>
-                        <div className="font-semibold text-sm">Rider</div>
-                        <div className="text-xs text-gray-400">Deliver & earn</div>
-                      </div>
-                    </Link>
-                  </div>
-                )}
-              </div>
+              <Link
+                to="/register"
+                className="flex items-center gap-1 bg-[#1B4D3E] text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-[#0D2B22] transition-all"
+              >
+                Join
+              </Link>
 
               {/* Mobile Menu */}
               <button
@@ -308,16 +279,16 @@ export default function ClientLandingPage() {
                   <MobileNavLink to="/about" onClick={() => setMobileMenuOpen(false)}>About us</MobileNavLink>
                   <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
                   <div className="pt-3 border-t space-y-1">
-                    <Link to="/register?role=customer" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🛒</span><span className="font-semibold text-sm">Join as Customer</span>
+                    <Link to="/register?role=customer" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
+                      <ShoppingBag size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Customer</span>
                     </Link>
-                    <Link to="/register?role=vendor" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🏪</span><span className="font-semibold text-sm">Join as Vendor</span>
+                    <Link to="/register?role=vendor" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
+                      <Store size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Vendor</span>
                     </Link>
-                    <Link to="/register?role=rider" className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors" onClick={() => setMobileMenuOpen(false)}>
-                      <span>🚴</span><span className="font-semibold text-sm">Join as Rider</span>
+                    <Link to="/register?role=rider" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
+                      <Bike size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Rider</span>
                     </Link>
-                    <Link to="/login" className="block py-3 text-center text-[#00897B] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
+                    <Link to="/login" className="block py-3 text-center text-[#1B4D3E] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
                       Log in
                     </Link>
                   </div>
@@ -341,7 +312,7 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                className="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight"
+                className="text-3xl sm:text-5xl lg:text-6xl xl:text-7xl font-bold text-gray-900 dark:text-white leading-[1.1] tracking-tight"
               >
                 We Help With the Shopping and Bring it to your{' '}
                 <span className="text-[#00897B] relative inline-block">
@@ -380,11 +351,11 @@ export default function ClientLandingPage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className="mt-8 flex flex-wrap items-center gap-3"
+                className="mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3"
               >
                 <Link
                   to="/stores"
-                  className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl font-bold shadow-xl transition-all text-base sm:text-lg"
+                  className="inline-flex items-center justify-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-xl transition-all duration-200 text-base sm:text-lg"
                 >
                   <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -394,7 +365,7 @@ export default function ClientLandingPage() {
 
                 <Link
                   to="/register?role=vendor"
-                  className="inline-flex items-center gap-2 bg-white hover:bg-gray-50 text-gray-800 border border-gray-200 px-6 sm:px-7 py-3.5 sm:py-4 rounded-xl font-semibold shadow transition-all text-base sm:text-lg"
+                  className="inline-flex items-center justify-center gap-2 border-2 border-[#1B4D3E] text-[#1B4D3E] hover:bg-[#1B4D3E] hover:text-white w-full sm:w-auto px-6 sm:px-7 py-3.5 sm:py-4 rounded-full font-semibold shadow transition-all duration-200 text-base sm:text-lg"
                 >
                   Sell on Afrimercato
                 </Link>
@@ -424,19 +395,6 @@ export default function ClientLandingPage() {
                 </motion.button>
               </motion.div>
 
-              {/* Trust Indicator — static, never moves */}
-              <div className="mt-5 flex items-center gap-4 shrink-0">
-                <div className="flex -space-x-3">
-                  {['👩🏾', '👨🏿', '👩🏽'].map((emoji, i) => (
-                    <div key={i} className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/80 border-[3px] border-[#F5A623] flex items-center justify-center text-lg">
-                      {emoji}
-                    </div>
-                  ))}
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white border-[3px] border-[#F5A623] flex items-center justify-center text-xs sm:text-sm font-bold text-gray-700">
-                    +4K
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Right — Hero Image */}
@@ -483,7 +441,7 @@ export default function ClientLandingPage() {
                   className="hidden md:block absolute bottom-20 right-0 lg:-right-4 bg-white rounded-2xl p-4 shadow-xl z-20"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center text-2xl">🚚</div>
+                    <div className="w-12 h-12 bg-[#FFB800]/20 rounded-xl flex items-center justify-center"><Truck size={24} className="text-[#FFB800]" /></div>
                     <div>
                       <p className="font-bold text-gray-900">Fast Delivery</p>
                       <p className="text-sm text-gray-600">20-30 minutes</p>
@@ -495,146 +453,92 @@ export default function ClientLandingPage() {
           </div>
 
           {/* ============================================
-              SEARCH BAR
+              SEARCH BAR — UberEats pill style
               ============================================ */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="relative z-20 mt-8 lg:mt-6"
+            className="relative z-20 mt-10 lg:mt-8"
           >
-            <form onSubmit={handleFindStore} className="bg-white rounded-2xl sm:rounded-full shadow-2xl p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center">
-                {/* Location Input */}
-                <div className="flex-1 relative">
-                  <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
-                      onFocus={() => setShowLocationDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                      placeholder="Postcode, store name, location"
-                      className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-base sm:text-lg"
-                    />
-                  </div>
-
-                  <AnimatePresence>
-                    {showLocationDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
-                      >
-                        <div className="p-3">
-                          {location.trim().length >= 2 ? (
-                            <>
-                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Suggestions</p>
-                              {locationLoading && (
-                                <div className="flex items-center gap-2 px-3 py-2.5 text-gray-400 text-sm">
-                                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                  </svg>
-                                  Searching...
-                                </div>
-                              )}
-                              {!locationLoading && locationSuggestions.length === 0 && (
-                                <p className="text-sm text-gray-400 px-3 py-2.5">No results found</p>
-                              )}
-                              {!locationLoading && locationSuggestions.map((suggestion) => (
-                                <button
-                                  key={suggestion}
-                                  type="button"
-                                  onClick={() => selectLocation(suggestion)}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                                >
-                                  <svg className="w-4 h-4 text-[#00897B] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-gray-700">{suggestion}</span>
-                                </button>
-                              ))}
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Popular locations</p>
-                              {recentSearches.map((city) => (
-                                <button
-                                  key={city}
-                                  type="button"
-                                  onClick={() => selectLocation(city)}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                                >
-                                  <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-gray-700">{city}</span>
-                                </button>
-                              ))}
-                            </>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="hidden sm:block w-px h-10 bg-gray-200 mx-2"></div>
-
-                {/* Price Tag */}
-                <div className="sm:w-36">
-                  <div className="flex items-center gap-2 px-4 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                    <select
-                      value={priceTag}
-                      onChange={(e) => setPriceTag(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-gray-700 cursor-pointer text-sm appearance-none"
-                    >
-                      <option value="all">Price Tag</option>
-                      <option value="budget">Budget</option>
-                      <option value="mid">Mid Range</option>
-                      <option value="premium">Premium</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="hidden sm:block w-px h-10 bg-gray-200 mx-2"></div>
-
-                {/* Shopping Method */}
-                <div className="sm:w-44">
-                  <div className="flex items-center gap-2 px-4 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <select
-                      value={shoppingMethod}
-                      onChange={(e) => setShoppingMethod(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-gray-700 cursor-pointer text-sm appearance-none"
-                    >
-                      <option value="all">Shopping Method</option>
-                      <option value="delivery">Delivery</option>
-                      <option value="pickup">Pickup</option>
-                      <option value="in-store">In-Store</option>
-                    </select>
-                  </div>
-                </div>
-
+            <form onSubmit={handleFindStore} className="relative">
+              <div className="flex items-center bg-white rounded-full shadow-2xl border border-gray-100 p-2 max-w-2xl mx-auto">
+                <MapPin size={20} className="ml-4 text-[#FFB800] flex-shrink-0" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
+                  onFocus={() => setShowLocationDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                  placeholder="Enter postcode or area..."
+                  className="text-lg flex-1 px-4 py-3 outline-none bg-transparent text-gray-900 placeholder-gray-400"
+                />
                 <motion.button
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl sm:rounded-full font-bold shadow-lg transition-all text-base whitespace-nowrap"
+                  className="bg-[#FFB800] text-[#1B4D3E] font-bold rounded-full px-8 py-3 whitespace-nowrap hover:bg-[#FF8C00] transition-all"
                 >
-                  Find Store
+                  Find Stores
                 </motion.button>
               </div>
+
+              <AnimatePresence>
+                {showLocationDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 w-full max-w-2xl mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                  >
+                    <div className="p-3">
+                      {location.trim().length >= 2 ? (
+                        <>
+                          <p className="text-xs text-gray-500 font-medium mb-2 px-2">Suggestions</p>
+                          {locationLoading && (
+                            <div className="flex items-center gap-2 px-3 py-2.5 text-gray-400 text-sm">
+                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Searching...
+                            </div>
+                          )}
+                          {!locationLoading && locationSuggestions.length === 0 && (
+                            <p className="text-sm text-gray-400 px-3 py-2.5">No results found</p>
+                          )}
+                          {!locationLoading && locationSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => selectLocation(suggestion)}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                            >
+                              <MapPin size={14} className="text-[#FFB800] flex-shrink-0" />
+                              <span className="text-gray-700">{suggestion}</span>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs text-gray-500 font-medium mb-2 px-2">Popular locations</p>
+                          {recentSearches.map((city) => (
+                            <button
+                              key={city}
+                              type="button"
+                              onClick={() => selectLocation(city)}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                            >
+                              <MapPin size={14} className="text-[#FFB800] flex-shrink-0" />
+                              <span className="text-gray-700">{city}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </form>
 
             {/* Quick City Tags */}
@@ -642,7 +546,7 @@ export default function ClientLandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
-              className="mt-4 flex flex-wrap items-center gap-2 justify-center sm:justify-start"
+              className="mt-4 flex flex-wrap items-center gap-2 justify-center"
             >
               <span className="text-gray-700 text-sm font-medium">Popular:</span>
               {['London', 'Birmingham', 'Manchester', 'Leeds', 'Bristol'].map((city) => (
@@ -669,51 +573,124 @@ export default function ClientLandingPage() {
       {/* ============================================
           STORE MARKETPLACE SECTION
           ============================================ */}
-      <section className="bg-white dark:bg-gray-800 py-16 sm:py-20">
+      <section className="bg-white dark:bg-gray-800 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3"
-            >
-              African Online Store In the United Kingdom
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: 0.1 }}
-              className="text-gray-600 max-w-2xl mx-auto"
-            >
-              Use existing infrastructure of African products delivered to your doorstep.
-              Open stores, no staff needed, deliver to you however convenient.
-            </motion.p>
+          {/* Deliveroo-style section header */}
+          <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
+            <h2 className="text-2xl font-black text-[#1A1A1A]">Featured Stores</h2>
+            <Link to="/stores" className="text-[#1B4D3E] text-sm font-semibold hover:underline">See all →</Link>
+          </div>
+
+          {/* Glovo-style category pills */}
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 mb-8" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${
+                  activeCategory === cat.id
+                    ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
+                    : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
+                }`}
+              >
+                <cat.Icon size={16} />
+                {cat.label}
+              </button>
+            ))}
           </div>
 
           {/* Meet Our Partners */}
           <div className="text-center mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-4">Meet Our Partners</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">Meet Our Founding Partners</h3>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
+            <p className="text-gray-500 text-sm mb-8">The people behind Afrimercato</p>
 
-            {/* Tabs: Stores | Pickers | Riders */}
-            <div className="inline-flex items-center gap-1 p-1 bg-gray-100 rounded-full mb-6">
+            {/* Founding partner profiles */}
+            <div className="flex items-center justify-center gap-6 sm:gap-12 mb-8 flex-wrap">
               {[
-                { id: 'stores', label: 'Stores' },
-                { id: 'pickers', label: 'Pickers' },
-                { id: 'riders', label: 'Riders' },
+                {
+                  id: 'stores',
+                  name: 'Efezino',
+                  role: 'Founder & CEO',
+                  img: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=300&q=80',
+                },
+                {
+                  id: 'pickers',
+                  name: 'Chukwudi Obi',
+                  role: 'Co-Founder, Operations',
+                  img: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=300&q=80',
+                },
+                {
+                  id: 'riders',
+                  name: 'Emeka Adeyemi',
+                  role: 'Co-Founder, Technology',
+                  img: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=300&q=80',
+                },
+              ].map((partner) => (
+                <button
+                  key={partner.id}
+                  type="button"
+                  onClick={() => setActivePartnerTab(partner.id)}
+                  className="flex flex-col items-center gap-3 group"
+                >
+                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-110 ${
+                    activePartnerTab === partner.id
+                      ? 'border-[#FFB800] scale-105 shadow-xl'
+                      : 'border-white'
+                  }`}>
+                    <img
+                      src={partner.img}
+                      alt={partner.name}
+                      className="w-full h-full object-cover object-top"
+                      onError={(e) => {
+                        e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&q=80'
+                        e.target.onerror = null
+                      }}
+                    />
+                  </div>
+                  <div className="text-center">
+                    <p className={`font-bold text-sm ${activePartnerTab === partner.id ? 'text-[#1B4D3E]' : 'text-gray-800'}`}>
+                      {partner.name}
+                    </p>
+                    <p className="text-xs text-gray-500">{partner.role}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Section separator before community role tabs */}
+            <div className="w-full my-10 border-t border-gray-100" />
+            <h3 className="text-center text-2xl font-bold text-[#1A1A1A] mb-3">
+              Join Our Growing Community
+            </h3>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
+            <p className="text-center text-gray-500 mb-10">
+              Choose your role and start your journey
+            </p>
+
+            {/* Role tabs: Stores | Pickers | Riders | Vendors */}
+            <div className="grid grid-cols-4 gap-4 sm:gap-8 mb-8 max-w-sm sm:max-w-md mx-auto">
+              {[
+                { id: 'stores',  label: 'Stores',  Icon: Store,          gradient: 'from-[#1B4D3E] to-[#2D6A4F]',               shadow: 'shadow-green-300' },
+                { id: 'pickers', label: 'Pickers', Icon: ShoppingBasket, gradient: 'from-[#E53E3E] to-[#C53030]',               shadow: 'shadow-red-300' },
+                { id: 'riders',  label: 'Riders',  Icon: Zap,            gradient: 'from-[#FFB800] to-[#FF8C00]',               shadow: 'shadow-amber-300' },
+                { id: 'vendors', label: 'Vendors', Icon: Briefcase,      gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]', shadow: 'shadow-red-300' },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => setActivePartnerTab(tab.id)}
-                  className={`px-6 py-2 rounded-full font-medium text-sm transition-all ${
-                    activePartnerTab === tab.id
-                      ? 'bg-[#00897B] text-white shadow-sm'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className="flex flex-col items-center gap-2 group"
                 >
-                  {tab.label}
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center shadow-md transition-all duration-200 group-hover:scale-110 group-hover:shadow-xl ${
+                    activePartnerTab === tab.id ? `ring-4 ring-[#FFB800] ring-offset-2 scale-110 shadow-xl ${tab.shadow}` : ''
+                  }`}>
+                    <tab.Icon size={28} color="white" strokeWidth={1.8} />
+                  </div>
+                  <span className={`font-semibold text-sm transition-colors leading-tight ${activePartnerTab === tab.id ? 'text-[#1A1A1A]' : 'text-gray-500'}`}>
+                    {tab.label}
+                  </span>
                 </button>
               ))}
             </div>
@@ -732,7 +709,7 @@ export default function ClientLandingPage() {
                     onClick={() => setActiveFilter(f.id)}
                     className={`font-medium pb-1 transition-colors ${
                       activeFilter === f.id
-                        ? 'text-[#00897B] border-b-2 border-[#00897B]'
+                        ? 'text-[#1B4D3E] border-b-2 border-[#1B4D3E]'
                         : 'text-gray-600 hover:text-gray-900'
                     }`}
                   >
@@ -741,7 +718,7 @@ export default function ClientLandingPage() {
                 ))}
                 <Link
                   to="/partner"
-                  className="flex items-center gap-2 px-4 py-2 border border-[#00897B] text-[#00897B] rounded-full font-medium text-sm hover:bg-[#00897B] hover:text-white transition-all"
+                  className="flex items-center gap-2 px-4 py-2 border border-[#1B4D3E] text-[#1B4D3E] rounded-full font-medium text-sm hover:bg-[#1B4D3E] hover:text-white transition-all duration-200"
                 >
                   + Onboard your store
                 </Link>
@@ -749,7 +726,7 @@ export default function ClientLandingPage() {
             )}
 
             <div className="text-right mb-4">
-              <Link to="/stores" className="text-[#00897B] font-medium hover:underline">
+              <Link to="/stores" className="text-[#1B4D3E] font-medium hover:underline">
                 See All Stores →
               </Link>
             </div>
@@ -759,13 +736,13 @@ export default function ClientLandingPage() {
           {activePartnerTab === 'stores' ? (
             <>
               {storesLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="bg-gray-100 rounded-2xl animate-pulse h-80" />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredStores.map((store, index) => (
                     <StoreCard key={store._id || store.id} store={store} index={index} navigate={navigate} />
                   ))}
@@ -776,16 +753,29 @@ export default function ClientLandingPage() {
             <PartnerCTA type={activePartnerTab} />
           )}
 
+          {/* Deliveroo-style promo banner */}
+          <div className="bg-gradient-to-r from-[#FFB800] to-[#FF8C00] rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between overflow-hidden relative mt-10">
+            <div className="relative z-10">
+              <p className="text-xs font-bold text-[#1B4D3E] uppercase tracking-widest">Limited time</p>
+              <h3 className="text-3xl font-black text-[#1B4D3E] mt-1">Free delivery on first order</h3>
+              <Link
+                to="/register?role=customer"
+                className="mt-4 inline-block bg-[#1B4D3E] text-white rounded-full px-6 py-2.5 font-bold text-sm hover:bg-[#0D2B22] transition-all"
+              >
+                Order Now
+              </Link>
+            </div>
+            <PhCart size={80} weight="fill" className="text-[#1B4D3E] opacity-20 mt-6 sm:mt-0 flex-shrink-0" />
+          </div>
+
           {/* View All */}
           <div className="text-center mt-10">
             <Link
               to="/stores"
-              className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
+              className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base sm:text-lg"
             >
               View All Stores
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <ArrowRight size={20} />
             </Link>
           </div>
         </div>
@@ -794,47 +784,49 @@ export default function ClientLandingPage() {
       {/* ============================================
           WHY AFRIMERCATO EXISTS
           ============================================ */}
-      <section className="py-16 sm:py-20 bg-white dark:bg-gray-800">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-6"
-          >
-            Why Afrimercato Exists
-          </motion.h2>
+      <section className="py-16 sm:py-20 bg-[#FDF8F0] dark:bg-gray-800">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.1 }}
-            className="text-gray-600 text-lg leading-relaxed space-y-4"
+            className="max-w-2xl mx-auto bg-white rounded-3xl p-6 sm:p-10 shadow-lg text-center border-l-4 border-[#FFB800]"
           >
-            <p>
-              Afrimercato was born from a simple but powerful observation. A Nigerian living abroad
-              noticed how difficult it was for people outside Africa to reliably access authentic African goods.
-            </p>
-            <p>
-              Local stores struggled with visibility. Customers struggled with trust and convenience.
-              Delivery systems were fragmented, expensive, or unfair. Yet the demand was clear.
-              And the businesses were ready — they just lacked the right digital bridge.
-            </p>
-            <p className="text-[#00897B] font-semibold text-xl">Afrimercato is that bridge.</p>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.3 }}
-            className="mt-8"
-          >
-            <Link to="/about" className="inline-flex items-center gap-2 text-[#00897B] font-semibold hover:underline">
-              Read our full story
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </Link>
+            <Globe size={32} className="text-[#1B4D3E] mx-auto mb-4" />
+            <h2 className="text-2xl sm:text-3xl font-black text-center text-gray-900 mb-3">
+              Born from an African Story
+            </h2>
+            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full mb-4" />
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.1 }}
+              className="text-gray-600 text-center leading-relaxed space-y-4"
+            >
+              <p>
+                Afrimercato was born from a simple but powerful observation. A Nigerian living abroad
+                noticed how difficult it was for people outside Africa to reliably access authentic African goods.
+              </p>
+              <p>
+                Local stores struggled with visibility. Customers struggled with trust and convenience.
+                Delivery systems were fragmented, expensive, or unfair. Yet the demand was clear.
+                And the businesses were ready. They just lacked the right digital bridge.
+              </p>
+              <p className="text-[#1B4D3E] font-semibold text-xl">Afrimercato is that bridge.</p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.3 }}
+              className="mt-8"
+            >
+              <Link to="/about" className="inline-flex items-center gap-2 text-[#1B4D3E] font-semibold hover:underline">
+                Read our full story
+                <ArrowRight size={16} />
+              </Link>
+            </motion.div>
           </motion.div>
         </div>
       </section>
@@ -848,15 +840,16 @@ export default function ClientLandingPage() {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.2 }}
-            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-12"
+            className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white text-center mb-4"
           >
             Who It's For
           </motion.h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
+          <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full mb-10" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {[
-              { icon: '🏪', title: 'Stores', message: 'You control your business, your delivery, your costs.', color: 'from-[#00897B] to-[#00695C]' },
-              { icon: '🚴', title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', color: 'from-[#F5A623] to-[#FF9800]' },
-              { icon: '🛒', title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', color: 'from-[#4285F4] to-[#1a73e8]' }
+              { Icon: Store, title: 'Stores', message: 'You control your business, your delivery, your costs.', gradient: 'from-[#1B4D3E] to-[#2D6A4F]', link: '/register?role=vendor' },
+              { Icon: Bike, title: 'Riders & Pickers', message: 'Work independently. Choose your stores. Pay only when you earn.', gradient: 'from-[#FFB800] to-[#FF8C00]', link: '/register?role=rider' },
+              { Icon: ShoppingBag, title: 'Customers', message: 'Discover authentic African goods from trusted local stores, delivered to your door.', gradient: 'from-[#1B4D3E] to-[#0D2B22]', link: '/register?role=customer' }
             ].map((card, index) => (
               <motion.div
                 key={card.title}
@@ -864,15 +857,16 @@ export default function ClientLandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, amount: 0.2 }}
                 transition={{ delay: 0.15 + index * 0.15 }}
-                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-shadow overflow-hidden"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100 overflow-hidden p-6 sm:p-8 flex flex-col items-center text-center"
               >
-                <div className={`bg-gradient-to-r ${card.color} p-6`}>
-                  <span className="text-4xl">{card.icon}</span>
+                <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${card.gradient} flex items-center justify-center mb-6`}>
+                  <card.Icon size={32} color="white" />
                 </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{card.message}</p>
-                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{card.title}</h3>
+                <p className="text-gray-500 text-sm leading-relaxed mb-4">{card.message}</p>
+                <Link to={card.link} className="text-[#1B4D3E] text-sm font-semibold hover:underline flex items-center gap-1 mt-auto">
+                  Learn more <ArrowRight size={14} />
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -882,63 +876,59 @@ export default function ClientLandingPage() {
       {/* ============================================
           VISION & MISSION
           ============================================ */}
-      <section className="py-16 sm:py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
-              <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
-                To be the digital home where African and local businesses thrive — connecting stores, customers, and communities worldwide.
+      <section className="py-12 sm:py-20 px-4 sm:px-6 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22]">
+        <div className="max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border-l-4 border-[#FFB800]"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-3">Our Vision</p>
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">The Digital Home for African Commerce</h3>
+              <p className="text-gray-600 leading-relaxed">
+                To be the digital home where African and local businesses thrive, connecting stores, customers, and communities worldwide.
               </p>
             </motion.div>
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true, amount: 0.2 }} transition={{ delay: 0.15 }}>
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
-              <p className="text-xl sm:text-2xl font-semibold leading-relaxed">
+            <motion.div
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true, amount: 0.2 }}
+              transition={{ delay: 0.15 }}
+              className="bg-white rounded-2xl p-6 sm:p-8 shadow-md border-l-4 border-[#FFB800]"
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-3">Our Mission</p>
+              <h3 className="text-xl font-bold text-[#1A1A1A] mb-4">Empowering Every Merchant</h3>
+              <p className="text-gray-600 leading-relaxed">
                 Afrimercato empowers local and international merchants to sell, fulfil, and grow through a fair, flexible, and trusted marketplace.
               </p>
             </motion.div>
           </div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true, amount: 0.2 }}
-            transition={{ delay: 0.3 }}
-            className="mt-10 pt-8 border-t border-white/20 text-center"
-          >
-            <p className="text-white/80 text-sm">
-              We are currently in a guided testing phase to ensure speed, reliability, and strong foundations before scaling to new regions.
-            </p>
-          </motion.div>
         </div>
       </section>
 
       {/* ============================================
           WAITLIST
           ============================================ */}
-      <section className="py-20 sm:py-24 bg-[#0a2e2a] relative overflow-hidden">
-        {/* decorative blobs */}
-        <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
-          <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#00897B]/20 rounded-full blur-3xl" />
-          <div className="absolute -bottom-24 -right-24 w-80 h-80 bg-yellow-400/10 rounded-full blur-3xl" />
-        </div>
-
-        <div className="relative max-w-2xl mx-auto px-4 sm:px-6 text-center">
+      <section className="py-8 px-4 bg-[#0a2e2a]">
+        <div className="max-w-3xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, amount: 0.3 }}
             transition={{ duration: 0.5 }}
+            className="bg-[#FFB800] rounded-3xl p-6 sm:p-10 md:p-12 text-center"
           >
-            {/* eyebrow */}
-            <span className="inline-block bg-[#00897B]/30 text-[#4db6ac] text-xs font-semibold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
+            <span className="inline-block bg-[#1B4D3E]/20 text-[#1B4D3E] text-xs font-bold uppercase tracking-widest px-4 py-1.5 rounded-full mb-6">
               Coming Soon
             </span>
 
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-tight mb-4">
-              Be the first to know<br className="hidden sm:block" /> when we go live
+            <h2 className="text-2xl sm:text-3xl font-black text-[#1A1A1A] leading-tight mb-3">
+              Be the first to know when we go live
             </h2>
-            <p className="text-white/60 text-base sm:text-lg mb-10">
-              Join thousands of shoppers and vendors waiting for Afrimercato to launch across the UK.
+            <p className="text-[#1B4D3E] font-medium mb-8">
+              Join shoppers and vendors waiting for Afrimercato to launch across the UK.
             </p>
 
             {waitlistStatus === 'success' ? (
@@ -947,46 +937,51 @@ export default function ClientLandingPage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex flex-col items-center gap-3"
               >
-                <div className="w-16 h-16 rounded-full bg-[#00897B]/20 flex items-center justify-center mb-2">
-                  <svg className="w-8 h-8 text-[#4db6ac]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <div className="w-16 h-16 rounded-full bg-[#1B4D3E]/20 flex items-center justify-center mb-2">
+                  <svg className="w-8 h-8 text-[#1B4D3E]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <p className="text-white font-semibold text-lg">{waitlistMessage}</p>
-                <p className="text-white/50 text-sm">Keep an eye on your inbox.</p>
+                <p className="text-[#1A1A1A] font-semibold text-lg">{waitlistMessage}</p>
+                <p className="text-[#1B4D3E]/70 text-sm">Keep an eye on your inbox.</p>
               </motion.div>
             ) : (
               <form
                 onSubmit={handleWaitlistSubmit}
-                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-lg mx-auto"
+                className="max-w-lg mx-auto"
               >
-                <input
-                  type="email"
-                  required
-                  value={waitlistEmail}
-                  onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus(''); setWaitlistMessage('') }}
-                  placeholder="Enter your email address"
-                  className="flex-1 px-5 py-4 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-[#00897B] focus:border-transparent transition text-sm sm:text-base"
-                />
-                <button
-                  type="submit"
-                  disabled={waitlistStatus === 'loading'}
-                  className="flex-shrink-0 bg-[#00897B] hover:bg-[#00695C] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-7 py-4 rounded-xl shadow-lg transition-all text-sm sm:text-base whitespace-nowrap"
-                >
-                  {waitlistStatus === 'loading' ? 'Joining…' : 'Join Waitlist'}
-                </button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-2 sm:bg-white sm:rounded-full sm:p-2 sm:shadow-xl">
+                  <input
+                    type="email"
+                    required
+                    value={waitlistEmail}
+                    onChange={(e) => { setWaitlistEmail(e.target.value); setWaitlistStatus(''); setWaitlistMessage('') }}
+                    placeholder="Enter your email address"
+                    className="flex-1 bg-white sm:bg-transparent rounded-full sm:rounded-none px-5 py-4 sm:px-4 sm:py-2 border-none outline-none text-gray-900 placeholder-gray-400 text-sm shadow-lg sm:shadow-none"
+                  />
+                  <button
+                    type="submit"
+                    disabled={waitlistStatus === 'loading'}
+                    className="flex-shrink-0 w-full sm:w-auto bg-[#1B4D3E] hover:bg-[#0D2B22] disabled:opacity-60 disabled:cursor-not-allowed text-white font-bold px-8 py-4 rounded-full transition-all whitespace-nowrap text-sm"
+                  >
+                    {waitlistStatus === 'loading' ? 'Joining...' : 'Join Waitlist'}
+                  </button>
+                </div>
               </form>
             )}
 
             {waitlistStatus === 'duplicate' && (
-              <p className="mt-3 text-green-400 text-sm">{waitlistMessage}</p>
+              <p className="mt-3 text-[#1B4D3E] text-sm">{waitlistMessage}</p>
             )}
 
             {waitlistStatus === 'error' && (
-              <p className="mt-3 text-red-400 text-sm">{waitlistMessage}</p>
+              <p className="mt-3 text-red-700 text-sm">{waitlistMessage}</p>
             )}
 
-            <p className="mt-6 text-white/30 text-xs">No spam. We'll only email you when we launch.</p>
+            <p className="mt-6 text-[#1B4D3E]/80 text-sm font-medium">
+              We are currently in a guided testing phase to ensure speed, reliability, and strong foundations before scaling to new regions.
+            </p>
+            <p className="mt-3 text-[#1B4D3E]/60 text-xs">No spam. We'll only email you when we launch.</p>
           </motion.div>
         </div>
       </section>
@@ -994,7 +989,7 @@ export default function ClientLandingPage() {
       {/* ============================================
           FOOTER
           ============================================ */}
-      <footer id="contact" className="bg-[#1a1a1a] text-white py-12">
+      <footer id="contact" className="bg-[#1a1a1a] text-white py-12 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-10">
             {/* Contact Info */}
@@ -1004,9 +999,9 @@ export default function ClientLandingPage() {
                 A fair, flexible marketplace connecting African stores, customers, and communities worldwide.
               </p>
               <div className="space-y-3 text-gray-400">
-                <p className="flex items-center gap-2"><span className="text-yellow-500">📞</span> +44 7778 285855</p>
-                <p className="flex items-center gap-2"><span className="text-yellow-500">📧</span> info@afrimercato.co.uk</p>
-                <p className="flex items-center gap-2"><span className="text-yellow-500">📍</span> Washington Ave, Manchester, United Kingdom.</p>
+                <p className="flex items-center gap-2"><Phone size={16} className="text-[#FFB800] flex-shrink-0" /> +44 7778 285855</p>
+                <p className="flex items-center gap-2"><Mail size={16} className="text-[#FFB800] flex-shrink-0" /> info@afrimercato.co.uk</p>
+                <p className="flex items-center gap-2"><MapPin size={16} className="text-[#FFB800] flex-shrink-0" /> Washington Ave, Manchester, United Kingdom.</p>
               </div>
             </div>
 
@@ -1044,30 +1039,25 @@ export default function ClientLandingPage() {
 
           <div className="border-t border-gray-800 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
             <p>© 2026 Afrimercato</p>
-            <p>Designed By thedesignpygi</p>
+            <p>Designed by Arbythecoder</p>
             <p>All Rights Reserved.</p>
           </div>
         </div>
       </footer>
 
       {/* Sticky bottom CTA bar — fixed while scrolling */}
-      <div className="fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 shadow-lg px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-40 bg-[#1B4D3E] shadow-lg px-4 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="flex -space-x-2">
-              {['👩🏾','👨🏿','👩🏽'].map((e,i) => (
-                <div key={i} className="w-8 h-8 rounded-full bg-amber-100 border-2 border-amber-400 flex items-center justify-center text-sm">{e}</div>
-              ))}
-            </div>
+            <Store size={20} className="text-[#FFB800]" />
+            <span className="text-white text-sm font-medium hidden sm:block">Grow your business with Afrimercato</span>
           </div>
           <Link
             to="/register?role=vendor"
-            className="flex-shrink-0 inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-5 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all"
+            className="flex-shrink-0 inline-flex items-center gap-2 bg-[#FFB800] hover:bg-[#FF8C00] text-[#1A1A1A] px-5 py-2.5 rounded-full font-bold text-sm shadow-md transition-all duration-200"
           >
+            <Store size={14} />
             Partner With Us
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-            </svg>
           </Link>
         </div>
       </div>
@@ -1081,14 +1071,12 @@ export default function ClientLandingPage() {
 }
 
 // ============================================
-// STORE CARD COMPONENT
+// STORE CARD COMPONENT — Glovo style
 // ============================================
 function StoreCard({ store, index, navigate }) {
   const storeImage = store.image || store.logo || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
   const storeName = store.storeName || store.name || 'African Store'
-  const storeLocation = store.location?.city
-    ? `${store.location.city}${store.location.country ? ', ' + store.location.country : ''}`
-    : (store.location || 'United Kingdom')
+  const storeCity = store.location?.city || (typeof store.location === 'string' ? store.location.split(',')[0] : 'UK')
   const rating = store.rating || store.averageRating || 4.5
   const isOpen = store.isOpen !== undefined ? store.isOpen : store.isActive !== false
 
@@ -1106,9 +1094,10 @@ function StoreCard({ store, index, navigate }) {
       transition={{ delay: 0.1 + index * 0.12 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       onClick={handleClick}
-      className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-2xl border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all"
+      className="group bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 relative"
     >
-      <div className="relative aspect-video overflow-hidden bg-gray-100">
+      {/* Image */}
+      <div className="h-48 overflow-hidden rounded-t-2xl relative">
         <img
           src={storeImage}
           alt={storeName}
@@ -1119,30 +1108,40 @@ function StoreCard({ store, index, navigate }) {
             e.target.onerror = null
           }}
         />
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
-          {store.priceRange || store.category || 'African Store'}
-        </div>
-        <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md ${isOpen ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-          {rating} ★ {isOpen ? 'Open' : 'Closed'}
+        {/* Discount / closed badge — top-left */}
+        {store._isSample && isOpen && (
+          <div className="absolute top-3 left-3 bg-[#E53E3E] text-white text-xs font-bold px-2 py-1 rounded-md">
+            20% OFF
+          </div>
+        )}
+        {!isOpen && (
+          <div className="absolute top-3 left-3 bg-gray-700/80 text-white text-xs font-bold px-2 py-1 rounded-md">
+            Closed
+          </div>
+        )}
+        {/* Rating badge — top-right */}
+        <div className="absolute top-3 right-3 bg-white text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+          <PhStar size={10} weight="fill" color="#FFB800" />
+          {rating}
         </div>
       </div>
 
-      <div className="p-5">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-          {storeName}
-          <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-        </h3>
-        <p className="text-sm text-gray-500 mb-3">📍 {storeLocation}</p>
-
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <svg key={star} className={`w-4 h-4 ${star <= Math.floor(rating) ? 'text-yellow-400' : 'text-gray-300'}`} fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-          ))}
-          <span className="text-xs text-gray-500 ml-1">{rating}</span>
+      {/* Card body */}
+      <div className="p-4">
+        <h3 className="font-bold text-base text-[#1A1A1A] line-clamp-1">{storeName}</h3>
+        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <Clock size={12} /> 20-30 min
+          </span>
+          <span className="flex items-center gap-1">
+            <MapPin size={12} /> {storeCity}
+          </span>
+          <span className="flex items-center gap-1">
+            <Tag size={12} /> Free delivery
+          </span>
+        </div>
+        <div className="mt-2 inline-block text-xs bg-amber-50 text-[#1B4D3E] px-2 py-0.5 rounded-full font-medium">
+          {store.category || 'African Store'}
         </div>
       </div>
     </motion.div>
@@ -1155,34 +1154,45 @@ function StoreCard({ store, index, navigate }) {
 function PartnerCTA({ type }) {
   const config = {
     pickers: {
-      icon: '📦',
+      Icon: ShoppingBasket,
+      gradient: 'from-[#E53E3E] to-[#C53030]',
       title: 'Become a Picker',
       desc: 'Help fulfil orders in local African stores near you. Flexible hours, fair pay, and a growing network of stores to work with.',
       link: '/register?role=picker',
       cta: 'Sign Up as Picker'
     },
     riders: {
-      icon: '🏍️',
+      Icon: Zap,
+      gradient: 'from-[#FFB800] to-[#FF8C00]',
       title: 'Become a Rider',
       desc: 'Deliver authentic African groceries to customers in your city. Set your own hours and earn on every delivery.',
       link: '/register?role=rider',
       cta: 'Sign Up as Rider'
+    },
+    vendors: {
+      Icon: Briefcase,
+      gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]',
+      title: 'Become a Vendor',
+      desc: 'Open your African store online. No staff needed. Reach thousands of customers across the UK with zero upfront cost.',
+      link: '/register?role=vendor',
+      cta: 'Sign Up as Vendor'
     }
   }
   const c = config[type]
+  if (!c) return null
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div className="text-6xl mb-4">{c.icon}</div>
-      <h3 className="text-2xl font-bold text-gray-900 mb-3">{c.title}</h3>
-      <p className="text-gray-600 max-w-md mb-8">{c.desc}</p>
+    <div className="flex flex-col items-center justify-center py-10 sm:py-16 text-center px-4">
+      <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br ${c.gradient} flex items-center justify-center mb-5 shadow-lg`}>
+        <c.Icon size={32} color="white" />
+      </div>
+      <h3 className="text-xl sm:text-2xl font-bold text-gray-900 mb-3">{c.title}</h3>
+      <p className="text-gray-600 max-w-sm sm:max-w-md mb-8 text-sm sm:text-base">{c.desc}</p>
       <Link
         to={c.link}
-        className="inline-flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-8 py-4 rounded-xl font-bold shadow-lg transition-all text-lg"
+        className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base sm:text-lg"
       >
         {c.cta}
-        <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-        </svg>
+        <ArrowRight size={18} />
       </Link>
     </div>
   )
@@ -1194,7 +1204,7 @@ function NavLink({ href, children, active }) {
     <Link
       to={href}
       className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-        active ? 'bg-[#00897B] text-white' : 'text-gray-800 hover:bg-white/50'
+        active ? 'bg-[#1B4D3E] text-white' : 'text-gray-800 hover:bg-white/50'
       }`}
     >
       {children}
@@ -1207,7 +1217,7 @@ function MobileNavLink({ to, onClick, children }) {
     <Link
       to={to}
       onClick={onClick}
-      className="block py-3 px-4 text-gray-700 font-medium hover:bg-gray-50 rounded-xl transition-colors"
+      className="block py-4 px-4 text-gray-700 font-medium hover:bg-gray-50 rounded-xl transition-colors border-b border-gray-100"
     >
       {children}
     </Link>

@@ -12,7 +12,8 @@ import {
   Ruler,
   RefreshCw,
   Wifi,
-  WifiOff
+  WifiOff,
+  AlertTriangle
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
@@ -97,7 +98,7 @@ function RiderDashboard() {
   if (error) {
     return (
       <div className="min-h-screen bg-afri-gray-50 flex flex-col items-center justify-center gap-4 px-5">
-        <div className="text-5xl">⚠️</div>
+        <div className="text-5xl"><AlertTriangle size={40} /></div>
         <p className="text-gray-600 font-medium">{error}</p>
         <button onClick={fetchDashboardData} className="flex items-center gap-2 px-6 py-3 bg-afri-green text-white rounded-2xl font-bold">
           <RefreshCw size={16} /> Retry
@@ -120,7 +121,7 @@ function RiderDashboard() {
             <p className="text-afri-green-light text-sm font-medium">
               Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}
             </p>
-            <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Rider'} 👋</h1>
+            <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Rider'}</h1>
             {stats.rating > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <Star size={13} className="fill-afri-yellow text-afri-yellow" />

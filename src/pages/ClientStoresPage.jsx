@@ -6,22 +6,29 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { MapPin, Clock, Tag, Store, ShoppingBag, Leaf, Flame, Globe, Coffee, Package } from 'lucide-react'
+import { Star as PhStar } from '@phosphor-icons/react'
 import { SUGGESTED_CITIES } from '../constants/locations'
 import useCustomerStore from '../stores/useCustomerStore'
 
+const CATEGORIES = [
+  { id: 'all',       label: 'All Stores',    Icon: Store },
+  { id: 'groceries', label: 'Groceries',     Icon: ShoppingBag },
+  { id: 'fresh',     label: 'Fresh Produce', Icon: Leaf },
+  { id: 'spices',    label: 'Spices',        Icon: Flame },
+  { id: 'african',   label: 'African Food',  Icon: Globe },
+  { id: 'drinks',    label: 'Drinks',        Icon: Coffee },
+  { id: 'snacks',    label: 'Snacks',        Icon: Package },
+]
+
 function StoreCardSkeleton() {
   return (
-    <div className="bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 animate-pulse">
-      <div className="w-full aspect-video bg-gray-200" />
-      <div className="p-5 space-y-3">
-        <div className="h-5 bg-gray-200 rounded w-3/4" />
-        <div className="h-4 bg-gray-200 rounded w-1/2" />
-        <div className="h-4 bg-gray-200 rounded w-2/3" />
-        <div className="flex gap-2 pt-2">
-          <div className="h-6 bg-gray-200 rounded-full w-20" />
-          <div className="h-6 bg-gray-200 rounded-full w-16" />
-          <div className="h-6 bg-gray-200 rounded-full w-20" />
-        </div>
+    <div className="bg-white rounded-2xl shadow-md overflow-hidden animate-pulse">
+      <div className="h-48 bg-gray-200" />
+      <div className="p-4 space-y-3">
+        <div className="h-4 bg-gray-200 rounded w-3/4" />
+        <div className="h-3 bg-gray-200 rounded w-1/2" />
+        <div className="h-5 bg-gray-200 rounded-full w-24" />
       </div>
     </div>
   )
@@ -37,6 +44,7 @@ export default function ClientStoresPage() {
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('all')
 
   const cityNames = SUGGESTED_CITIES.map(c => c.name)
   const locationSuggestions = searchLocation.trim()
@@ -116,7 +124,7 @@ export default function ClientStoresPage() {
             {/* Nav Links */}
             <div className="hidden md:flex items-center gap-6">
               <Link to="/" className="text-gray-600 hover:text-gray-900 font-medium">Home</Link>
-              <Link to="/stores" className="text-[#00897B] font-medium">Stores</Link>
+              <Link to="/stores" className="text-[#1B4D3E] font-medium">Stores</Link>
               <Link to="/partner" className="text-gray-600 hover:text-gray-900 font-medium">Partner With Us</Link>
             </div>
 
@@ -125,7 +133,7 @@ export default function ClientStoresPage() {
               <Link to="/login" className="text-gray-700 hover:text-gray-900 font-medium">Log in</Link>
               <Link
                 to="/register"
-                className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-full font-semibold transition-all"
+                className="flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-4 py-2 rounded-full font-semibold transition-all"
               >
                 Sign Up
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,101 +147,71 @@ export default function ClientStoresPage() {
 
       {/* Hero — full when no search, compact when results are showing */}
       {!location || loading ? (
-        <section className="bg-gradient-to-br from-[#00897B] via-[#00695C] to-[#004D40] py-12">
+        <section className="bg-gradient-to-br from-[#1B4D3E] via-[#0D2B22] to-[#0a1f18] py-14">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid lg:grid-cols-2 gap-8 items-center">
-              <div>
-                <motion.h1
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="text-3xl sm:text-4xl font-bold text-white mb-3"
-                >
-                  African Groceries,<br />
-                  <span className="text-[#F5A623]">Delivered Across the UK</span>
-                </motion.h1>
-                <motion.p
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="text-green-100 mb-6"
-                >
-                  Search by city, postcode, or store name to find authentic African stores near you.
-                </motion.p>
+            <div className="max-w-2xl mx-auto text-center">
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="text-3xl sm:text-4xl font-black text-white mb-3 leading-tight"
+              >
+                African Groceries,{' '}
+                <span className="text-[#FFB800]">Delivered Across the UK</span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 }}
+                className="text-white/70 mb-8 text-base"
+              >
+                Search by city, postcode, or store name to find authentic African stores near you.
+              </motion.p>
 
-                {/* Search Bar */}
-                <form onSubmit={handleSearch} className="flex gap-2 mb-6">
-                  <div className="flex-1 relative">
-                    <div className="flex items-center gap-2 bg-white rounded-lg px-4 py-3 shadow-md">
-                      <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                      </svg>
-                      <input
-                        type="text"
-                        value={searchLocation}
-                        onChange={(e) => setSearchLocation(e.target.value)}
-                        onFocus={() => setShowLocationDropdown(true)}
-                        onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                        placeholder="City, postcode, or store name…"
-                        className="flex-1 bg-transparent outline-none text-gray-900 placeholder-gray-400"
-                      />
-                    </div>
-                    {showLocationDropdown && locationSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-h-60 overflow-y-auto">
-                        {locationSuggestions.map((loc, idx) => (
-                          <button
-                            key={idx}
-                            type="button"
-                            onClick={() => {
-                              setSearchLocation(loc)
-                              setShowLocationDropdown(false)
-                              navigate(`/stores?location=${encodeURIComponent(loc)}`)
-                            }}
-                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
-                          >
-                            <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            </svg>
-                            <span className="text-gray-700">{loc}</span>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
+              {/* Search Bar — UberEats pill style */}
+              <form onSubmit={handleSearch} className="relative mb-6">
+                <div className="flex items-center bg-white rounded-full shadow-2xl border border-gray-100 p-2">
+                  <MapPin size={20} className="ml-4 text-[#FFB800] flex-shrink-0" />
+                  <input
+                    type="text"
+                    value={searchLocation}
+                    onChange={(e) => setSearchLocation(e.target.value)}
+                    onFocus={() => setShowLocationDropdown(true)}
+                    onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                    placeholder="Enter postcode or area..."
+                    className="text-base flex-1 px-4 py-3 outline-none bg-transparent text-gray-900 placeholder-gray-400"
+                  />
                   <button
                     type="submit"
-                    className="bg-[#F5A623] hover:bg-[#E59400] text-white px-6 py-3 rounded-lg font-bold shadow-md transition-all"
+                    className="bg-[#FFB800] text-[#1B4D3E] font-bold rounded-full px-6 py-3 whitespace-nowrap hover:bg-[#FF8C00] transition-all"
                   >
-                    Search
+                    Find Stores
                   </button>
-                </form>
-
-                <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2">
-                    {['👩🏾', '👨🏿', '👩🏽'].map((e, i) => (
-                      <div key={i} className="w-8 h-8 rounded-full bg-white/20 border-2 border-white flex items-center justify-center text-sm">{e}</div>
+                </div>
+                {showLocationDropdown && locationSuggestions.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-10 max-h-60 overflow-y-auto text-left">
+                    {locationSuggestions.map((loc, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => {
+                          setSearchLocation(loc)
+                          setShowLocationDropdown(false)
+                          navigate(`/stores?location=${encodeURIComponent(loc)}`)
+                        }}
+                        className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-2 transition-colors"
+                      >
+                        <MapPin size={14} className="text-[#FFB800] flex-shrink-0" />
+                        <span className="text-gray-700">{loc}</span>
+                      </button>
                     ))}
                   </div>
-                  <span className="bg-white/20 border border-white/30 px-3 py-1 rounded-full text-sm font-medium text-white">
-                    4,320+ Vendors across the UK
-                  </span>
-                </div>
-              </div>
+                )}
+              </form>
 
-              <div className="hidden lg:block">
-                <div className="relative bg-gradient-to-br from-afri-green-dark to-afri-green rounded-2xl p-4 overflow-hidden shadow-2xl">
-                  <div className="w-full h-64 rounded-xl flex items-center justify-center">
-                    <div className="text-center text-white/90">
-                      <div className="text-7xl mb-3">🛒</div>
-                      <p className="font-bold text-lg">African Groceries</p>
-                      <p className="text-sm text-white/70">Delivered to your door</p>
-                    </div>
-                  </div>
-                  <div className="absolute bottom-6 left-6 bg-white rounded-xl px-4 py-2 shadow-lg">
-                    <p className="text-xs text-gray-500">Avg. Delivery Time</p>
-                    <p className="font-bold text-[#00897B]">ADT 25–40 mins</p>
-                  </div>
-                </div>
+              <div className="flex items-center justify-center gap-2">
+                <span className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full text-sm font-medium text-white/80">
+                  4,320+ Vendors across the UK
+                </span>
               </div>
             </div>
           </div>
@@ -244,18 +222,13 @@ export default function ClientStoresPage() {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex items-center gap-2 text-gray-700">
-                <svg className="w-5 h-5 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                </svg>
+                <MapPin size={18} className="text-[#FFB800]" />
                 <span className="font-semibold text-gray-900">{filteredStores.length} store{filteredStores.length !== 1 ? 's' : ''}</span>
-                <span className="text-gray-500">near <span className="text-[#00897B] font-medium">{location}</span></span>
+                <span className="text-gray-500">near <span className="text-[#1B4D3E] font-medium">{location}</span></span>
               </div>
               <form onSubmit={handleSearch} className="flex items-center gap-2">
-                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2">
-                  <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                  </svg>
+                <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
+                  <MapPin size={14} className="text-gray-400" />
                   <input
                     type="text"
                     value={searchLocation}
@@ -266,7 +239,7 @@ export default function ClientStoresPage() {
                 </div>
                 <button
                   type="submit"
-                  className="bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all"
+                  className="bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-4 py-2 rounded-full text-sm font-semibold transition-all"
                 >
                   Go
                 </button>
@@ -286,9 +259,32 @@ export default function ClientStoresPage() {
       {/* Meet Our Partners Section */}
       <section className="py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-2xl font-bold text-gray-900 text-center mb-6">
-            Meet Our <span className="text-[#F5A623]">Partners</span>
-          </h2>
+          {/* Deliveroo-style section header */}
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-black text-[#1A1A1A]">Browse Stores</h2>
+            <span className="text-[#1B4D3E] text-sm font-semibold">
+              {filteredStores.length > 0 ? `${filteredStores.length} available` : 'All stores'}
+            </span>
+          </div>
+
+          {/* Glovo-style category pills */}
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${
+                  activeCategory === cat.id
+                    ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
+                    : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
+                }`}
+              >
+                <cat.Icon size={16} />
+                {cat.label}
+              </button>
+            ))}
+          </div>
 
           {/* Tabs: Stores | Pickers | Riders */}
           <div className="flex justify-center mb-6">
@@ -299,7 +295,7 @@ export default function ClientStoresPage() {
                   onClick={() => setActiveTab(tab)}
                   className={`px-6 py-2 rounded-full font-medium text-sm capitalize transition-all ${
                     activeTab === tab
-                      ? 'bg-[#00897B] text-white'
+                      ? 'bg-[#1B4D3E] text-white'
                       : 'text-gray-700 hover:bg-gray-200'
                   }`}
                 >
@@ -318,11 +314,11 @@ export default function ClientStoresPage() {
             >
               <div className="inline-flex items-center justify-center w-20 h-20 bg-teal-100 rounded-full mb-6">
                 {activeTab === 'pickers' ? (
-                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-10 h-10 text-[#1B4D3E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8l1 13h12L19 8" />
                   </svg>
                 ) : (
-                  <svg className="w-10 h-10 text-[#00897B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-10 h-10 text-[#1B4D3E]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                 )}
@@ -337,7 +333,7 @@ export default function ClientStoresPage() {
               </p>
               <Link
                 to={activeTab === 'pickers' ? '/register?role=picker' : '/register?role=rider'}
-                className="inline-flex items-center gap-2 bg-[#00897B] text-white px-8 py-3 rounded-full font-medium hover:bg-[#00695C] transition-colors"
+                className="inline-flex items-center gap-2 bg-[#1B4D3E] text-white px-8 py-3 rounded-full font-medium hover:bg-[#0D2B22] transition-colors"
               >
                 {activeTab === 'pickers' ? 'Sign Up as a Picker' : 'Sign Up as a Rider'}
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -361,7 +357,7 @@ export default function ClientStoresPage() {
                   onClick={() => setActiveFilter(filter.id)}
                   className={`font-medium pb-1 transition-colors ${
                     activeFilter === filter.id
-                      ? 'text-[#00897B] border-b-2 border-[#00897B]'
+                      ? 'text-[#1B4D3E] border-b-2 border-[#1B4D3E]'
                       : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
@@ -373,32 +369,31 @@ export default function ClientStoresPage() {
             <div className="flex items-center gap-4">
               <Link
                 to="/partner"
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-full text-gray-700 hover:bg-gray-50 font-medium text-sm"
+                className="flex items-center gap-2 px-4 py-2 border border-[#1B4D3E] rounded-full text-[#1B4D3E] hover:bg-[#FDF8F0] font-medium text-sm transition-all"
               >
-                Onboard your store
+                + Onboard your store
               </Link>
-              <span className="text-[#00897B] font-medium">See All Stores</span>
             </div>
           </div>
           )}
 
           {/* Skeleton loading */}
           {loading && activeTab === 'stores' && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {Array.from({ length: 6 }).map((_, i) => <StoreCardSkeleton key={i} />)}
             </div>
           )}
 
           {/* Store Cards Grid */}
           {!loading && activeTab === 'stores' && filteredStores.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredStores.map((store, index) => (
                 <motion.div
                   key={store._id || store.id || index}
                   initial={{ opacity: 0, y: 30 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.1 }}
-                  whileHover={{ y: -8 }}
+                  whileHover={{ y: -8, transition: { duration: 0.2 } }}
                   onClick={() => {
                     // Store vendor data in sessionStorage for the storefront to use
                     const vendorId = store._id || store.id
@@ -414,10 +409,10 @@ export default function ClientStoresPage() {
                     }))
                     navigate(`/store/${vendorId}`)
                   }}
-                  className="bg-white rounded-2xl overflow-hidden transition-all duration-200 border border-gray-100 hover:border-gray-200 hover:shadow-xl cursor-pointer group"
+                  className="bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 group relative"
                 >
-                  {/* Store Image */}
-                  <div className="relative w-full h-44 bg-gray-100 overflow-hidden">
+                  {/* Image */}
+                  <div className="h-48 overflow-hidden rounded-t-2xl relative bg-gray-100">
                     {store.image || store.logo ? (
                       <img
                         src={store.image || store.logo}
@@ -428,50 +423,47 @@ export default function ClientStoresPage() {
                       />
                     ) : null}
                     <div
-                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#00897B] to-[#004D40]"
+                      className="w-full h-full flex items-center justify-center bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22]"
                       style={{ display: (store.image || store.logo) ? 'none' : 'flex' }}
                     >
-                      <span className="text-6xl font-black text-white/60">
+                      <span className="text-6xl font-black text-white/40">
                         {(store.name || store.storeName || store.businessName || 'S').charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    {/* Open / Closed badge */}
-                    <div className={`absolute top-3 right-3 px-2.5 py-1 rounded-full text-xs font-bold shadow ${
-                      store.isOpen !== false ? 'bg-green-500 text-white' : 'bg-gray-700/80 text-white'
-                    }`}>
-                      {store.isOpen !== false ? 'Open' : 'Closed'}
+                    {/* Closed badge — top-left */}
+                    {store.isOpen === false && (
+                      <div className="absolute top-3 left-3 bg-gray-700/80 text-white text-xs font-bold px-2 py-1 rounded-md">
+                        Closed
+                      </div>
+                    )}
+                    {/* Rating badge — top-right */}
+                    <div className="absolute top-3 right-3 bg-white text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+                      <PhStar size={10} weight="fill" color="#FFB800" />
+                      {store.rating || '4.5'}
                     </div>
                   </div>
 
-                  {/* Store Info */}
+                  {/* Card body */}
                   <div className="p-4">
-                    {/* Name row */}
-                    <div className="flex items-start justify-between gap-2 mb-1">
-                      <h3 className="text-base font-bold text-gray-900 leading-snug line-clamp-1">
-                        {store.name || store.storeName || store.businessName}
-                      </h3>
-                      {store.verified !== false && (
-                        <svg className="w-4 h-4 text-[#00897B] flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd"/>
-                        </svg>
-                      )}
+                    <h3 className="font-bold text-base text-[#1A1A1A] line-clamp-1">
+                      {store.name || store.storeName || store.businessName}
+                    </h3>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <Clock size={12} />
+                        {store.deliveryTime || '20-30 min'}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin size={12} />
+                        {typeof store.location === 'string' ? store.location.split(',')[0] : (store.location?.city || 'UK')}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <Tag size={12} />
+                        {store.deliveryFee || 'Free delivery'}
+                      </span>
                     </div>
-
-                    {/* Category / location subtitle */}
-                    <p className="text-sm text-gray-500 mb-3 line-clamp-1">
-                      {store.category || store.location || 'African Groceries'}
-                    </p>
-
-                    {/* Key info row: rating • time • fee */}
-                    <div className="flex items-center gap-1.5 text-sm text-gray-600">
-                      <svg className="w-3.5 h-3.5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-                      </svg>
-                      <span className="font-semibold text-gray-800">{store.rating || '4.5'}</span>
-                      <span className="text-gray-300">·</span>
-                      <span>{store.deliveryTime || '30 min'}</span>
-                      <span className="text-gray-300">·</span>
-                      <span>{store.deliveryFee ? `${store.deliveryFee} delivery` : 'Free delivery'}</span>
+                    <div className="mt-2 inline-block text-xs bg-amber-50 text-[#1B4D3E] px-2 py-0.5 rounded-full font-medium">
+                      {store.category || 'African Store'}
                     </div>
                   </div>
                 </motion.div>
@@ -510,7 +502,7 @@ export default function ClientStoresPage() {
                   {searchLocation && (
                     <button
                       onClick={() => expandSearchRadius(100)}
-                      className="w-full flex items-center justify-center gap-2 bg-[#00897B] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#00695C] transition-all shadow-md hover:shadow-lg"
+                      className="w-full flex items-center justify-center gap-2 bg-[#1B4D3E] text-white px-6 py-3 rounded-xl font-semibold hover:bg-[#0D2B22] transition-all shadow-md hover:shadow-lg"
                     >
                       <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -522,7 +514,7 @@ export default function ClientStoresPage() {
                   {/* Browse All Stores */}
                   <button
                     onClick={browseAllStores}
-                    className="w-full flex items-center justify-center gap-2 bg-white border-2 border-[#00897B] text-[#00897B] px-6 py-3 rounded-xl font-semibold hover:bg-[#E0F2F1] transition-all"
+                    className="w-full flex items-center justify-center gap-2 bg-white border-2 border-[#1B4D3E] text-[#1B4D3E] px-6 py-3 rounded-xl font-semibold hover:bg-[#FDF8F0] transition-all"
                   >
                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -556,7 +548,7 @@ export default function ClientStoresPage() {
                     <p className="text-sm text-gray-600 mb-3">
                       Want to know when we launch in {searchLocation}?
                     </p>
-                    <button className="text-[#00897B] font-semibold hover:underline text-sm">
+                    <button className="text-[#1B4D3E] font-semibold hover:underline text-sm">
                       Notify me when available →
                     </button>
                   </div>
@@ -597,7 +589,7 @@ export default function ClientStoresPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-            <p>© 2024 Afrimercato. All rights reserved.</p>
+            <p>© 2026 Afrimercato. All rights reserved.</p>
           </div>
         </div>
       </footer>

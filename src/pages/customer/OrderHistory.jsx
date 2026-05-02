@@ -30,7 +30,7 @@ const statusColors = {
   pending: 'bg-yellow-100 text-yellow-800',
   confirmed: 'bg-blue-100 text-blue-800',
   preparing: 'bg-orange-100 text-orange-800',
-  'out-for-delivery': 'bg-purple-100 text-purple-800',
+  'out-for-delivery': 'bg-[#FDF8F0] text-[#1B4D3E]',
   delivered: 'bg-green-100 text-green-800',
   completed: 'bg-gray-100 text-gray-800',
   cancelled: 'bg-red-100 text-red-800'
@@ -221,7 +221,7 @@ function OrderHistory() {
                           title={order.repeatPurchase?.active ? 'Disable auto-repeat' : 'Enable weekly auto-repeat'}
                           className={`text-sm px-3 py-1.5 rounded-lg font-semibold transition-all ${
                             order.repeatPurchase?.active
-                              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                              ? 'bg-[#FDF8F0] text-[#1B4D3E] hover:bg-amber-50'
                               : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                           }`}
                         >

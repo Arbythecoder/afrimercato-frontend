@@ -32,7 +32,7 @@ const COLORS = ['#00B207', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
 const STATUS_COLORS = {
   pending: 'from-yellow-400 to-amber-500',
   confirmed: 'from-blue-400 to-blue-600',
-  processing: 'from-purple-400 to-purple-600',
+  processing: 'from-[#1B4D3E] to-[#0D2B22]',
   ready: 'from-cyan-400 to-cyan-600',
   'out-for-delivery': 'from-orange-400 to-orange-600',
   delivered: 'from-green-400 to-green-600',
@@ -541,7 +541,7 @@ function Dashboard() {
           value={stats?.products?.total?.toLocaleString() || 0}
           icon={<ShoppingBag className="w-7 h-7" />}
           trend={stats?.products?.trend}
-          color="from-purple-400 to-purple-600"
+          color="from-[#1B4D3E] to-[#0D2B22]"
           delay={200}
         />
         <StatCard
@@ -745,7 +745,7 @@ function Dashboard() {
           </div>
         </Link>
 
-        <Link to="/vendor/orders" className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+        <Link to="/vendor/orders" className="group relative bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity"></div>
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
           {pendingOrders > 0 && (
@@ -767,13 +767,13 @@ function Dashboard() {
           </div>
         </Link>
 
-        <Link to="/reports" className="group relative bg-gradient-to-br from-purple-500 to-violet-600 text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
+        <Link to="/reports" className="group relative bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] text-white rounded-2xl shadow-xl p-6 overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl">
           <div className="absolute inset-0 bg-black opacity-0 group-hover:opacity-10 transition-opacity"></div>
           <div className="absolute -right-8 -bottom-8 w-32 h-32 bg-white opacity-10 rounded-full"></div>
           <div className="relative z-10 flex items-center justify-between">
             <div>
               <h4 className="text-xl font-bold mb-2">View Reports</h4>
-              <p className="text-purple-100">Analytics and insights</p>
+              <p className="text-[#FDF8F0]">Analytics and insights</p>
             </div>
             <div className="w-14 h-14 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
               <svg className="w-8 h-8" fill="currentColor" viewBox="0 0 20 20">
