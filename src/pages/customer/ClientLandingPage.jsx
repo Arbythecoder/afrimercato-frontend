@@ -6,7 +6,8 @@ import { useState, useEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { getFeaturedVendors, joinWaitlist } from '../../services/api'
-import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck, Globe, Zap, Briefcase, ShoppingBasket } from 'lucide-react'
+import { Phone, Mail, MapPin, Store, Bike, ShoppingBag, Star, ArrowRight, Package, Truck, Globe, Zap, Briefcase, ShoppingBasket, Clock, Tag, Flame, Leaf, Coffee } from 'lucide-react'
+import { Star as PhStar, ShoppingCart as PhCart } from '@phosphor-icons/react'
 
 // Fallback stores shown while API loads or if no real vendors exist in DB yet
 const FALLBACK_STORES = [
@@ -18,6 +19,16 @@ const FALLBACK_STORES = [
   { id: 'f6', _isSample: true, storeName: 'Bristol African Store', category: 'African Groceries', logo: 'https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=600', rating: 4.7, location: { city: 'Bristol' }, isActive: true },
 ]
 
+const CATEGORIES = [
+  { id: 'all',       label: 'All Stores',    Icon: Store },
+  { id: 'groceries', label: 'Groceries',     Icon: ShoppingBag },
+  { id: 'fresh',     label: 'Fresh Produce', Icon: Leaf },
+  { id: 'spices',    label: 'Spices',        Icon: Flame },
+  { id: 'african',   label: 'African Food',  Icon: Globe },
+  { id: 'drinks',    label: 'Drinks',        Icon: Coffee },
+  { id: 'snacks',    label: 'Snacks',        Icon: Package },
+]
+
 export default function ClientLandingPage() {
   const navigate = useNavigate()
   const [location, setLocation] = useState('')
@@ -27,6 +38,7 @@ export default function ClientLandingPage() {
   const [showJoinDropdown, setShowJoinDropdown] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
+  const [activeCategory, setActiveCategory] = useState('all')
 
   // Partners section state
   const [activePartnerTab, setActivePartnerTab] = useState('stores') // stores | pickers | riders
@@ -441,146 +453,92 @@ export default function ClientLandingPage() {
           </div>
 
           {/* ============================================
-              SEARCH BAR
+              SEARCH BAR — UberEats pill style
               ============================================ */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.6, duration: 0.8 }}
-            className="relative z-20 mt-8 lg:mt-6"
+            className="relative z-20 mt-10 lg:mt-8"
           >
-            <form onSubmit={handleFindStore} className="bg-white rounded-2xl sm:rounded-full shadow-2xl p-3 sm:p-4">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-0 sm:items-center">
-                {/* Location Input */}
-                <div className="flex-1 relative">
-                  <div className="flex items-center gap-3 px-4 sm:px-6 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
-                    <input
-                      type="text"
-                      value={location}
-                      onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
-                      onFocus={() => setShowLocationDropdown(true)}
-                      onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                      placeholder="Postcode, store name, location"
-                      className="flex-1 bg-transparent border-none outline-none text-gray-900 placeholder-gray-500 text-base sm:text-lg"
-                    />
-                  </div>
-
-                  <AnimatePresence>
-                    {showLocationDropdown && (
-                      <motion.div
-                        initial={{ opacity: 0, y: -10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50"
-                      >
-                        <div className="p-3">
-                          {location.trim().length >= 2 ? (
-                            <>
-                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Suggestions</p>
-                              {locationLoading && (
-                                <div className="flex items-center gap-2 px-3 py-2.5 text-gray-400 text-sm">
-                                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                                  </svg>
-                                  Searching...
-                                </div>
-                              )}
-                              {!locationLoading && locationSuggestions.length === 0 && (
-                                <p className="text-sm text-gray-400 px-3 py-2.5">No results found</p>
-                              )}
-                              {!locationLoading && locationSuggestions.map((suggestion) => (
-                                <button
-                                  key={suggestion}
-                                  type="button"
-                                  onClick={() => selectLocation(suggestion)}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                                >
-                                  <svg className="w-4 h-4 text-[#00897B] flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-gray-700">{suggestion}</span>
-                                </button>
-                              ))}
-                            </>
-                          ) : (
-                            <>
-                              <p className="text-xs text-gray-500 font-medium mb-2 px-2">Popular locations</p>
-                              {recentSearches.map((city) => (
-                                <button
-                                  key={city}
-                                  type="button"
-                                  onClick={() => selectLocation(city)}
-                                  className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
-                                >
-                                  <svg className="w-4 h-4 text-orange-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                                  </svg>
-                                  <span className="text-gray-700">{city}</span>
-                                </button>
-                              ))}
-                            </>
-                          )}
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                <div className="hidden sm:block w-px h-10 bg-gray-200 mx-2"></div>
-
-                {/* Price Tag */}
-                <div className="sm:w-36">
-                  <div className="flex items-center gap-2 px-4 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-                    </svg>
-                    <select
-                      value={priceTag}
-                      onChange={(e) => setPriceTag(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-gray-700 cursor-pointer text-sm appearance-none"
-                    >
-                      <option value="all">Price Tag</option>
-                      <option value="budget">Budget</option>
-                      <option value="mid">Mid Range</option>
-                      <option value="premium">Premium</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="hidden sm:block w-px h-10 bg-gray-200 mx-2"></div>
-
-                {/* Shopping Method */}
-                <div className="sm:w-44">
-                  <div className="flex items-center gap-2 px-4 py-3 sm:py-0">
-                    <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
-                    </svg>
-                    <select
-                      value={shoppingMethod}
-                      onChange={(e) => setShoppingMethod(e.target.value)}
-                      className="flex-1 bg-transparent border-none outline-none text-gray-700 cursor-pointer text-sm appearance-none"
-                    >
-                      <option value="all">Shopping Method</option>
-                      <option value="delivery">Delivery</option>
-                      <option value="pickup">Pickup</option>
-                      <option value="in-store">In-Store</option>
-                    </select>
-                  </div>
-                </div>
-
+            <form onSubmit={handleFindStore} className="relative">
+              <div className="flex items-center bg-white rounded-full shadow-2xl border border-gray-100 p-2 max-w-2xl mx-auto">
+                <MapPin size={20} className="ml-4 text-[#FFB800] flex-shrink-0" />
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
+                  onFocus={() => setShowLocationDropdown(true)}
+                  onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
+                  placeholder="Enter postcode or area..."
+                  className="text-lg flex-1 px-4 py-3 outline-none bg-transparent text-gray-900 placeholder-gray-400"
+                />
                 <motion.button
                   type="submit"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className="bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base whitespace-nowrap"
+                  className="bg-[#FFB800] text-[#1B4D3E] font-bold rounded-full px-8 py-3 whitespace-nowrap hover:bg-[#FF8C00] transition-all"
                 >
-                  Find Store
+                  Find Stores
                 </motion.button>
               </div>
+
+              <AnimatePresence>
+                {showLocationDropdown && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="absolute top-full left-1/2 -translate-x-1/2 w-full max-w-2xl mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50"
+                  >
+                    <div className="p-3">
+                      {location.trim().length >= 2 ? (
+                        <>
+                          <p className="text-xs text-gray-500 font-medium mb-2 px-2">Suggestions</p>
+                          {locationLoading && (
+                            <div className="flex items-center gap-2 px-3 py-2.5 text-gray-400 text-sm">
+                              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                              </svg>
+                              Searching...
+                            </div>
+                          )}
+                          {!locationLoading && locationSuggestions.length === 0 && (
+                            <p className="text-sm text-gray-400 px-3 py-2.5">No results found</p>
+                          )}
+                          {!locationLoading && locationSuggestions.map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              type="button"
+                              onClick={() => selectLocation(suggestion)}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                            >
+                              <MapPin size={14} className="text-[#FFB800] flex-shrink-0" />
+                              <span className="text-gray-700">{suggestion}</span>
+                            </button>
+                          ))}
+                        </>
+                      ) : (
+                        <>
+                          <p className="text-xs text-gray-500 font-medium mb-2 px-2">Popular locations</p>
+                          {recentSearches.map((city) => (
+                            <button
+                              key={city}
+                              type="button"
+                              onClick={() => selectLocation(city)}
+                              className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-gray-50 rounded-lg transition-colors text-left"
+                            >
+                              <MapPin size={14} className="text-[#FFB800] flex-shrink-0" />
+                              <span className="text-gray-700">{city}</span>
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </form>
 
             {/* Quick City Tags */}
@@ -588,7 +546,7 @@ export default function ClientLandingPage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 1, duration: 0.6 }}
-              className="mt-4 flex flex-wrap items-center gap-2 justify-center sm:justify-start"
+              className="mt-4 flex flex-wrap items-center gap-2 justify-center"
             >
               <span className="text-gray-700 text-sm font-medium">Popular:</span>
               {['London', 'Birmingham', 'Manchester', 'Leeds', 'Bristol'].map((city) => (
@@ -617,26 +575,29 @@ export default function ClientLandingPage() {
           ============================================ */}
       <section className="bg-white dark:bg-gray-800 py-12 sm:py-16 lg:py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-8">
-            <motion.h2
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 dark:text-white mb-3"
-            >
-              African Online Store In the United Kingdom
-            </motion.h2>
-            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true, amount: 0.2 }}
-              transition={{ delay: 0.1 }}
-              className="text-gray-600 max-w-2xl mx-auto"
-            >
-              Use existing infrastructure of African products delivered to your doorstep.
-              Open stores, no staff needed, deliver to you however convenient.
-            </motion.p>
+          {/* Deliveroo-style section header */}
+          <div className="flex items-center justify-between mb-6 px-4 sm:px-0">
+            <h2 className="text-2xl font-black text-[#1A1A1A]">Featured Stores</h2>
+            <Link to="/stores" className="text-[#1B4D3E] text-sm font-semibold hover:underline">See all →</Link>
+          </div>
+
+          {/* Glovo-style category pills */}
+          <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 mb-8" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${
+                  activeCategory === cat.id
+                    ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
+                    : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
+                }`}
+              >
+                <cat.Icon size={16} />
+                {cat.label}
+              </button>
+            ))}
           </div>
 
           {/* Meet Our Partners */}
@@ -775,13 +736,13 @@ export default function ClientLandingPage() {
           {activePartnerTab === 'stores' ? (
             <>
               {storesLoading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {[1, 2, 3].map((i) => (
                     <div key={i} className="bg-gray-100 rounded-2xl animate-pulse h-80" />
                   ))}
                 </div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredStores.map((store, index) => (
                     <StoreCard key={store._id || store.id} store={store} index={index} navigate={navigate} />
                   ))}
@@ -792,6 +753,21 @@ export default function ClientLandingPage() {
             <PartnerCTA type={activePartnerTab} />
           )}
 
+          {/* Deliveroo-style promo banner */}
+          <div className="bg-gradient-to-r from-[#FFB800] to-[#FF8C00] rounded-2xl p-8 flex flex-col sm:flex-row items-center justify-between overflow-hidden relative mt-10">
+            <div className="relative z-10">
+              <p className="text-xs font-bold text-[#1B4D3E] uppercase tracking-widest">Limited time</p>
+              <h3 className="text-3xl font-black text-[#1B4D3E] mt-1">Free delivery on first order</h3>
+              <Link
+                to="/register?role=customer"
+                className="mt-4 inline-block bg-[#1B4D3E] text-white rounded-full px-6 py-2.5 font-bold text-sm hover:bg-[#0D2B22] transition-all"
+              >
+                Order Now
+              </Link>
+            </div>
+            <PhCart size={80} weight="fill" className="text-[#1B4D3E] opacity-20 mt-6 sm:mt-0 flex-shrink-0" />
+          </div>
+
           {/* View All */}
           <div className="text-center mt-10">
             <Link
@@ -799,9 +775,7 @@ export default function ClientLandingPage() {
               className="inline-flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-6 sm:px-8 py-3.5 sm:py-4 rounded-full font-bold shadow-lg transition-all duration-200 text-base sm:text-lg"
             >
               View All Stores
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
+              <ArrowRight size={20} />
             </Link>
           </div>
         </div>
@@ -1097,14 +1071,12 @@ export default function ClientLandingPage() {
 }
 
 // ============================================
-// STORE CARD COMPONENT
+// STORE CARD COMPONENT — Glovo style
 // ============================================
 function StoreCard({ store, index, navigate }) {
   const storeImage = store.image || store.logo || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
   const storeName = store.storeName || store.name || 'African Store'
-  const storeLocation = store.location?.city
-    ? `${store.location.city}${store.location.country ? ', ' + store.location.country : ''}`
-    : (store.location || 'United Kingdom')
+  const storeCity = store.location?.city || (typeof store.location === 'string' ? store.location.split(',')[0] : 'UK')
   const rating = store.rating || store.averageRating || 4.5
   const isOpen = store.isOpen !== undefined ? store.isOpen : store.isActive !== false
 
@@ -1122,9 +1094,10 @@ function StoreCard({ store, index, navigate }) {
       transition={{ delay: 0.1 + index * 0.12 }}
       whileHover={{ y: -8, transition: { duration: 0.2 } }}
       onClick={handleClick}
-      className="group bg-white dark:bg-gray-700 rounded-2xl shadow-lg hover:shadow-xl hover:-translate-y-1 [border-top:3px_solid_#FFB800] border border-gray-100 dark:border-gray-600 overflow-hidden cursor-pointer transition-all duration-300"
+      className="group bg-white rounded-2xl shadow-md hover:shadow-xl overflow-hidden cursor-pointer transition-all duration-300 relative"
     >
-      <div className="relative aspect-video overflow-hidden bg-gray-100">
+      {/* Image */}
+      <div className="h-48 overflow-hidden rounded-t-2xl relative">
         <img
           src={storeImage}
           alt={storeName}
@@ -1135,32 +1108,40 @@ function StoreCard({ store, index, navigate }) {
             e.target.onerror = null
           }}
         />
-        <div className="absolute top-3 left-3 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full text-sm font-medium text-gray-700 shadow-md">
-          {store.priceRange || store.category || 'African Store'}
-        </div>
-        <div className={`absolute top-3 right-3 px-3 py-1.5 rounded-full text-sm font-medium shadow-md flex items-center gap-1 ${isOpen ? 'bg-green-500 text-white' : 'bg-red-500 text-white'}`}>
-          {rating} <Star size={12} className="fill-current" /> {isOpen ? 'Open' : 'Closed'}
+        {/* Discount / closed badge — top-left */}
+        {store._isSample && isOpen && (
+          <div className="absolute top-3 left-3 bg-[#E53E3E] text-white text-xs font-bold px-2 py-1 rounded-md">
+            20% OFF
+          </div>
+        )}
+        {!isOpen && (
+          <div className="absolute top-3 left-3 bg-gray-700/80 text-white text-xs font-bold px-2 py-1 rounded-md">
+            Closed
+          </div>
+        )}
+        {/* Rating badge — top-right */}
+        <div className="absolute top-3 right-3 bg-white text-[#1A1A1A] text-xs font-bold px-2 py-1 rounded-md flex items-center gap-1 shadow-sm">
+          <PhStar size={10} weight="fill" color="#FFB800" />
+          {rating}
         </div>
       </div>
 
-      <div className="p-5">
-        <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-1 flex items-center gap-2">
-          {storeName}
-          <svg className="w-5 h-5 text-green-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-          </svg>
-        </h3>
-        <p className="text-sm text-gray-500 mb-3 flex items-center gap-1"><MapPin size={14} className="text-[#FFB800] flex-shrink-0" /> {storeLocation}</p>
-
-        <div className="flex items-center gap-1">
-          {[1, 2, 3, 4, 5].map((star) => (
-            <Star
-              key={star}
-              size={14}
-              className={star <= Math.floor(rating) ? 'fill-[#FFB800] text-[#FFB800]' : 'fill-gray-300 text-gray-300'}
-            />
-          ))}
-          <span className="text-xs text-gray-500 ml-1">{rating}</span>
+      {/* Card body */}
+      <div className="p-4">
+        <h3 className="font-bold text-base text-[#1A1A1A] line-clamp-1">{storeName}</h3>
+        <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+          <span className="flex items-center gap-1">
+            <Clock size={12} /> 20-30 min
+          </span>
+          <span className="flex items-center gap-1">
+            <MapPin size={12} /> {storeCity}
+          </span>
+          <span className="flex items-center gap-1">
+            <Tag size={12} /> Free delivery
+          </span>
+        </div>
+        <div className="mt-2 inline-block text-xs bg-amber-50 text-[#1B4D3E] px-2 py-0.5 rounded-full font-medium">
+          {store.category || 'African Store'}
         </div>
       </div>
     </motion.div>
