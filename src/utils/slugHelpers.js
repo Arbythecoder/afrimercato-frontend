@@ -3,7 +3,7 @@
  * Detects ObjectId vs slug and resolves vendor ID
  */
 
-import api from '../services/api'
+import { apiCall } from '../services/api'
 
 /**
  * Check if a string is a valid MongoDB ObjectId
@@ -29,13 +29,13 @@ export const resolveVendorId = async (slugOrId) => {
     }
 
     // Otherwise, resolve slug to ID via API
-    const response = await api.get(`/api/vendors/slug/${slugOrId}`)
+    const response = await apiCall(`/products/vendor/${slugOrId}`)
     
-    if (response.data && response.data.success && response.data.data) {
+    if (response.success && response.data) {
       return {
         success: true,
-        vendorId: response.data.data._id || response.data.data.id,
-        vendor: response.data.data,
+        vendorId: response.data._id || response.data.id,
+        vendor: response.data,
         isSlug: true
       }
     }
