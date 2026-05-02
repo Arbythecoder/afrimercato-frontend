@@ -56,8 +56,10 @@ function VendorDiscovery() {
       const params = {
         category: category !== 'all' ? category : undefined,
         sort,
-        search,
-        location: userLocation ? `${userLocation.lat},${userLocation.lng}` : location
+        search: search || undefined,
+        location: userLocation
+          ? `${userLocation.lat},${userLocation.lng}`
+          : location || undefined,
       }
       const response = await vendorAPI.getVendors(params)
       if (response.success) {

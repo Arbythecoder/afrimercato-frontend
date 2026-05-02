@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../services/api';
+import { apiCall, handleApiError } from '../services/api';
 
 /**
  * Reset Password Page
@@ -56,12 +56,14 @@ function ResetPassword() {
     setError('');
 
     try {
-      const response = await api.post(`/auth/reset-password/${token}`, {
-        password: formData.password,
-        confirmPassword: formData.confirmPassword
+      const response = await apiCall(`/auth/reset-password/${token}`, {
+        method: 'POST',
+        body: JSON.stringify({ 
+          password: formData.password
+        })
       });
-
-      if (response.data.success) {
+      
+      if (response.success) {
         // Show success message and redirect to login
         setTimeout(() => {
           navigate('/login', { 
@@ -72,7 +74,7 @@ function ResetPassword() {
         }, 2000);
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to reset password. The link may have expired.');
+      setError(handleApiError(err));
     } finally {
       setLoading(false);
     }

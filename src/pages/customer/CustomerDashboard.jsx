@@ -2,6 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { BsGraphUpArrow } from "react-icons/bs";
+import { FaStar } from "react-icons/fa6";
+import { LuShoppingBag } from 'react-icons/lu';
+import { MdShoppingCart } from 'react-icons/md';
 import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
 
 function CustomerDashboard() {
@@ -61,34 +65,51 @@ function CustomerDashboard() {
 
   const quickActions = [
     {
-      icon: '🛍️',
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+        </svg>
+      ),
       title: 'Browse Products',
       description: 'Explore our fresh products',
       action: () => navigate('/products'),
       color: 'from-blue-500 to-blue-600'
     },
     {
-      icon: <MapPin size={24} />,
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
+        </svg>
+      ),
       title: 'Find Vendors',
       description: 'Discover local stores',
-      action: () => navigate('/vendors'),
+      action: () => navigate('/discover'),
       color: 'from-green-500 to-green-600'
     },
     {
-      icon: <Package size={24} />,
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 11.096l-9-5.143-9 5.143m18 0v7.808c0 .545-.316 1.033-.8 1.272l-8.2 4.095m9-13.175l-9 5.143m-9-5.143v7.808c0 .545.316 1.033.8 1.272l8.2 4.095m0 0v-7.808" />
+        </svg>
+      ),
       title: 'Track Orders',
       description: 'Check delivery status',
       action: () => navigate('/orders'),
       color: 'from-[#1B4D3E] to-[#0D2B22]'
     },
     {
-      icon: <Heart size={24} />,
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+        </svg>
+      ),
       title: 'Wishlist',
       description: 'View saved items',
       action: () => navigate('/wishlist'),
       color: 'from-red-500 to-red-600'
     }
-  ]
+  ];
 
   if (loading) {
     return (
@@ -104,10 +125,14 @@ function CustomerDashboard() {
   return (
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Header */}
-      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8 animate-slideDown">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome Back!</h1>
+      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white flex justify-between py-8 animate-slideDown">
+        <div className=" px-4 sm:px-6 lg:px-8">
+          <h1 className="text-3xl font-bold mb-2">Welcome Back! 👋</h1>
           <p className="text-afri-green-light">Here's what's happening with your orders</p>
+        </div>
+
+        <div className='px-3'>
+          <MdShoppingCart onClick={() => navigate('/cart')} className='sm:text-4xl cursor-pointer text-4xl' />
         </div>
       </div>
 
@@ -210,7 +235,9 @@ function CustomerDashboard() {
 
             {recentOrders.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-6xl mb-4"><Package size={48} /></div>
+                  <LuShoppingBag className="mx-auto sm:text-4xl text-gray-500" />
+                <div className="text-6xl mb-4">
+                </div>
                 <p className="text-gray-500 mb-4">No orders yet</p>
                 <button
                   onClick={() => navigate('/products')}
@@ -273,7 +300,7 @@ function CustomerDashboard() {
                   <div
                     key={product._id || index}
                     className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/products/${product._id}`)}
+                    onClick={() => navigate(`/product/${product._id}`)}
                   >
                     {/* Product image with smart fallback to category-specific defaults */}
                     <img

@@ -61,6 +61,14 @@ function VendorStorefront() {
 
   const updateCartQuantity = (productId, newQuantity) => {
     if (newQuantity <= 0) {
+      // Confirm before removing item when quantity goes to 0
+      const item = cart.find(item => item._id === productId)
+      if (item) {
+        const confirmMsg = `Remove "${item.name}" from your cart?`
+        if (!window.confirm(confirmMsg)) {
+          return // User cancelled, keep the item
+        }
+      }
       removeFromCart(productId)
     } else {
       setCart(cart.map(item =>
@@ -70,6 +78,13 @@ function VendorStorefront() {
   }
 
   const removeFromCart = (productId) => {
+    const item = cart.find(item => item._id === productId)
+    if (item) {
+      const confirmMsg = `Remove "${item.name}" from your cart?`
+      if (!window.confirm(confirmMsg)) {
+        return // User cancelled
+      }
+    }
     setCart(cart.filter(item => item._id !== productId))
   }
 
@@ -324,20 +339,20 @@ function VendorStorefront() {
                           <h3 className="font-semibold text-gray-900">{item.name}</h3>
                           <p className="text-sm text-gray-600">£{item.price.toFixed(2)}</p>
                           <div className="flex items-center gap-2 mt-2">
-                            <button
+                            <button type="button"
                               onClick={() => updateCartQuantity(item._id, item.quantity - 1)}
                               className="w-6 h-6 bg-gray-200 rounded hover:bg-gray-300 transition"
                             >
                               -
                             </button>
                             <span className="font-semibold">{item.quantity}</span>
-                            <button
+                            <button type="button"
                               onClick={() => updateCartQuantity(item._id, item.quantity + 1)}
                               className="w-6 h-6 bg-gray-200 rounded hover:bg-gray-300 transition"
                             >
                               +
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => removeFromCart(item._id)}
                               className="ml-auto text-red-500 hover:text-red-700"
                             >

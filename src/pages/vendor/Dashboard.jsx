@@ -21,6 +21,13 @@ import {
   Area,
 } from 'recharts'
 
+import {
+  DollarSign,
+  Package,
+  ShoppingBag,
+  BarChart2,
+} from 'lucide-react'
+
 const COLORS = ['#00B207', '#3B82F6', '#F59E0B', '#EF4444', '#8B5CF6']
 const STATUS_COLORS = {
   pending: 'from-yellow-400 to-amber-500',
@@ -84,8 +91,35 @@ function Dashboard() {
       const errors = []
 
       if (statsResult.status === 'fulfilled' && statsResult.value?.success) {
-        setStats(statsResult.value.data)
-        if (statsResult.value.data?.revenue?.trend > 10) {
+        const raw = statsResult.value.data
+
+        const normalized = {
+          revenue: {
+            total: raw.totalRevenue ?? 0,
+            trend: raw.monthlyGrowth ?? 0,
+            avgOrderValue: raw.todayStats?.avgOrderValue ?? 0,
+            avgTrend: null,
+          },
+          orders: {
+            total: raw.todayStats?.orders ?? 0,
+            pending: raw.pendingOrders ?? 0,
+            trend: null,
+            fulfillmentRate: raw.metrics?.fulfillmentRate ?? 0,
+          },
+          products: {
+            total: raw.totalProducts ?? 0,
+            lowStock: Array.isArray(raw.lowStockProducts) ? raw.lowStockProducts.length : 0,
+            trend: null,
+          },
+          topProducts: raw.topProducts ?? [],
+          recentOrders: raw.recentOrders ?? [],
+          storeInfo: raw.storeInfo,
+          metrics: raw.metrics,
+        }
+
+        setStats(normalized)
+
+        if (normalized.revenue.trend > 10) {
           setShowConfetti(true)
           setTimeout(() => setShowConfetti(false), 3000)
         }
@@ -486,7 +520,7 @@ function Dashboard() {
         <StatCard
           title="Total Revenue"
           value={`£${stats?.revenue?.total?.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
-          icon="💰"
+          icon={<DollarSign  className="w-7 h-7" />}
           trend={stats?.revenue?.trend}
           color="from-green-400 to-emerald-500"
           delay={0}
@@ -496,7 +530,7 @@ function Dashboard() {
         <StatCard
           title="Total Orders"
           value={stats?.orders?.total?.toLocaleString() || 0}
-          icon="📦"
+          icon={<Package     className="w-7 h-7" />}
           trend={stats?.orders?.trend}
           color="from-blue-400 to-blue-600"
           delay={100}
@@ -505,7 +539,7 @@ function Dashboard() {
         <StatCard
           title="Active Products"
           value={stats?.products?.total?.toLocaleString() || 0}
-          icon="🛍️"
+          icon={<ShoppingBag className="w-7 h-7" />}
           trend={stats?.products?.trend}
           color="from-[#1B4D3E] to-[#0D2B22]"
           delay={200}
@@ -513,7 +547,7 @@ function Dashboard() {
         <StatCard
           title="Avg. Order Value"
           value={`£${stats?.revenue?.avgOrderValue?.toFixed(2) || '0.00'}`}
-          icon="📊"
+          icon={<BarChart2   className="w-7 h-7" />}
           trend={stats?.revenue?.avgTrend}
           color="from-amber-400 to-orange-500"
           delay={300}

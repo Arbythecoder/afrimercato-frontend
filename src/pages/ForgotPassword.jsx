@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import api from '../services/api';
+import { apiCall } from '../services/api';
 
 /**
  * Forgot Password Page
@@ -19,9 +19,12 @@ function ForgotPassword() {
     setError('');
 
     try {
-      const response = await api.post('/auth/forgot-password', { email });
+      const response = await apiCall('/auth/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+      });
       
-      if (response.data.success) {
+      if (response.success) {
         setSuccess(true);
       }
     } catch (err) {

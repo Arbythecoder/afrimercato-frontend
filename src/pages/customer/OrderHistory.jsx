@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { orderAPI, toggleRepeatOrder } from '../../services/api'
+import { LuShoppingBag } from "react-icons/lu";
 
 const reorderItems = (order, navigate, setReorderedId) => {
   if (!order?.items?.length) return
@@ -129,7 +130,9 @@ function OrderHistory() {
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-lg">
-            <span className="text-6xl">📦</span>
+            <span className="text-6xl">
+              <LuShoppingBag className="mx-auto text-gray-500" />
+            </span>
             <h2 className="text-2xl font-bold text-gray-900 mt-4">No orders found</h2>
             <p className="text-gray-500 mt-2">Start shopping to see your orders here!</p>
             <button
