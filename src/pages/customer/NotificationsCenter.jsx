@@ -19,7 +19,7 @@ const typeColors = {
   order: 'bg-blue-100 text-blue-600',
   promo: 'bg-yellow-100 text-yellow-600',
   system: 'bg-gray-100 text-gray-600',
-  delivery: 'bg-purple-100 text-purple-600'
+  delivery: 'bg-[#FDF8F0] text-[#1B4D3E]'
 }
 
 function NotificationsCenter() {

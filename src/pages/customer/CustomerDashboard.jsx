@@ -6,6 +6,7 @@ import { BsGraphUpArrow } from "react-icons/bs";
 import { FaStar } from "react-icons/fa6";
 import { LuShoppingBag } from 'react-icons/lu';
 import { MdShoppingCart } from 'react-icons/md';
+import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
 
 function CustomerDashboard() {
   const navigate = useNavigate()
@@ -55,7 +56,7 @@ function CustomerDashboard() {
       pending: 'bg-yellow-100 text-yellow-800',
       confirmed: 'bg-blue-100 text-blue-800',
       preparing: 'bg-orange-100 text-orange-800',
-      'out-for-delivery': 'bg-purple-100 text-purple-800',
+      'out-for-delivery': 'bg-[#FDF8F0] text-[#1B4D3E]',
       delivered: 'bg-green-100 text-green-800',
       cancelled: 'bg-red-100 text-red-800'
     }
@@ -95,7 +96,7 @@ function CustomerDashboard() {
       title: 'Track Orders',
       description: 'Check delivery status',
       action: () => navigate('/orders'),
-      color: 'from-purple-500 to-purple-600'
+      color: 'from-[#1B4D3E] to-[#0D2B22]'
     },
     {
       icon: (
@@ -141,9 +142,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 10.5V6a3.75 3.75 0 10-7.5 0v4.5m11.356-1.993l1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 01-1.12-1.243l1.264-12A1.125 1.125 0 015.513 7.5h12.974c.576 0 1.059.435 1.119 1.007zM8.625 10.5a.375.375 0 11-.75 0 .375.375 0 01.75 0zm7.5 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                </svg>
+                <Package size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
@@ -158,7 +157,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <BsGraphUpArrow className="w-8 h-8 text-white" />
+                <BarChart2 size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
@@ -173,9 +172,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '200ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                    <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                    </svg>
+                <Heart size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
@@ -189,8 +186,8 @@ function CustomerDashboard() {
 
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
             <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-purple-400 to-purple-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <FaStar className="w-8 h-8 text-white"  />
+              <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
+                <Star size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.rewardPoints}</p>
@@ -198,7 +195,7 @@ function CustomerDashboard() {
               </div>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-purple-400 to-purple-500 h-2 rounded-full" style={{ width: '60%' }}></div>
+              <div className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] h-2 rounded-full" style={{ width: '60%' }}></div>
             </div>
           </div>
         </div>

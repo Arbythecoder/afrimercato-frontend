@@ -205,9 +205,9 @@ function Earnings() {
           <p className="text-xs text-gray-500 mt-1">{earnings?.commissionRate || 12}% platform fee</p>
         </div>
 
-        <div className="bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-200 rounded-2xl p-6 shadow-sm">
+        <div className="bg-gradient-to-br from-[#FDF8F0] to-amber-50 border border-amber-200 rounded-2xl p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-purple-500 rounded-full flex items-center justify-center">
+            <div className="w-10 h-10 bg-[#1B4D3E] rounded-full flex items-center justify-center">
               <span className="text-xl">🏦</span>
             </div>
             <p className="text-sm font-medium text-gray-600">Lifetime Paid Out</p>
@@ -274,7 +274,7 @@ function Earnings() {
       </div>
 
       {/* How Payouts Work */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl p-6">
+      <div className="bg-gradient-to-br from-blue-50 to-amber-50 border border-blue-200 rounded-2xl p-6">
         <h2 className="text-xl font-bold text-gray-900 mb-4">How Payouts Work</h2>
         <ol className="space-y-3 text-gray-700">
           <li className="flex items-start gap-3">

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { submitFeedback } from '../services/api'
+import { Lightbulb, Zap, ThumbsUp } from 'lucide-react'
 
 const CATEGORIES = [
   { value: 'general',     label: 'General feedback' },
@@ -78,9 +79,9 @@ export default function Feedback() {
 
             <div className="space-y-5">
               {[
-                { icon: '💡', title: 'Shape the product', body: 'Your suggestions directly influence what we build next.' },
-                { icon: '🚀', title: 'Early access', body: 'Active contributors get early access when we go live.' },
-                { icon: '🙌', title: 'Responses within 48 h', body: 'We personally reply to every piece of feedback.' },
+                { icon: <Lightbulb size={18} />, title: 'Shape the product', body: 'Your suggestions directly influence what we build next.' },
+                { icon: <Zap size={18} />, title: 'Early access', body: 'Active contributors get early access when we go live.' },
+                { icon: <ThumbsUp size={18} />, title: 'Responses within 48 h', body: 'We personally reply to every piece of feedback.' },
               ].map(item => (
                 <div key={item.title} className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-xl bg-[#00897B]/10 flex items-center justify-center flex-shrink-0 text-lg">

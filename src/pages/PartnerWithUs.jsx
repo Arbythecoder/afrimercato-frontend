@@ -81,9 +81,9 @@ export default function PartnerWithUs() {
       subtitle: 'Pick orders, earn money',
       description: 'Help prepare customer orders at partner stores. Perfect part-time opportunity with flexible shifts.',
       icon: CheckCircleIcon,
-      gradient: 'from-[#6366F1] to-[#4F46E5]',
-      lightBg: 'bg-indigo-50',
-      textColor: 'text-[#6366F1]',
+      gradient: 'from-[#E53E3E] to-[#C53030]',
+      lightBg: 'bg-amber-50',
+      textColor: 'text-[#E53E3E]',
       stats: [
         { value: '£12-18', label: 'Per Hour' },
         { value: 'Flexible', label: 'Shift Times' },
@@ -99,7 +99,7 @@ export default function PartnerWithUs() {
       ],
       cta: 'Start Picking',
       ctaLink: '/register?role=picker',
-      gradient2: 'from-[#6366F1] to-[#4F46E5]',
+      gradient2: 'from-[#E53E3E] to-[#C53030]',
       emoji: '📦'
     }
   ]
