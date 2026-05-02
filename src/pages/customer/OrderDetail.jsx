@@ -316,11 +316,10 @@ function OrderDetail() {
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Delivery Address</h2>
               <div className="text-sm">
-                <p className="font-semibold">{order.deliveryAddress?.name || order.customerName}</p>
-                <p className="text-gray-600">{order.deliveryAddress?.street}</p>
-                <p className="text-gray-600">
-                  {order.deliveryAddress?.city}, {order.deliveryAddress?.postcode}
-                </p>
+                <p className="text-gray-700 text-sm"> <span className="font-semibold">Name:</span> {order.customer?.name}</p>
+                <p className="text-gray-700 text-sm"><span className="font-semibold">Email:</span> {order.customer?.email}</p>
+                <p className="text-gray-700 text-sm"><span className="font-semibold">Phone:</span> {order.customer?.phone || "No number provided"}</p>
+                <p className="text-gray-700 text-sm"><span className="font-semibold">Address:</span> {order.deliveryAddress}</p>
                 {order.deliveryAddress?.phone && (
                   <p className="text-gray-600 mt-2">📞 {order.deliveryAddress.phone}</p>
                 )}

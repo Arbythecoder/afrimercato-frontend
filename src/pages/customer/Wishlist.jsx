@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { MdShoppingCart } from 'react-icons/md'
 
 function Wishlist() {
   const navigate = useNavigate()
@@ -52,10 +53,14 @@ function Wishlist() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bg-gradient-to-r text-white from-afri-green to-afri-green-dark flex justify-between py-8">
+        <div className=" px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">My Wishlist</h1>
           <p className="text-afri-green-light mt-1">{wishlist.length} saved items</p>
+        </div>
+
+         <div className='px-3'>
+          <MdShoppingCart onClick={() => navigate('/cart')} className='sm:text-4xl cursor-pointer text-4xl' />
         </div>
       </div>
 

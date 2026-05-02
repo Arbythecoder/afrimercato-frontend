@@ -91,7 +91,7 @@ function Login() {
         break
       case 'customer':
       default:
-        navigate('/cart')
+        navigate('/my-dashboard')
         break
     }
 

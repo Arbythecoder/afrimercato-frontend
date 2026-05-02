@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { userAPI, orderAPI } from '../../services/api'
+import { LuShoppingBag } from 'react-icons/lu'
 
 function CustomerProfile() {
   const { user, updateUser, logout } = useAuth()
@@ -89,7 +90,8 @@ function CustomerProfile() {
     try {
       await userAPI.changePassword({
         currentPassword: passwords.current,
-        newPassword: passwords.new
+        newPassword: passwords.new,
+        confirmNewPassword: passwords.confirm,
       })
       setMessage({ type: 'success', text: 'Password changed successfully!' })
       setPasswords({ current: '', new: '', confirm: '' })
@@ -255,6 +257,8 @@ function CustomerProfile() {
                   </div>
                 ) : recentOrders.length === 0 ? (
                   <div className="text-center py-6 bg-gray-50 rounded-xl">
+                    
+                    <LuShoppingBag className="mx-auto text-gray-500" />
                     <p className="text-gray-400 text-sm">No orders yet</p>
                     <Link to="/stores" className="mt-2 inline-block text-afri-green text-sm font-semibold hover:underline">
                       Browse stores →

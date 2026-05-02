@@ -109,7 +109,7 @@ function Register() {
               localStorage.removeItem('post_login_redirect')
               navigate('/checkout', { replace: true })
             } else {
-              navigate('/cart', { replace: true })
+              navigate('/my-dashboard', { replace: true })
             }
             break
           }

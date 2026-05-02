@@ -183,9 +183,9 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
                   </div>
                   <div className="col-span-1 md:col-span-2 bg-white rounded-lg p-4 shadow-sm">
                     <p className="text-sm text-gray-500 mb-1">Delivery Address</p>
-                    <p className="font-semibold text-gray-900">
-                      {order.deliveryAddress?.street}, {order.deliveryAddress?.city}, {order.deliveryAddress?.state} {order.deliveryAddress?.postalCode}
-                    </p>
+                    <p className="text-gray-700 text-sm"> <span className="font-semibold">Name:</span> {order.customer?.name}</p>
+                    <p className="text-gray-700 text-sm"><span className="font-semibold">Email:</span> {order.customer?.email}</p>
+                    <p className="text-gray-700 text-sm"><span className="font-semibold">Address:</span> {order.deliveryAddress}</p>
                     {order.deliveryAddress?.instructions && (
                       <div className="mt-2 p-3 bg-yellow-50 border-l-4 border-[#FFB300] rounded">
                         <p className="text-sm text-gray-700">

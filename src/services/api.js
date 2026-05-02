@@ -532,15 +532,15 @@ export const createOrder = async (orderData) => {
 };
 
 export const getUserOrders = async () => {
-  return apiCall('/orders/user');
+  return apiCall('/customers/orders');
 };
 
 export const getOrderById = async (id) => {
-  return apiCall(`/orders/${id}`);
+  return apiCall(`/customers/orders/${id}`);
 };
 
 export const cancelOrder = async (id) => {
-  return apiCall(`/orders/${id}/cancel`, {
+  return apiCall(`/customers/orders/${id}/cancel`, {
     method: 'PATCH'
   });
 };
@@ -846,7 +846,15 @@ export const vendorAPI = {
     const qs = new URLSearchParams(params).toString();
     return apiCall(`/vendor/dashboard/payouts${qs ? '?' + qs : ''}`);
   },
-  requestPayout: async (body) => apiCall('/vendor/dashboard/payouts/request', { method: 'POST', body: JSON.stringify(body) })
+  requestPayout: async (body) => apiCall('/vendor/dashboard/payouts/request', { method: 'POST', body: JSON.stringify(body) }),
+  getVendors: (params = {}) => {
+    const filtered = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== '')
+    )
+    const qs = new URLSearchParams(filtered).toString()
+    return apiCall(`/vendor${qs ? '?' + qs : ''}`)
+  },
+  getFeaturedVendors: (limit = 8) => apiCall(`/vendor/featured?limit=${limit}`),
 };
 
 // =================================================================

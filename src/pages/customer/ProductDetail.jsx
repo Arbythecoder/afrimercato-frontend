@@ -37,7 +37,7 @@ function ProductDetail() {
       if (response.success) {
         setProduct(response.data)
         // Fetch related products
-        const relatedResponse = await productAPI.getProducts({
+        const relatedResponse = await productAPI.getAll({
           category: response.data.category,
           limit: 4
         })

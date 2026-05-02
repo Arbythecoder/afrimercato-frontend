@@ -4,6 +4,8 @@ import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
 import { cartAPI, getVendorById, getVendorBySlug } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
+import { MdShoppingCart } from 'react-icons/md'
+import { FaArrowLeft, FaArrowLeftLong } from 'react-icons/fa6'
 
 // Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
 const isValidMongoId = (id) => {
@@ -393,8 +395,8 @@ function ShoppingCart() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
-        <div className="max-w-7xl mx-auto px-4">
+      <div className="bg-gradient-to-r from-afri-green to-afri-green-dark flex justify-between text-white py-8">
+        <div className=" px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold">Shopping Cart</h1>
           <p className="text-afri-green-light mt-1">
             {cart.length} items in your cart
@@ -423,6 +425,10 @@ function ShoppingCart() {
               </div>
             ) : null
           })()}
+        </div>
+
+        <div className='px-3'>
+          <FaArrowLeftLong  title='back' onClick={() => navigate(-1)} className='sm:text-3xl cursor-pointer text-2xl' />
         </div>
       </div>
 
