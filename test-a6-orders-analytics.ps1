@@ -11,7 +11,7 @@
 # - Dashboard doesn't timeout (performance check)
 
 $ErrorActionPreference = "Stop"
-$baseUrl = "https://afrimercato-backend-1.onrender.com"
+$baseUrl = "http://localhost:8080"
 # $baseUrl = "http://localhost:5000"  # Uncomment for local testing
 
 Write-Host "==================================================================" -ForegroundColor Cyan

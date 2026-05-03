@@ -257,6 +257,7 @@ function CustomerDashboard() {
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-gradient-to-br from-afri-green to-afri-green-dark rounded-lg flex items-center justify-center text-white font-bold">
                         #{order.orderNumber?.slice(-4) || 'N/A'}
+                        {console.log('Order data:', order)}
                       </div>
                       <div>
                         <p className="font-semibold text-gray-900">
