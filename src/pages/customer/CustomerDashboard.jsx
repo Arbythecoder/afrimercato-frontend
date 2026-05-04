@@ -7,10 +7,12 @@ import { FaStar } from "react-icons/fa6";
 import { LuShoppingBag } from 'react-icons/lu';
 import { MdShoppingCart } from 'react-icons/md';
 import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
+import { apiCall, getUserProfile } from '../../services/api';
 
 function CustomerDashboard() {
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
+  const [firstName, setFirstName] = useState('');
   const [stats, setStats] = useState({
     activeOrders: 0,
     totalOrders: 0,
@@ -27,11 +29,27 @@ function CustomerDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      const [statsRes, ordersRes, productsRes] = await Promise.all([
+      const [statsRes, ordersRes, productsRes, user] = await Promise.all([
         customerAPI.getDashboardStats(),
         customerAPI.getRecentOrders({ limit: 5 }),
         customerAPI.getRecommendedProducts({ limit: 4 })
       ])
+      const response = await getUserProfile();
+      if (response?.success) {
+          // Adjust this path based on your exact backend response structure
+          // It's usually response.user, response.data.user, or response.data
+        const userData = response.user || response.data?.user || response.data;
+
+        if (userData) {
+          const extractedFirstName = 
+            userData.firstName || 
+            (userData.name ? userData.name.split(' ')[0] : 'Customer');
+
+          setFirstName(extractedFirstName);
+        }
+      }
+      console.log('Dashboard stats response:', statsRes)
+      console.log('User profile response:', user)
 
       if (statsRes.success) {
         setStats(statsRes.data)
@@ -127,7 +145,7 @@ function CustomerDashboard() {
       {/* Header */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white flex justify-between py-8 animate-slideDown">
         <div className=" px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold mb-2">Welcome Back! 👋</h1>
+          <h1 className="text-3xl font-bold mb-2">Welcome Back {firstName || 'there!'}! 👋</h1>
           <p className="text-afri-green-light">Here's what's happening with your orders</p>
         </div>
 
@@ -142,7 +160,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Package size={20} />
+                <Package className='text-white' size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
@@ -157,7 +175,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '100ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <BarChart2 size={20} />
+                <BarChart2 className='text-white' size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
@@ -172,7 +190,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '200ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Heart size={20} />
+                <Heart className='text-white'  size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
@@ -187,7 +205,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Star size={20} />
+                <Star className='text-white'  size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.rewardPoints}</p>
@@ -248,19 +266,43 @@ function CustomerDashboard() {
               </div>
             ) : (
               <div className="space-y-4">
-                {recentOrders.map((order, index) => (
+                {recentOrders.map((order, index) => {
+                const firstItem = order.items?.[0]
+                const thumbnail = firstItem?.product?.images?.[0]?.url
+                  || firstItem?.product?.images?.[0]
+                  || null
+
+                return (
                   <div
                     key={order._id || index}
                     className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/orders/${order._id}`)}
+                    onClick={() => navigate(`/order/${order._id}`)}
                   >
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-afri-green to-afri-green-dark rounded-lg flex items-center justify-center text-white font-bold">
+                      {/* Order number badge */}
+                      <div className="w-12 h-12 bg-gradient-to-br from-afri-green to-afri-green-dark rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
                         #{order.orderNumber?.slice(-4) || 'N/A'}
                       </div>
+
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                        {thumbnail ? (
+                          <img
+                            src={thumbnail}
+                            alt={firstItem?.name || 'Product'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.target.style.display = 'none' }}
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                            🛍️
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Order meta */}
                       <div>
                         <p className="font-semibold text-gray-900">
-                          {order.items?.length || 0} items
+                          {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
                         </p>
                         <p className="text-sm text-gray-500">
                           {new Date(order.createdAt).toLocaleDateString('en-GB', {
@@ -271,6 +313,7 @@ function CustomerDashboard() {
                         </p>
                       </div>
                     </div>
+
                     <div className="text-right">
                       <p className="font-bold text-gray-900">
                         £{order.totalAmount?.toFixed(2) || '0.00'}
@@ -280,7 +323,8 @@ function CustomerDashboard() {
                       </span>
                     </div>
                   </div>
-                ))}
+                )
+              })}
               </div>
             )}
           </div>
@@ -304,9 +348,15 @@ function CustomerDashboard() {
                   >
                     {/* Product image with smart fallback to category-specific defaults */}
                     <img
-                      src={getProductImage(product)}
+                      src={
+                        typeof product.images?.[0] === 'string'
+                          ? product.images[0]
+                          : product.images?.[0]?.url
+                          || null
+                      }
                       alt={product.name}
-                      className="w-16 h-16 rounded-lg object-cover"
+                      className="w-16 h-16 rounded-lg object-cover bg-gray-100"
+                      onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200' }}
                     />
                     <div className="flex-1">
                       <p className="font-semibold text-gray-900 text-sm line-clamp-1">

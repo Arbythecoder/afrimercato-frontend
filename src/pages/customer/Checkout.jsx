@@ -91,36 +91,58 @@ function CheckoutForm() {
   const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false })
   const [paymentMethodId, setPaymentMethodId] = useState(null)
 
+  const validateUKPostcode = (postcode) => {
+    // Official UK postcode regex
+    const ukPostcodeRegex = /^[A-Z]{1,2}[0-9][0-9A-Z]?\s?[0-9][A-Z]{2}$/i
+    return ukPostcodeRegex.test(postcode.trim())
+  }
+
   const lookupPostcode = async () => {
     const postcode = address.postcode.trim().replace(/\s+/g, '')
     if (!postcode) return
+
+    if (!validateUKPostcode(postcode)) {
+      setPostcodeError('Please enter a valid UK postcode (e.g. SW1A 1AA)')
+      return
+    }
+
     setLookingUpPostcode(true)
+    setPostcodeError('')
+
     try {
       const res = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
       const data = await res.json()
+
       if (data.status === 200 && data.result) {
         setAddress(prev => ({
           ...prev,
-          city: data.result.admin_district || data.result.parish || prev.city
+          city:    data.result.admin_district || data.result.parish || prev.city,
+          county:  data.result.admin_county   || data.result.region || '',
+          country: 'United Kingdom',
         }))
+        setPostcodeError('')
+      } else {
+        setPostcodeError('Postcode not found. Please check and try again.')
       }
-    } catch (_e) {
-      // silent fail — user can fill manually
+    } catch {
+      setPostcodeError('Could not verify postcode. Please check your connection.')
     } finally {
       setLookingUpPostcode(false)
     }
   }
 
   // Address form
+  const [postcodeError, setPostcodeError] = useState('')
   const [address, setAddress] = useState({
     fullName: '',
     phone: '',
     street: '',
     city: '',
+    county: '',
     postcode: '',
+    country: 'United Kingdom', // always locked
     instructions: ''
   })
-
   // Payment form
   const [payment, setPayment] = useState({
     method: 'card',
@@ -379,6 +401,13 @@ function CheckoutForm() {
 
   const handleAddressSubmit = (e) => {
     e.preventDefault()
+
+    // Block if postcode is invalid
+    if (!validateUKPostcode(address.postcode)) {
+      setPostcodeError('Please enter a valid UK postcode')
+      return
+    }
+
     if (!isAuthenticated) {
       localStorage.setItem('post_login_redirect', '/checkout')
       localStorage.setItem('checkout_redirect', 'true')
@@ -981,6 +1010,7 @@ function CheckoutForm() {
                         placeholder="London"
                       />
                     </div>
+                    {/* Postcode field — with error */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
                         Postcode *
@@ -991,18 +1021,46 @@ function CheckoutForm() {
                           required
                           autoComplete="postal-code"
                           value={address.postcode}
-                          onChange={(e) => setAddress({ ...address, postcode: e.target.value.toUpperCase() })}
-                          className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
+                          onChange={(e) => {
+                            setAddress({ ...address, postcode: e.target.value.toUpperCase() })
+                            setPostcodeError('') // clear error on edit
+                          }}
+                          onBlur={() => {
+                            // Validate on blur so user gets feedback without clicking Find
+                            if (address.postcode && !validateUKPostcode(address.postcode)) {
+                              setPostcodeError('Please enter a valid UK postcode (e.g. SW1A 1AA)')
+                            }
+                          }}
+                          className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 
+                            focus:border-transparent min-h-[44px] ${
+                              postcodeError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                            }`}
                           placeholder="SW1A 1AA"
                         />
                         <button
                           type="button"
                           onClick={lookupPostcode}
                           disabled={lookingUpPostcode || !address.postcode.trim()}
-                          className="px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition whitespace-nowrap min-h-[44px]"
+                          className="px-3 py-2 bg-green-600 text-white rounded-lg text-xs font-medium 
+                            hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition 
+                            whitespace-nowrap min-h-[44px]"
                         >
                           {lookingUpPostcode ? '…' : 'Find'}
                         </button>
+                      </div>
+                      {postcodeError && (
+                        <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
+                          ⚠️ {postcodeError}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Locked country field */}
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">Country</label>
+                      <div className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg 
+                        text-gray-500 text-sm flex items-center gap-2 min-h-[44px]">
+                        🇬🇧 United Kingdom (only)
                       </div>
                     </div>
                   </div>

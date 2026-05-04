@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { customerAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { MdShoppingCart } from 'react-icons/md'
+import { FaArrowLeft } from 'react-icons/fa6'
 
 function Wishlist() {
   const navigate = useNavigate()
@@ -54,9 +55,12 @@ function Wishlist() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r text-white from-afri-green to-afri-green-dark flex justify-between py-8">
-        <div className=" px-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold">My Wishlist</h1>
-          <p className="text-afri-green-light mt-1">{wishlist.length} saved items</p>
+          <div className=" px-4 sm:px-6 lg:px-8">  
+          <FaArrowLeft title='back'  className='mb-3 cursor-pointer' onClick={()=> navigate(-1)} />
+          <div className=" px-4 sm:px-6 lg:px-8">
+            <h1 className="text-3xl font-bold">My Wishlist</h1>
+            <p className="text-afri-green-light mt-1">{wishlist.length} saved items</p>
+          </div>
         </div>
 
          <div className='px-3'>

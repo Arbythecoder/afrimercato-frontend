@@ -12,7 +12,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
+  Legend,   
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -93,28 +93,35 @@ function Dashboard() {
       if (statsResult.status === 'fulfilled' && statsResult.value?.success) {
         const raw = statsResult.value.data
 
+        // Inside fetchDashboardData, replace your normalized object:
         const normalized = {
           revenue: {
-            total: raw.totalRevenue ?? 0,
-            trend: raw.monthlyGrowth ?? 0,
-            avgOrderValue: raw.todayStats?.avgOrderValue ?? 0,
-            avgTrend: null,
+            total:        raw.totalRevenue       ?? 0,
+            monthly:      raw.monthlyRevenue     ?? 0,
+            trend:        raw.monthlyGrowth      ?? 0,
+            avgOrderValue: raw.avgOrderValue     ?? 0,
+            todayRevenue: raw.todayStats?.revenue ?? 0,
+            weekRevenue:  raw.weekStats?.revenue  ?? 0,
           },
           orders: {
-            total: raw.todayStats?.orders ?? 0,
-            pending: raw.pendingOrders ?? 0,
-            trend: null,
+            total:    raw.totalOrders            ?? 0,
+            pending:  raw.pendingOrders          ?? 0,
+            today:    raw.todayStats?.orders     ?? 0,
+            weekly:   raw.weekStats?.orders      ?? 0,
+            trend:    null,
             fulfillmentRate: raw.metrics?.fulfillmentRate ?? 0,
           },
           products: {
-            total: raw.totalProducts ?? 0,
+            total:    raw.totalProducts          ?? 0,
             lowStock: Array.isArray(raw.lowStockProducts) ? raw.lowStockProducts.length : 0,
-            trend: null,
+            trend:    null,
           },
-          topProducts: raw.topProducts ?? [],
-          recentOrders: raw.recentOrders ?? [],
-          storeInfo: raw.storeInfo,
-          metrics: raw.metrics,
+          topProducts:   raw.topProducts        ?? [],
+          recentOrders:  raw.recentOrders       ?? [],
+          cancelledOrders: raw.cancelledOrders  ?? 0,
+          storeInfo:     raw.storeInfo,
+          metrics:       raw.metrics,
+          accountHealth: raw.accountHealth      ?? 0,
         }
 
         setStats(normalized)
@@ -134,11 +141,26 @@ function Dashboard() {
       }
 
       if (chartResult.status === 'fulfilled' && chartResult.value?.success) {
-        setChartData(chartResult.value.data)
-      } else {
-        hasError = true
-        errors.push('Chart data')
-      }
+      const raw = chartResult.value.data // this is the flat array
+
+      // Format dates to be more readable on the chart axis
+      const formatDate = (dateStr) =>
+        new Date(dateStr).toLocaleDateString('en-GB', { month: 'short', day: 'numeric' })
+
+      setChartData({
+        // Both charts use the same array recharts just picks different dataKeys
+        revenueData: raw.map(d => ({ date: formatDate(d.date), revenue: d.revenue })),
+        ordersData:  raw.map(d => ({ date: formatDate(d.date), orders: d.orders })),
+
+        // Build status pie from stats since backend doesn't return it in chart data
+        orderStatusData: [
+          { name: 'Pending',   value: statsResult.value?.data?.pendingOrders     ?? 0 },
+          { name: 'Confirmed', value: statsResult.value?.data?.confirmedOrders    ?? 0 },
+          { name: 'Delivered', value: statsResult.value?.data?.deliveredOrders    ?? 0 },
+          { name: 'Cancelled', value: statsResult.value?.data?.cancelledOrders    ?? 0 },
+        ].filter(d => d.value > 0), // hide zero-value slices from pie
+      })
+    }
 
       if (hasError && errors.length > 0 && !isPendingApproval) {
         console.warn(`Partial dashboard load: ${errors.join(', ')} failed to load`)
@@ -193,7 +215,7 @@ function Dashboard() {
     )
   }
 
-  // RENDER: ONBOARDING & LOADING
+  // RENDER ONBOARDING & LOADING
   if (needsOnboarding && !loading) {
     return <VendorOnboarding onComplete={handleOnboardingComplete} />
   }
@@ -519,8 +541,10 @@ function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <StatCard
           title="Total Revenue"
-          value={`£${stats?.revenue?.total?.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`}
-          icon={<DollarSign  className="w-7 h-7" />}
+          value={`£${stats?.revenue?.total?.toLocaleString('en-GB', {
+            minimumFractionDigits: 2, maximumFractionDigits: 2
+          }) || '0.00'}`}
+          icon={<DollarSign className="w-7 h-7" />}
           trend={stats?.revenue?.trend}
           color="from-green-400 to-emerald-500"
           delay={0}
@@ -529,16 +553,16 @@ function Dashboard() {
         />
         <StatCard
           title="Total Orders"
-          value={stats?.orders?.total?.toLocaleString() || 0}
-          icon={<Package     className="w-7 h-7" />}
+          value={stats?.orders?.total?.toLocaleString() || '0'}
+          icon={<Package className="w-7 h-7" />}
           trend={stats?.orders?.trend}
           color="from-blue-400 to-blue-600"
           delay={100}
-          pulse={pendingOrders > 0}
+          pulse={stats?.orders?.pending > 0}
         />
         <StatCard
           title="Active Products"
-          value={stats?.products?.total?.toLocaleString() || 0}
+          value={stats?.products?.total?.toLocaleString() || '0'}
           icon={<ShoppingBag className="w-7 h-7" />}
           trend={stats?.products?.trend}
           color="from-[#1B4D3E] to-[#0D2B22]"
@@ -547,8 +571,8 @@ function Dashboard() {
         <StatCard
           title="Avg. Order Value"
           value={`£${stats?.revenue?.avgOrderValue?.toFixed(2) || '0.00'}`}
-          icon={<BarChart2   className="w-7 h-7" />}
-          trend={stats?.revenue?.avgTrend}
+          icon={<BarChart2 className="w-7 h-7" />}
+          trend={stats?.revenue?.trend}
           color="from-amber-400 to-orange-500"
           delay={300}
         />
@@ -645,12 +669,32 @@ function Dashboard() {
                 outerRadius={90}
                 paddingAngle={5}
                 dataKey="value"
+                label={({ name, percent }) => 
+                  percent > 0 ? `${(percent * 100).toFixed(0)}%` : ''
+                }
               >
                 {(chartData?.orderStatusData || []).map((entry, index) => (
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip
+                formatter={(value, name) => [`${value} orders`, name]}
+                contentStyle={{
+                  backgroundColor: 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  boxShadow: '0 10px 40px rgba(0,0,0,0.1)',
+                }}
+              />
+              <Legend
+                iconType="circle"
+                iconSize={8}
+                formatter={(value, entry) => (
+                  <span style={{ color: '#6B7280', fontSize: '12px' }}>
+                    {value} ({entry.payload.value})
+                  </span>
+                )}
+              />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex flex-wrap gap-3 justify-center mt-4">

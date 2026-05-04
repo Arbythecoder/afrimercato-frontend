@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { vendorAPI } from '../../services/api'
+import { FaArrowLeft } from 'react-icons/fa6'
 
 const categories = [
   { id: 'all', name: 'All Stores', icon: '🏪' },
@@ -106,6 +107,8 @@ function VendorDiscovery() {
       {/* Hero Section with Search */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
+          
+          <FaArrowLeft className='mb- cursor-pointer' onClick={()=> navigate(-1)} />
           <h1 className="text-4xl font-bold text-center mb-2">Discover African Grocery Stores</h1>
           <p className="text-afri-green-light text-center mb-8">Fresh produce, authentic spices, and more near you</p>
 
@@ -143,7 +146,7 @@ function VendorDiscovery() {
               </div>
               <button
                 type="submit"
-                className="bg-afri-gold text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-yellow-400 transition-colors"
+                className="bg-afri-gold border border-yellow-400 text-gray-900 px-8 py-4 rounded-xl font-semibold hover:bg-yellow-400 transition-colors"
               >
                 Search
               </button>
