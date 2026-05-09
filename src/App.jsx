@@ -94,31 +94,28 @@ function LazyLoadingFallback() {
   )
 }
 
-
-// Helper component to redirect based on user role
 function RoleBasedRedirect() {
   const { user } = useAuth()
-  // Check roles array first to correctly handle multi-role users
-  // (e.g. a user with roles: ['vendor', 'picker'] should reach picker dashboard
-  //  when navigating to a picker-only route)
-  const roles = user?.roles || []
-  const role = user?.role || user?.primaryRole || 'customer'
+  const roles = user?.roles
+  const role  = user?.role || user?.primaryRole
 
-  if (roles.includes('picker')) return <Navigate to="/picker/dashboard" replace />
-  if (roles.includes('rider')) return <Navigate to="/rider/dashboard" replace />
+  // roles array takes priority (multi-role users like picker+vendor)
+  if (roles?.includes('superadmin')) return <Navigate to="/admin/dashboard" replace />
+  if (roles?.includes('admin'))      return <Navigate to="/admin/dashboard" replace />
+  if (roles?.includes('picker'))     return <Navigate to="/picker/dashboard" replace />
+  if (roles?.includes('rider'))      return <Navigate to="/rider/dashboard" replace />
+  if (roles?.includes('vendor'))     return <Navigate to="/dashboard" replace />
 
+  // Fallback to singular role field
   switch (role) {
-    case 'vendor':
-      return <Navigate to="/dashboard" replace />
-    case 'rider':
-      return <Navigate to="/rider/dashboard" replace />
-    case 'picker':
-      return <Navigate to="/picker/dashboard" replace />
-    case 'admin':
-      return <Navigate to="/admin/dashboard" replace />
+    case 'superadmin':
+    case 'admin':   return <Navigate to="/admin/dashboard" replace />
+    case 'vendor':  return <Navigate to="/dashboard" replace />
+    case 'rider':   return <Navigate to="/rider/dashboard" replace />
+    case 'picker':  return <Navigate to="/picker/dashboard" replace />
+
     case 'customer':
     default: {
-      // If the user was mid-checkout when they registered/logged in, send them back there
       const pendingRedirect = localStorage.getItem('post_login_redirect')
       if (pendingRedirect) {
         localStorage.removeItem('post_login_redirect')
@@ -129,7 +126,7 @@ function RoleBasedRedirect() {
         localStorage.removeItem('checkout_redirect')
         return <Navigate to="/checkout" replace />
       }
-      return <Navigate to="/" replace />
+      return <Navigate to="/my-dashboard" replace />
     }
   }
 }
@@ -203,7 +200,14 @@ function AppContent() {
       <Routes>
       {/* Public Routes - Customer Marketplace */}
       {/* CLIENT-EXACT Landing Page - Just Eats / Uber Eats style with location-first approach */}
-      <Route path="/" element={<ClientLandingPage />} />
+      <Route
+        path="/"
+        element={
+          isAuthenticated && user?.role !== 'customer' && user?.primaryRole !== 'customer'
+            ? <RoleBasedRedirect />
+            : <ClientLandingPage />
+        }
+      />
       <Route path="/old-home" element={<Home />} /> {/* Keep old version for reference */}
       <Route path="/partner" element={<PartnerWithUs />} />
       <Route path="/stores" element={<ClientStoresPage />} />

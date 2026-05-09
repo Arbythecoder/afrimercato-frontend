@@ -131,10 +131,32 @@ function OrderConfirmation() {
             {/* Delivery Address */}
             <div className="mb-6 pb-6 border-b">
               <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
-              <p className="text-gray-700 text-sm"> <span className="font-semibold">Name:</span> {order.customer?.name}</p>
-              <p className="text-gray-700 text-sm"><span className="font-semibold">Email:</span> {order.customer?.email}</p>
-              <p className="text-gray-700 text-sm"><span className="font-semibold">Phone:</span> {order.customer?.phone || "No number provided"}</p>
-              <p className="text-gray-700 text-sm"><span className="font-semibold">Address:</span> {order.deliveryAddress}</p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Name:</span> {order.customer?.name}
+              </p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Email:</span> {order.customer?.email}
+              </p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
+              </p>
+
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Address:</span>{' '}
+                {[
+                  order.deliveryAddress?.street,
+                  order.deliveryAddress?.city,
+                  order.deliveryAddress?.county,
+                  order.deliveryAddress?.postcode,
+                  order.deliveryAddress?.country,
+                ].filter(Boolean).join(', ')}
+              </p>
+
+              {order.deliveryAddress?.instructions && (
+                <p className="text-gray-700 text-sm">
+                  <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
+                </p>
+              )}
             </div>
 
             {/* Items */}
@@ -201,8 +223,8 @@ function OrderConfirmation() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Payment</h2>
             <div className="sm:flex justify-between items-center">
               <p className="text-gray-700">
-                 <span className='font-semibold'>Method:</span> {order.payment?.method === 'card' ? '💳 Card Payment' : '💳 Card Payment'}
-                {console.log(order)}
+                <span className="font-semibold">Method:</span>{' '}
+{order.paymentMethod === 'card' ? '💳 Card Payment' : '💵 Cash on Delivery'}
               </p>
               <div className='flex'>
                 <p className="text-gray-700 font-semibold">Status:</p>

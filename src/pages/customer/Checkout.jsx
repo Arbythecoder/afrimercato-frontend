@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall, createPaymentIntent } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall, getUserOrders, createPaymentIntent } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js'
@@ -283,7 +283,7 @@ function CheckoutForm() {
     loadRepurchaseItems()
   }, [isAuthenticated, isCustomer])
 
-  // Pre-fill delivery address from user profile — non-blocking, runs once on mount
+  // Pre-fill delivery address from user profile
   useEffect(() => {
     if (!isAuthenticated || !isCustomer) return
     const prefillAddress = async () => {
@@ -291,19 +291,69 @@ function CheckoutForm() {
         const res = await userAPI.getProfile()
         const profile = res?.data || res
         if (!profile) return
-        // Prefer the address marked isDefault; fall back to first in array
-        const savedAddr = profile.addresses?.find(a => a.isDefault) || profile.addresses?.[0]
-        setAddress(prev => ({
-          fullName:     prev.fullName     || profile.name  || '',
-          phone:        prev.phone        || profile.phone || '',
-          street:       prev.street       || savedAddr?.street   || '',
-          city:         prev.city         || savedAddr?.city     || '',
-          postcode:     prev.postcode     || savedAddr?.postcode || '',
-          instructions: prev.instructions || ''
-        }))
-      } catch (_e) {
-        // Non-blocking — ignore silently if profile fetch fails
-      }
+
+        // ── 1. Try saved addresses first ─────────────────────────────
+        const savedAddr = profile.addresses?.find(a => a.isDefault)
+          || profile.addresses?.[0]
+
+        if (savedAddr?.street) {
+          setAddress(prev => ({
+            fullName:     prev.fullName     || profile.name  || '',
+            phone:        prev.phone        || profile.phone || savedAddr.phone || '',
+            street:       prev.street       || savedAddr.street,
+            city:         prev.city         || savedAddr.city,
+            county:       prev.county       || savedAddr.county   || '',
+            postcode:     prev.postcode     || savedAddr.postcode,
+            country:      'United Kingdom',
+            instructions: prev.instructions || ''
+          }))
+          return // done, no need to fetch orders
+        }
+
+        // ── 2. Fallback: pull address from last order ─────────────────
+        // profile.addresses is empty but the address exists on past orders
+        console.log('[Prefill] No saved address — checking last order')
+        try {
+          const ordersRes = await getUserOrders()
+           const lastOrder = ordersRes?.data?.[0] || ordersRes?.orders?.[0]
+          // const lastOrder = ordersRes?.data?.orders?.[0] || ordersRes?.data?.[0]
+          const orderAddr = lastOrder?.deliveryAddress
+
+          console.log('[Prefill] Last order address:', orderAddr)
+
+          if (orderAddr?.street) {
+            setAddress(prev => ({
+              fullName:     prev.fullName     || orderAddr.fullName || profile.name || '',
+              phone:        prev.phone        || orderAddr.phone    || profile.phone || '',
+              street:       prev.street       || orderAddr.street,
+              city:         prev.city         || orderAddr.city,
+              county:       prev.county       || orderAddr.county   || '',
+              postcode:     prev.postcode     || orderAddr.postcode,
+              country:      'United Kingdom',
+              instructions: prev.instructions || ''
+            }))
+
+            // ── 3. Also fix the root cause: save it now so next time ──
+            // addresses array won't be empty again after this
+            userAPI.saveDefaultAddress({
+              street:    orderAddr.street,
+              city:      orderAddr.city,
+              county:    orderAddr.county    || '',
+              postcode:  orderAddr.postcode,
+              country:   'United Kingdom',
+              fullName:  orderAddr.fullName,
+              phone:     orderAddr.phone,
+              label:     'Home',
+              isDefault: true
+            })
+            .then(() => console.log('[Prefill] ✓ Backfilled address from last order'))
+            .catch(err => console.error('[Prefill] Backfill failed:', err.message))
+          }
+        } catch (orderErr) {
+          console.warn('[Prefill] Could not fetch last order:', orderErr.message)
+        }
+
+      } catch (_e) {}
     }
     prefillAddress()
   }, [isAuthenticated, isCustomer])
@@ -571,11 +621,18 @@ function CheckoutForm() {
           // Fire-and-forget: persist delivery address back to profile for next checkout
           if (isAuthenticated && address.street) {
             userAPI.saveDefaultAddress({
-              street:   address.street,
-              city:     address.city,
-              postcode: address.postcode,
-              label:    'Home'
-            }).catch(() => { /* non-critical — never blocks checkout */ })
+              street:    address.street,
+              city:      address.city,
+              county:    address.county || '',
+              postcode:  address.postcode,
+              country:   'United Kingdom',
+              fullName:  address.fullName,
+              phone:     address.phone,
+              label:     'Home',
+              isDefault: true
+            })
+            .then(() => console.log('[Checkout] ✓ Address saved to profile'))  // add this
+            .catch((err) => console.error('[Checkout] saveDefaultAddress failed:', err.message))
           }
 
           navigate(`/payment/verify?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`)
