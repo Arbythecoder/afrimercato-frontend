@@ -40,20 +40,19 @@ const statusNames = {
 }
 
 // What actions a vendor can take per status
-// [label, nextStatus, style]
 const VENDOR_ACTIONS = {
   pending:            [['Confirm', 'confirmed', 'primary'], ['Cancel', 'cancelled', 'danger']],
   confirmed:          [['Start Preparing', 'preparing', 'primary'], ['Cancel', 'cancelled', 'danger']],
   preparing:          [['Ready for Delivery', 'ready_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  ready_for_delivery: [['Cancel', 'cancelled', 'danger']],  // picker/rider takes over from here
+  ready_for_delivery: [['Out for Delivery', 'out_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
   assigned_to_picker: [['Cancel', 'cancelled', 'danger']],
   picking:            [['Cancel', 'cancelled', 'danger']],
   packed:             [['Cancel', 'cancelled', 'danger']],
   assigned_to_rider:  [['Cancel', 'cancelled', 'danger']],
   rider_accepted:     [],
   picked_up_by_rider: [],
-  out_for_delivery:   [],
-  delivered:          [],
+  out_for_delivery:   [['Mark Delivered', 'delivered', 'primary']],
+  delivered:          [['Complete Order', 'completed', 'primary']],
   completed:          [],
   cancelled:          [],
   failed:             [],
@@ -219,22 +218,14 @@ function Orders() {
     const { order, action } = pendingAction
     setActionLoading(true)
     setUpdateError('')
+
     try {
       const response = await vendorAPI.updateOrderStatus(order._id, {
         status: action[1],
         note: `Status updated to ${action[1]} by vendor`,
       })
+
       if (response.success) {
-        updateOrderStatusInStore(order._id, action[1])
-        // Optimistic update — avoids full refetch flicker
-        setOrders(prev =>
-          prev.map(o => o._id === order._id ? { ...o, status: action[1] } : o)
-        )
-        // If the detail modal is open for this order, refresh it
-        if (selectedOrder?._id === order._id) {
-          const updated = await vendorAPI.getOrder(order._id)
-          if (updated.success) setSelectedOrder(updated.data.order)
-        }
         setPendingAction(null)
       } else {
         setUpdateError(response.message || 'Failed to update status')
@@ -243,6 +234,14 @@ function Orders() {
       setUpdateError(error.data?.message || error.message || 'Failed to update status')
     } finally {
       setActionLoading(false)
+      await fetchOrders()
+      // Refresh detail modal if open
+      if (selectedOrder) {
+        try {
+          const updated = await vendorAPI.getOrder(selectedOrder._id)
+          if (updated.success) setSelectedOrder(updated.data.order)
+        } catch (_e) {}
+      }
     }
   }
 

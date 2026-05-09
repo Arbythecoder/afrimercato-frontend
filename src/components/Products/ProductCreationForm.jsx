@@ -296,8 +296,19 @@ function ProductCreationForm({ product, onClose, onSave }) {
   };
 
   const removeImage = (index) => {
-    setImages(prev => prev.filter((_, i) => i !== index));
-    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    const preview = imagePreviews[index]
+    const isExisting = typeof preview === 'string' && preview.startsWith('http')
+
+    if (!isExisting) {
+      // Only remove from images array if it's a new upload
+      // Find which new-upload index this corresponds to
+      const newUploadIndex = imagePreviews
+        .slice(0, index)
+        .filter(p => !p.startsWith('http')).length
+      setImages(prev => prev.filter((_, i) => i !== newUploadIndex))
+    }
+
+    setImagePreviews(prev => prev.filter((_, i) => i !== index))
   };
 
   const addVariant = () => {
@@ -382,145 +393,151 @@ function ProductCreationForm({ product, onClose, onSave }) {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+
+    if (e?.preventDefault) e.preventDefault()
 
     if (!validate()) {
-      // Show specific errors in alert
-      const errorMessages = Object.entries(errors).map(([field, msg]) => `${field}: ${msg}`).join('\n');
-      alert(`Please fix the following errors:\n\n${errorMessages}`);
+      const errorMessages = Object.entries(errors).map(([field, msg]) => `${field}: ${msg}`).join('\n')
+      alert(`Please fix the following errors:\n\n${errorMessages}`)
 
-      // Jump to first error step
-      if (errors.name || errors.description || errors.category) setCurrentStep(1);
-      else if (errors.images) setCurrentStep(2);
-      else if (errors.price || errors.stock) setCurrentStep(3);
+      if (errors.name || errors.description || errors.category) setCurrentStep(1)
+      else if (errors.images) setCurrentStep(2)
+      else if (errors.price || errors.stock) setCurrentStep(3)
 
-      return;
+      return
     }
 
-    // Check network connectivity
     if (!navigator.onLine) {
-      alert('❌ No internet connection. Please check your network and try again.');
-      return;
+      alert('No internet connection. Please check your network and try again.')
+      return
     }
 
     try {
-      setSaving(true);
-      setUploadProgress('Preparing upload...');
+      setSaving(true)
+      setUploadProgress('Preparing upload...')
 
-      // Validate images before sending
-      if (!images || images.length === 0) {
-        alert('❌ At least one product image is required');
-        setSaving(false);
-        setUploadProgress('');
-        return;
+      // Check both new uploads AND existing URLs
+      const hasExistingImages = imagePreviews.some(p => typeof p === 'string' && p.startsWith('http'))
+      const hasNewImages = images.length > 0
+
+      if (!hasExistingImages && !hasNewImages) {
+        alert(' At least one product image is required')
+        setSaving(false)
+        setUploadProgress('')
+        return
       }
 
-      // Create FormData for multipart upload
-      const submitData = new FormData();
+      const submitData = new FormData()
 
       // Add text fields
       Object.keys(formData).forEach(key => {
         if (key !== 'availability' && key !== 'tags') {
-          submitData.append(key, formData[key]);
+          submitData.append(key, formData[key])
         }
-      });
+      })
 
-      // Add complex objects as JSON strings
-      submitData.append('availability', JSON.stringify(formData.availability));
-      submitData.append('tags', JSON.stringify(formData.tags));
-      submitData.append('variants', JSON.stringify(variants));
+      // Add complex objects as JSON
+      submitData.append('availability', JSON.stringify(formData.availability))
+      submitData.append('tags', JSON.stringify(formData.tags))
+      submitData.append('variants', JSON.stringify(variants))
 
-      // Calculate total image size for progress
-      const totalSize = images.reduce((sum, img) => sum + img.size, 0);
-      const totalSizeKB = (totalSize / 1024).toFixed(1);
-      console.log(`📸 Sending ${images.length} image(s), total: ${totalSizeKB}KB`);
+      // Handle images — new uploads OR preserve existing URLs
+      if (hasNewImages) {
+        const totalSize = images.reduce((sum, img) => sum + img.size, 0)
+        const totalSizeKB = (totalSize / 1024).toFixed(1)
+        console.log(`📸 Sending ${images.length} new image(s), total: ${totalSizeKB}KB`)
 
-      // Add images with debug logging
-      images.forEach((image, index) => {
-        console.log(`  Image ${index + 1}: ${image.name} (${(image.size / 1024).toFixed(1)}KB)`);
-        submitData.append('images', image);
-      });
+        images.forEach((image, index) => {
+          console.log(`  Image ${index + 1}: ${image.name} (${(image.size / 1024).toFixed(1)}KB)`)
+          submitData.append('images', image)
+        })
 
-      setUploadProgress(`Uploading ${images.length} image(s) (${totalSizeKB}KB)...`);
+        setUploadProgress(`Uploading ${images.length} image(s) (${totalSizeKB}KB)...`)
+      } else {
+        // No new uploads — send existing URLs so backend doesn't wipe them
+        const existingUrls = imagePreviews.filter(p => typeof p === 'string' && p.startsWith('http'))
+        console.log(`Preserving ${existingUrls.length} existing image(s)`)
+        submitData.append('images', JSON.stringify(existingUrls))
+        setUploadProgress('Saving changes...')
+      }
 
-      // Retry logic for mobile network instability
-      let response;
-      let lastError;
-      const maxRetries = 3;
+      // Retry logic
+      let response
+      let lastError
+      const maxRetries = 3
 
       for (let attempt = 1; attempt <= maxRetries; attempt++) {
         try {
           if (attempt > 1) {
-            setUploadProgress(`Retrying upload (attempt ${attempt}/${maxRetries})...`);
-            // Wait before retry with exponential backoff
-            await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+            setUploadProgress(`Retrying upload (attempt ${attempt}/${maxRetries})...`)
+            await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
           }
 
           if (product) {
-            response = await vendorAPI.updateProduct(product._id, submitData);
+            response = await vendorAPI.updateProduct(product._id, submitData)
           } else {
-            response = await vendorAPI.createProduct(submitData);
+            response = await vendorAPI.createProduct(submitData)
           }
 
-          // If we get here, upload succeeded
-          break;
+          break // success — exit retry loop
         } catch (err) {
-          lastError = err;
-          console.warn(`Upload attempt ${attempt} failed:`, err.message);
+          lastError = err
+          console.warn(`Upload attempt ${attempt} failed:`, err.message)
 
-          // Don't retry auth errors or validation errors
-          if (err.message?.includes('401') || err.message?.includes('Session expired') ||
-              err.code === 'AUTH_EXPIRED' || err.status === 400 || err.status === 401) {
-            throw err;
+          // Don't retry auth or validation errors
+          if (
+            err.message?.includes('401') ||
+            err.message?.includes('Session expired') ||
+            err.code === 'AUTH_EXPIRED' ||
+            err.status === 400 ||
+            err.status === 401
+          ) {
+            throw err
           }
 
-          // On last attempt, throw the error
-          if (attempt === maxRetries) {
-            throw err;
-          }
+          if (attempt === maxRetries) throw err
         }
       }
 
       if (response?.success) {
-        setUploadProgress('');
-        alert(product ? '✅ Product updated successfully!' : '✅ Product created successfully!');
-        // Pass full response to parent so it can decide what to do (refresh, close modal, etc.)
-        onSave(response);
+        setUploadProgress('')
+        alert(product ? ' Product updated successfully!' : 'Product created successfully!')
+        onSave(response)
       } else {
-        // Handle non-success response
-        alert(`❌ ${response?.message || 'Failed to save product'}`);
+        alert(` ${response?.message || 'Failed to save product'}`)
       }
     } catch (error) {
-      console.error('Product save error:', error);
-      setUploadProgress('');
+      console.error('Product save error:', error)
+      setUploadProgress('')
 
-      // apiCall throws Error with message directly
-      const errorMessage = error.message || 'Failed to save product';
+      const errorMessage = error.message || 'Failed to save product'
 
-      // Check for specific error types
       if (errorMessage.includes('401') || errorMessage.includes('Session expired') || error.code === 'AUTH_EXPIRED') {
-        alert('❌ Your session has expired. Please log in again.');
-        navigate('/login');
+        alert(' Your session has expired. Please log in again.')
+        navigate('/login')
       } else if (errorMessage.includes('501')) {
-        alert('❌ This feature is not yet available. Coming soon!');
-      } else if (errorMessage.includes('timed out') || errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        // Mobile-specific error handling
+        alert(' This feature is not yet available. Coming soon!')
+      } else if (
+        errorMessage.includes('timed out') ||
+        errorMessage.includes('Failed to fetch') ||
+        errorMessage.includes('NetworkError')
+      ) {
         alert(
-          '❌ Upload failed - Network issue detected.\n\n' +
+          ' Upload failed - Network issue detected.\n\n' +
           'Tips for mobile users:\n' +
           '• Make sure you have a stable internet connection\n' +
           '• Try connecting to WiFi instead of mobile data\n' +
           '• The images have been optimized, but your connection may be slow\n' +
           '• Try again in a moment'
-        );
+        )
       } else {
-        alert(`❌ ${errorMessage}`);
+        alert(` ${errorMessage}`)
       }
     } finally {
-      setSaving(false);
-      setUploadProgress('');
+      setSaving(false)
+      setUploadProgress('')
     }
-  };
+  }
 
   const steps = [
     { id: 1, name: 'Basic Info' },
@@ -578,7 +595,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-4 sm:p-6">
+        <div className="p-4 sm:p-6">
           <div className="max-h-[50vh] sm:max-h-[60vh] overflow-y-auto">
             {/* STEP 1: BASIC INFO */}
             {currentStep === 1 && (
@@ -1072,7 +1089,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                 </button>
               ) : (
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={() => handleSubmit()}
                   disabled={saving || compressingImages}
                   className="px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                 >
@@ -1090,7 +1108,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
               )}
             </div>
           </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   );
