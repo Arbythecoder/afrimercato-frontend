@@ -30,31 +30,16 @@ function Login() {
     setError('')
     setLoading(true)
 
-    // Read before login() so we can pass requiredRole — the flag must be checked
-    // now because login() won't set auth state on a role mismatch (no redirect race).
     const checkoutRedirect = localStorage.getItem('checkout_redirect') === 'true'
 
-    const result = await login(
-      formData.email,
-      formData.password,
-      checkoutRedirect ? { requiredRole: 'customer' } : {}
-    )
+    const result = await login(formData.email, formData.password)
 
     if (!result.success) {
-      if (result.roleBlocked) {
-        const roleLabel = result.actualRole === 'vendor' ? 'Vendor'
-          : result.actualRole === 'rider' ? 'Rider'
-          : result.actualRole === 'picker' ? 'Picker'
-          : result.actualRole === 'admin' ? 'Admin'
-          : 'Non-Customer'
-        setError(`This account is registered as a ${roleLabel}. Please use a customer account.`)
+      const msg = result.message || 'Login failed. Please try again.'
+      if (msg.includes('timed out') || msg.includes('timeout')) {
+        setError('Server is waking up — please try again in a few seconds.')
       } else {
-        const msg = result.message || 'Login failed. Please try again.'
-        if (msg.includes('timed out') || msg.includes('timeout')) {
-          setError('Server is waking up — please try again in a few seconds.')
-        } else {
-          setError(msg)
-        }
+        setError(msg)
       }
       setLoading(false)
       return
@@ -91,7 +76,7 @@ function Login() {
         break
       case 'customer':
       default:
-        navigate('/cart')
+        navigate('/my-dashboard')
         break
     }
 
