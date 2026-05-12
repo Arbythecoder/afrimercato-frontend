@@ -165,7 +165,11 @@
       "Bash(vercel project:*)",
       "Bash(vercel --prod --force:*)",
       "Bash(git subtree split --prefix=afrimercato-frontend -b frontend-deploy)",
-      "Bash(git subtree push --prefix=afrimercato-backend backend main)"
+      "Bash(git subtree push --prefix=afrimercato-backend backend main)",
+      "Bash(fly machine status e825d10b130368 --app afrimercato-backend)",
+      "Bash(flyctl deploy:*)",
+      "Bash(grep -rn \"DeliveryChat\\\\|chat\" c:/Users/HP/Desktop/afrihub/src --include=*.jsx --include=*.js)",
+      "Bash(grep -rn \"STREAM\\\\|stream_chat\\\\|getstream\" c:/Users/HP/Desktop/afrihub/docs --include=*.md)"
     ],
     "deny": [],
     "ask": []

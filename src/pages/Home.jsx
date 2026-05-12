@@ -493,9 +493,6 @@ export default function Home() {
           <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">
             Are You a Food Vendor?
           </h2>
-          <p className="text-lg text-gray-800 mb-8">
-            Join 4,320+ vendors already selling on AfriMercato. Reach thousands of customers and grow your business online.
-          </p>
           <Link
             to="/partner"
             className="inline-block bg-gray-900 text-white hover:bg-gray-800 px-10 py-4 rounded-xl font-bold shadow-2xl text-lg"
@@ -541,7 +538,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; 2025 AfriMercato. All rights reserved.</p>
+            <p>&copy; 2026 AfriMercato. All rights reserved.</p>
           </div>
         </div>
       </footer>
