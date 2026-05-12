@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { orderAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { IoImageOutline } from 'react-icons/io5'
 
 const statusSteps = [
   { key: 'pending', label: 'Order Placed', icon: '📝' },
@@ -191,7 +192,7 @@ function OrderDetail() {
         {order.status === 'cancelled' && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-6 mb-6">
             <div className="flex items-center gap-3">
-              <span className="text-3xl">❌</span>
+              <span className="text-3xl"></span>
               <div>
                 <h3 className="font-bold text-red-800">Order Cancelled</h3>
                 <p className="text-red-600">
@@ -210,13 +211,30 @@ function OrderDetail() {
                 Order Items ({order.items?.length || 0})
               </h2>
               <div className="space-y-4">
-                {order.items?.map((item, index) => (
+                {order.items?.map((item, index) => {
+                const rawImages = item.product?.images || item.images || []
+                const firstImage = rawImages[0]
+                const imageUrl = firstImage?.url
+                  || (typeof firstImage === 'string' ? firstImage : null)
+                  || null
+
+                return (
                   <div key={index} className="flex gap-4 pb-4 border-b last:border-0">
-                    <img
-                      src={getProductImage(item)}
-                      alt={item.name}
-                      className="w-20 h-20 rounded-lg object-cover"
-                    />
+                    <div className="w-20 h-20 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
+                      {imageUrl ? (
+                        <img
+                          src={imageUrl}
+                          alt={item.name}
+                          className="w-full h-full object-cover"
+                          onError={(e) => {
+                            e.target.style.display = 'none'
+                            e.target.parentNode.innerHTML = '<div class="w-full h-full flex items-center justify-center text-2xl"><IoImageOutline /></div>'
+                          }}
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-2xl"><IoImageOutline /></div>
+                      )}
+                    </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900">{item.name}</h3>
                       <p className="text-sm text-gray-500">Quantity: {item.quantity}</p>
@@ -233,7 +251,8 @@ function OrderDetail() {
                       </p>
                     </div>
                   </div>
-                ))}
+                )
+              })}
               </div>
             </div>
 
@@ -315,16 +334,32 @@ function OrderDetail() {
             {/* Delivery Address */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <h2 className="text-lg font-bold text-gray-900 mb-4">Delivery Address</h2>
-              <div className="text-sm">
-                <p className="font-semibold">{order.deliveryAddress?.name || order.customerName}</p>
-                <p className="text-gray-600">{order.deliveryAddress?.street}</p>
-                <p className="text-gray-600">
-                  {order.deliveryAddress?.city}, {order.deliveryAddress?.postcode}
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Name:</span> {order.customer?.name}
+              </p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Email:</span> {order.customer?.email}
+              </p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
+              </p>
+
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Address:</span>{' '}
+                {[
+                  order.deliveryAddress?.street,
+                  order.deliveryAddress?.city,
+                  order.deliveryAddress?.county,
+                  order.deliveryAddress?.postcode,
+                  order.deliveryAddress?.country,
+                ].filter(Boolean).join(', ')}
+              </p>
+
+              {order.deliveryAddress?.instructions && (
+                <p className="text-gray-700 text-sm">
+                  <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
                 </p>
-                {order.deliveryAddress?.phone && (
-                  <p className="text-gray-600 mt-2">📞 {order.deliveryAddress.phone}</p>
-                )}
-              </div>
+              )}
             </div>
 
             {/* Actions */}

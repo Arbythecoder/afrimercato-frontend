@@ -5,6 +5,7 @@ import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
 import { checkVendorLock } from '../../utils/cartVendorLock'
 import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
+import { FaArrowLeft } from 'react-icons/fa6'
 
 const categories = [
   { id: 'all', name: 'All Products', icon: '🛒' },
@@ -210,11 +211,12 @@ function ProductBrowsing() {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold mb-4">Browse Products</h1>
+        <div className="max-w-7xl mx-auto ">
+          <FaArrowLeft className='mb-3 cursor-pointer' onClick={()=> navigate(-1)} />
+          <h1 className="text-3xl font-bold mb-4 px-4">Browse Products</h1>
 
           {/* Search Bar */}
-          <div className="flex gap-4">
+          <div className="flex gap-4 px-4">
             <div className="flex-1 relative">
               <input
                 type="text"

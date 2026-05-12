@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { orderAPI, toggleRepeatOrder } from '../../services/api'
+import { LuShoppingBag } from "react-icons/lu";
+import { FaArrowLeft } from 'react-icons/fa6';
 
 const reorderItems = (order, navigate, setReorderedId) => {
   if (!order?.items?.length) return
@@ -80,9 +82,10 @@ function OrderHistory() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
-        <div className="max-w-7xl mx-auto px-4">
-          <h1 className="text-3xl font-bold">Order History</h1>
-          <p className="text-afri-green-light mt-1">Track and manage your orders</p>
+        <div className="max-w-7xl mx-auto ">
+          <FaArrowLeft title='back' className='mb-3 cursor-pointer' onClick={()=> navigate('/my-dashboard')} />
+          <h1 className="text-3xl px-4 font-bold">Order History</h1>
+          <p className="text-afri-green-light px-4 mt-1">Track and manage your orders</p>
         </div>
       </div>
 
@@ -129,7 +132,9 @@ function OrderHistory() {
           </div>
         ) : filteredOrders.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-lg">
-            <span className="text-6xl">📦</span>
+            <span className="text-6xl">
+              <LuShoppingBag className="mx-auto text-gray-500" />
+            </span>
             <h2 className="text-2xl font-bold text-gray-900 mt-4">No orders found</h2>
             <p className="text-gray-500 mt-2">Start shopping to see your orders here!</p>
             <button
@@ -231,16 +236,36 @@ function OrderHistory() {
 
                 {/* Order Items Preview */}
                 <div className="mt-4 pt-4 border-t flex gap-2 overflow-x-auto">
-                  {order.items?.slice(0, 4).map((item, i) => (
-                    <div key={i} className="flex-shrink-0 text-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
-                        🛒
+                  {order.items?.slice(0, 4).map((item, i) => {
+                    const imageObj = item.product?.images?.[0];
+                    const imageSrc = typeof imageObj === 'string' ? imageObj : imageObj?.url || null;
+
+                    return (
+                      <div key={i} className="flex-shrink-0 text-center">
+                        
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt={item.name || 'Item'}
+                            className="w-16 h-16 rounded-lg object-cover bg-gray-100"
+                            onError={(e) => { 
+                              e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200';
+                            }}
+                          />
+                        ) : (
+                          <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-2xl">
+                            🛒
+                          </div>
+                        )}
+
+                        <p className="text-xs text-gray-500 mt-1 truncate w-16">
+                          {item.name || 'Item'}
+                        </p>
                       </div>
-                      <p className="text-xs text-gray-500 mt-1 truncate w-16">
-                        {item.name || 'Item'}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
+                  
+                  {/* Remaining items counter */}
                   {order.items?.length > 4 && (
                     <div className="flex-shrink-0 w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-sm text-gray-500">
                       +{order.items.length - 4}

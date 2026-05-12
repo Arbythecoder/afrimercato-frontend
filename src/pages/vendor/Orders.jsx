@@ -3,38 +3,147 @@ import { vendorAPI } from '../../services/api'
 import OrderDetailsModal from '../../components/OrderFulfillment/OrderDetailsModal'
 import useVendorStore from '../../stores/useVendorStore'
 
-// Order status badge colors
 const statusColors = {
-  pending: 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900',
-  confirmed: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
-  assigned_picker: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
-  picking: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
-  picked: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
-  packing: 'bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] text-white',
-  ready_for_pickup: 'bg-gradient-to-r from-teal-500 to-teal-600 text-white',
-  preparing: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white',
-  ready: 'bg-gradient-to-r from-green-600 to-green-700 text-white',
-  'out-for-delivery': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white',
-  delivered: 'bg-gradient-to-r from-green-700 to-green-800 text-white',
-  completed: 'bg-gradient-to-r from-gray-700 to-gray-800 text-white',
-  cancelled: 'bg-gradient-to-r from-red-500 to-red-600 text-white',
+  pending:            'bg-amber-100 text-amber-800',
+  confirmed:          'bg-blue-100 text-blue-800',
+  preparing:          'bg-orange-100 text-orange-800',
+  assigned_to_picker: 'bg-teal-100 text-teal-800',
+  picking:            'bg-teal-100 text-teal-800',
+  packed:             'bg-teal-100 text-teal-800',
+  ready_for_delivery: 'bg-cyan-100 text-cyan-800',
+  assigned_to_rider:  'bg-purple-100 text-purple-800',
+  rider_accepted:     'bg-purple-100 text-purple-800',
+  picked_up_by_rider: 'bg-purple-100 text-purple-800',
+  out_for_delivery:   'bg-blue-100 text-blue-800',
+  delivered:          'bg-green-100 text-green-800',
+  completed:          'bg-gray-100 text-gray-700',
+  cancelled:          'bg-red-100 text-red-800',
+  failed:             'bg-red-100 text-red-800',
 }
 
-// Status display names
 const statusNames = {
-  pending: 'Pending',
-  confirmed: 'Confirmed',
-  assigned_picker: 'Picker Assigned',
-  picking: 'Picking Items',
-  picked: 'Items Picked',
-  packing: 'Packing',
-  ready_for_pickup: 'Ready for Pickup',
-  preparing: 'Preparing',
-  ready: 'Ready',
-  'out-for-delivery': 'Out for Delivery',
-  delivered: 'Delivered',
-  completed: 'Completed',
-  cancelled: 'Cancelled',
+  pending:            'Pending',
+  confirmed:          'Confirmed',
+  preparing:          'Preparing',
+  assigned_to_picker: 'Picker Assigned',
+  picking:            'Picking',
+  packed:             'Packed',
+  ready_for_delivery: 'Ready for Delivery',
+  assigned_to_rider:  'Rider Assigned',
+  rider_accepted:     'Rider Accepted',
+  picked_up_by_rider: 'Picked Up',
+  out_for_delivery:   'Out for Delivery',
+  delivered:          'Delivered',
+  completed:          'Completed',
+  cancelled:          'Cancelled',
+  failed:             'Failed',
+}
+
+// What actions a vendor can take per status
+const VENDOR_ACTIONS = {
+  pending:            [['Confirm', 'confirmed', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  confirmed:          [['Start Preparing', 'preparing', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  preparing:          [['Ready for Delivery', 'ready_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  ready_for_delivery: [['Out for Delivery', 'out_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  assigned_to_picker: [['Cancel', 'cancelled', 'danger']],
+  picking:            [['Cancel', 'cancelled', 'danger']],
+  packed:             [['Cancel', 'cancelled', 'danger']],
+  assigned_to_rider:  [['Cancel', 'cancelled', 'danger']],
+  rider_accepted:     [],
+  picked_up_by_rider: [],
+  out_for_delivery:   [['Mark Delivered', 'delivered', 'primary']],
+  delivered:          [['Complete Order', 'completed', 'primary']],
+  completed:          [],
+  cancelled:          [],
+  failed:             [],
+}
+
+// Action button styles
+const actionBtnClass = {
+  primary: 'bg-green-600 hover:bg-green-700 text-white',
+  danger:  'bg-red-100 hover:bg-red-200 text-red-700 border border-red-200',
+}
+
+function ConfirmModal({ action, order, onConfirm, onCancel, loading }) {
+  if (!action || !order) return null
+  const isCancelling = action[1] === 'cancelled'
+  return (
+    <div
+      style={{ minHeight: 300, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      className="fixed inset-0 z-50"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isCancelling ? 'bg-red-100' : 'bg-green-100'}`}>
+          <span className="text-2xl">{isCancelling ? '⚠️' : '✓'}</span>
+        </div>
+        <h3 className="text-lg font-bold text-gray-900 text-center mb-1">
+          {isCancelling ? 'Cancel this order?' : `${action[0]} order?`}
+        </h3>
+        <p className="text-sm text-gray-500 text-center mb-1">
+          Order <span className="font-semibold text-gray-700">{order.orderNumber}</span>
+        </p>
+        <p className="text-sm text-gray-500 text-center mb-5">
+          Status will change to{' '}
+          <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${statusColors[action[1]]}`}>
+            {statusNames[action[1]]}
+          </span>
+        </p>
+        <div className="flex gap-3">
+          <button
+            type="button"
+            onClick={onCancel}
+            disabled={loading}
+            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition text-sm disabled:opacity-50"
+          >
+            Keep
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            disabled={loading}
+            className={`flex-1 py-2.5 rounded-xl font-semibold transition text-sm disabled:opacity-50 ${
+              isCancelling
+                ? 'bg-red-600 hover:bg-red-700 text-white'
+                : 'bg-green-600 hover:bg-green-700 text-white'
+            }`}
+          >
+            {loading ? (
+              <span className="flex items-center justify-center gap-1">
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                Updating...
+              </span>
+            ) : (isCancelling ? 'Yes, Cancel' : action[0])}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatusActions({ order, onAction }) {
+  const actions = VENDOR_ACTIONS[order.status] || []
+  if (actions.length === 0) return <span className="text-xs text-gray-400">—</span>
+  return (
+    <div className="flex items-center gap-1.5 flex-wrap">
+      {actions.map(action => (
+        <button
+          key={action[1]}
+          type="button"
+          onClick={() => onAction(order, action)}
+          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${actionBtnClass[action[2]]}`}
+        >
+          {action[0]}
+        </button>
+      ))}
+    </div>
+  )
 }
 
 function Orders() {
@@ -45,21 +154,19 @@ function Orders() {
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [fetchError, setFetchError] = useState('')
   const [updateError, setUpdateError] = useState('')
+
+  // Confirmation modal state
+  const [pendingAction, setPendingAction] = useState(null)   // { order, action }
+  const [actionLoading, setActionLoading] = useState(false)
+
   const [filters, setFilters] = useState({
-    status: '',
-    search: '',
-    page: 1,
-    limit: 20,
+    status: '', search: '', page: 1, limit: 20,
   })
   const [pagination, setPagination] = useState({
-    total: 0,
-    pages: 0,
-    currentPage: 1,
+    total: 0, pages: 0, currentPage: 1,
   })
 
-  useEffect(() => {
-    fetchOrders()
-  }, [filters])
+  useEffect(() => { fetchOrders() }, [filters])
 
   const fetchOrders = async () => {
     try {
@@ -99,30 +206,58 @@ function Orders() {
     }
   }
 
-  const updateOrderStatus = async (orderId, newStatus, note = '') => {
+  // Called when user clicks an action button — opens confirmation modal
+  const handleActionClick = (order, action) => {
     setUpdateError('')
+    setPendingAction({ order, action })
+  }
+
+  // Called when user confirms inside the modal
+  const handleActionConfirm = async () => {
+    if (!pendingAction) return
+    const { order, action } = pendingAction
+    setActionLoading(true)
+    setUpdateError('')
+
     try {
-      const response = await vendorAPI.updateOrderStatus(orderId, { status: newStatus, note })
+      const response = await vendorAPI.updateOrderStatus(order._id, {
+        status: action[1],
+        note: `Status updated to ${action[1]} by vendor`,
+      })
+
       if (response.success) {
-        updateOrderStatusInStore(orderId, newStatus)
-        fetchOrders()
-        if (selectedOrder && selectedOrder._id === orderId) {
-          const updatedOrderResponse = await vendorAPI.getOrder(orderId)
-          if (updatedOrderResponse.success) {
-            setSelectedOrder(updatedOrderResponse.data.order)
-          }
-        }
+        setPendingAction(null)
       } else {
-        setUpdateError(response.message || 'Failed to update order status')
+        setUpdateError(response.message || 'Failed to update status')
       }
     } catch (error) {
-      setUpdateError(error.data?.message || error.message || 'Failed to update order status')
+      setUpdateError(error.data?.message || error.message || 'Failed to update status')
+    } finally {
+      setActionLoading(false)
+      await fetchOrders()
+      // Refresh detail modal if open
+      if (selectedOrder) {
+        try {
+          const updated = await vendorAPI.getOrder(selectedOrder._id)
+          if (updated.success) setSelectedOrder(updated.data.order)
+        } catch (_e) {}
+      }
     }
   }
 
   return (
     <div className="p-6">
-      {/* Header */}
+      {/* Confirmation modal */}
+      {pendingAction && (
+        <ConfirmModal
+          action={pendingAction.action}
+          order={pendingAction.order}
+          onConfirm={handleActionConfirm}
+          onCancel={() => !actionLoading && setPendingAction(null)}
+          loading={actionLoading}
+        />
+      )}
+
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-afri-gray-900">Orders</h1>
         <p className="text-afri-gray-600 mt-1">Manage and track all your orders</p>
@@ -131,7 +266,6 @@ function Orders() {
       {/* Filters */}
       <div className="bg-white rounded-lg shadow p-4 mb-6">
         <div className="flex flex-wrap gap-4">
-          {/* Search */}
           <div className="flex-1 min-w-[250px]">
             <input
               type="text"
@@ -141,14 +275,13 @@ function Orders() {
               className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent"
             />
           </div>
-
-          {/* Status filters */}
           <div className="flex flex-wrap gap-2">
-            {['pending', 'confirmed', 'preparing', 'ready', 'out-for-delivery', 'delivered'].map((status) => (
+            {['pending','confirmed','preparing','packed','ready_for_delivery','out_for_delivery','delivered','cancelled'].map(status => (
               <button
                 key={status}
+                type="button"
                 onClick={() => handleStatusFilter(status)}
-                className={`px-4 py-2 rounded-lg font-medium transition ${
+                className={`px-3 py-1.5 rounded-lg font-medium text-xs transition ${
                   filters.status === status
                     ? 'bg-afri-green text-white'
                     : 'bg-afri-gray-50 text-afri-gray-700 hover:bg-afri-gray-100'
@@ -159,33 +292,30 @@ function Orders() {
             ))}
             {filters.status && (
               <button
+                type="button"
                 onClick={() => setFilters({ ...filters, status: '' })}
-                className="px-4 py-2 rounded-lg font-medium bg-red-100 text-red-700 hover:bg-red-200"
+                className="px-3 py-1.5 rounded-lg font-medium text-xs bg-red-100 text-red-700 hover:bg-red-200"
               >
-                Clear Filter
+                Clear
               </button>
             )}
           </div>
         </div>
       </div>
 
-      {/* Fetch error */}
       {fetchError && (
         <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
           <p className="text-red-700 text-sm">{fetchError}</p>
-          <button onClick={fetchOrders} className="text-red-600 text-sm font-semibold hover:underline ml-4">Retry</button>
+          <button type="button" onClick={fetchOrders} className="text-red-600 text-sm font-semibold hover:underline ml-4">Retry</button>
         </div>
       )}
-
-      {/* Update status error */}
       {updateError && (
         <div className="mb-4 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center justify-between">
           <p className="text-red-700 text-sm">{updateError}</p>
-          <button onClick={() => setUpdateError('')} className="text-red-400 hover:text-red-600 ml-4 text-lg leading-none">&times;</button>
+          <button type="button" onClick={() => setUpdateError('')} className="text-red-400 hover:text-red-600 ml-4 text-lg leading-none">&times;</button>
         </div>
       )}
 
-      {/* Orders List */}
       {loading ? (
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-afri-green"></div>
@@ -193,7 +323,7 @@ function Orders() {
       ) : orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <svg className="w-16 h-16 text-afri-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
           </svg>
           <h3 className="text-lg font-medium text-afri-gray-900 mb-1">No orders found</h3>
           <p className="text-afri-gray-500">
@@ -205,67 +335,48 @@ function Orders() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-afri-gray-50">
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Order Number
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Customer
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Items
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Total
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Status
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Date
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                  Actions
-                </th>
+                {['Order', 'Customer', 'Items', 'Total', 'Status', 'Actions', 'Date', ''].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
+                    {h}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map((order) => (
+              {orders.map(order => (
                 <tr key={order._id} className="hover:bg-afri-gray-50 transition">
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-afri-gray-900">{order.orderNumber}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm text-afri-gray-900">{order.customer?.name || 'N/A'}</div>
-                    <div className="text-sm text-afri-gray-500">{order.customer?.phone || ''}</div>
+                    <div className="text-xs text-afri-gray-500">{order.customer?.phone || ''}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-afri-gray-900">{order.items?.length || 0} items</div>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm text-afri-gray-900">
+                    {order.items?.length || 0} items
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-afri-gray-900">
-                      £{(order.vendorTotal ?? order.totalAmount ?? 0).toFixed(2)}
-                    </div>
+                  <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-afri-gray-900">
+                    £{(order.vendorTotal ?? order.totalAmount ?? 0).toFixed(2)}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      order.status === 'pending' ? 'bg-amber-100 text-amber-800' :
-                      order.status === 'processing' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'cancelled' ? 'bg-red-100 text-red-800' :
-                      statusColors[order.status] || 'bg-gray-100 text-gray-800'
-                    }`}>
-                      {statusNames[order.status]}
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <span className={`px-2.5 py-1 inline-flex text-xs font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
+                      {statusNames[order.status] || order.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-afri-gray-500">
+                  {/* Inline action buttons */}
+                  <td className="px-4 py-4">
+                    <StatusActions order={order} onAction={handleActionClick} />
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap text-xs text-afri-gray-500">
                     {new Date(order.createdAt).toLocaleDateString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
                     <button
+                      type="button"
                       onClick={() => viewOrderDetails(order._id)}
                       className="text-afri-green hover:text-afri-green-dark font-medium"
                     >
-                      View Details
+                      Details
                     </button>
                   </td>
                 </tr>
@@ -278,12 +389,13 @@ function Orders() {
       {/* Pagination */}
       {(pagination.totalPages ?? pagination.pages ?? 0) > 1 && (
         <div className="mt-6 flex justify-center">
-          <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+          <nav className="inline-flex rounded-md shadow-sm -space-x-px">
             {[...Array(pagination.totalPages ?? pagination.pages)].map((_, i) => (
               <button
                 key={i}
+                type="button"
                 onClick={() => setFilters({ ...filters, page: i + 1 })}
-                className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                className={`px-4 py-2 border text-sm font-medium ${
                   pagination.currentPage === i + 1
                     ? 'z-10 bg-afri-green text-white border-afri-green'
                     : 'bg-white border-gray-300 text-afri-gray-700 hover:bg-afri-gray-50'
@@ -296,15 +408,16 @@ function Orders() {
         </div>
       )}
 
-      {/* Order Detail Modal */}
       {showOrderModal && selectedOrder && (
         <OrderDetailsModal
           order={selectedOrder}
-          onClose={() => {
-            setShowOrderModal(false)
-            setSelectedOrder(null)
+          onClose={() => { setShowOrderModal(false); setSelectedOrder(null) }}
+          onStatusUpdate={async (orderId, newStatus, note) => {
+            // Reuse same confirm flow from the modal
+            const action = [statusNames[newStatus], newStatus, newStatus === 'cancelled' ? 'danger' : 'primary']
+            const order = orders.find(o => o._id === orderId) || selectedOrder
+            handleActionClick(order, action)
           }}
-          onStatusUpdate={updateOrderStatus}
           onRefresh={fetchOrders}
         />
       )}

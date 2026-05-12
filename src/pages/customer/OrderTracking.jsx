@@ -306,6 +306,8 @@ function OrderTracking() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
             {groupItemsByVendor(order.items).map((group) => {
               const groupSubtotal = group.items.reduce((s, i) => s + i.price * i.quantity, 0)
+              
+              console.log("Orders grouped by vendor:", order.items, group)
               return (
                 <div key={group.vendorId} className="mb-4">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1">
@@ -339,21 +341,34 @@ function OrderTracking() {
 
           {/* Delivery Address */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Delivery Address</h2>
-            <p className="text-gray-700">
-              {order.deliveryAddress?.fullName}<br />
-              {order.deliveryAddress?.phone}<br />
-              {order.deliveryAddress?.street}<br />
-              {order.deliveryAddress?.city}, {order.deliveryAddress?.postalCode}
-            </p>
-            {order.deliveryAddress?.instructions && (
-              <div className="mt-3 bg-yellow-50 rounded p-3">
-                <p className="text-sm text-gray-700">
-                  <strong>Instructions:</strong> {order.deliveryAddress.instructions}
+              <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Name:</span> {order.customer?.name}
+              </p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Email:</span> {order.customer?.email}
+              </p>
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
+              </p>
+
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Address:</span>{' '}
+                {[
+                  order.deliveryAddress?.street,
+                  order.deliveryAddress?.city,
+                  order.deliveryAddress?.county,
+                  order.deliveryAddress?.postcode,
+                  order.deliveryAddress?.country,
+                ].filter(Boolean).join(', ')}
+              </p>
+
+              {order.deliveryAddress?.instructions && (
+                <p className="text-gray-700 text-sm">
+                  <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
                 </p>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
 
           {/* Actions */}
           {order.status === 'delivered' && (

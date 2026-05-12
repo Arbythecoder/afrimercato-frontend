@@ -78,6 +78,9 @@ function Settings() {
     confirmPassword: '',
   })
 
+  // Postcode autocomplete suggestions
+  const [postcodeSuggestions, setPostcodeSuggestions] = useState([])
+
   useEffect(() => {
     fetchSettings()
   }, [])
@@ -134,44 +137,6 @@ function Settings() {
     }
 
     setLoading(false)
-  }
-  
-  // LOADING GUARD: Show spinner while loading to prevent undefined errors
-  if (loading && !loadError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-afri-green mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading vendor settings...</p>
-        </div>
-      </div>
-    )
-  }
-  
-  // ERROR GUARD: Show error message if loading failed
-  if (loadError) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center max-w-sm">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Failed to Load Settings</h2>
-          <p className="text-gray-600 mb-6">{loadError}</p>
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={fetchSettings}
-              className="bg-afri-green text-white px-4 py-2 rounded hover:bg-green-600"
-            >
-              Retry
-            </button>
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="text-gray-500 hover:text-gray-700 px-4 py-2 rounded border border-gray-300 hover:border-gray-400"
-            >
-              ← Back to Dashboard
-            </button>
-          </div>
-        </div>
-      </div>
-    )
   }
 
   const handleVendorChange = (field, value) => {
@@ -234,7 +199,6 @@ function Settings() {
   }
 
   // Autocomplete suggestions using postcodes.io
-  const [postcodeSuggestions, setPostcodeSuggestions] = useState([])
   const fetchPostcodeSuggestions = async (partial) => {
     if (!partial || partial.length < 2) { setPostcodeSuggestions([]); return }
     try {
@@ -382,6 +346,7 @@ function Settings() {
       const response = await userAPI.changePassword({
         currentPassword: passwordData.currentPassword,
         newPassword: passwordData.newPassword,
+        confirmNewPassword: passwordData.confirmPassword,
       })
       if (response.success) {
         success('Password changed successfully!')
@@ -429,11 +394,39 @@ function Settings() {
     { id: 'security', name: 'Security', icon: '🔒' },
   ]
 
-  if (loading) {
+  // Handle loading state
+  if (loading && !loadError) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-afri-green border-t-transparent rounded-full animate-spin"></div>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-afri-green mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading vendor settings...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Handle error state
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center max-w-sm">
+          <h2 className="text-xl font-semibold text-red-600 mb-2">Failed to Load Settings</h2>
+          <p className="text-gray-600 mb-6">{loadError}</p>
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={fetchSettings}
+              className="bg-afri-green text-white px-4 py-2 rounded hover:bg-green-600"
+            >
+              Retry
+            </button>
+            <button
+              onClick={() => navigate('/dashboard')}
+              className="text-gray-500 hover:text-gray-700 px-4 py-2 rounded border border-gray-300 hover:border-gray-400"
+            >
+              ← Back to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     )

@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { io } from 'socket.io-client'
-import api from '../services/api'
+import { apiCall } from '../services/api'
 
 /**
  * Real-Time Order Tracking Component
@@ -47,14 +47,14 @@ function RealTimeOrderTracking({ orderId, onClose }) {
   const fetchTrackingData = async () => {
     try {
       setLoading(true)
-      const response = await api.get(`/tracking/${orderId}`)
+      const response = await apiCall(`/tracking/${orderId}`)
 
-      if (response.data.success) {
-        setTracking(response.data.tracking)
+      if (response.success) {
+        setTracking(response.data || response.tracking)
 
         // Initialize rider location if available
-        if (response.data.tracking.rider?.currentLocation) {
-          setRiderLocation(response.data.tracking.rider.currentLocation)
+        if (response.data?.rider?.currentLocation) {
+          setRiderLocation(response.data.rider.currentLocation)
         }
       }
     } catch (err) {

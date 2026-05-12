@@ -24,23 +24,16 @@ const processQueue = (error, token = null) => {
 
 // Attempt to refresh the access token
 const refreshAccessToken = async () => {
-  const refreshToken = localStorage.getItem('afrimercato_refresh_token');
-
-  if (!refreshToken) {
-    throw new Error('No refresh token available');
-  }
-
-  // Use AbortController to enforce a timeout on token refresh
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
+    // We don't need to pass the token in the body anymore! 
+    // credentials: 'include' automatically sends the HttpOnly refresh cookie.
     const response = await fetch(`${API_BASE_URL}/auth/refresh-token`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ refreshToken }),
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include', // <--- CRITICAL
       signal: controller.signal
     });
 
@@ -52,23 +45,19 @@ const refreshAccessToken = async () => {
 
     const data = await response.json();
 
-    if (data.success && data.data?.token) {
-      localStorage.setItem('afrimercato_token', data.data.token);
-      return data.data.token;
+    if (data.success) {
+      // Backend automatically set the new access cookie in the browser
+      return true;
     }
 
     throw new Error('Invalid refresh response');
   } catch (error) {
-    // Refresh failed - clear all tokens and redirect to login
-    localStorage.removeItem('afrimercato_token');
-    localStorage.removeItem('afrimercato_refresh_token');
     throw error;
   }
 };
 
 // Generic API call function with automatic token refresh
 export const apiCall = async (endpoint, options = {}, isRetry = false) => {
-  // Enforce a request timeout using AbortController to avoid hanging the UI
   const controller = new AbortController();
   const timeoutMs = typeof options.timeout === 'number' ? options.timeout : 10000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -77,9 +66,7 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
     const url = `${API_BASE_URL}${endpoint}`;
     const config = {
       ...options,
-      headers: {
-        ...options.headers
-      },
+      headers: { ...options.headers },
       credentials: 'include',
       signal: controller.signal
     };
@@ -92,81 +79,59 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
       }
     }
 
-    const token = localStorage.getItem('afrimercato_token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-
     if (import.meta.env.DEV) {
       console.log('[API_DEBUG] request:', {
         url,
-        method: config.method || 'GET',
-        hasToken: !!token,
-        tokenPreview: token ? token.substring(0, 20) + '...' : null
+        method: config.method || 'GET'
       });
     }
 
     const response = await fetch(url, config);
     clearTimeout(timeoutId);
 
-    if (import.meta.env.DEV) {
-      console.log('[API_DEBUG] response:', {
-        url,
-        status: response.status,
-        ok: response.ok
-      });
-    }
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
 
-      // Handle 401 - Token expired or invalid
+      // Handle 401 - Access Cookie expired or missing
       if (response.status === 401 && !isRetry) {
-        if (errorData.errorCode === 'TOKEN_EXPIRED' || errorData.errorCode === 'INVALID_TOKEN') {
-          if (isRefreshing) {
-            return new Promise((resolve, reject) => {
-              failedQueue.push({ resolve, reject });
-            })
-            .then(token => apiCall(endpoint, options, true))
-            .catch(err => { throw err; });
-          }
+        if (isRefreshing) {
+          return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+          })
+          .then(() => apiCall(endpoint, options, true))
+          .catch(err => { throw err; });
+        }
 
-          isRefreshing = true;
+        isRefreshing = true;
 
-          try {
-            const newToken = await refreshAccessToken();
-            processQueue(null, newToken);
-            isRefreshing = false;
-            return apiCall(endpoint, options, true);
-          } catch (refreshError) {
-            processQueue(refreshError, null);
-            isRefreshing = false;
-            // DO NOT use window.location.href - let React handle navigation
-            // Components will check isAuthenticated and redirect via <Navigate />
-            const authError = new Error('Session expired. Please log in again.');
-            authError.code = 'AUTH_EXPIRED';
-            throw authError;
-          }
+        try {
+          // Silently call our refresh endpoint to get a new access cookie
+          await refreshAccessToken();
+          processQueue(null);
+          isRefreshing = false;
+          
+          // Retry the original request (it will automatically use the new cookie)
+          return apiCall(endpoint, options, true);
+        } catch (refreshError) {
+          processQueue(refreshError);
+          isRefreshing = false;
+          
+          const authError = new Error('Session expired. Please log in again.');
+          authError.code = 'AUTH_EXPIRED';
+          throw authError;
         }
       }
 
+      // If we hit 401 even after retrying, throw the auth error
       if (response.status === 401) {
-        localStorage.removeItem('afrimercato_token');
-        localStorage.removeItem('afrimercato_refresh_token');
-        // DO NOT redirect here - throw error and let component handle it
         const authError = new Error('Session expired. Please log in again.');
         authError.code = 'AUTH_EXPIRED';
         throw authError;
       }
 
-      // Create error with status code for better handling
       const statusMessage = {
-        400: 'Bad Request',
-        401: 'Unauthorized',
-        403: 'Access Denied',
-        404: 'Not Found',
-        500: 'Server Error',
-        501: 'Feature Not Implemented'
+        400: 'Bad Request', 401: 'Unauthorized', 403: 'Access Denied',
+        404: 'Not Found', 500: 'Server Error', 501: 'Feature Not Implemented'
       };
       
       const errorMsg = errorData.message || statusMessage[response.status] || `HTTP error! status: ${response.status}`;
@@ -176,16 +141,10 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
       throw error;
     }
 
-    const data = await response.json();
-    return data;
+    return await response.json();
   } catch (error) {
-    // Normalize AbortError message
-    if (error.name === 'AbortError') {
-      throw new Error('Request timed out');
-    }
-    if (import.meta.env.DEV) {
-      console.error(`API Error (${endpoint}):`, error);
-    }
+    if (error.name === 'AbortError') throw new Error('Request timed out');
+    if (import.meta.env.DEV) console.error(`API Error (${endpoint}):`, error);
     throw error;
   } finally {
     clearTimeout(timeoutId);
@@ -199,16 +158,6 @@ export const loginUser = async (credentials) => {
     body: JSON.stringify(credentials),
     timeout: 30000 // 30s – backend may cold-start + bcrypt is CPU-heavy
   });
-
-  if (response.success && response.data?.token) {
-    localStorage.setItem('afrimercato_token', response.data.token);
-
-    // Store refresh token if provided
-    if (response.data.refreshToken) {
-      localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
-    }
-  }
-
   return response;
 };
 
@@ -218,16 +167,6 @@ export const registerUser = async (userData) => {
     body: JSON.stringify(userData),
     timeout: 30000 // 30s – backend may cold-start + bcrypt hashing
   });
-
-  if (response.success && response.data?.token) {
-    localStorage.setItem('afrimercato_token', response.data.token);
-
-    // Store refresh token if provided
-    if (response.data.refreshToken) {
-      localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
-    }
-  }
-
   return response;
 };
 
@@ -237,36 +176,13 @@ export const registerVendor = async (vendorData) => {
     body: JSON.stringify(vendorData),
     timeout: 30000
   });
-
-  if (response.success && response.data?.token) {
-    // FIX: Use STANDARD token keys (same as customer registration)
-    localStorage.setItem('afrimercato_token', response.data.token);
-    localStorage.setItem('afrimercato_role', response.data.user.role || 'vendor');
-    localStorage.setItem('afrimercato_user', JSON.stringify(response.data.user));
-    
-    if (response.data.refreshToken) {
-      localStorage.setItem('afrimercato_refresh_token', response.data.refreshToken);
-    }
-  }
-
   return response;
 };
 
 export const logoutUser = async () => {
-  try {
-    await apiCall('/auth/logout', {
-      method: 'POST'
-    });
-  } finally {
-    // Clear ALL tokens and user data
-    localStorage.removeItem('afrimercato_token');
-    localStorage.removeItem('afrimercato_refresh_token');
-    localStorage.removeItem('afrimercato_role');
-    localStorage.removeItem('afrimercato_user');
-    localStorage.removeItem('afrimercato_cart');
-    sessionStorage.clear();
-    // Navigation handled by AuthContext
-  }
+  return await apiCall('/auth/logout', {
+    method: 'POST'
+  });
 };
 
 export const refreshToken = async () => {
@@ -346,7 +262,7 @@ export const getVendorOrder = async (orderId) => {
 
 export const updateOrderStatus = async (orderId, statusData) => {
   return apiCall(`/vendor/orders/${orderId}/status`, {
-    method: 'PUT',
+    method: 'PATCH',
     body: JSON.stringify(statusData)
   });
 };
@@ -532,15 +448,15 @@ export const createOrder = async (orderData) => {
 };
 
 export const getUserOrders = async () => {
-  return apiCall('/orders/user');
+  return apiCall('/customers/orders');
 };
 
 export const getOrderById = async (id) => {
-  return apiCall(`/orders/${id}`);
+  return apiCall(`/customers/orders/${id}`);
 };
 
 export const cancelOrder = async (id) => {
-  return apiCall(`/orders/${id}/cancel`, {
+  return apiCall(`/customers/orders/${id}/cancel`, {
     method: 'PATCH'
   });
 };
@@ -634,7 +550,7 @@ export const updateCustomerAddress = async (addressId, addressData) => {
 // Upsert the default delivery address — updates existing default or creates one.
 // Called fire-and-forget after checkout so the next visit pre-fills automatically.
 export const saveDefaultAddress = async (addressData) => {
-  return apiCall('/customers/addresses/default', {
+  return apiCall('/customers/addresses/save-default', {
     method: 'PUT',
     body: JSON.stringify(addressData)
   });
@@ -654,18 +570,14 @@ export const getAllOrders = async () => {
 };
 
 // FILE UPLOADS
+// FILE UPLOADS
 export const uploadImage = async (file, type = 'general') => {
   const formData = new FormData();
   formData.append('image', file);
   formData.append('type', type);
 
-  const token = localStorage.getItem('afrimercato_token');
-
   return apiCall('/upload/image', {
     method: 'POST',
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` })
-    },
     body: formData
   });
 };
@@ -677,13 +589,8 @@ export const uploadProductImages = async (files) => {
     formData.append('productImages', file);
   });
 
-  const token = localStorage.getItem('afrimercato_token');
-
   return apiCall('/vendor/upload/images', {
     method: 'POST',
-    headers: {
-      ...(token && { Authorization: `Bearer ${token}` })
-    },
     body: formData
   });
 };
@@ -720,24 +627,13 @@ export const bulkUpdateStock = async (data) => {
 // UTILITIES
 export const handleApiError = (error) => {
   if (error.message.includes('401') || error.message.includes('Session expired') || error.code === 'AUTH_EXPIRED') {
-    localStorage.removeItem('afrimercato_token');
-    localStorage.removeItem('afrimercato_refresh_token');
-    // DO NOT redirect here - let React components handle navigation
+    // REMOVED: localStorage token deletion
     return 'Please log in to continue';
   }
   
-  if (error.message.includes('403')) {
-    return 'You do not have permission to perform this action';
-  }
-  
-  if (error.message.includes('404')) {
-    return 'The requested resource was not found';
-  }
-  
-  if (error.message.includes('500')) {
-    return 'Server error. Please try again later';
-  }
-  
+  if (error.message.includes('403')) return 'You do not have permission to perform this action';
+  if (error.message.includes('404')) return 'The requested resource was not found';
+  if (error.message.includes('500')) return 'Server error. Please try again later';
   if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
     return 'Network error. Please check your internet connection';
   }
@@ -790,9 +686,9 @@ export const showErrorMessage = (message, duration = 5000) => {
 };
 
 export const isAuthenticated = () => {
-  return !!localStorage.getItem('afrimercato_token');
+  // Since tokens are hidden in cookies, we check if the user profile exists in storage
+  return !!localStorage.getItem('afrimercato_role');
 };
-
 // GROUPED EXPORTS FOR CONVENIENCE
 export const authAPI = {
   login: loginUser,
@@ -846,7 +742,15 @@ export const vendorAPI = {
     const qs = new URLSearchParams(params).toString();
     return apiCall(`/vendor/dashboard/payouts${qs ? '?' + qs : ''}`);
   },
-  requestPayout: async (body) => apiCall('/vendor/dashboard/payouts/request', { method: 'POST', body: JSON.stringify(body) })
+  requestPayout: async (body) => apiCall('/vendor/dashboard/payouts/request', { method: 'POST', body: JSON.stringify(body) }),
+  getVendors: (params = {}) => {
+    const filtered = Object.fromEntries(
+      Object.entries(params).filter(([_, v]) => v !== undefined && v !== '')
+    )
+    const qs = new URLSearchParams(filtered).toString()
+    return apiCall(`/vendor${qs ? '?' + qs : ''}`)
+  },
+  getFeaturedVendors: (limit = 8) => apiCall(`/vendor/featured?limit=${limit}`),
 };
 
 // =================================================================
