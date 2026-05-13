@@ -8,8 +8,11 @@ import { LuShoppingBag } from 'react-icons/lu';
 import { MdShoppingCart } from 'react-icons/md';
 import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
 import { apiCall, getUserProfile } from '../../services/api';
+import { CiLogout } from 'react-icons/ci';
+import { useAuth } from '../../context/AuthContext';
 
 function CustomerDashboard() {
+  const { logout } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [firstName, setFirstName] = useState('');
@@ -25,6 +28,14 @@ function CustomerDashboard() {
   useEffect(() => {
     fetchDashboardData()
   }, [])
+
+  const handleLogout = () => {
+    const confirmed = window.confirm('Are you sure you want to logout?')
+    if (confirmed) {
+      logout()
+      navigate('/login')
+    }
+  }
 
   const fetchDashboardData = async () => {
     try {
@@ -433,6 +444,11 @@ function CustomerDashboard() {
           -webkit-box-orient: vertical;
         }
       `}</style>
+
+      <div className="fixed bottom-3 ml-4 left-14 bg-red-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-red-600 transition-all">
+        <CiLogout onClick={handleLogout} className='text-2xl cursor-pointer' size={20}
+        />
+      </div>
     </div>
   )
 }
