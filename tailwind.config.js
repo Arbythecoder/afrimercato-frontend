@@ -8,6 +8,9 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ["'Plus Jakarta Sans'", 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
       colors: {
         // Afrimercato brand colors - Fresh Grocery Theme
         'afri-green': {

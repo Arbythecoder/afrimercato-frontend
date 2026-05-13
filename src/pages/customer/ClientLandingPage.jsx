@@ -245,61 +245,69 @@ export default function ClientLandingPage() {
               <Link to="/login" className="hidden sm:block font-medium text-gray-800 hover:text-gray-900 transition-colors">
                 Log in
               </Link>
+              {/* Join dropdown backdrop */}
+              {showJoinDropdown && (
+                <div className="fixed inset-0 z-40" onClick={() => setShowJoinDropdown(false)} />
+              )}
 
-               <div className="relative">
+              {/* Join button with role dropdown */}
+              <div className="relative z-50">
                 <button
                   type="button"
-                  onClick={() => setShowJoinDropdown(v => !v)}
-                  onBlur={() => setTimeout(() => setShowJoinDropdown(false), 150)}
-                  className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 sm:px-5 py-2.5 rounded-full font-semibold shadow-lg transition-all hover:scale-105 active:scale-95"
+                  onClick={() => setShowJoinDropdown(!showJoinDropdown)}
+                  className="flex items-center gap-1 bg-[#1B4D3E] text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-[#0D2B22] transition-all"
                 >
-                  <span className="hidden sm:inline">Join</span>
-                  <span className="sm:hidden">Join</span>
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  Join
+                  <svg className="w-3 h-3 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
+
                 {showJoinDropdown && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl p-2">
                     <Link
                       to="/register?role=customer"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors"
+                      onClick={() => setShowJoinDropdown(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#FDF8F0] text-[#1A1A1A] font-medium transition-colors"
                     >
-                      <span className="text-lg">🛒</span>
-                      <div>
-                        <div className="font-semibold text-sm">Customer</div>
-                        <div className="text-xs text-gray-400">Shop & order</div>
+                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag size={16} className="text-[#FFB800]" />
                       </div>
+                      Sign up as Customer
                     </Link>
                     <Link
                       to="/register?role=vendor"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                      onClick={() => setShowJoinDropdown(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#FDF8F0] text-[#1A1A1A] font-medium transition-colors"
                     >
-                      <span className="text-lg">🏪</span>
-                      <div>
-                        <div className="font-semibold text-sm">Vendor</div>
-                        <div className="text-xs text-gray-400">Sell your products</div>
+                      <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                        <Store size={16} className="text-[#1B4D3E]" />
                       </div>
+                      Sign up as Vendor
                     </Link>
                     <Link
                       to="/register?role=rider"
-                      className="flex items-center gap-3 px-4 py-3 text-gray-700 hover:bg-green-50 hover:text-[#00897B] transition-colors border-t border-gray-50"
+                      onClick={() => setShowJoinDropdown(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#FDF8F0] text-[#1A1A1A] font-medium transition-colors"
                     >
-                      <span className="text-lg">🚴</span>
-                      <div>
-                        <div className="font-semibold text-sm">Rider</div>
-                        <div className="text-xs text-gray-400">Deliver & earn</div>
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <Bike size={16} className="text-[#FF8C00]" />
                       </div>
+                      Sign up as Rider
+                    </Link>
+                    <Link
+                      to="/register?role=picker"
+                      onClick={() => setShowJoinDropdown(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-[#FDF8F0] text-[#1A1A1A] font-medium transition-colors"
+                    >
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <Package size={16} className="text-[#E53E3E]" />
+                      </div>
+                      Sign up as Picker
                     </Link>
                   </div>
                 )}
               </div>
-              {/* <Link
-                to="/register"
-                className="flex items-center gap-1 bg-[#1B4D3E] text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-[#0D2B22] transition-all"
-              >
-                Join
-              </Link> */}
 
               {/* Mobile Menu */}
               <button
@@ -329,13 +337,28 @@ export default function ClientLandingPage() {
                   <MobileNavLink to="/contact" onClick={() => setMobileMenuOpen(false)}>Contact us</MobileNavLink>
                   <div className="pt-3 border-t space-y-1">
                     <Link to="/register?role=customer" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      <ShoppingBag size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Customer</span>
+                      <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                        <ShoppingBag size={16} className="text-[#FFB800]" />
+                      </div>
+                      <span className="font-semibold text-sm">Join as Customer</span>
                     </Link>
                     <Link to="/register?role=vendor" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      <Store size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Vendor</span>
+                      <div className="w-8 h-8 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                        <Store size={16} className="text-[#1B4D3E]" />
+                      </div>
+                      <span className="font-semibold text-sm">Join as Vendor</span>
                     </Link>
                     <Link to="/register?role=rider" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
-                      <Bike size={16} className="text-[#1B4D3E]" /><span className="font-semibold text-sm">Join as Rider</span>
+                      <div className="w-8 h-8 rounded-full bg-orange-100 flex items-center justify-center flex-shrink-0">
+                        <Bike size={16} className="text-[#FF8C00]" />
+                      </div>
+                      <span className="font-semibold text-sm">Join as Rider</span>
+                    </Link>
+                    <Link to="/register?role=picker" className="w-full flex items-center gap-3 px-3 py-4 rounded-lg text-gray-700 hover:bg-[#FDF8F0] hover:text-[#1B4D3E] transition-colors border-b border-gray-100" onClick={() => setMobileMenuOpen(false)}>
+                      <div className="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                        <Package size={16} className="text-[#E53E3E]" />
+                      </div>
+                      <span className="font-semibold text-sm">Join as Picker</span>
                     </Link>
                     <Link to="/login" className="block py-3 text-center text-[#1B4D3E] font-semibold border-t mt-1" onClick={() => setMobileMenuOpen(false)}>
                       Log in
