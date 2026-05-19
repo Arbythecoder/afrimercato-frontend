@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-const API_URL = import.meta.env.VITE_API_URL || 'https://afrimercato-backend-1.onrender.com'
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
 
 /**
  * OAuth Callback Handler
