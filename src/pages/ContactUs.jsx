@@ -332,9 +332,6 @@ export default function ContactUs() {
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Interested in Partnering With Us?
           </h2>
-          <p className="text-gray-600 mb-8">
-            Join over 4,320 vendors already selling on Afrimercato and reach thousands of customers.
-          </p>
           <Link
             to="/partner"
             className="inline-block bg-[#F5A623] text-gray-900 px-10 py-4 rounded-xl font-bold shadow-lg hover:bg-[#FF9800] transition-all"
@@ -375,7 +372,7 @@ export default function ContactUs() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; 2024 Afrimercato. All rights reserved.</p>
+            <p>&copy; 2026 Afrimercato. All rights reserved.</p>
           </div>
         </div>
       </footer>

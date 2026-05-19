@@ -268,8 +268,6 @@ export default function BetterLandingPage() {
               transition={{ delay: 0.3 }}
               className="mt-6 text-gray-700 flex flex-col sm:flex-row items-center justify-center gap-2 text-sm sm:text-base"
             >
-              <span className="text-2xl">👥</span>
-              <span className="font-semibold">Join <span className="text-green-600">4,320+ vendors</span> and <span className="text-green-600">12,000+ happy customers</span></span>
             </motion.div>
           </div>
         </div>
@@ -524,9 +522,6 @@ export default function BetterLandingPage() {
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
             Are You a Vendor?
           </h2>
-          <p className="text-base sm:text-lg text-gray-800 mb-6 sm:mb-8 px-4">
-            Join 4,320+ vendors selling on Afrimercato. Reach thousands of customers across the UK.
-          </p>
           <Link
             to="/partner"
             className="inline-block bg-gray-900 text-white hover:bg-gray-800 px-8 sm:px-10 py-4 rounded-xl font-bold shadow-2xl text-base sm:text-lg w-full sm:w-auto"

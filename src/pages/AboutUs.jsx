@@ -5,6 +5,7 @@
 
 import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
+import { Target, Eye, Shield, Heart, Globe, Zap, CheckCircle, Store, Users } from 'lucide-react'
 
 export default function AboutUs() {
   const teamMembers = [
@@ -64,7 +65,7 @@ export default function AboutUs() {
               <Link to="/" className="text-gray-600 hover:text-gray-900 font-medium">Home</Link>
               <Link to="/stores" className="text-gray-600 hover:text-gray-900 font-medium">Stores</Link>
               <Link to="/delivery" className="text-gray-600 hover:text-gray-900 font-medium">Delivery</Link>
-              <Link to="/about" className="text-[#00897B] font-medium">About us</Link>
+              <Link to="/about" className="text-[#1B4D3E] font-medium">About us</Link>
               <Link to="/contact" className="text-gray-600 hover:text-gray-900 font-medium">Contact us</Link>
             </div>
 
@@ -72,7 +73,7 @@ export default function AboutUs() {
               <Link to="/login" className="text-gray-700 hover:text-gray-900 font-medium">Log in</Link>
               <Link
                 to="/register"
-                className="flex items-center gap-2 bg-[#00897B] hover:bg-[#00695C] text-white px-4 py-2 rounded-full font-semibold transition-all"
+                className="flex items-center gap-2 bg-[#1B4D3E] hover:bg-[#0D2B22] text-white px-4 py-2 rounded-full font-semibold transition-all"
               >
                 Sign Up
               </Link>
@@ -81,13 +82,16 @@ export default function AboutUs() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-[#F5A623] to-[#FF9800] py-20 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      {/* CHANGE 1 — Hero Section */}
+      <section className="relative bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] py-24 px-4 sm:px-6 lg:px-8 overflow-hidden">
+        <div className="max-w-7xl mx-auto text-center">
+          <span className="inline-block bg-[#FFB800] text-[#1B4D3E] text-xs font-bold px-4 py-1.5 rounded-full uppercase tracking-widest mb-6">
+            OUR STORY
+          </span>
           <motion.h1
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl md:text-6xl font-bold text-gray-900 mb-6"
+            className="text-3xl sm:text-5xl font-black text-white leading-tight max-w-3xl mx-auto"
           >
             About Afrimercato
           </motion.h1>
@@ -95,16 +99,19 @@ export default function AboutUs() {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="text-xl text-gray-800 max-w-3xl mx-auto"
+            className="text-[#FFB800] font-semibold text-xl mt-2 text-center"
+          >
+            The UK's Premier African Grocery Marketplace
+          </motion.p>
+          <motion.p
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-gray-300 text-center max-w-2xl mx-auto mt-4 leading-relaxed"
           >
             We're on a mission to bring authentic African products and groceries
             to every doorstep across the United Kingdom.
           </motion.p>
-        </div>
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg viewBox="0 0 1440 120" fill="none" preserveAspectRatio="none" className="w-full h-20">
-            <path d="M0 120L1440 120L1440 0C1200 80 800 40 400 60C200 70 0 40 0 0L0 120Z" fill="white"/>
-          </svg>
         </div>
       </section>
 
@@ -131,7 +138,7 @@ export default function AboutUs() {
                 Yet the demand was clear. And the businesses were ready — they just lacked the right
                 digital bridge.
               </p>
-              <p className="text-[#00897B] mb-4 text-xl font-semibold leading-relaxed">
+              <p className="text-[#1B4D3E] mb-4 text-xl font-semibold leading-relaxed">
                 Afrimercato is that bridge.
               </p>
               <p className="text-gray-600 mb-4 text-lg leading-relaxed">
@@ -156,7 +163,7 @@ export default function AboutUs() {
                 className="rounded-2xl shadow-2xl w-full h-96 object-cover"
                 loading="lazy"
               />
-              <div className="absolute -bottom-6 -left-6 bg-[#00897B] text-white p-6 rounded-xl shadow-xl">
+              <div className="absolute -bottom-6 -left-6 bg-[#1B4D3E] text-white p-6 rounded-xl shadow-xl">
                 <p className="text-3xl font-bold">4,320+</p>
                 <p className="text-sm opacity-90">Trusted Vendors</p>
               </div>
@@ -165,115 +172,143 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* Vision & Mission */}
-      <section className="py-20 bg-gradient-to-br from-[#00897B] to-[#00695C] text-white">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Vision & Mission</h2>
-          <div className="grid md:grid-cols-2 gap-12">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="bg-white/10 backdrop-blur-sm rounded-2xl p-8"
-            >
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Vision</h3>
-              <p className="text-xl leading-relaxed">
-                To be the digital home where African and local businesses thrive — connecting stores,
-                customers, and communities worldwide.
-              </p>
-            </motion.div>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.15 }}
-              className="bg-white/10 backdrop-blur-sm rounded-2xl p-8"
-            >
-              <h3 className="text-sm font-semibold uppercase tracking-wider text-white/70 mb-3">Our Mission</h3>
-              <p className="text-xl leading-relaxed">
-                Afrimercato empowers local and international merchants to sell, fulfil, and grow
-                through a fair, flexible, and trusted marketplace.
-              </p>
-            </motion.div>
+      {/* CHANGE 4 — Stats Section */}
+      <section className="bg-gradient-to-r from-[#FFB800] to-[#FF8C00] py-16 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+          <div>
+            <p className="text-4xl font-black text-[#1B4D3E]">4,320+</p>
+            <p className="text-[#1B4D3E] font-semibold text-sm mt-1">Trusted Vendors</p>
+          </div>
+          <div>
+            <p className="text-4xl font-black text-[#1B4D3E]">15+</p>
+            <p className="text-[#1B4D3E] font-semibold text-sm mt-1">UK Cities</p>
+          </div>
+          <div>
+            <p className="text-4xl font-black text-[#1B4D3E]">2022</p>
+            <p className="text-[#1B4D3E] font-semibold text-sm mt-1">Year Founded</p>
+          </div>
+          <div>
+            <p className="text-4xl font-black text-[#1B4D3E]">100K+</p>
+            <p className="text-[#1B4D3E] font-semibold text-sm mt-1">Happy Customers</p>
           </div>
         </div>
       </section>
 
-      {/* Who It's For */}
-      <section className="py-20 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-4">Who It's For</h2>
+      {/* CHANGE 2 — Mission/Vision Section */}
+      <section className="bg-[#FDF8F0] py-20 px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="bg-white rounded-3xl p-10 shadow-lg border-t-4 border-[#FFB800]"
+          >
+            <Target size={32} className="text-[#FFB800] mb-4" />
+            <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-2">Our Mission</p>
+            <h3 className="text-2xl font-black text-[#1A1A1A]">Empowering African Commerce</h3>
+            <p className="text-gray-600 leading-relaxed mt-3">
+              Afrimercato empowers local and international merchants to sell, fulfil, and grow
+              through a fair, flexible, and trusted marketplace.
+            </p>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-3xl p-10 shadow-lg border-t-4 border-[#1B4D3E]"
+          >
+            <Eye size={32} className="text-[#1B4D3E] mb-4" />
+            <p className="text-xs font-bold uppercase tracking-widest text-[#FFB800] mb-2">Our Vision</p>
+            <h3 className="text-2xl font-black text-[#1A1A1A]">A Global African Home</h3>
+            <p className="text-gray-600 leading-relaxed mt-3">
+              To be the digital home where African and local businesses thrive — connecting stores,
+              customers, and communities worldwide.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+
+      {/* Who It's For — CHANGE 5: Emojis replaced with lucide icons */}
+      <section className="py-20 bg-gray-50 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-black text-[#1A1A1A] text-center mb-4">Who It's For</h2>
           <p className="text-gray-600 text-center mb-12 max-w-2xl mx-auto">
             Afrimercato serves every side of the marketplace — from the stores that sell, to the people who deliver, to the customers who enjoy.
           </p>
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                icon: '🏪',
+                Icon: Store,
                 title: 'Stores',
                 description: 'You control your business, your delivery, your costs.'
               },
               {
-                icon: '🚴',
+                Icon: Users,
                 title: 'Riders & Pickers',
                 description: 'Work independently. Choose your stores. Pay only when you earn.'
               },
               {
-                icon: '📈',
+                Icon: Zap,
                 title: 'Investors',
                 description: 'Asset-light, multi-sided marketplace with global expansion potential.'
               }
-            ].map((value, index) => (
+            ].map(({ Icon, title, description }, index) => (
               <motion.div
-                key={value.title}
+                key={title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
                 className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
               >
-                <div className="text-5xl mb-4">{value.icon}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{value.title}</h3>
-                <p className="text-gray-600">{value.description}</p>
+                <div className="w-14 h-14 rounded-full bg-[#1B4D3E] flex items-center justify-center mb-4">
+                  <Icon size={24} className="text-white" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{title}</h3>
+                <p className="text-gray-600">{description}</p>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Values */}
-      <section className="py-20 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-12">Our Values</h2>
-          <div className="grid md:grid-cols-3 gap-8">
+      {/* CHANGE 3 — Values Section */}
+      <section className="bg-white py-20 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-3xl sm:text-4xl font-black text-[#1A1A1A] text-center">Our Values</h2>
+          <div className="w-16 h-1 bg-[#FFB800] mx-auto mt-3 mb-12 rounded-full" />
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-8">
             {[
               {
-                icon: '🤝',
+                Icon: Shield,
                 title: 'Fairness',
                 description: 'We build systems where every participant — store, rider, picker, and customer — is treated with respect and transparency.'
               },
               {
-                icon: '🌍',
+                Icon: Heart,
                 title: 'Community First',
                 description: 'We believe in supporting local businesses and connecting communities through authentic African commerce.'
               },
               {
-                icon: '🔧',
+                Icon: Globe,
                 title: 'Flexibility',
                 description: 'Our platform respects how African businesses already operate — and gives them modern tools to grow on their own terms.'
               }
-            ].map((value, index) => (
+            ].map(({ Icon, title, description }, index) => (
               <motion.div
-                key={value.title}
+                key={title}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-gray-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-shadow"
+                className="bg-[#FDF8F0] rounded-2xl p-8 text-center hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
               >
-                <div className="text-5xl mb-4">{value.icon}</div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3">{value.title}</h3>
-                <p className="text-gray-600">{value.description}</p>
+                <div className="w-14 h-14 rounded-full mx-auto bg-[#1B4D3E] flex items-center justify-center mb-4">
+                  <Icon size={24} className="text-white" />
+                </div>
+                <h3 className="font-bold text-lg text-[#1A1A1A]">{title}</h3>
+                <p className="text-gray-500 text-sm mt-2">{description}</p>
               </motion.div>
             ))}
           </div>
@@ -289,7 +324,7 @@ export default function AboutUs() {
             viewport={{ once: true }}
             className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-2"
           >
-            Our <span className="text-[#F5A623]">Journey</span>
+            Our <span className="text-[#FFB800]">Journey</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -302,8 +337,7 @@ export default function AboutUs() {
           </motion.p>
 
           <div className="relative">
-            {/* Connecting line */}
-            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[#00897B] via-[#F5A623] to-[#00897B]" />
+            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-[#1B4D3E] via-[#FFB800] to-[#1B4D3E]" />
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               {milestones.map((milestone, index) => (
@@ -315,14 +349,12 @@ export default function AboutUs() {
                   transition={{ delay: index * 0.15 }}
                   className="flex flex-col items-center text-center group"
                 >
-                  {/* Year bubble */}
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#00897B] to-[#00695C] flex flex-col items-center justify-center text-white z-10 shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300 ring-4 ring-white">
+                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] flex flex-col items-center justify-center text-white z-10 shadow-lg mb-5 group-hover:scale-110 transition-transform duration-300 ring-4 ring-white">
                     <span className="text-xs font-medium opacity-80">year</span>
                     <span className="text-2xl font-extrabold leading-none">{milestone.year.slice(2)}</span>
                   </div>
-                  {/* Card */}
                   <div className="bg-white rounded-2xl shadow-md p-5 w-full group-hover:shadow-xl transition-shadow border border-gray-100">
-                    <p className="text-[#F5A623] font-bold text-base mb-1">{milestone.year}</p>
+                    <p className="text-[#FFB800] font-bold text-base mb-1">{milestone.year}</p>
                     <h3 className="text-lg font-bold text-gray-900 mb-1">{milestone.title}</h3>
                     <p className="text-gray-500 text-sm leading-relaxed">{milestone.description}</p>
                   </div>
@@ -334,7 +366,7 @@ export default function AboutUs() {
       </section>
 
       {/* Team */}
-      <section className="py-16 bg-gradient-to-br from-[#00897B]/5 to-white">
+      <section className="py-16 bg-gradient-to-br from-[#1B4D3E]/5 to-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <motion.h2
             initial={{ opacity: 0, y: 20 }}
@@ -342,7 +374,7 @@ export default function AboutUs() {
             viewport={{ once: true }}
             className="text-3xl md:text-4xl font-bold text-gray-900 text-center mb-2"
           >
-            Meet the <span className="text-[#00897B]">Founders</span>
+            Meet the <span className="text-[#1B4D3E]">Founders</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -364,22 +396,21 @@ export default function AboutUs() {
                 transition={{ delay: index * 0.1 }}
                 className={`rounded-2xl overflow-hidden transition-all duration-300 ${
                   member.placeholder
-                    ? 'border-2 border-dashed border-gray-300 bg-white hover:border-[#F5A623] hover:shadow-md'
+                    ? 'border-2 border-dashed border-gray-300 bg-white hover:border-[#FFB800] hover:shadow-md'
                     : 'bg-white shadow-lg hover:shadow-2xl hover:-translate-y-1'
                 }`}
               >
-                {/* Avatar panel */}
                 <div className={`relative w-full h-44 flex items-center justify-center overflow-hidden ${
                   member.placeholder
                     ? 'bg-gray-50'
                     : index === 0
-                      ? 'bg-gradient-to-br from-[#00897B] via-[#00695C] to-[#004D40]'
-                      : 'bg-gradient-to-br from-[#F5A623] via-[#e09520] to-[#c27a10]'
+                      ? 'bg-gradient-to-br from-[#1B4D3E] via-[#0D2B22] to-[#0D2B22]'
+                      : 'bg-gradient-to-br from-[#FFB800] via-[#e09520] to-[#c27a10]'
                 }`}>
                   {!member.placeholder && (
                     <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-2 right-4 text-6xl">✦</div>
-                      <div className="absolute bottom-2 left-4 text-4xl">✦</div>
+                      <div className="absolute top-2 right-4 text-6xl">&#10022;</div>
+                      <div className="absolute bottom-2 left-4 text-4xl">&#10022;</div>
                     </div>
                   )}
                   <span className={`text-7xl font-extrabold z-10 select-none ${
@@ -406,7 +437,7 @@ export default function AboutUs() {
                         Founder
                       </div>
                       <h3 className="text-xl font-bold text-gray-900 mb-0.5">{member.name}</h3>
-                      <p className="text-[#00897B] font-semibold text-sm mb-3">{member.role}</p>
+                      <p className="text-[#1B4D3E] font-semibold text-sm mb-3">{member.role}</p>
                       <p className="text-gray-500 text-sm leading-relaxed">{member.bio}</p>
                     </>
                   )}
@@ -417,34 +448,34 @@ export default function AboutUs() {
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 bg-[#00897B]">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
+      {/* CHANGE 6 — CTA Section */}
+      <section className="py-8 px-4 sm:px-6 lg:px-8 mb-8">
+        <div className="bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] py-20 px-6 text-center rounded-3xl mx-4">
+          <h2 className="text-3xl sm:text-4xl font-black text-white">
             Ready to Start Shopping?
           </h2>
-          <p className="text-white/90 text-lg mb-8">
+          <p className="text-gray-300 mt-3 text-lg">
             Join thousands of happy customers who trust Afrimercato for their grocery needs.
           </p>
-          <div className="flex flex-wrap justify-center gap-4">
+          <div className="flex flex-wrap justify-center gap-4 mt-8">
             <Link
               to="/stores"
-              className="bg-white text-[#00897B] px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all"
+              className="bg-[#FFB800] text-[#1B4D3E] font-bold rounded-full px-8 py-4 hover:bg-[#e6a600] transition-all shadow-lg"
             >
-              Browse Stores
+              Start Shopping
             </Link>
             <Link
               to="/partner"
-              className="border-2 border-white text-white px-8 py-4 rounded-xl font-bold hover:bg-white hover:text-[#00897B] transition-all"
+              className="border-2 border-white text-white rounded-full px-8 py-4 font-bold hover:bg-white hover:text-[#1B4D3E] transition-all"
             >
-              Become a Vendor
+              Become a Partner
             </Link>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-[#1a1a1a] text-white py-12">
+      {/* CHANGE 8 — Footer */}
+      <footer className="bg-[#1A1A1A] text-white pt-12 pb-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
             <div>
@@ -455,17 +486,17 @@ export default function AboutUs() {
             <div>
               <h4 className="font-bold mb-4">Company</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><Link to="/" className="hover:text-[#F5A623]">Home</Link></li>
-                <li><Link to="/stores" className="hover:text-[#F5A623]">Stores</Link></li>
-                <li><Link to="/about" className="hover:text-[#F5A623]">About Us</Link></li>
-                <li><Link to="/contact" className="hover:text-[#F5A623]">Contact</Link></li>
+                <li><Link to="/" className="hover:text-[#FFB800]">Home</Link></li>
+                <li><Link to="/stores" className="hover:text-[#FFB800]">Stores</Link></li>
+                <li><Link to="/about" className="hover:text-[#FFB800]">About Us</Link></li>
+                <li><Link to="/contact" className="hover:text-[#FFB800]">Contact</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-bold mb-4">Support</h4>
               <ul className="space-y-2 text-gray-400 text-sm">
-                <li><Link to="/delivery" className="hover:text-[#F5A623]">Delivery Info</Link></li>
-                <li><Link to="/partner" className="hover:text-[#F5A623]">Partner With Us</Link></li>
+                <li><Link to="/delivery" className="hover:text-[#FFB800]">Delivery Info</Link></li>
+                <li><Link to="/partner" className="hover:text-[#FFB800]">Partner With Us</Link></li>
               </ul>
             </div>
             <div>
@@ -476,7 +507,8 @@ export default function AboutUs() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">
-            <p>&copy; 2026 Afrimercato. All rights reserved.</p>
+            <p>Designed by Arbythecoder</p>
+            <p className="mt-1">&copy; 2026 Afrimercato. All rights reserved.</p>
           </div>
         </div>
       </footer>
