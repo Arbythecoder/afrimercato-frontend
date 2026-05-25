@@ -768,7 +768,7 @@ function CheckoutForm() {
 
   // Sign-in gate — shown when user hits checkout without being logged in
   if (showAuthModal && !isAuthenticated) {
-    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend-1.onrender.com'}/api/auth/google`
+    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/auth/google`
 
     const handleAuthLogin = async (e) => {
       e.preventDefault()
@@ -880,8 +880,8 @@ function CheckoutForm() {
             <p className="text-center text-sm text-gray-500 mt-5">
               No account?{' '}
               <a
-                href="/register"
-                onClick={() => localStorage.setItem('checkout_redirect', 'true')}
+                // href="/register"
+                onClick={() => localStorage.setItem('checkout_redirect', 'true'), navigate('/register')}
                 className="text-green-600 hover:text-green-700 font-medium"
               >
                 Create one free →

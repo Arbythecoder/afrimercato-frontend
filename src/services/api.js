@@ -1,7 +1,7 @@
 // API Base URL - uses environment variable with fallback
 const API_BASE_URL = import.meta.env.VITE_API_URL 
   ? `${import.meta.env.VITE_API_URL}/api`
-  : 'https://afrimercato-backend-1.onrender.com/api';
+  : 'http://localhost:8080/api';
 
 if (import.meta.env.DEV) {
   console.log('API Base URL:', API_BASE_URL);
@@ -116,7 +116,7 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
           processQueue(refreshError);
           isRefreshing = false;
           
-          const authError = new Error('Session expired. Please log in again.');
+          const authError = new Error('Incorect email/password');
           authError.code = 'AUTH_EXPIRED';
           throw authError;
         }
@@ -124,7 +124,7 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
 
       // If we hit 401 even after retrying, throw the auth error
       if (response.status === 401) {
-        const authError = new Error('Session expired. Please log in again.');
+        const authError = new Error('Incorect email/password');
         authError.code = 'AUTH_EXPIRED';
         throw authError;
       }
@@ -750,7 +750,17 @@ export const vendorAPI = {
     const qs = new URLSearchParams(filtered).toString()
     return apiCall(`/vendor${qs ? '?' + qs : ''}`)
   },
+  getNearbyVendors: (lat, lng, radius = 15) => {
+    if (!lat || !lng) {
+      return apiCall('/vendor/nearby');
+    }
+    const params = new URLSearchParams({ lat, lng, radius }).toString();
+    return apiCall(`/vendor/nearby?${params}`);
+  },
   getFeaturedVendors: (limit = 8) => apiCall(`/vendor/featured?limit=${limit}`),
+  getPendingStaff: () => apiCall('/connections/vendor/pending'),
+  getActiveStaff: () => apiCall('/connections/vendor/active'),
+  approveStaff: (staffId) => apiCall(`/connections/vendor/approve/${staffId}`, { method: 'POST' }),
 };
 
 // =================================================================
