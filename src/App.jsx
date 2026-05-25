@@ -107,6 +107,7 @@ function RoleBasedRedirect() {
   if (roles?.includes('picker'))     return <Navigate to="/picker/dashboard" replace />
   if (roles?.includes('rider'))      return <Navigate to="/rider/dashboard" replace />
   if (roles?.includes('vendor'))     return <Navigate to="/dashboard" replace />
+  if (roles?.includes('customer'))     return <Navigate to="/my-dashboard" replace />
 
   // Fallback to singular role field
   switch (role) {
@@ -205,7 +206,7 @@ function AppContent() {
       <Route
         path="/"
         element={
-          isAuthenticated && user?.role !== 'customer' && user?.primaryRole !== 'customer'
+          isAuthenticated
             ? <RoleBasedRedirect />
             : <ClientLandingPage />
         }
@@ -244,7 +245,11 @@ function AppContent() {
         path="/my-dashboard"
         element={
           isAuthenticated ? (
-            <CustomerDashboard />
+            (user?.role === 'customer' || user?.roles?.includes('customer')) ? (
+              <CustomerDashboard />
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )

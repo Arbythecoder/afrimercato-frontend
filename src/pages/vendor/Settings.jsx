@@ -105,9 +105,15 @@ function Settings() {
     if (vendorResponse?.success && vendorResponse.data) {
       // Backend returns vendor data either at data.vendor or data directly
       const vendorData = vendorResponse.data.vendor || vendorResponse.data
+      const normalizedVendorData = {
+        ...vendorData,
+        storeName: vendorData.storeName || vendorData.name || vendorData.businessName || '',
+        businessName: vendorData.businessName || vendorData.storeName || vendorData.name || '',
+        name: vendorData.name || vendorData.storeName || vendorData.businessName || ''
+      }
       setVendorProfile(prev => ({
         ...prev,
-        ...vendorData,
+        ...normalizedVendorData,
         address: {
           ...prev.address,
           ...(vendorData.address || {})
@@ -147,6 +153,13 @@ function Settings() {
       setVendorProfile((prev) => ({
         ...prev,
         address: { ...prev.address, [addressField]: value },
+      }))
+    } else if (field === 'storeName') {
+      setVendorProfile((prev) => ({
+        ...prev,
+        storeName: value,
+        name: value,
+        businessName: value,
       }))
     } else {
       setVendorProfile((prev) => ({ ...prev, [field]: value }))
@@ -292,7 +305,11 @@ function Settings() {
 
     try {
       setSaving(true)
-      let payloadToSave = { ...vendorProfile };
+      let payloadToSave = {
+        ...vendorProfile,
+        name: vendorProfile.storeName,
+        businessName: vendorProfile.storeName,
+      };
       if (!payloadToSave.address.latitude || !payloadToSave.address.longitude) {
         try {
           const { street, city, state, country } = payloadToSave.address;
