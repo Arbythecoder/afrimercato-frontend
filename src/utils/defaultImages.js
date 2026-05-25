@@ -101,7 +101,7 @@ const fixImageUrl = (url) => {
     const baseUrl = apiUrl.replace('/api', '')
     return url.replace('http://localhost:5000', baseUrl)
   }
-  
+
   return url
 }
 
