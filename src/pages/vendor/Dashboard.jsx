@@ -28,7 +28,10 @@ const STATUS_COLORS = {
   confirmed: 'from-blue-400 to-blue-600',
   processing: 'from-[#1B4D3E] to-[#0D2B22]',
   ready: 'from-cyan-400 to-cyan-600',
+  ready_for_delivery: 'from-cyan-400 to-cyan-600',
   'out-for-delivery': 'from-orange-400 to-orange-600',
+  out_for_delivery: 'from-orange-400 to-orange-600',
+  completed: 'from-green-400 to-green-600',
   delivered: 'from-green-400 to-green-600',
   cancelled: 'from-red-400 to-red-600',
 }
@@ -47,9 +50,73 @@ function Dashboard() {
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showConfetti, setShowConfetti] = useState(false)
 
+  const normalizeVendorStats = (data) => {
+    if (!data) return null
+
+    const totalProducts = data.products?.total ?? data.totalProducts ?? 0
+    const pendingOrders = data.orders?.pending ?? data.pendingOrders ?? 0
+    const totalOrders = data.orders?.total ?? data.totalOrders ?? 0
+    const totalRevenue = data.revenue?.total ?? data.totalRevenue ?? 0
+    const monthlyGrowth = data.revenue?.trend ?? data.monthlyGrowth ?? 0
+    const lowStock = Array.isArray(data.lowStockProducts)
+      ? data.lowStockProducts.length
+      : data.products?.lowStock ?? data.lowStockProducts ?? 0
+    const avgOrderValue = data.revenue?.avgOrderValue ?? data.weekStats?.avgOrderValue ?? data.todayStats?.avgOrderValue ?? 0
+
+    return {
+      ...data,
+      revenue: {
+        ...data.revenue,
+        total: totalRevenue,
+        trend: monthlyGrowth,
+        avgOrderValue,
+        avgTrend: data.revenue?.avgTrend ?? null,
+      },
+      orders: {
+        ...data.orders,
+        total: totalOrders,
+        pending: pendingOrders,
+        fulfillmentRate: data.orders?.fulfillmentRate ?? data.metrics?.fulfillmentRate ?? 0,
+        trend: data.orders?.trend ?? null,
+      },
+      products: {
+        ...data.products,
+        total: totalProducts,
+        lowStock,
+        trend: data.products?.trend ?? null,
+      },
+      topProducts: data.topProducts ?? [],
+      recentOrders: data.recentOrders ?? [],
+      approvalStatus: data.approvalStatus ?? {},
+      storeInfo: data.storeInfo ?? {},
+      metrics: data.metrics ?? {},
+      todayStats: data.todayStats ?? {},
+      weekStats: data.weekStats ?? {},
+    }
+  }
+
+  const deriveOrderStatusDataFromStats = (statsData) => {
+    const orders = statsData?.recentOrders ?? []
+    const statusCounts = orders.reduce((acc, order) => {
+      const status = order.status || 'pending'
+      acc[status] = (acc[status] || 0) + 1
+      return acc
+    }, {})
+
+    return Object.entries(statusCounts).map(([name, value]) => ({ name, value }))
+  }
+
+  const normalizeVendorChartData = (data, statsData) => {
+    const isFlatArray = Array.isArray(data)
+    
+    return {
+      revenueData: isFlatArray ? data : (data?.revenueData ?? data?.revenue ?? []),
+      ordersData: isFlatArray ? data : (data?.ordersData ?? data?.orders ?? []),
+      orderStatusData: data?.orderStatusData ?? data?.orderStatus ?? data?.statusData ?? deriveOrderStatusDataFromStats(statsData),
+    }
+  }
+
   useEffect(() => {
-    // Immediate check from context: If user object has a pending status, trigger the UI immediately.
-    // Adjust 'status' or 'vendorStatus' based on exactly what your backend returns in the user object.
     if (user?.status === 'pending' || user?.vendorStatus === 'pending') {
       setIsPendingApproval(true)
       setLoading(false)
@@ -83,29 +150,34 @@ function Dashboard() {
 
       let hasError = false
       const errors = []
+      let normalizedStats = null
 
       if (statsResult.status === 'fulfilled' && statsResult.value?.success) {
-        setStats(statsResult.value.data)
-        if (statsResult.value.data?.revenue?.trend > 10) {
+        normalizedStats = normalizeVendorStats(statsResult.value.data)
+        setStats(normalizedStats)
+        if (normalizedStats?.revenue?.trend > 10) {
           setShowConfetti(true)
           setTimeout(() => setShowConfetti(false), 3000)
         }
       } else {
         hasError = true
         errors.push('Dashboard stats')
-        
+
         // Check if the API explicitly rejected them because they are pending
         if (statsResult.reason?.message?.toLowerCase().includes('pending')) {
           setIsPendingApproval(true)
         }
       }
 
+      let rawChartData = null
       if (chartResult.status === 'fulfilled' && chartResult.value?.success) {
-        setChartData(chartResult.value.data)
+        rawChartData = chartResult.value.data
       } else {
         hasError = true
         errors.push('Chart data')
       }
+
+      setChartData(normalizeVendorChartData(rawChartData, normalizedStats))
 
       if (hasError && errors.length > 0 && !isPendingApproval) {
         console.warn(`Partial dashboard load: ${errors.join(', ')} failed to load`)
@@ -343,30 +415,9 @@ function Dashboard() {
     )
   }
 
-  if (needsOnboarding && !loading) {
-    return <VendorOnboarding onComplete={handleOnboardingComplete} />
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="relative mb-8">
-          <div className="w-24 h-24 border-4 border-green-500 border-t-transparent rounded-full animate-spin"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" style={{ animationDirection: 'reverse' }}></div>
-          </div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-            <div className="w-8 h-8 border-4 border-blue-400 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        </div>
-        <p className="text-gray-600 font-medium animate-pulse">Loading your dashboard...</p>
-      </div>
-    )
-  }
-
   // Calculate alerts
-  const lowStockProducts = stats?.products?.lowStock || 0
-  const pendingOrders = stats?.orders?.pending || 0
+  const lowStockProducts = stats?.products?.lowStock ?? 0
+  const pendingOrders = stats?.orders?.pending ?? 0
 
   return (
     <div className="space-y-6 pb-8">
@@ -492,7 +543,7 @@ function Dashboard() {
           color="from-green-400 to-emerald-500"
           delay={0}
           pulse={stats?.revenue?.trend > 0}
-          sparkData={chartData?.revenueData?.slice(-7).map(d => ({ value: d.revenue }))}
+          sparkData={(chartData?.revenueData || []).slice(-7).map(d => ({ value: d.revenue }))}
         />
         <StatCard
           title="Total Orders"
@@ -537,6 +588,7 @@ function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData?.revenueData || []}>
+              
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#00B207" stopOpacity={0.4} />
