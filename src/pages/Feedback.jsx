@@ -57,7 +57,7 @@ export default function Feedback() {
         </div>
       </nav>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 sm:py-16">
+      <div className="max-w-lg mx-auto px-4 sm:px-6 py-12 sm:py-16">
         <div className="grid lg:grid-cols-2 gap-12 items-start">
 
           {/* Left — copy */}
@@ -69,7 +69,7 @@ export default function Feedback() {
             <span className="inline-block bg-[#00897B]/10 text-[#00897B] text-xs font-semibold uppercase tracking-widest px-3 py-1.5 rounded-full mb-5">
               We're listening
             </span>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 leading-tight mb-4">
+            <h1 className="text-xl font-bold text-gray-900 leading-tight mb-4">
               Share your thoughts<br className="hidden sm:block" /> with us
             </h1>
             <p className="text-gray-500 text-base sm:text-lg mb-8 leading-relaxed">
@@ -102,7 +102,7 @@ export default function Feedback() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6">
 
               {status === 'success' ? (
                 <motion.div
@@ -184,7 +184,7 @@ export default function Feedback() {
                     <textarea
                       name="message"
                       required
-                      rows={5}
+                      rows={3}
                       value={form.message}
                       onChange={handleChange}
                       placeholder="Tell us what you think, what you'd like to see, or anything on your mind…"

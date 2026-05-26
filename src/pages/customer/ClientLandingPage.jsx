@@ -43,7 +43,7 @@ export default function ClientLandingPage() {
   // Partners section state
   const [activePartnerTab, setActivePartnerTab] = useState('stores') // stores | pickers | riders
   const [activeFilter, setActiveFilter] = useState('nearby') // nearby | top | featured
-  const [stores, setStores] = useState(FALLBACK_STORES)
+  const [stores, setStores] = useState([])
   const [storesLoading, setStoresLoading] = useState(true)
 
   // Waitlist
@@ -149,12 +149,10 @@ export default function ClientLandingPage() {
         if (response.success && response.data && response.data.length > 0) {
           setStores(response.data)
         } else {
-          // No real vendors yet — show fallback sample stores
-          setStores(FALLBACK_STORES)
+          setStores([])
         }
       } catch (_e) {
-        // API unreachable — show fallback sample stores
-        setStores(FALLBACK_STORES)
+        setStores([])
       } finally {
         setStoresLoading(false)
       }
@@ -173,8 +171,11 @@ export default function ClientLandingPage() {
   // Handle search
   const handleFindStore = (e) => {
     e?.preventDefault()
-    if (!location.trim()) return
-    navigate(`/stores?location=${encodeURIComponent(location)}&price=${priceTag}&method=${shoppingMethod}`)
+    if (!location.trim()) {
+      navigate('/stores')
+      return
+    }
+    navigate(`/stores?search=${encodeURIComponent(location)}`)
   }
 
   const handleWaitlistSubmit = async (e) => {
@@ -207,7 +208,7 @@ export default function ClientLandingPage() {
   const selectLocation = (loc) => {
     setLocation(loc)
     setShowLocationDropdown(false)
-    navigate(`/stores?location=${encodeURIComponent(loc)}`)
+    navigate(`/stores?search=${encodeURIComponent(loc)}`)
   }
 
   return (
@@ -813,11 +814,19 @@ export default function ClientLandingPage() {
                     <div key={i} className="bg-gray-100 rounded-2xl animate-pulse h-80" />
                   ))}
                 </div>
-              ) : (
+              ) : filteredStores.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredStores.map((store, index) => (
                     <StoreCard key={store._id || store.id} store={store} index={index} navigate={navigate} />
                   ))}
+                </div>
+              ) : (
+                <div className="text-center py-16 text-gray-500">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Store size={28} className="text-gray-400" />
+                  </div>
+                  <p className="text-lg font-semibold text-gray-700 mb-1">No stores available yet</p>
+                  <p className="text-sm">Check back soon — we&apos;re onboarding new vendors!</p>
                 </div>
               )}
             </>
@@ -1073,7 +1082,7 @@ export default function ClientLandingPage() {
               <div className="space-y-3 text-gray-400">
                 <p className="flex items-center gap-2"><Phone size={16} className="text-[#FFB800] flex-shrink-0" /> +44 7778 285855</p>
                 <p className="flex items-center gap-2"><Mail size={16} className="text-[#FFB800] flex-shrink-0" /> info@afrimercato.co.uk</p>
-                <p className="flex items-center gap-2"><MapPin size={16} className="text-[#FFB800] flex-shrink-0" /> Washington Ave, Manchester, United Kingdom.</p>
+                <p className="flex items-center gap-2"><MapPin size={16} className="text-[#FFB800] flex-shrink-0" /> Bristol, United Kingdom</p>
               </div>
             </div>
 
@@ -1153,9 +1162,9 @@ function StoreCard({ store, index, navigate }) {
   const isOpen = store.isOpen !== undefined ? store.isOpen : store.isActive !== false
 
   const handleClick = () => {
-    if (store._isSample) navigate('/stores')
-    else if (store.slug) navigate(`/store/${store.slug}`)
+    if (store.slug) navigate(`/store/${store.slug}`)
     else if (store._id) navigate(`/store/${store._id}`)
+    else navigate('/stores')
   }
 
   return (

@@ -55,7 +55,7 @@ export default function ContactUs() {
     {
       icon: <MapPin size={40} />,
       title: 'Visit Us',
-      content: 'Washington Ave, Manchester',
+      content: 'Bristol, United Kingdom',
       description: 'United Kingdom'
     },
     {
@@ -368,7 +368,7 @@ export default function ContactUs() {
             <div>
               <h4 className="font-bold mb-4">Contact</h4>
               <p className="text-gray-400 text-sm">info@afrimercato.co.uk</p>
-              <p className="text-gray-400 text-sm mt-2">Manchester, United Kingdom</p>
+              <p className="text-gray-400 text-sm mt-2">Bristol, United Kingdom</p>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-500 text-sm">

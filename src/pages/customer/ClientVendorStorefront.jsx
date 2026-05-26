@@ -647,7 +647,7 @@ export default function ClientVendorStorefront() {
             <div className="lg:col-span-2">
               <h3 className="text-xl font-bold mb-4">You've Got Questions?<br/>Do Reach Out!</h3>
               <p className="text-gray-400 text-sm mb-2">Email: info@afrimercato.co.uk</p>
-              <p className="text-gray-400 text-sm">Location: Washington Ave, Manchester, UK</p>
+              <p className="text-gray-400 text-sm">Location: Bristol, United Kingdom</p>
             </div>
             <div>
               <h4 className="font-bold mb-4">Company</h4>

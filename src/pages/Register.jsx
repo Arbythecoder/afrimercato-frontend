@@ -217,7 +217,7 @@ function Register() {
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <h1 className="text-6xl font-bold text-white mb-2">Afrimercato</h1>
+            <Link to="/" className="text-6xl font-bold text-white mb-2 hover:opacity-80 transition-opacity inline-block">Afrimercato</Link>
             <p className="text-afri-yellow text-xl font-semibold">{roleContent.title}</p>
           </motion.div>
 
@@ -297,7 +297,7 @@ function Register() {
         >
           {/* Mobile Logo */}
           <motion.div variants={itemVariants} className="lg:hidden text-center mb-8">
-            <h1 className="text-4xl font-bold text-afri-green mb-2">Afrimercato</h1>
+            <Link to="/" className="text-4xl font-bold text-afri-green mb-2 hover:opacity-80 transition-opacity inline-block">Afrimercato</Link>
             <p className="text-gray-600">{roleContent.title}</p>
           </motion.div>
 

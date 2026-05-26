@@ -37,6 +37,7 @@ function StoreCardSkeleton() {
 export default function ClientStoresPage() {
   const [searchParams] = useSearchParams()
   const location = searchParams.get('location') || ''
+  const searchQuery = searchParams.get('search') || ''
   const navigate = useNavigate()
 
   const { stores, loading: { stores: loading }, fetchStores } = useCustomerStore()
@@ -52,8 +53,8 @@ export default function ClientStoresPage() {
     : cityNames.slice(0, 5)
 
   useEffect(() => {
-    fetchStores(location)
-  }, [location]) // eslint-disable-line react-hooks/exhaustive-deps
+    fetchStores(searchQuery || location)
+  }, [location, searchQuery]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const expandSearchRadius = async (newRadius = 100) => {
     try {
@@ -106,7 +107,7 @@ export default function ClientStoresPage() {
   const handleSearch = (e) => {
     e.preventDefault()
     if (searchLocation.trim()) {
-      navigate(`/stores?location=${encodeURIComponent(searchLocation)}`)
+      navigate(`/stores?search=${encodeURIComponent(searchLocation)}`)
     }
   }
 
@@ -146,7 +147,7 @@ export default function ClientStoresPage() {
       </nav>
 
       {/* Hero — full when no search, compact when results are showing */}
-      {!location || loading ? (
+      {(!location && !searchQuery) || loading ? (
         <section className="bg-gradient-to-br from-[#1B4D3E] via-[#0D2B22] to-[#0a1f18] py-14">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="max-w-2xl mx-auto text-center">
@@ -224,7 +225,11 @@ export default function ClientStoresPage() {
               <div className="flex items-center gap-2 text-gray-700">
                 <MapPin size={18} className="text-[#FFB800]" />
                 <span className="font-semibold text-gray-900">{filteredStores.length} store{filteredStores.length !== 1 ? 's' : ''}</span>
-                <span className="text-gray-500">near <span className="text-[#1B4D3E] font-medium">{location}</span></span>
+                {searchQuery ? (
+                  <span className="text-gray-500">matching &quot;<span className="text-[#1B4D3E] font-medium">{searchQuery}</span>&quot;</span>
+                ) : (
+                  <span className="text-gray-500">near <span className="text-[#1B4D3E] font-medium">{location}</span></span>
+                )}
               </div>
               <form onSubmit={handleSearch} className="flex items-center gap-2">
                 <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2">
@@ -266,6 +271,19 @@ export default function ClientStoresPage() {
               {filteredStores.length > 0 ? `${filteredStores.length} available` : 'All stores'}
             </span>
           </div>
+
+          {/* Search results banner */}
+          {searchQuery && (
+            <div className="mb-4 flex items-center gap-2 text-sm text-gray-600 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+              <svg className="w-4 h-4 text-[#FFB800] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+              <span>Showing results for: <strong className="text-gray-900">&quot;{searchQuery}&quot;</strong></span>
+              <button onClick={() => navigate('/stores')} className="ml-auto text-[#1B4D3E] hover:underline font-medium text-xs">
+                Clear
+              </button>
+            </div>
+          )}
 
           {/* Glovo-style category pills */}
           <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 mb-6" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>

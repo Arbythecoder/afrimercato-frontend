@@ -112,14 +112,16 @@ function Login() {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <motion.h1 
-            className="text-5xl font-bold text-white mb-2"
-            initial={{ y: -20 }}
-            animate={{ y: 0 }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-          >
-            Afrimercato
-          </motion.h1>
+          <Link to="/">
+            <motion.h1
+              className="text-5xl font-bold text-white mb-2 hover:opacity-80 transition-opacity"
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              transition={{ type: "spring", stiffness: 300, damping: 20 }}
+            >
+              Afrimercato
+            </motion.h1>
+          </Link>
           <motion.p
             className="text-afri-yellow text-lg"
             initial={{ opacity: 0 }}
