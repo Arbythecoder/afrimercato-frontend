@@ -10,7 +10,7 @@
 # - Image uploads work (test with URL)
 
 $ErrorActionPreference = "Stop"
-$baseUrl = "https://afrimercato-backend-1.onrender.com"
+$baseUrl = "https://afrimercato-backend.onrender.com"
 # $baseUrl = "http://localhost:5000"  # Uncomment for local testing
 
 Write-Host "==================================================================" -ForegroundColor Cyan

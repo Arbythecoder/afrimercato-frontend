@@ -7,7 +7,7 @@
 # 3. Earnings endpoint shows correct amounts
 # ===================================================
 
-$API_URL = "https://afrimercato-backend-1.onrender.com/api"
+$API_URL = "https://afrimercato-backend.onrender.com/api"
 
 Write-Host "`n=== BLOCKER 4: Commission Tracking Test ===" -ForegroundColor Cyan
 
