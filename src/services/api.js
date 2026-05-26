@@ -116,7 +116,7 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
           processQueue(refreshError);
           isRefreshing = false;
           
-          const authError = new Error('Incorect email/password');
+          const authError = new Error('Incorrect email/password');
           authError.code = 'AUTH_EXPIRED';
           throw authError;
         }
@@ -124,7 +124,7 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
 
       // If we hit 401 even after retrying, throw the auth error
       if (response.status === 401) {
-        const authError = new Error('Incorect email/password');
+        const authError = new Error('Incorrect email/password');
         authError.code = 'AUTH_EXPIRED';
         throw authError;
       }
