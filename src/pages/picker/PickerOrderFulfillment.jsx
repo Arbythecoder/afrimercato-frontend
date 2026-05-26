@@ -234,7 +234,7 @@ function PickerOrderFulfillment() {
               const isLoading = actionLoading === itemId
               const productName = item.product?.name || `Item ${idx + 1}`
               const productImage = item.product?.images?.[0]
-
+              
               return (
                 <motion.div
                   key={itemId}
@@ -242,16 +242,16 @@ function PickerOrderFulfillment() {
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: isHandled ? 0.6 : 1, y: 0 }}
                   transition={{ delay: idx * 0.04 }}
-                  className={`bg-white rounded-2xl shadow-sm overflow-hidden transition-all ${isHandled ? 'opacity-60' : ''}`}
+                  className={`bg-white rounded-2xl border border-black/40 shadow-sm overflow-hidden transition-all ${isHandled ? 'opacity-60' : ''}`}
                 >
                   {/* Top accent */}
                   <div className={`h-0.5 w-full ${isPicked ? 'bg-emerald-500' : isUnavailable ? 'bg-red-400' : 'bg-gray-100'}`} />
 
                   <div className="flex items-stretch">
                     {/* Product image / placeholder */}
-                    <div className="w-20 h-20 flex-shrink-0 bg-gray-50 overflow-hidden">
+                    <div className="w-20 h-20 flex-shrink-0 overflow-hidden">
                       {productImage ? (
-                        <img src={productImage} alt={productName} className="w-full h-full object-cover" />
+                        <img src={productImage.url} alt={productName} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-2xl">📦</div>
                       )}
@@ -259,10 +259,10 @@ function PickerOrderFulfillment() {
 
                     {/* Details */}
                     <div className="flex-1 p-3 min-w-0">
-                      <p className={`font-semibold text-sm truncate ${isHandled ? 'line-through text-gray-400' : 'text-gray-900'}`}>
+                      <p className={`font-semibold text-sm truncate ${isHandled ? 'line-through text-black' : 'text-black'}`}>
                         {productName}
                       </p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="text-xs text-black mt-0.5">
                         Qty: {item.quantityOrdered}
                         {item.quantityPicked > 0 && item.quantityPicked !== item.quantityOrdered && ` · picked: ${item.quantityPicked}`}
                       </p>
@@ -279,14 +279,14 @@ function PickerOrderFulfillment() {
                       <button
                         onClick={() => handlePickItem(item)}
                         disabled={isLoading || isUnavailable}
-                        className={`w-11 h-11 rounded-2xl flex items-center justify-center transition-all ${
+                        className={`w-11 h-11 border border-gray-300 rounded-2xl flex items-center justify-center transition-all ${
                           isPicked
-                            ? 'bg-emerald-500 text-white'
-                            : 'bg-gray-100 text-gray-300 hover:bg-emerald-50 hover:text-emerald-400'
+                            ? 'bg-emerald-700 text-white'
+                            : 'bg-emerald-500 text-white hover:bg-emerald-700 hover:text-emerald-400'
                         } disabled:opacity-40`}
                       >
                         {isLoading
-                          ? <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                          ? <div className="w-4 h-4 border border-gray-400 rounded-full animate-spin" />
                           : <CheckCircle2 size={20} strokeWidth={isPicked ? 2.5 : 1.5} />
                         }
                       </button>
@@ -296,7 +296,7 @@ function PickerOrderFulfillment() {
                         <button
                           onClick={() => { setSelectedItem(item); setShowIssueModal(true) }}
                           disabled={isLoading}
-                          className="w-11 h-11 rounded-2xl bg-gray-50 text-gray-300 hover:bg-red-50 hover:text-red-400 flex items-center justify-center transition-all disabled:opacity-40"
+                          className="w-11 h-11 rounded-2xl bg-red-100 text-red-500 hover:bg-red-200 hover:text-red-400 flex items-center justify-center transition-all disabled:opacity-40"
                         >
                           <AlertTriangle size={18} strokeWidth={1.5} />
                         </button>
@@ -320,26 +320,39 @@ function PickerOrderFulfillment() {
 
       {/* Sticky complete button */}
       <div className="fixed bottom-0 left-0 right-0 px-5 pb-6 pt-3 bg-white/95 backdrop-blur-xl border-t border-gray-100">
-        <motion.button
-          onClick={handleComplete}
-          disabled={!allDone || completeLoading}
-          whileTap={allDone ? { scale: 0.97 } : {}}
-          className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
-            allDone && !completeLoading
-              ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200'
-              : 'bg-gray-100 text-gray-400'
-          }`}
-        >
-          {completeLoading
-            ? <span className="flex items-center justify-center gap-2">
-                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                Completing...
-              </span>
-            : allDone
-              ? '✓ Complete & Ready for Delivery'
-              : `${totalItems - handledCount} more item${totalItems - handledCount !== 1 ? 's' : ''} to handle`
-          }
-        </motion.button>
+        {(() => {
+          // Check if the order is already completed on the backend
+          const isAlreadyCompleted = ['packed', 'ready_for_delivery', 'assigned_to_rider', 'rider_accepted', 'picked_up_by_rider', 'delivered'].includes(order?.status);
+          const isDisabled = !allDone || completeLoading || isAlreadyCompleted;
+
+          return (
+            <motion.button
+              onClick={handleComplete}
+              disabled={isDisabled}
+              whileTap={!isDisabled ? { scale: 0.97 } : {}}
+              className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
+                isAlreadyCompleted
+                  ? 'bg-afri-green-pale text-afri-green-dark cursor-not-allowed' // Already done style
+                  : allDone && !completeLoading
+                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' // Ready to click style
+                    : 'bg-gray-100 text-gray-400' // Incomplete style
+              }`}
+            >
+              {completeLoading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                  Completing...
+                </span>
+              ) : isAlreadyCompleted ? (
+                '✓ Order Already Packed'
+              ) : allDone ? (
+                '✓ Complete & Ready for Delivery'
+              ) : (
+                `${totalItems - handledCount} more item${totalItems - handledCount !== 1 ? 's' : ''} to handle`
+              )}
+            </motion.button>
+          )
+        })()}
       </div>
 
       {/* Floating order chat */}
@@ -404,7 +417,7 @@ function PickerOrderFulfillment() {
               </div>
               <button
                 onClick={() => { setShowIssueModal(false); setSelectedItem(null) }}
-                className="w-full mt-4 py-3.5 text-gray-400 font-semibold text-sm"
+                className="w-full mt-4 py-3.5 border border-gray-400 hover:shadow-lg rounded-full text-gray-400 font-semibold text-sm"
               >
                 Cancel
               </button>

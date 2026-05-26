@@ -1,10 +1,12 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, TrendingUp, User } from 'lucide-react'
+import { FaStore } from "react-icons/fa";
 
 const tabs = [
   { path: '/picker/dashboard',   label: 'Home',        icon: LayoutDashboard },
   { path: '/picker/performance', label: 'Performance', icon: TrendingUp },
   { path: '/picker/profile',     label: 'Profile',     icon: User },
+  { path: '/picker/explore',     label: 'Find Stores',     icon: FaStore },
 ]
 
 function PickerLayout({ children }) {

@@ -18,6 +18,7 @@ const Dashboard = lazy(() => import('./pages/vendor/Dashboard'))
 const Products = lazy(() => import('./pages/vendor/Products'))
 const Earnings = lazy(() => import('./pages/vendor/Earnings'))
 const Orders = lazy(() => import('./pages/vendor/Orders'))
+const Staff = lazy(() => import('./pages/vendor/VendorStaff'))
 const Reports = lazy(() => import('./pages/vendor/Reports'))
 const Settings = lazy(() => import('./pages/vendor/Settings'))
 const Subscription = lazy(() => import('./pages/vendor/Subscription'))
@@ -56,6 +57,7 @@ const PickerDashboard = lazy(() => import('./pages/picker/PickerDashboard'))
 const PickerOrderFulfillment = lazy(() => import('./pages/picker/PickerOrderFulfillment'))
 const PickerPerformance = lazy(() => import('./pages/picker/PickerPerformance'))
 const PickerProfile = lazy(() => import('./pages/picker/PickerProfile'))
+const PickerStoreExplore = lazy(() => import('./pages/picker/StoreExplore'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
 const AdminRiderManagement = lazy(() => import('./pages/admin/AdminRiderManagement'))
@@ -105,6 +107,7 @@ function RoleBasedRedirect() {
   if (roles?.includes('picker'))     return <Navigate to="/picker/dashboard" replace />
   if (roles?.includes('rider'))      return <Navigate to="/rider/dashboard" replace />
   if (roles?.includes('vendor'))     return <Navigate to="/dashboard" replace />
+  if (roles?.includes('customer'))     return <Navigate to="/my-dashboard" replace />
 
   // Fallback to singular role field
   switch (role) {
@@ -203,7 +206,7 @@ function AppContent() {
       <Route
         path="/"
         element={
-          isAuthenticated && user?.role !== 'customer' && user?.primaryRole !== 'customer'
+          isAuthenticated
             ? <RoleBasedRedirect />
             : <ClientLandingPage />
         }
@@ -242,7 +245,11 @@ function AppContent() {
         path="/my-dashboard"
         element={
           isAuthenticated ? (
-            <CustomerDashboard />
+            (user?.role === 'customer' || user?.roles?.includes('customer')) ? (
+              <CustomerDashboard />
+            ) : (
+              <RoleBasedRedirect />
+            )
           ) : (
             <Navigate to="/login" />
           )
@@ -268,6 +275,7 @@ function AppContent() {
       <Route path="/picker/order/:orderId" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerOrderFulfillment /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
       <Route path="/picker/performance" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerPerformance /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
       <Route path="/picker/profile" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerProfile /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/picker/explore" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerStoreExplore /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
       <Route
         path="/login"
@@ -363,6 +371,23 @@ function AppContent() {
             user?.role === 'vendor' ? (
               <VendorLayout>
                 <Orders />
+              </VendorLayout>
+            ) : (
+              <RoleBasedRedirect />
+            )
+          ) : (
+            <Navigate to="/login" />
+          )
+        }
+      />
+
+      <Route
+        path="/vendor/staff"
+        element={
+          isAuthenticated ? (
+            user?.role === 'vendor' ? (
+              <VendorLayout>
+                <Staff />
               </VendorLayout>
             ) : (
               <RoleBasedRedirect />

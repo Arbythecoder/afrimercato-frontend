@@ -54,6 +54,8 @@ function Settings() {
       state: '',
       country: 'United Kingdom',
       postalCode: '',
+      latitude: '', // <-- Added for GPS testing
+      longitude: '', // <-- Added for GPS testing
     },
     businessHours: {
       monday: { open: '09:00', close: '18:00', isOpen: true },
@@ -103,9 +105,15 @@ function Settings() {
     if (vendorResponse?.success && vendorResponse.data) {
       // Backend returns vendor data either at data.vendor or data directly
       const vendorData = vendorResponse.data.vendor || vendorResponse.data
+      const normalizedVendorData = {
+        ...vendorData,
+        storeName: vendorData.storeName || vendorData.name || vendorData.businessName || '',
+        businessName: vendorData.businessName || vendorData.storeName || vendorData.name || '',
+        name: vendorData.name || vendorData.storeName || vendorData.businessName || ''
+      }
       setVendorProfile(prev => ({
         ...prev,
-        ...vendorData,
+        ...normalizedVendorData,
         address: {
           ...prev.address,
           ...(vendorData.address || {})
@@ -145,6 +153,13 @@ function Settings() {
       setVendorProfile((prev) => ({
         ...prev,
         address: { ...prev.address, [addressField]: value },
+      }))
+    } else if (field === 'storeName') {
+      setVendorProfile((prev) => ({
+        ...prev,
+        storeName: value,
+        name: value,
+        businessName: value,
       }))
     } else {
       setVendorProfile((prev) => ({ ...prev, [field]: value }))
@@ -266,13 +281,8 @@ function Settings() {
 
     // Validate phone numbers
     if (vendorProfile.phone && !validatePhone(vendorProfile.phone, country)) {
-      errors.phone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number. Format: ${country === 'United Kingdom' ? '+44 7xxx xxxxxx or 07xxx xxxxxx' : '+353 8x xxx xxxx or 08x xxx xxxx'}`
+      errors.phone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number.`
     }
-    if (vendorProfile.alternativePhone && !validatePhone(vendorProfile.alternativePhone, country)) {
-      errors.alternativePhone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number`
-    }
-
-    // Postcode format is only a soft warning — don't block save
 
     // Validate required fields
     if (!vendorProfile.storeName?.trim()) {
@@ -283,9 +293,6 @@ function Settings() {
     }
     if (!vendorProfile.address?.city?.trim()) {
       errors.city = 'City is required'
-    }
-    if (!vendorProfile.address?.postalCode?.trim()) {
-      errors.postalCode = 'Postcode is required'
     }
 
     setValidationErrors(errors)
@@ -298,10 +305,41 @@ function Settings() {
 
     try {
       setSaving(true)
-      const response = await vendorAPI.updateProfile(vendorProfile)
+      let payloadToSave = {
+        ...vendorProfile,
+        name: vendorProfile.storeName,
+        businessName: vendorProfile.storeName,
+      };
+      if (!payloadToSave.address.latitude || !payloadToSave.address.longitude) {
+        try {
+          const { street, city, state, country } = payloadToSave.address;
+          const searchQuery = encodeURIComponent(`${street}, ${city}, ${state || ''}, ${country}`);
+          
+          // Call the free OpenStreetMap API
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`);
+          const geoData = await geoRes.json();
+
+          if (geoData && geoData.length > 0) {
+            payloadToSave.address.latitude = geoData[0].lat;
+            payloadToSave.address.longitude = geoData[0].lon;
+          } else {
+            console.warn("Could not auto-detect GPS for this address. Using default/fallback.");
+          }
+        } catch (geoErr) {
+          console.error("Geocoding failed silently:", geoErr);
+        }
+      }
+
+      const response = await vendorAPI.updateProfile(payloadToSave)
+      
       if (response?.success) {
         success('Vendor profile updated successfully!')
+        
+        if (payloadToSave.address.latitude) {
+           setVendorProfile(payloadToSave);
+        }
         setValidationErrors({})
+        await fetchSettings()
       } else {
         error(response?.message || 'Failed to update vendor profile')
       }
@@ -787,6 +825,7 @@ function Settings() {
                   ))}
                 </select>
               </div>
+
             </div>
           </div>
 
@@ -809,7 +848,7 @@ function Settings() {
                   Saving...
                 </>
               ) : (
-                'Save Changes'
+                'Update'
               )}
             </button>
           </div>

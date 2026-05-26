@@ -265,7 +265,7 @@ export default function ClientLandingPage() {
                 </button>
 
                 {showJoinDropdown && (
-                  <div className="absolute right-0 top-full mt-2 w-56 bg-white rounded-2xl shadow-xl p-2">
+                  <div className="absolute right-0 top-full mt-2 w-56 sm:w-64 bg-white rounded-2xl shadow-xl p-2">
                     <Link
                       to="/register?role=customer"
                       onClick={() => setShowJoinDropdown(false)}

@@ -880,8 +880,8 @@ function CheckoutForm() {
             <p className="text-center text-sm text-gray-500 mt-5">
               No account?{' '}
               <a
-                href="/register"
-                onClick={() => localStorage.setItem('checkout_redirect', 'true')}
+                // href="/register"
+                onClick={() => localStorage.setItem('checkout_redirect', 'true'), navigate('/register')}
                 className="text-green-600 hover:text-green-700 font-medium"
               >
                 Create one free →

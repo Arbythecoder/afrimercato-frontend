@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import NotificationDropdown from '../Notifications/NotificationDropdown'
 import { IoIosHourglass } from "react-icons/io";
+import { Users } from 'lucide-react';
 
 import { vendorAPI } from '../../services/api'
 
@@ -19,6 +20,7 @@ function VendorLayout({ children }) {
     { name: 'Dashboard', path: '/dashboard', icon: '📊' },
     { name: 'Products', path: '/vendor/products', icon: '📦' },
     { name: 'Orders', path: '/vendor/orders', icon: '🛒' },
+    { name: 'Staff & Team', path: '/vendor/staff', icon: <Users size={18} /> },
     { name: 'Reports', path: '/reports', icon: '📈' },
     { name: 'Subscription', path: '/subscription', icon: '💳' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },
