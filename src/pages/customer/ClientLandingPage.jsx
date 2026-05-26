@@ -146,8 +146,9 @@ export default function ClientLandingPage() {
       setStoresLoading(true)
       try {
         const response = await getFeaturedVendors(9)
-        if (response.success && response.data && response.data.length > 0) {
-          setStores(response.data)
+        if (response.success) {
+          const vendorList = response.data?.vendors || response.data || []
+          setStores(Array.isArray(vendorList) ? vendorList : [])
         } else {
           setStores([])
         }
@@ -1155,7 +1156,7 @@ export default function ClientLandingPage() {
 // STORE CARD COMPONENT — Glovo style
 // ============================================
 function StoreCard({ store, index, navigate }) {
-  const storeImage = store.image || store.logo || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
+  const storeImage = store.storeImage || store.image || store.logo || 'https://images.unsplash.com/photo-1604719312566-8912e9227c6a?w=800&q=80'
   const storeName = store.storeName || store.name || 'African Store'
   const storeCity = store.location?.city || (typeof store.location === 'string' ? store.location.split(',')[0] : 'UK')
   const rating = store.rating || store.averageRating || 4.5

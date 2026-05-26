@@ -83,7 +83,8 @@ const useCustomerStore = create((set, get) => ({
           const loc = location.toLowerCase()
           rawVendors = rawVendors.filter(v =>
             (v.address?.city || v.location || '').toLowerCase().includes(loc) ||
-            (v.storeName || v.businessName || v.name || '').toLowerCase().includes(loc)
+            (v.storeName || v.businessName || v.name || '').toLowerCase().includes(loc) ||
+            (v.address?.postcode || v.postcode || '').toLowerCase().includes(loc)
           )
         }
 
