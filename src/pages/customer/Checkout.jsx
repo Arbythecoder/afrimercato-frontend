@@ -501,7 +501,6 @@ function CheckoutForm() {
   const handlePlaceOrder = async (e) => {
     e.preventDefault()
 
-    // Guard: card must be tokenized via Step 2 before we can confirm payment
     if (!stripe || !paymentMethodId) {
       setOrderError('Card details are missing. Please go back and enter your card details.')
       setStep(2)
@@ -539,14 +538,11 @@ function CheckoutForm() {
 
       if (import.meta.env.DEV) console.log('[Checkout] Calling initializePayment — items:', orderData.items.length, 'total:', total)
       const data = await checkoutAPI.initializePayment(orderData)
-      if (import.meta.env.DEV) console.log('[Checkout] initializePayment response — success:', data?.success, 'clientSecret:', !!data?.data?.payment?.clientSecret, 'url:', !!data?.data?.payment?.url)
+      if (import.meta.env.DEV) console.log('[Checkout] initializePayment response — success:', data?.success, 'clientSecret:', !!data?.data?.payment?.clientSecret)
 
       if (data.success) {
         const orderId = data.data.order._id
 
-        // Prefer clientSecret from initializePayment (updated backend).
-        // If the backend still returns only a Checkout Session URL, call
-        // /payments/create-intent to get a PaymentIntent clientSecret instead.
         let clientSecret = data.data.payment?.clientSecret
 
         if (!clientSecret) {
@@ -560,31 +556,16 @@ function CheckoutForm() {
             clientSecret = intentRes?.data?.clientSecret
           } catch (intentErr) {
             if (import.meta.env.DEV) console.warn('[Checkout] create-intent failed:', intentErr.message)
-            // Last resort: fall back to Stripe hosted checkout page
-            if (data.data.payment?.url) {
-              if (import.meta.env.DEV) console.log('[Checkout] Falling back to Stripe hosted page')
-              try {
-                localStorage.setItem('afrimercato_last_order_items', JSON.stringify(
-                  cart.slice(0, 5).map(item => ({ _id: item._id, name: item.name, price: item.price, quantity: item.quantity, unit: item.unit, images: item.images }))
-                ))
-              } catch (_e) {}
-              localStorage.removeItem('afrimercato_cart')
-              localStorage.removeItem('repeatPurchaseFrequency')
-              localStorage.setItem('pending_order_id', orderId)
-              window.location.href = data.data.payment.url
-              return
-            }
             throw new Error('Unable to initialize payment. Please try again.')
           }
         }
 
         if (!clientSecret) {
           setOrderError('Payment system error. Please contact support.')
-          window.scrollTo({ top: 0, behavior: 'smooth' })
+          setLoading(false)
           return
         }
 
-        // Confirm card payment inline — no redirect to Stripe hosted page
         if (import.meta.env.DEV) console.log('[Checkout] Confirming payment with Stripe Elements')
         const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
           clientSecret,
@@ -601,7 +582,6 @@ function CheckoutForm() {
         if (paymentIntent?.status === 'succeeded') {
           if (import.meta.env.DEV) console.log('[Checkout] ✓ Payment confirmed:', paymentIntent.id)
 
-          // Payment confirmed — safe to clear cart now
           try {
             localStorage.setItem('afrimercato_last_order_items', JSON.stringify(
               cart.slice(0, 5).map(item => ({
@@ -618,7 +598,6 @@ function CheckoutForm() {
           localStorage.removeItem('afrimercato_cart')
           localStorage.removeItem('repeatPurchaseFrequency')
 
-          // Fire-and-forget: persist delivery address back to profile for next checkout
           if (isAuthenticated && address.street) {
             userAPI.saveDefaultAddress({
               street:    address.street,
@@ -631,7 +610,7 @@ function CheckoutForm() {
               label:     'Home',
               isDefault: true
             })
-            .then(() => console.log('[Checkout] ✓ Address saved to profile'))  // add this
+            .then(() => console.log('[Checkout] ✓ Address saved to profile'))
             .catch((err) => console.error('[Checkout] saveDefaultAddress failed:', err.message))
           }
 
@@ -648,14 +627,12 @@ function CheckoutForm() {
     } catch (error) {
       const msg = error.message || 'Failed to place order'
 
-      // Check for email verification error
       if (error.response?.data?.errorCode === 'EMAIL_NOT_VERIFIED') {
         setEmailVerificationError(true)
         window.scrollTo({ top: 0, behavior: 'smooth' })
         return
       }
 
-      // Session expired — redirect to login
       if (error.status === 401 || error.code === 'AUTH_EXPIRED') {
         setOrderError('Your session has expired. Please log in again.')
         localStorage.setItem('checkout_redirect', 'true')

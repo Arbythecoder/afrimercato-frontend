@@ -24,7 +24,8 @@ function PaymentVerify() {
     if (paymentIntentId && orderId) {
       try {
         if (import.meta.env.DEV) console.log('[PaymentVerify] Elements flow — calling /payments/stripe/verify/' + paymentIntentId)
-        const data = await apiCall(`/payments/stripe/verify/${paymentIntentId}`, { timeout: 15000 })
+        // const data = await apiCall(`/payments/stripe/verify/${paymentIntentId}`, { timeout: 15000 })
+        const data = await apiCall(`/payments/stripe/verify-intent/${paymentIntentId}`, { timeout: 15000 })
         if (import.meta.env.DEV) console.log('[PaymentVerify] Verify response:', data?.success, '— paymentStatus:', data?.data?.paymentStatus)
 
         if (data.success && data.data?.paymentStatus === 'paid') {
