@@ -6,47 +6,50 @@ import OrderStatusTimeline from './OrderStatusTimeline'
 import RiderRating from './RiderRating'
 import DeliveryChat from '../DeliveryChat'
 
-// Order status badge colors using client theme
 const statusColors = {
   pending: 'bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900',
   confirmed: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
-  assigned_picker: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white',
-  picking: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white',
-  picked: 'bg-gradient-to-r from-purple-700 to-purple-800 text-white',
-  packing: 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white',
-  ready_for_pickup: 'bg-gradient-to-r from-teal-500 to-teal-600 text-white',
   preparing: 'bg-gradient-to-r from-orange-500 to-orange-600 text-white',
-  ready: 'bg-gradient-to-r from-green-600 to-green-700 text-white',
-  'out-for-delivery': 'bg-gradient-to-r from-blue-600 to-blue-700 text-white',
-  delivered: 'bg-gradient-to-r from-green-700 to-green-800 text-white',
+  assigned_to_picker: 'bg-gradient-to-r from-purple-500 to-purple-600 text-white',
+  picking: 'bg-gradient-to-r from-purple-600 to-purple-700 text-white',
+  packed: 'bg-gradient-to-r from-indigo-500 to-indigo-600 text-white',
+  ready_for_delivery: 'bg-gradient-to-r from-teal-500 to-teal-600 text-white',
+  assigned_to_rider: 'bg-gradient-to-r from-blue-400 to-blue-500 text-white',
+  rider_accepted: 'bg-gradient-to-r from-blue-500 to-blue-600 text-white',
+  picked_up_by_rider: 'bg-gradient-to-r from-blue-600 to-blue-700 text-white',
+  out_for_delivery: 'bg-gradient-to-r from-blue-700 to-blue-800 text-white',
+  delivered: 'bg-gradient-to-r from-green-600 to-green-700 text-white',
   completed: 'bg-gradient-to-r from-gray-700 to-gray-800 text-white',
   cancelled: 'bg-gradient-to-r from-red-500 to-red-600 text-white',
+  failed: 'bg-gradient-to-r from-red-700 to-red-800 text-white',
 }
 
 const statusNames = {
   pending: 'Pending',
   confirmed: 'Confirmed',
-  assigned_picker: 'Picker Assigned',
-  picking: 'Picking Items',
-  picked: 'Items Picked',
-  packing: 'Packing',
-  ready_for_pickup: 'Ready for Pickup',
   preparing: 'Preparing',
-  ready: 'Ready',
-  'out-for-delivery': 'Out for Delivery',
+  assigned_to_picker: 'Picker Assigned',
+  picking: 'Picking Items',
+  packed: 'Items Packed',
+  ready_for_delivery: 'Ready for Delivery',
+  assigned_to_rider: 'Rider Assigned',
+  rider_accepted: 'Rider Accepted',
+  picked_up_by_rider: 'Picked Up by Rider',
+  out_for_delivery: 'Out for Delivery',
   delivered: 'Delivered',
   completed: 'Completed',
   cancelled: 'Cancelled',
-}
+  failed: 'Failed'
+};
 
 function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
   const [activeTab, setActiveTab] = useState('details')
   const [packingProgress, setPackingProgress] = useState([])
+
   const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
-    // Initialize packing progress if in packing status
-    if (order.status === 'packing' || order.status === 'picking') {
+    if (order.status === 'picking') {
       const progress = order.items.map((item) => ({
         itemId: item._id || item.productId,
         packed: false,
@@ -71,14 +74,13 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
     setPackingProgress(packedItems)
     const allPacked = packedItems.every((item) => item.packed)
     if (allPacked) {
-      // Auto-transition to ready_for_pickup when all items packed
-      handleStatusUpdate('ready_for_pickup', 'All items packed and ready')
+      handleStatusUpdate('packed', 'All items packed and ready')
     }
   }
 
   const handlePickerAssigned = async (pickerId) => {
     try {
-      await handleStatusUpdate('assigned_picker', `Picker ${pickerId} assigned`)
+      await handleStatusUpdate('assigned_to_picker', `Picker ${pickerId} assigned`)
     } catch (error) {
       console.error('Error assigning picker:', error)
     }
@@ -128,7 +130,7 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
             {[
               { id: 'details', label: 'Order Details', icon: '📋' },
               { id: 'timeline', label: 'Timeline', icon: '📍' },
-              { id: 'packing', label: 'Packing', icon: '📦', show: ['packing', 'picking', 'assigned_picker'].includes(order.status) },
+              { id: 'packing', label: 'Packing', icon: '📦', show: ['packing', 'picking', 'assigned_to_picker'].includes(order.status) },
               { id: 'picker', label: 'Picker', icon: '👤', show: ['pending', 'confirmed'].includes(order.status) },
               { id: 'rating', label: 'Rate Rider', icon: '⭐', show: ['delivered', 'completed'].includes(order.status) },
               { id: 'chat', label: 'Chat', icon: '💬', show: !!order.rider },
@@ -139,11 +141,10 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`px-6 py-4 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap ${
-                    activeTab === tab.id
-                      ? 'border-[#FFB300] text-[#FFB300] bg-white'
-                      : 'border-transparent text-gray-600 hover:text-[#FFB300] hover:bg-gray-100'
-                  }`}
+                  className={`px-6 py-4 text-sm font-medium transition-all duration-200 border-b-2 whitespace-nowrap ${activeTab === tab.id
+                    ? 'border-[#FFB300] text-[#FFB300] bg-white'
+                    : 'border-transparent text-gray-600 hover:text-[#FFB300] hover:bg-gray-100'
+                    }`}
                 >
                   <span className="mr-2">{tab.icon}</span>
                   {tab.label}
@@ -310,11 +311,10 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-500">Status:</span>
-                    <span className={`font-semibold px-3 py-1 rounded-lg shadow-sm ${
-                      order.payment?.status === 'paid'
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span className={`font-semibold px-3 py-1 rounded-lg shadow-sm ${order.payment?.status === 'paid'
+                      ? 'bg-green-100 text-green-700'
+                      : 'bg-yellow-100 text-yellow-700'
+                      }`}>
                       {order.payment?.status?.toUpperCase() || 'PENDING'}
                     </span>
                   </div>

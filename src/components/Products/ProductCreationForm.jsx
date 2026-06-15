@@ -393,7 +393,6 @@ function ProductCreationForm({ product, onClose, onSave }) {
   };
 
   const handleSubmit = async (e) => {
-
     if (e?.preventDefault) e.preventDefault()
 
     if (!validate()) {
@@ -416,7 +415,6 @@ function ProductCreationForm({ product, onClose, onSave }) {
       setSaving(true)
       setUploadProgress('Preparing upload...')
 
-      // Check both new uploads AND existing URLs
       const hasExistingImages = imagePreviews.some(p => typeof p === 'string' && p.startsWith('http'))
       const hasNewImages = images.length > 0
 
@@ -427,41 +425,6 @@ function ProductCreationForm({ product, onClose, onSave }) {
         return
       }
 
-      const submitData = new FormData()
-
-      // Add text fields
-      Object.keys(formData).forEach(key => {
-        if (key !== 'availability' && key !== 'tags') {
-          submitData.append(key, formData[key])
-        }
-      })
-
-      // Add complex objects as JSON
-      submitData.append('availability', JSON.stringify(formData.availability))
-      submitData.append('tags', JSON.stringify(formData.tags))
-      submitData.append('variants', JSON.stringify(variants))
-
-      // Handle images — new uploads OR preserve existing URLs
-      if (hasNewImages) {
-        const totalSize = images.reduce((sum, img) => sum + img.size, 0)
-        const totalSizeKB = (totalSize / 1024).toFixed(1)
-        console.log(`📸 Sending ${images.length} new image(s), total: ${totalSizeKB}KB`)
-
-        images.forEach((image, index) => {
-          console.log(`  Image ${index + 1}: ${image.name} (${(image.size / 1024).toFixed(1)}KB)`)
-          submitData.append('images', image)
-        })
-
-        setUploadProgress(`Uploading ${images.length} image(s) (${totalSizeKB}KB)...`)
-      } else {
-        // No new uploads — send existing URLs so backend doesn't wipe them
-        const existingUrls = imagePreviews.filter(p => typeof p === 'string' && p.startsWith('http'))
-        console.log(`Preserving ${existingUrls.length} existing image(s)`)
-        submitData.append('images', JSON.stringify(existingUrls))
-        setUploadProgress('Saving changes...')
-      }
-
-      // Retry logic
       let response
       let lastError
       const maxRetries = 3
@@ -473,18 +436,53 @@ function ProductCreationForm({ product, onClose, onSave }) {
             await new Promise(resolve => setTimeout(resolve, 1000 * attempt))
           }
 
+          const submitData = new FormData()
+
+          // Add text fields
+          Object.keys(formData).forEach(key => {
+            if (key !== 'availability' && key !== 'tags') {
+              submitData.append(key, formData[key])
+            }
+          })
+
+          submitData.append('availability', JSON.stringify(formData.availability))
+          submitData.append('tags', JSON.stringify(formData.tags))
+          submitData.append('variants', JSON.stringify(variants))
+
+          if (hasNewImages) {
+            if (attempt === 1) { 
+              const totalSize = images.reduce((sum, img) => sum + img.size, 0)
+              const totalSizeKB = (totalSize / 1024).toFixed(1)
+              console.log(`📸 Sending ${images.length} new image(s), total: ${totalSizeKB}KB`)
+              setUploadProgress(`Uploading ${images.length} image(s) (${totalSizeKB}KB)...`)
+            }
+
+            images.forEach((image, index) => {
+              if (attempt === 1) console.log(`  Image ${index + 1}: ${image.name} (${(image.size / 1024).toFixed(1)}KB)`)
+
+              submitData.append('images', image)
+            })
+          } else {
+            const existingUrls = imagePreviews.filter(p => typeof p === 'string' && p.startsWith('http'))
+            if (attempt === 1) console.log(`Preserving ${existingUrls.length} existing image(s)`)
+
+            submitData.append('images', JSON.stringify(existingUrls))
+            if (attempt === 1) setUploadProgress('Saving changes...')
+          }
+
           if (product) {
             response = await vendorAPI.updateProduct(product._id, submitData)
           } else {
             response = await vendorAPI.createProduct(submitData)
           }
 
-          break // success — exit retry loop
+          break 
+
         } catch (err) {
           lastError = err
           console.warn(`Upload attempt ${attempt} failed:`, err.message)
 
-          // Don't retry auth or validation errors
+          // Don't retry auth or validation errors, they will fail every time
           if (
             err.message?.includes('401') ||
             err.message?.includes('Session expired') ||
@@ -575,11 +573,10 @@ function ProductCreationForm({ product, onClose, onSave }) {
               <div key={step.id} className="flex items-center flex-1 min-w-fit">
                 <div className="flex items-center">
                   <div
-                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold ${
-                      currentStep >= step.id
+                    className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold ${currentStep >= step.id
                         ? 'bg-green-500 text-white'
                         : 'bg-gray-200 text-gray-600'
-                    }`}
+                      }`}
                   >
                     {currentStep > step.id ? <FiCheck className="w-3 h-3 sm:w-4 sm:h-4" /> : step.id}
                   </div>
@@ -613,9 +610,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.name ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="e.g., Organic Cherry Tomatoes"
                     maxLength={100}
                   />
@@ -631,9 +627,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     value={formData.description}
                     onChange={handleChange}
                     rows={4}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.description ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="Fresh organic cherry tomatoes grown in Ireland. Sweet and juicy, perfect for salads."
                     maxLength={2000}
                   />
@@ -653,9 +648,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     value={formData.category}
                     onChange={handleChange}
                     list="category-suggestions"
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${
-                      errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent ${errors.category ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                      }`}
                     placeholder="e.g., Fresh Produce, Bakery, Meat & Seafood..."
                     maxLength={50}
                   />
@@ -747,9 +741,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       onChange={handleChange}
                       step="0.01"
                       min="0.01"
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${
-                        errors.price ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${errors.price ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
                       placeholder="2.99"
                     />
                     {errors.price && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.price}</p>}
@@ -821,10 +814,9 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       onChange={handleChange}
                       min="0"
                       disabled={formData.unlimitedStock}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${
-                        formData.unlimitedStock ? 'bg-gray-100 border-gray-300' :
-                        errors.stock ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                      }`}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${formData.unlimitedStock ? 'bg-gray-100 border-gray-300' :
+                          errors.stock ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        }`}
                       placeholder="50"
                     />
                     {errors.stock && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.stock}</p>}
@@ -947,11 +939,10 @@ function ProductCreationForm({ product, onClose, onSave }) {
                         key={index}
                         type="button"
                         onClick={() => toggleTag(tag)}
-                        className={`px-4 py-2 rounded-full text-sm font-medium transition ${
-                          formData.tags.includes(tag)
+                        className={`px-4 py-2 rounded-full text-sm font-medium transition ${formData.tags.includes(tag)
                             ? 'bg-green-500 text-white'
                             : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                        }`}
+                          }`}
                       >
                         {tag}
                       </button>

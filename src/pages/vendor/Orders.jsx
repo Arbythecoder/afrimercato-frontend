@@ -4,127 +4,161 @@ import OrderDetailsModal from '../../components/OrderFulfillment/OrderDetailsMod
 import useVendorStore from '../../stores/useVendorStore'
 
 const statusColors = {
-  pending:            'bg-amber-100 text-amber-800',
-  confirmed:          'bg-blue-100 text-blue-800',
-  preparing:          'bg-orange-100 text-orange-800',
+  pending: 'bg-amber-100 text-amber-800',
+  confirmed: 'bg-blue-100 text-blue-800',
+  preparing: 'bg-orange-100 text-orange-800',
   assigned_to_picker: 'bg-teal-100 text-teal-800',
-  picking:            'bg-teal-100 text-teal-800',
-  packed:             'bg-teal-100 text-teal-800',
+  picking: 'bg-teal-100 text-teal-800',
+  packed: 'bg-teal-100 text-teal-800',
   ready_for_delivery: 'bg-cyan-100 text-cyan-800',
-  assigned_to_rider:  'bg-purple-100 text-purple-800',
-  rider_accepted:     'bg-purple-100 text-purple-800',
+  assigned_to_rider: 'bg-purple-100 text-purple-800',
+  rider_accepted: 'bg-purple-100 text-purple-800',
   picked_up_by_rider: 'bg-purple-100 text-purple-800',
-  out_for_delivery:   'bg-blue-100 text-blue-800',
-  delivered:          'bg-green-100 text-green-800',
-  completed:          'bg-gray-100 text-gray-700',
-  cancelled:          'bg-red-100 text-red-800',
-  failed:             'bg-red-100 text-red-800',
+  out_for_delivery: 'bg-blue-100 text-blue-800',
+  delivered: 'bg-green-100 text-green-800',
+  completed: 'bg-gray-100 text-gray-700',
+  cancelled: 'bg-red-100 text-red-800',
+  failed: 'bg-red-100 text-red-800',
 }
 
 const statusNames = {
-  pending:            'Pending',
-  confirmed:          'Confirmed',
-  preparing:          'Preparing',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  preparing: 'Preparing',
   assigned_to_picker: 'Picker Assigned',
-  picking:            'Picking',
-  packed:             'Packed',
+  picking: 'Picking',
+  packed: 'Packed',
   ready_for_delivery: 'Ready for Delivery',
-  assigned_to_rider:  'Rider Assigned',
-  rider_accepted:     'Rider Accepted',
+  assigned_to_rider: 'Rider Assigned',
+  rider_accepted: 'Rider Accepted',
   picked_up_by_rider: 'Picked Up',
-  out_for_delivery:   'Out for Delivery',
-  delivered:          'Delivered',
-  completed:          'Completed',
-  cancelled:          'Cancelled',
-  failed:             'Failed',
+  out_for_delivery: 'Out for Delivery',
+  delivered: 'Delivered',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  failed: 'Failed',
 }
 
 // What actions a vendor can take per status
 const VENDOR_ACTIONS = {
-  pending:            [['Confirm', 'confirmed', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  confirmed:          [['Start Preparing', 'preparing', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  preparing:          [['Ready for Delivery', 'ready_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  pending: [['Confirm', 'confirmed', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  confirmed: [['Start Preparing', 'preparing', 'primary'], ['Cancel', 'cancelled', 'danger']],
+  preparing: [['Ready for Delivery', 'ready_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
   ready_for_delivery: [['Out for Delivery', 'out_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
   assigned_to_picker: [['Cancel', 'cancelled', 'danger']],
-  picking:            [['Cancel', 'cancelled', 'danger']],
-  packed:             [['Cancel', 'cancelled', 'danger']],
-  assigned_to_rider:  [['Cancel', 'cancelled', 'danger']],
-  rider_accepted:     [],
+  picking: [['Cancel', 'cancelled', 'danger']],
+  packed: [['Cancel', 'cancelled', 'danger']],
+  assigned_to_rider: [['Cancel', 'cancelled', 'danger']],
+  rider_accepted: [],
   picked_up_by_rider: [],
-  out_for_delivery:   [['Mark Delivered', 'delivered', 'primary']],
-  delivered:          [['Complete Order', 'completed', 'primary']],
-  completed:          [],
-  cancelled:          [],
-  failed:             [],
+  out_for_delivery: [['Mark Delivered', 'delivered', 'primary']],
+  delivered: [['Complete Order', 'completed', 'primary']],
+  completed: [],
+  cancelled: [],
+  failed: [],
 }
 
 // Action button styles
 const actionBtnClass = {
   primary: 'bg-green-600 hover:bg-green-700 text-white',
-  danger:  'bg-red-100 hover:bg-red-200 text-red-700 border border-red-200',
+  danger: 'bg-red-100 hover:bg-red-200 text-red-700 border border-red-200',
 }
 
-function ConfirmModal({ action, order, onConfirm, onCancel, loading }) {
-  if (!action || !order) return null
-  const isCancelling = action[1] === 'cancelled'
+function ConfirmModal({ action, order, onConfirm, onCancel, loading, statusColors, statusNames }) {
+  const [pin, setPin] = useState('');
+
+  useEffect(() => {
+    setPin('');
+  }, [order]);
+
+  if (!action || !order) return null;
+
+  const isCancelling = action[1] === 'cancelled';
+  const isHandoff = action[1] === 'out_for_delivery' || (action[1] === 'completed' && order?.status !== 'delivered');
+
   return (
     <div
       style={{ minHeight: 300, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      className="fixed inset-0 z-50"
+      className="fixed inset-0 z-50 transition-opacity"
       onClick={onCancel}
     >
       <div
-        className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
+        className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 transform transition-all"
         onClick={e => e.stopPropagation()}
       >
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isCancelling ? 'bg-red-100' : 'bg-green-100'}`}>
-          <span className="text-2xl">{isCancelling ? '⚠️' : '✓'}</span>
+        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isHandoff ? 'bg-orange-100' : isCancelling ? 'bg-red-100' : 'bg-green-100'}`}>
+          <span className="text-2xl">{isHandoff ? '🔒' : isCancelling ? '⚠️' : '✓'}</span>
         </div>
+
         <h3 className="text-lg font-bold text-gray-900 text-center mb-1">
-          {isCancelling ? 'Cancel this order?' : `${action[0]} order?`}
+          {isHandoff ? 'Secure Handoff' : isCancelling ? 'Cancel this order?' : `${action[0]} order?`}
         </h3>
+
         <p className="text-sm text-gray-500 text-center mb-1">
-          Order <span className="font-semibold text-gray-700">{order.orderNumber}</span>
+          Order <span className="font-semibold text-gray-700">{order?.orderNumber}</span>
         </p>
+
         <p className="text-sm text-gray-500 text-center mb-5">
           Status will change to{' '}
-          <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${statusColors[action[1]]}`}>
-            {statusNames[action[1]]}
+          <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${statusColors?.[action[1]] || 'bg-gray-100 text-gray-700'}`}>
+            {statusNames?.[action[1]] || action[1]}
           </span>
         </p>
+
+        {isHandoff && (
+          <div className="mb-6">
+            <p className="text-xs font-bold text-gray-500 uppercase tracking-wider text-center mb-2">
+              Enter 4-Digit Pickup PIN
+            </p>
+            <input
+              type="text"
+              maxLength="4"
+              value={pin}
+              onChange={(e) => setPin(e.target.value.replace(/\D/g, ''))}
+              className="w-full text-center text-4xl tracking-[0.5em] font-bold border-2 border-gray-300 rounded-xl p-3 focus:border-[#00897B] focus:ring-0 outline-none transition-colors bg-gray-50"
+              placeholder="••••"
+            />
+          </div>
+        )}
+
         <div className="flex gap-3">
           <button
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition text-sm disabled:opacity-50"
+            className="flex-1 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition text-sm disabled:opacity-50"
           >
-            Keep
+            Cancel
           </button>
           <button
             type="button"
-            onClick={onConfirm}
-            disabled={loading}
-            className={`flex-1 py-2.5 rounded-xl font-semibold transition text-sm disabled:opacity-50 ${
-              isCancelling
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
+            onClick={() => onConfirm(isHandoff ? pin : null)}
+            disabled={loading || (isHandoff && pin.length !== 4)}
+            className={`flex-1 py-3 rounded-xl font-bold shadow-md hover:shadow-lg transition text-sm disabled:opacity-50 disabled:cursor-not-allowed ${isCancelling
+              ? 'bg-red-600 hover:bg-red-700 text-white'
+              : 'bg-gradient-to-r from-[#00897B] to-[#26A69A] text-white'
+              }`}
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-1">
+              <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
-                Updating...
+                Verifying...
               </span>
-            ) : (isCancelling ? 'Yes, Cancel' : action[0])}
+            ) : isHandoff ? (
+              'Verify & Release'
+            ) : isCancelling ? (
+              'Yes, Cancel'
+            ) : (
+              action[0]
+            )}
           </button>
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 function StatusActions({ order, onAction }) {
@@ -206,41 +240,49 @@ function Orders() {
     }
   }
 
-  // Called when user clicks an action button — opens confirmation modal
   const handleActionClick = (order, action) => {
     setUpdateError('')
     setPendingAction({ order, action })
   }
 
-  // Called when user confirms inside the modal
-  const handleActionConfirm = async () => {
-    if (!pendingAction) return
-    const { order, action } = pendingAction
-    setActionLoading(true)
-    setUpdateError('')
+  const handleActionConfirm = async (pinFromModal) => {
+    if (!pendingAction) return;
+
+    const { order, action } = pendingAction;
+    const newStatus = action[1];
+
+    setActionLoading(true);
+    setUpdateError('');
 
     try {
-      const response = await vendorAPI.updateOrderStatus(order._id, {
-        status: action[1],
-        note: `Status updated to ${action[1]} by vendor`,
-      })
+      let response;
+
+      const isHandoff = newStatus === 'out_for_delivery' || (newStatus === 'completed' && order.status !== 'delivered');
+
+      if (isHandoff) {
+        response = await vendorAPI.verifyPickupPin(order._id, pinFromModal);
+      } else {
+        response = await vendorAPI.updateOrderStatus(order._id, {
+          status: newStatus,
+          note: `Status updated to ${newStatus} by vendor`,
+        });
+      }
 
       if (response.success) {
-        setPendingAction(null)
+        setPendingAction(null);
       } else {
-        setUpdateError(response.message || 'Failed to update status')
+        setUpdateError(response.message || 'Failed to update status');
       }
     } catch (error) {
-      setUpdateError(error.data?.message || error.message || 'Failed to update status')
+      setUpdateError(error.data?.message || error.message || 'Failed to update status');
     } finally {
-      setActionLoading(false)
-      await fetchOrders()
-      // Refresh detail modal if open
+      setActionLoading(false);
+      await fetchOrders();
       if (selectedOrder) {
         try {
-          const updated = await vendorAPI.getOrder(selectedOrder._id)
-          if (updated.success) setSelectedOrder(updated.data.order)
-        } catch (_e) {}
+          const updated = await vendorAPI.getOrder(selectedOrder._id);
+          if (updated.success) setSelectedOrder(updated.data.order);
+        } catch (_e) { }
       }
     }
   }
@@ -255,6 +297,8 @@ function Orders() {
           onConfirm={handleActionConfirm}
           onCancel={() => !actionLoading && setPendingAction(null)}
           loading={actionLoading}
+          statusColors={statusColors}
+          statusNames={statusNames}
         />
       )}
 
@@ -276,16 +320,15 @@ function Orders() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            {['pending','confirmed','preparing','packed','ready_for_delivery','out_for_delivery','delivered','cancelled'].map(status => (
+            {['pending', 'confirmed', 'preparing', 'packed', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancelled'].map(status => (
               <button
                 key={status}
                 type="button"
                 onClick={() => handleStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg font-medium text-xs transition ${
-                  filters.status === status
-                    ? 'bg-afri-green text-white'
-                    : 'bg-afri-gray-50 text-afri-gray-700 hover:bg-afri-gray-100'
-                }`}
+                className={`px-3 py-1.5 rounded-lg font-medium text-xs transition ${filters.status === status
+                  ? 'bg-afri-green text-white'
+                  : 'bg-afri-gray-50 text-afri-gray-700 hover:bg-afri-gray-100'
+                  }`}
               >
                 {statusNames[status]}
               </button>
@@ -323,7 +366,7 @@ function Orders() {
       ) : orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <svg className="w-16 h-16 text-afri-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <h3 className="text-lg font-medium text-afri-gray-900 mb-1">No orders found</h3>
           <p className="text-afri-gray-500">
@@ -395,11 +438,10 @@ function Orders() {
                 key={i}
                 type="button"
                 onClick={() => setFilters({ ...filters, page: i + 1 })}
-                className={`px-4 py-2 border text-sm font-medium ${
-                  pagination.currentPage === i + 1
-                    ? 'z-10 bg-afri-green text-white border-afri-green'
-                    : 'bg-white border-gray-300 text-afri-gray-700 hover:bg-afri-gray-50'
-                }`}
+                className={`px-4 py-2 border text-sm font-medium ${pagination.currentPage === i + 1
+                  ? 'z-10 bg-afri-green text-white border-afri-green'
+                  : 'bg-white border-gray-300 text-afri-gray-700 hover:bg-afri-gray-50'
+                  }`}
               >
                 {i + 1}
               </button>
@@ -413,7 +455,6 @@ function Orders() {
           order={selectedOrder}
           onClose={() => { setShowOrderModal(false); setSelectedOrder(null) }}
           onStatusUpdate={async (orderId, newStatus, note) => {
-            // Reuse same confirm flow from the modal
             const action = [statusNames[newStatus], newStatus, newStatus === 'cancelled' ? 'danger' : 'primary']
             const order = orders.find(o => o._id === orderId) || selectedOrder
             handleActionClick(order, action)

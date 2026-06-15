@@ -44,29 +44,62 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
       ],
       preparing: [
         {
-          status: 'ready',
+          status: 'ready_for_delivery',
           label: 'Mark as Ready',
           icon: '✓',
           color: 'green',
-          description: 'Order is ready for pickup',
+          description: 'Order is ready for pickup/delivery',
         },
       ],
-      ready: [
+
+      // --- PICKER FLOW ---
+      assigned_to_picker: [
         {
-          status: 'out-for-delivery',
+          status: 'picking',
+          label: 'Start Picking',
+          icon: '🛒',
+          color: 'purple',
+          description: 'Picker is collecting items',
+        },
+      ],
+      picking: [
+        {
+          status: 'packed',
+          label: 'Items Packed',
+          icon: '📦',
+          color: 'indigo',
+          description: 'All items are packed and ready',
+        },
+      ],
+
+      // --- HANDOFF FLOW ---
+      packed: [
+        {
+          status: 'out_for_delivery',
+          label: 'Hand off to Rider',
+          icon: '🚚',
+          color: 'blue',
+          description: 'Verify PIN and give to Rider',
+        },
+      ],
+      ready_for_delivery: [
+        {
+          status: 'out_for_delivery',
           label: 'Out for Delivery',
           icon: '🚚',
           color: 'blue',
-          description: 'Rider has picked up the order',
+          description: 'Verify PIN and give to Rider',
         },
       ],
-      'out-for-delivery': [
+
+      // --- FINALIZATION ---
+      out_for_delivery: [
         {
           status: 'delivered',
           label: 'Mark as Delivered',
-          icon: '✓',
-          color: 'green',
-          description: 'Order has been delivered to customer',
+          icon: '📍',
+          color: 'teal',
+          description: 'Order has reached the customer',
         },
       ],
       delivered: [
@@ -76,42 +109,6 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
           icon: '✓',
           color: 'gray',
           description: 'Finalize and archive this order',
-        },
-      ],
-      assigned_picker: [
-        {
-          status: 'picking',
-          label: 'Start Picking',
-          icon: '📦',
-          color: 'purple',
-          description: 'Picker starts collecting items',
-        },
-      ],
-      picking: [
-        {
-          status: 'picked',
-          label: 'Items Picked',
-          icon: '✓',
-          color: 'purple',
-          description: 'All items have been picked',
-        },
-      ],
-      picked: [
-        {
-          status: 'packing',
-          label: 'Start Packing',
-          icon: '📦',
-          color: 'indigo',
-          description: 'Begin packing the items',
-        },
-      ],
-      packing: [
-        {
-          status: 'ready_for_pickup',
-          label: 'Ready for Pickup',
-          icon: '✓',
-          color: 'teal',
-          description: 'Order is packed and ready',
         },
       ],
     }
@@ -135,13 +132,16 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
     }
 
     try {
+      // Await the parent update function
       await onStatusUpdate(selectedAction.status, note)
-      setShowConfirmDialog(false)
-      setSelectedAction(null)
-      setCancellationNote('')
     } catch (error) {
       console.error('Error updating status:', error)
       alert('Failed to update order status. Please try again.')
+    } finally {
+      // Clear the modal state AFTER the API call completely finishes
+      setShowConfirmDialog(false)
+      setSelectedAction(null)
+      setCancellationNote('')
     }
   }
 
@@ -221,11 +221,15 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
         <div className="flex flex-wrap gap-3">
           {availableActions.map((action) => {
             const colors = colorClasses[action.color] || colorClasses.gray
+
+            // MAGIC SAUCE: Only true if the parent is updating AND this specific action matches what we selected
+            const isThisButtonLoading = isUpdating && selectedAction?.status === action.status;
+
             return (
               <button
                 key={action.status}
                 onClick={() => handleActionClick(action)}
-                disabled={isUpdating}
+                disabled={isUpdating} // Disable ALL buttons while any update is happening
                 className={`
                   flex items-center gap-2 px-6 py-3 rounded-lg font-semibold text-white
                   ${colors.bg} ${colors.hover}
@@ -235,8 +239,12 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
                 `}
               >
                 <span className="text-xl">{action.icon}</span>
-                <span>{action.label}</span>
-                {isUpdating && (
+
+                {/* Dynamically swap text for this specific button */}
+                <span>{isThisButtonLoading ? 'Updating...' : action.label}</span>
+
+                {/* Only render the spinner next to the active button */}
+                {isThisButtonLoading && (
                   <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
@@ -253,9 +261,8 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[60] p-4 animate-fadeIn">
           <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-slideUp">
             {/* Icon */}
-            <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${
-              selectedAction.color === 'red' ? 'bg-red-100' : 'bg-green-100'
-            }`}>
+            <div className={`w-16 h-16 rounded-full mx-auto mb-4 flex items-center justify-center ${selectedAction.color === 'red' ? 'bg-red-100' : 'bg-green-100'
+              }`}>
               <span className="text-3xl">{selectedAction.icon}</span>
             </div>
 

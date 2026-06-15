@@ -47,13 +47,13 @@ function CustomerDashboard() {
       ])
       const response = await getUserProfile();
       if (response?.success) {
-          // Adjust this path based on your exact backend response structure
-          // It's usually response.user, response.data.user, or response.data
+        // Adjust this path based on your exact backend response structure
+        // It's usually response.user, response.data.user, or response.data
         const userData = response.user || response.data?.user || response.data;
 
         if (userData) {
-          const extractedFirstName = 
-            userData.firstName || 
+          const extractedFirstName =
+            userData.firstName ||
             (userData.name ? userData.name.split(' ')[0] : 'Customer');
 
           setFirstName(extractedFirstName);
@@ -91,6 +91,20 @@ function CustomerDashboard() {
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
   }
+  const calculateWidth = (value, maxTarget) => {
+    if (!value || !maxTarget || maxTarget === 0) return '0%';
+    const percentage = (value / maxTarget) * 100;
+    return `${Math.min(percentage, 100)}%`;
+  };
+
+  const MONTHLY_ORDER_GOAL = 50;
+  const WISHLIST_GOAL = 10;
+  const REWARD_POINTS_GOAL = 500;
+
+  const activeOrdersWidth = calculateWidth(stats.activeOrders, stats.totalOrders);
+  const totalOrdersWidth = calculateWidth(stats.totalOrders, MONTHLY_ORDER_GOAL);
+  const wishlistWidth = calculateWidth(stats.wishlistItems, WISHLIST_GOAL);
+  const rewardsWidth = calculateWidth(stats.rewardPoints, REWARD_POINTS_GOAL);
 
   const quickActions = [
     {
@@ -167,7 +181,7 @@ function CustomerDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
@@ -201,7 +215,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '200ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Heart className='text-white'  size={20} />
+                <Heart className='text-white' size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
@@ -216,7 +230,7 @@ function CustomerDashboard() {
           <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
             <div className="flex items-center justify-between mb-4">
               <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Star className='text-white'  size={20} />
+                <Star className='text-white' size={20} />
               </div>
               <div className="text-right">
                 <p className="text-2xl font-bold text-gray-900">{stats.rewardPoints}</p>
@@ -226,6 +240,89 @@ function CustomerDashboard() {
             <div className="w-full bg-gray-200 rounded-full h-2">
               <div className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] h-2 rounded-full" style={{ width: '60%' }}></div>
             </div>
+          </div>
+        </div> */}
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+
+            {/* Active Orders */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
+                  <Package className='text-white' size={20} />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
+                  <p className="text-sm text-gray-500">Active Orders</p>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-2 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: activeOrdersWidth }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Total Orders */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '100ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
+                  <BarChart2 className='text-white' size={20} />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
+                  <p className="text-sm text-gray-500">Total Orders</p>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-blue-400 to-blue-500 h-2 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: totalOrdersWidth }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Wishlist Items */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '200ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
+                  <Heart className='text-white' size={20} />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
+                  <p className="text-sm text-gray-500">Wishlist Items</p>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-red-400 to-red-500 h-2 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: wishlistWidth }}
+                ></div>
+              </div>
+            </div>
+
+            {/* Reward Points */}
+            <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
+                  <Star className='text-white' size={20} />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">{stats.rewardPoints}</p>
+                  <p className="text-sm text-gray-500">Reward Points</p>
+                </div>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] h-2 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: rewardsWidth }}
+                ></div>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -264,7 +361,7 @@ function CustomerDashboard() {
 
             {recentOrders.length === 0 ? (
               <div className="text-center py-12">
-                  <LuShoppingBag className="mx-auto sm:text-4xl text-gray-500" />
+                <LuShoppingBag className="mx-auto sm:text-4xl text-gray-500" />
                 <div className="text-6xl mb-4">
                 </div>
                 <p className="text-gray-500 mb-4">No orders yet</p>
@@ -278,64 +375,64 @@ function CustomerDashboard() {
             ) : (
               <div className="space-y-4">
                 {recentOrders.map((order, index) => {
-                const firstItem = order.items?.[0]
-                const thumbnail = firstItem?.product?.images?.[0]?.url
-                  || firstItem?.product?.images?.[0]
-                  || null
+                  const firstItem = order.items?.[0]
+                  const thumbnail = firstItem?.product?.images?.[0]?.url
+                    || firstItem?.product?.images?.[0]
+                    || null
 
-                return (
-                  <div
-                    key={order._id || index}
-                    className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/order/${order._id}`)}
-                  >
-                    <div className="flex items-center space-x-4">
-                      {/* Order number badge */}
-                      <div className="w-12 h-12 bg-gradient-to-br from-afri-green to-afri-green-dark rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
-                        #{order.orderNumber?.slice(-4) || 'N/A'}
+                  return (
+                    <div
+                      key={order._id || index}
+                      className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                      onClick={() => navigate(`/order/${order._id}`)}
+                    >
+                      <div className="flex items-center space-x-4">
+                        {/* Order number badge */}
+                        <div className="w-12 h-12 bg-gradient-to-br from-afri-green to-afri-green-dark rounded-lg flex items-center justify-center text-white font-bold flex-shrink-0">
+                          #{order.orderNumber?.slice(-4) || 'N/A'}
+                        </div>
+
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                          {thumbnail ? (
+                            <img
+                              src={thumbnail}
+                              alt={firstItem?.name || 'Product'}
+                              className="w-full h-full object-cover"
+                              onError={(e) => { e.target.style.display = 'none' }}
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                              🛍️
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Order meta */}
+                        <div>
+                          <p className="font-semibold text-gray-900">
+                            {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {new Date(order.createdAt).toLocaleDateString('en-GB', {
+                              day: 'numeric',
+                              month: 'short',
+                              year: 'numeric'
+                            })}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
-                        {thumbnail ? (
-                          <img
-                            src={thumbnail}
-                            alt={firstItem?.name || 'Product'}
-                            className="w-full h-full object-cover"
-                            onError={(e) => { e.target.style.display = 'none' }}
-                          />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                            🛍️
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Order meta */}
-                      <div>
-                        <p className="font-semibold text-gray-900">
-                          {order.items?.length || 0} item{order.items?.length !== 1 ? 's' : ''}
+                      <div className="text-right">
+                        <p className="font-bold text-gray-900">
+                          £{order.totalAmount?.toFixed(2) || '0.00'}
                         </p>
-                        <p className="text-sm text-gray-500">
-                          {new Date(order.createdAt).toLocaleDateString('en-GB', {
-                            day: 'numeric',
-                            month: 'short',
-                            year: 'numeric'
-                          })}
-                        </p>
+                        <span className={`text-xs px-3 py-1 rounded-full font-semibold ${getStatusColor(order.status)}`}>
+                          {order.status?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Pending'}
+                        </span>
                       </div>
                     </div>
-
-                    <div className="text-right">
-                      <p className="font-bold text-gray-900">
-                        £{order.totalAmount?.toFixed(2) || '0.00'}
-                      </p>
-                      <span className={`text-xs px-3 py-1 rounded-full font-semibold ${getStatusColor(order.status)}`}>
-                        {order.status?.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) || 'Pending'}
-                      </span>
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })}
               </div>
             )}
           </div>

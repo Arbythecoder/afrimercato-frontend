@@ -53,6 +53,7 @@ const RiderDeliveries = lazy(() => import('./pages/rider/RiderDeliveries'))
 const RiderDeliveryDetail = lazy(() => import('./pages/rider/RiderDeliveryDetail'))
 const RiderEarnings = lazy(() => import('./pages/rider/RiderEarnings'))
 const RiderProfile = lazy(() => import('./pages/rider/RiderProfile'))
+const RiderRadar = lazy(() => import('./pages/rider/RiderRadar'))
 const PickerDashboard = lazy(() => import('./pages/picker/PickerDashboard'))
 const PickerOrderFulfillment = lazy(() => import('./pages/picker/PickerOrderFulfillment'))
 const PickerPerformance = lazy(() => import('./pages/picker/PickerPerformance'))
@@ -267,6 +268,7 @@ function AppContent() {
       <Route path="/rider/delivery/:deliveryId" element={isAuthenticated && user?.role === 'rider' ? <RiderDeliveryDetail /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
       <Route path="/rider/earnings" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderEarnings /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
       <Route path="/rider/profile" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderProfile /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+      <Route path="/rider/gigs" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderRadar /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
       {/* Picker Routes — require picker role.
           Check role OR roles array to handle multi-role users (e.g. roles: ['vendor', 'picker'])

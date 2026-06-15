@@ -1,66 +1,41 @@
 import { useState, useEffect } from 'react'
+import { vendorAPI } from '../../services/api'
 
 function PickerAssignment({ order, onPickerAssigned }) {
+  const [isAssigned, setIsAssigned] = useState(false)
   const [pickers, setPickers] = useState([])
   const [selectedPicker, setSelectedPicker] = useState(null)
   const [loading, setLoading] = useState(true)
   const [assigning, setAssigning] = useState(false)
 
   useEffect(() => {
-    // Fetch available pickers
     fetchPickers()
   }, [])
 
   const fetchPickers = async () => {
     try {
       setLoading(true)
-      // TODO: Replace with actual API call
-      // For now, using mock data
-      const mockPickers = [
-        {
-          id: 'picker-1',
-          name: 'John Smith',
-          status: 'available',
-          activeOrders: 0,
-          rating: 4.8,
-          completedOrders: 156,
-          avatar: null,
-        },
-        {
-          id: 'picker-2',
-          name: 'Sarah Johnson',
-          status: 'available',
-          activeOrders: 1,
-          rating: 4.9,
-          completedOrders: 203,
-          avatar: null,
-        },
-        {
-          id: 'picker-3',
-          name: 'Michael Brown',
-          status: 'busy',
-          activeOrders: 3,
-          rating: 4.7,
-          completedOrders: 189,
-          avatar: null,
-        },
-        {
-          id: 'picker-4',
-          name: 'Emily Davis',
-          status: 'available',
-          activeOrders: 0,
-          rating: 5.0,
-          completedOrders: 98,
-          avatar: null,
-        },
-      ]
 
-      setTimeout(() => {
-        setPickers(mockPickers)
-        setLoading(false)
-      }, 500)
+      const res = await vendorAPI.getActiveStaff()
+
+      if (res?.data) {
+        const realPickers = res.data
+          .filter(staff => staff.role === 'picker')
+          .map(staff => ({
+            id: staff.user._id,
+            name: staff.user.name || 'Unknown Picker',
+            status: 'available',
+            activeOrders: 0,
+            rating: 5.0,
+            completedOrders: 0,
+            avatar: staff.user.avatar || null,
+          }))
+
+        setPickers(realPickers)
+      }
     } catch (error) {
       console.error('Error fetching pickers:', error)
+    } finally {
       setLoading(false)
     }
   }
@@ -73,14 +48,13 @@ function PickerAssignment({ order, onPickerAssigned }) {
 
     setAssigning(true)
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
+      await vendorAPI.assignOrder(order._id, selectedPicker.id)
 
       if (onPickerAssigned) {
         await onPickerAssigned(selectedPicker.id)
       }
+      setIsAssigned(true)
 
-      alert(`Order assigned to ${selectedPicker.name}`)
     } catch (error) {
       console.error('Error assigning picker:', error)
       alert('Failed to assign picker. Please try again.')
@@ -143,19 +117,19 @@ function PickerAssignment({ order, onPickerAssigned }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm text-gray-500">Order Number</p>
-            <p className="font-semibold text-gray-900">{order.orderNumber}</p>
+            <p className="font-semibold text-gray-900">{order?.orderNumber || 'N/A'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Total Items</p>
-            <p className="font-semibold text-gray-900">{order.items?.length || 0}</p>
+            <p className="font-semibold text-gray-900">{order?.items?.length || 0}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Order Value</p>
-            <p className="font-semibold text-[#00897B]">£{order.pricing?.total?.toFixed(2)}</p>
+            <p className="font-semibold text-[#00897B]">£{order?.pricing?.total?.toFixed(2) || '0.00'}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Customer</p>
-            <p className="font-semibold text-gray-900">{order.deliveryAddress?.fullName || 'N/A'}</p>
+            <p className="font-semibold text-gray-900">{order?.deliveryAddress?.fullName || 'N/A'}</p>
           </div>
         </div>
       </div>
@@ -174,10 +148,9 @@ function PickerAssignment({ order, onPickerAssigned }) {
                 onClick={() => setSelectedPicker(picker)}
                 className={`
                   bg-white rounded-xl p-5 shadow-md cursor-pointer transition-all duration-200
-                  border-2 ${
-                    selectedPicker?.id === picker.id
-                      ? 'border-[#FFB300] shadow-lg scale-105'
-                      : 'border-gray-200 hover:border-[#FFB300] hover:shadow-lg'
+                  border-2 ${selectedPicker?.id === picker.id
+                    ? 'border-[#FFB300] shadow-lg scale-105'
+                    : 'border-gray-200 hover:border-[#FFB300] hover:shadow-lg'
                   }
                 `}
               >
@@ -290,8 +263,8 @@ function PickerAssignment({ order, onPickerAssigned }) {
           <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pickers Available</h3>
-          <p className="text-gray-600">All pickers are currently busy. Please check back in a few minutes.</p>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">No Pickers Connected</h3>
+          <p className="text-gray-600">You don't have any active pickers yet. Go to your Staff & Logistics team tab to approve requests.</p>
         </div>
       )}
 
@@ -300,8 +273,11 @@ function PickerAssignment({ order, onPickerAssigned }) {
         <div className="sticky bottom-0 bg-white border-t-2 border-gray-200 p-4 -mx-6 -mb-6 rounded-b-xl shadow-lg">
           <button
             onClick={handleAssignPicker}
-            disabled={assigning}
-            className="w-full py-4 bg-gradient-to-r from-[#00897B] to-[#26A69A] text-white rounded-xl font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2"
+            disabled={assigning || isAssigned}
+            className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2 transition-all duration-200 ${isAssigned
+              ? 'bg-gray-400 text-white cursor-not-allowed opacity-80' // Grayed out success state
+              : 'bg-gradient-to-r from-[#00897B] to-[#26A69A] text-white hover:shadow-xl transform hover:-translate-y-1 disabled:opacity-50 disabled:transform-none' // Normal active state
+              }`}
           >
             {assigning ? (
               <>
@@ -310,6 +286,10 @@ function PickerAssignment({ order, onPickerAssigned }) {
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Assigning...
+              </>
+            ) : isAssigned ? (
+              <>
+                ✓ Successfully Assigned
               </>
             ) : (
               <>

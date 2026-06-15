@@ -5,11 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Package, MapPin, Clock, Ruler, ChevronRight, RefreshCw } from 'lucide-react'
 
 const STATUS_CONFIG = {
-  pending:    { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700',  stripe: 'bg-amber-400' },
-  accepted:   { label: 'Accepted',         color: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-400' },
-  picked_up:  { label: 'Picked Up',        color: 'bg-blue-100 text-blue-700',   stripe: 'bg-blue-400' },
-  in_transit: { label: 'In Transit',       color: 'bg-afri-green-pale text-afri-green-dark', stripe: 'bg-afri-green' },
-  delivered:  { label: 'Delivered',        color: 'bg-emerald-100 text-emerald-700', stripe: 'bg-emerald-500' },
+  pending: { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700', stripe: 'bg-amber-400' },
+  assigned_to_rider: { label: 'Accepted', color: 'bg-blue-100 text-blue-700', stripe: 'bg-blue-400' },
+  picked_up_by_rider: { label: 'Picked Up', color: 'bg-blue-100 text-blue-700', stripe: 'bg-blue-400' },
+  out_for_delivery: { label: 'In Transit', color: 'bg-afri-green-pale text-afri-green-dark', stripe: 'bg-afri-green' },
+  delivered: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', stripe: 'bg-emerald-500' },
 }
 
 const FILTERS = [
@@ -93,11 +93,10 @@ function RiderDeliveries() {
             <button
               key={f.id}
               onClick={() => setFilter(f.id)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                filter === f.id
-                  ? 'bg-afri-green text-white shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${filter === f.id
+                ? 'bg-afri-green text-white shadow-sm'
+                : 'text-gray-500 hover:text-gray-700'
+                }`}
             >
               {f.label}
             </button>
@@ -118,7 +117,7 @@ function RiderDeliveries() {
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-3">
-              {[1,2,3].map(i => <SkeletonDelivery key={i} />)}
+              {[1, 2, 3].map(i => <SkeletonDelivery key={i} />)}
             </motion.div>
           ) : deliveries.length === 0 ? (
             <motion.div key="empty" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl p-12 text-center shadow-sm">
@@ -170,12 +169,12 @@ function RiderDeliveries() {
                         <MapPin size={14} className="text-afri-green mt-0.5 flex-shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-medium text-gray-800 truncate">
-                            {d.customer?.name || 'Customer'}
+                            {d.deliveryAddress?.fullName || d.customer?.name || 'Customer'}
                           </p>
                           <p className="text-xs text-gray-400 truncate">
-                            {d.deliveryAddress?.street || d.deliveryAddress?.address || '—'}
+                            {d.deliveryAddress ? [d.deliveryAddress.street, d.deliveryAddress.city, d.deliveryAddress.postcode].filter(Boolean).join(', ') : d.deliveryAddress?.address || '—'}
                           </p>
-                          {d.customer?.phone && <p className="text-xs text-afri-green mt-0.5">{d.customer.phone}</p>}
+                          {(d.deliveryAddress?.phone || d.customer?.phone) && <p className="text-xs text-afri-green mt-0.5">{d.deliveryAddress?.phone || d.customer?.phone}</p>}
                         </div>
                       </div>
 
@@ -183,7 +182,7 @@ function RiderDeliveries() {
                       {filter === 'active' && (
                         <div className="flex items-center justify-between pt-3 border-t border-gray-50">
                           <div className="flex items-center gap-3 text-xs text-gray-400">
-                            {d.order?.items?.length > 0 && <span className="flex items-center gap-1"><Package size={11} />{d.order.items.length} items</span>}
+                            {(d.items || d.order?.items)?.length > 0 && <span className="flex items-center gap-1"><Package size={11} />{(d.items || d.order?.items).length} items</span>}
                             {d.distance && <span className="flex items-center gap-1"><Ruler size={11} />{d.distance} km</span>}
                             {d.estimatedDeliveryTime && <span className="flex items-center gap-1"><Clock size={11} />{new Date(d.estimatedDeliveryTime).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}</span>}
                           </div>
@@ -197,7 +196,7 @@ function RiderDeliveries() {
                                 {actionLoading === id + 'accept' ? '...' : 'Accept'}
                               </button>
                             )}
-                            {d.status === 'accepted' && (
+                            {d.status === 'assigned_to_rider' && (
                               <button
                                 onClick={e => handleAction(e, id, 'start')}
                                 disabled={actionLoading === id + 'start'}
@@ -206,7 +205,7 @@ function RiderDeliveries() {
                                 {actionLoading === id + 'start' ? '...' : 'Confirm Pickup'}
                               </button>
                             )}
-                            {(d.status === 'picked_up' || d.status === 'in_transit') && (
+                            {(d.status === 'picked_up_by_rider' || d.status === 'out_for_delivery') && (
                               <button
                                 onClick={e => handleAction(e, id, 'complete')}
                                 disabled={actionLoading === id + 'complete'}

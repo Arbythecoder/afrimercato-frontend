@@ -17,11 +17,11 @@ import {
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
-  pending:    { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700',   dot: 'bg-amber-400' },
-  accepted:   { label: 'Accepted',        color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-400' },
-  picked_up:  { label: 'Picked Up',       color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-400' },
-  in_transit: { label: 'In Transit',      color: 'bg-afri-green-pale text-afri-green-dark', dot: 'bg-afri-green' },
-  delivered:  { label: 'Delivered',       color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  assigned_to_rider: { label: 'Assigned', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
+  rider_accepted: { label: 'Heading to Store', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-400' },
+  picked_up_by_rider: { label: 'At Store', color: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-400' },
+  out_for_delivery: { label: 'In Transit', color: 'bg-afri-green-pale text-afri-green-dark', dot: 'bg-afri-green' },
+  delivered: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
 }
 
 function SkeletonCard() {
@@ -81,6 +81,23 @@ function RiderDashboard() {
     }
   }
 
+  const toggleOnlineStatus = async () => {
+    const newStatus = !isOnline;
+    setIsOnline(newStatus);
+
+    try {
+      // Assuming you have an apiCall helper
+      await apiCall('/riders/status', {
+        method: 'PUT',
+        body: JSON.stringify({ isOnline: newStatus })
+      });
+    } catch (error) {
+      // If it fails, revert the button back
+      setIsOnline(!newStatus);
+      alert('Failed to update status. Check your connection.');
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-afri-gray-50">
@@ -89,7 +106,7 @@ function RiderDashboard() {
           <div className="h-4 bg-white/5 rounded w-24 animate-pulse" />
         </div>
         <div className="px-5 -mt-12 space-y-3">
-          {[1,2,3].map(i => <SkeletonCard key={i} />)}
+          {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
         </div>
       </div>
     )
@@ -110,7 +127,7 @@ function RiderDashboard() {
   return (
     <div className="min-h-screen bg-afri-gray-50">
       {/* Hero Header — premium dark with brand green accents */}
-      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
+      <div className="bg-gradient-to-br mb-10 from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-52 h-52 bg-afri-green/10 rounded-full blur-2xl" />
         <div className="absolute bottom-0 -left-8 w-40 h-40 bg-afri-yellow-dark/10 rounded-full blur-2xl" />
         <div className="absolute top-8 right-6 w-2 h-2 bg-afri-green rounded-full opacity-70" />
@@ -130,12 +147,11 @@ function RiderDashboard() {
             )}
           </div>
           <button
-            onClick={() => setIsOnline(o => !o)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
-              isOnline
-                ? 'bg-afri-green text-white shadow-lg shadow-afri-green/30'
-                : 'bg-white/10 text-white/60 border border-white/20'
-            }`}
+            onClick={toggleOnlineStatus}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${isOnline
+              ? 'bg-afri-green text-white shadow-lg shadow-afri-green/30'
+              : 'bg-white/10 text-white/60 border border-white/20'
+              }`}
           >
             {isOnline ? <Wifi size={15} /> : <WifiOff size={15} />}
             {isOnline ? 'Online' : 'Offline'}
@@ -153,6 +169,29 @@ function RiderDashboard() {
           </div>
         </div>
       </div>
+
+      {isOnline && (
+        <section className="my-16 mx-4">
+          <div
+            onClick={() => navigate('/rider/gigs')}
+            className="bg-gradient-to-r from-afri-yellow to-[#FF8F00] rounded-2xl p-4 shadow-lg shadow-afri-yellow/20 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
+                <span className="absolute inset-0 rounded-full border-2 border-white animate-ping opacity-50"></span>
+                <MapPin size={20} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg">Gig Radar Active</h3>
+                <p className="text-white/80 text-xs font-medium">Looking for nearby orders...</p>
+              </div>
+            </div>
+            <div className="bg-white text-[#FF8F00] px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+              View Map
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="px-5 -mt-10 space-y-6 pb-4">
         {/* Active Deliveries */}
@@ -208,8 +247,8 @@ function RiderDashboard() {
                       <div className="flex items-center gap-2 mb-3">
                         <MapPin size={14} className="text-afri-green flex-shrink-0" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{d.customer?.name || 'Customer'}</p>
-                          <p className="text-xs text-gray-400 truncate">{d.deliveryAddress?.street || d.deliveryAddress?.address || '—'}</p>
+                          <p className="text-sm font-medium text-gray-800 truncate">{d.deliveryAddress?.fullName || d.customer?.name || 'Customer'}</p>
+                          <p className="text-xs text-gray-400 truncate">{d.deliveryAddress ? [d.deliveryAddress.street, d.deliveryAddress.city].filter(Boolean).join(', ') : d.deliveryAddress?.address || '—'}</p>
                         </div>
                       </div>
 
@@ -270,7 +309,7 @@ function RiderDashboard() {
                       <Package size={14} className="text-afri-green-dark" />
                     </div>
                     <div>
-                      <p className="text-sm font-semibold text-afri-gray-900">{d.orderNumber || `Delivery #${i+1}`}</p>
+                      <p className="text-sm font-semibold text-afri-gray-900">{d.orderNumber || `Delivery #${i + 1}`}</p>
                       <p className="text-xs text-gray-400">{d.vendor || '—'}</p>
                     </div>
                   </div>

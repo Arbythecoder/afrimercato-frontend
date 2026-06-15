@@ -1,5 +1,5 @@
 // API Base URL - uses environment variable with fallback
-const API_BASE_URL = import.meta.env.VITE_API_URL 
+const API_BASE_URL = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : 'https://afrimercato-backend.onrender.com/api';
 
@@ -98,8 +98,8 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
           return new Promise((resolve, reject) => {
             failedQueue.push({ resolve, reject });
           })
-          .then(() => apiCall(endpoint, options, true))
-          .catch(err => { throw err; });
+            .then(() => apiCall(endpoint, options, true))
+            .catch(err => { throw err; });
         }
 
         isRefreshing = true;
@@ -109,13 +109,13 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
           await refreshAccessToken();
           processQueue(null);
           isRefreshing = false;
-          
+
           // Retry the original request (it will automatically use the new cookie)
           return apiCall(endpoint, options, true);
         } catch (refreshError) {
           processQueue(refreshError);
           isRefreshing = false;
-          
+
           const authError = new Error('Incorrect email/password');
           authError.code = 'AUTH_EXPIRED';
           throw authError;
@@ -133,7 +133,7 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
         400: 'Bad Request', 401: 'Unauthorized', 403: 'Access Denied',
         404: 'Not Found', 500: 'Server Error', 501: 'Feature Not Implemented'
       };
-      
+
       const errorMsg = errorData.message || statusMessage[response.status] || `HTTP error! status: ${response.status}`;
       const error = new Error(errorMsg);
       error.status = response.status;
@@ -203,7 +203,7 @@ export const setupVendorStore = async (data) => {
   return apiCall('/vendor/profile/setup', {
     method: 'PUT',
     body: isFormData ? data : JSON.stringify(data),
-    headers: isFormData ? {} : { 'Content-Type': 'application/json' } 
+    headers: isFormData ? {} : { 'Content-Type': 'application/json' }
   });
 };
 
@@ -630,14 +630,14 @@ export const handleApiError = (error) => {
     // REMOVED: localStorage token deletion
     return 'Please log in to continue';
   }
-  
+
   if (error.message.includes('403')) return 'You do not have permission to perform this action';
   if (error.message.includes('404')) return 'The requested resource was not found';
   if (error.message.includes('500')) return 'Server error. Please try again later';
   if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
     return 'Network error. Please check your internet connection';
   }
-  
+
   return error.message || 'An unexpected error occurred';
 };
 
@@ -648,13 +648,13 @@ export const showSuccessMessage = (message, duration = 5000) => {
     <i class="fas fa-check-circle"></i>
     <span>${message}</span>
   `;
-  
+
   document.body.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.classList.add('show');
   }, 100);
-  
+
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => {
@@ -670,13 +670,13 @@ export const showErrorMessage = (message, duration = 5000) => {
     <i class="fas fa-exclamation-circle"></i>
     <span>${message}</span>
   `;
-  
+
   document.body.appendChild(toast);
-  
+
   setTimeout(() => {
     toast.classList.add('show');
   }, 100);
-  
+
   setTimeout(() => {
     toast.classList.remove('show');
     setTimeout(() => {
@@ -761,6 +761,14 @@ export const vendorAPI = {
   getPendingStaff: () => apiCall('/connections/vendor/pending'),
   getActiveStaff: () => apiCall('/connections/vendor/active'),
   approveStaff: (staffId) => apiCall(`/connections/vendor/approve/${staffId}`, { method: 'POST' }),
+  assignOrder: (orderId, pickerId) => apiCall(`/vendor/orders/${orderId}/assign-picker`, {
+    method: 'POST',
+    body: JSON.stringify({ pickerId })
+  }),
+  verifyPickupPin: (orderId, pin) => apiCall(`/vendor/orders/${orderId}/verify-pickup`, {
+    method: 'POST',
+    body: JSON.stringify({ pin })
+  }),
 };
 
 // =================================================================

@@ -2,12 +2,14 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import {
   LayoutDashboard,
   Package,
+  PackageSearch,
   Banknote,
   UserCircle,
 } from 'lucide-react'
 
 const tabs = [
   { path: '/rider/dashboard', label: 'Home', icon: LayoutDashboard },
+  { path: '/rider/gigs', label: 'Gigs', icon: PackageSearch },
   { path: '/rider/deliveries', label: 'Deliveries', icon: Package },
   { path: '/rider/earnings', label: 'Earnings', icon: Banknote },
   { path: '/rider/profile', label: 'Profile', icon: UserCircle },
@@ -30,9 +32,8 @@ function RiderLayout({ children }) {
               <button
                 key={path}
                 onClick={() => navigate(path)}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-3 text-xs font-semibold transition-all relative ${
-                  isActive ? 'text-afri-green' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-3 text-xs font-semibold transition-all relative ${isActive ? 'text-afri-green' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 {isActive && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-afri-green rounded-full" />
