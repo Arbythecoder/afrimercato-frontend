@@ -750,7 +750,7 @@ export const vendorAPI = {
     const qs = new URLSearchParams(filtered).toString()
     return apiCall(`/vendor${qs ? '?' + qs : ''}`)
   },
-  getNearbyVendors: (lat, lng, radius = 15) => {
+  getNearbyVendors: (lat, lng, radius = 50) => {
     if (!lat || !lng) {
       return apiCall('/vendor/nearby');
     }

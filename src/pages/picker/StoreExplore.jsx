@@ -13,18 +13,14 @@ function StoreExplorer({ userRole = 'rider' }) {
   const { user: authUser } = useAuth()
   const role = authUser?.role ?? userRole
 
-  useEffect(() => {
-    fetchStores()
-  }, [])
-
   const fetchStores = async (latitude = null, longitude = null) => {
     setLoading(true)
     try {
       const res = await vendorAPI.getNearbyVendors(latitude, longitude, 15)
-      
+
       const connectionsRes = await apiCall(`/picker-auth/requests`)
       const pendingIds = connectionsRes?.data?.requests?.map(r => r.id) || []
-      
+
       const activeRes = await apiCall(`/picker-auth/my-stores`)
       const activeIds = activeRes?.data?.stores?.map(s => s.id) || []
 
@@ -36,13 +32,9 @@ function StoreExplorer({ userRole = 'rider' }) {
             ? rawCoordinates.coordinates
             : null
 
-        const locationString = typeof store.location === 'string'
-          ? store.location
-          : store.location?.address
-            ? store.location.address
-            : coordsArray
-              ? `${coordsArray[1].toFixed(5)}, ${coordsArray[0].toFixed(5)}`
-              : 'Location not set'
+        const locationString = store.location?.address
+          || store.location?.city
+          || (coordsArray ? `${coordsArray[1].toFixed(5)}, ${coordsArray[0].toFixed(5)}` : 'Location not set')
 
         return {
           ...store,
@@ -64,7 +56,6 @@ function StoreExplorer({ userRole = 'rider' }) {
       setLoading(false)
     }
   }
-
   useEffect(() => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
@@ -72,7 +63,7 @@ function StoreExplorer({ userRole = 'rider' }) {
           fetchStores(position.coords.latitude, position.coords.longitude)
         },
         (error) => {
-          console.warn("User denied location or it failed. Fetching all stores.", error)
+          console.warn('Location unavailable, fetching all stores.', error)
           fetchStores()
         },
         { timeout: 10000 }
@@ -82,12 +73,17 @@ function StoreExplorer({ userRole = 'rider' }) {
     }
   }, [])
 
+  // useEffect(() => {
+  //   // TEMP: hardcode Lagos coords for testing
+  //   fetchStores(6.6194, 3.5105)
+  // }, [])
+
   const handleRequestJoin = async (storeId) => {
     setRequestingId(storeId)
     try {
       await apiCall(`/picker-auth/connect-store/request/${storeId}`, { method: 'POST' })
-      
-      setStores(prev => prev.map(s => 
+
+      setStores(prev => prev.map(s =>
         s._id === storeId ? { ...s, connectionStatus: 'pending' } : s
       ))
     } catch (error) {
@@ -97,7 +93,7 @@ function StoreExplorer({ userRole = 'rider' }) {
     }
   }
 
-  const filteredStores = stores.filter(s => 
+  const filteredStores = stores.filter(s =>
     s.storeName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     s.locationString?.toLowerCase().includes(searchQuery.toLowerCase())
   )
@@ -107,7 +103,7 @@ function StoreExplorer({ userRole = 'rider' }) {
       <div className="bg-gradient-to-br from-afri-yellow-dark to-[#FFB300] px-5 pt-14 pb-8 rounded-b-[2.5rem]">
         <h1 className="text-white text-2xl font-bold">Find Stores</h1>
         <p className="text-white/80 text-sm mt-1">Connect with vendors to start receiving orders.</p>
-        
+
         <div className="mt-6 relative">
           <Search className="absolute left-4 top-3.5 text-gray-400" size={20} />
           <input
@@ -152,7 +148,7 @@ function StoreExplorer({ userRole = 'rider' }) {
 
               {store.distance !== undefined && store.distance !== 9999 && (
                 <span className="bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full text-[10px] font-bold ml-2">
-                {store.distance < 1 ? '< 1 km away' : `${Math.round(store.distance)} km away`}
+                  {store.distance < 1 ? '< 1 km away' : `${Math.round(store.distance)} km away`}
                 </span>
               )}
 

@@ -37,10 +37,10 @@ function Settings() {
   const [saving, setSaving] = useState(false)
   const [postcodeLoading, setPostcodeLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
-  
+
   // Add error state for better UX
   const [loadError, setLoadError] = useState(null)
-  
+
   // Initialize vendor profile with defaults to prevent undefined errors
   const [vendorProfile, setVendorProfile] = useState({
     storeName: '',
@@ -54,8 +54,8 @@ function Settings() {
       state: '',
       country: 'United Kingdom',
       postalCode: '',
-      latitude: '', // <-- Added for GPS testing
-      longitude: '', // <-- Added for GPS testing
+      latitude: '',
+      longitude: '',
     },
     businessHours: {
       monday: { open: '09:00', close: '18:00', isOpen: true },
@@ -314,7 +314,7 @@ function Settings() {
         try {
           const { street, city, state, country } = payloadToSave.address;
           const searchQuery = encodeURIComponent(`${street}, ${city}, ${state || ''}, ${country}`);
-          
+
           // Call the free OpenStreetMap API
           const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`);
           const geoData = await geoRes.json();
@@ -331,12 +331,12 @@ function Settings() {
       }
 
       const response = await vendorAPI.updateProfile(payloadToSave)
-      
+
       if (response?.success) {
         success('Vendor profile updated successfully!')
-        
+
         if (payloadToSave.address.latitude) {
-           setVendorProfile(payloadToSave);
+          setVendorProfile(payloadToSave);
         }
         setValidationErrors({})
         await fetchSettings()
@@ -498,11 +498,10 @@ function Settings() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${
-                activeTab === tab.id
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${activeTab === tab.id
                   ? 'border-afri-green text-afri-green'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
+                }`}
             >
               <span className="text-xl">{tab.icon}</span>
               <span>{tab.name}</span>
@@ -535,16 +534,14 @@ function Settings() {
               type="button"
               onClick={toggleStoreClosed}
               disabled={saving}
-              className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${
-                vendorProfile.isClosed
+              className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${vendorProfile.isClosed
                   ? 'bg-red-400 focus:ring-red-500'
                   : 'bg-green-500 focus:ring-green-500'
-              }`}
+                }`}
             >
               <span
-                className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                  vendorProfile.isClosed ? 'translate-x-0' : 'translate-x-6'
-                }`}
+                className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${vendorProfile.isClosed ? 'translate-x-0' : 'translate-x-6'
+                  }`}
               />
             </button>
           </div>
@@ -645,9 +642,8 @@ function Settings() {
                       setValidationErrors(prev => ({ ...prev, phone: undefined }))
                     }
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                    validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                   placeholder="+44 7700 900000 or +234 800 555 0001"
                 />
                 {validationErrors.phone && (
@@ -668,9 +664,8 @@ function Settings() {
                       setValidationErrors(prev => ({ ...prev, alternativePhone: undefined }))
                     }
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                    validationErrors.alternativePhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.alternativePhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                    }`}
                   placeholder="+44 7700 900000 or +234 800 555 0002"
                 />
                 {validationErrors.alternativePhone && (
@@ -693,9 +688,8 @@ function Settings() {
                     handleVendorChange('address.street', e.target.value)
                     if (validationErrors.street) setValidationErrors(prev => ({ ...prev, street: undefined }))
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                    validationErrors.street ? 'border-red-500 bg-red-50' : vendorProfile.address?.street?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.street ? 'border-red-500 bg-red-50' : vendorProfile.address?.street?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., 12 Brixton Road"
                 />
                 {validationErrors.street
@@ -713,9 +707,8 @@ function Settings() {
                     handleVendorChange('address.city', e.target.value)
                     if (validationErrors.city) setValidationErrors(prev => ({ ...prev, city: undefined }))
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                    validationErrors.city ? 'border-red-500 bg-red-50' : vendorProfile.address?.city?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.city ? 'border-red-500 bg-red-50' : vendorProfile.address?.city?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                    }`}
                   placeholder="e.g., London"
                 />
                 {validationErrors.city
@@ -743,37 +736,36 @@ function Settings() {
                 </label>
                 <div className="flex gap-2">
                   <div className="flex-1 relative">
-                  <input
-                    type="text"
-                    value={vendorProfile.address?.postalCode || ''}
-                    onChange={(e) => {
-                      const val = e.target.value.toUpperCase()
-                      handleVendorChange('address.postalCode', val)
-                      if (validationErrors.postalCode) setValidationErrors(prev => ({ ...prev, postalCode: undefined }))
-                      fetchPostcodeSuggestions(val)
-                    }}
-                    onBlur={() => setTimeout(() => setPostcodeSuggestions([]), 200)}
-                    className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                      validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                    }`}
-                    placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
-                  />
-                  {postcodeSuggestions.length > 0 && (
-                    <ul className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-y-auto">
-                      {postcodeSuggestions.map(pc => (
-                        <li
-                          key={pc}
-                          onMouseDown={() => {
-                            handleVendorChange('address.postalCode', pc)
-                            setPostcodeSuggestions([])
-                          }}
-                          className="px-4 py-2 hover:bg-afri-green hover:text-white cursor-pointer text-sm"
-                        >
-                          {pc}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
+                    <input
+                      type="text"
+                      value={vendorProfile.address?.postalCode || ''}
+                      onChange={(e) => {
+                        const val = e.target.value.toUpperCase()
+                        handleVendorChange('address.postalCode', val)
+                        if (validationErrors.postalCode) setValidationErrors(prev => ({ ...prev, postalCode: undefined }))
+                        fetchPostcodeSuggestions(val)
+                      }}
+                      onBlur={() => setTimeout(() => setPostcodeSuggestions([]), 200)}
+                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
+                        }`}
+                      placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
+                    />
+                    {postcodeSuggestions.length > 0 && (
+                      <ul className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-y-auto">
+                        {postcodeSuggestions.map(pc => (
+                          <li
+                            key={pc}
+                            onMouseDown={() => {
+                              handleVendorChange('address.postalCode', pc)
+                              setPostcodeSuggestions([])
+                            }}
+                            className="px-4 py-2 hover:bg-afri-green hover:text-white cursor-pointer text-sm"
+                          >
+                            {pc}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                   </div>
                   {vendorProfile.address?.country === 'United Kingdom' && (
                     <button
@@ -806,8 +798,8 @@ function Settings() {
                   : vendorProfile.address?.postalCode?.trim()
                     ? <p className="text-green-600 text-sm mt-1">Valid postcode!</p>
                     : vendorProfile.address?.country === 'United Kingdom' && (
-                        <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
-                      )
+                      <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
+                    )
                 }
               </div>
 
@@ -966,14 +958,12 @@ function Settings() {
               <button
                 type="button"
                 onClick={() => handleDeliveryChange('acceptingOrders', !(vendorProfile.deliverySettings?.acceptingOrders ?? true))}
-                className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                  (vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'bg-green-500' : 'bg-gray-300'
-                }`}
+                className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${(vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'bg-green-500' : 'bg-gray-300'
+                  }`}
               >
                 <span
-                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
-                    (vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'translate-x-5' : 'translate-x-0'
-                  }`}
+                  className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${(vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'translate-x-5' : 'translate-x-0'
+                    }`}
                 />
               </button>
             </div>
