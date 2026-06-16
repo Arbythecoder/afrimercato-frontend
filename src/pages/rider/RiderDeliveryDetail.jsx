@@ -581,6 +581,29 @@ function RiderDeliveryDetail() {
           </div>
         </div>
 
+        {/* Order Items */}
+        {orderItems.length > 0 && (
+          <div className="bg-white rounded-xl shadow-sm p-5">
+            <h2 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <Package size={16} className="text-afri-green" /> Items ({orderItems.length})
+            </h2>
+            <div className="space-y-2">
+              {orderItems.map((item, idx) => (
+                <div key={idx} className="flex items-center justify-between py-2 border-b last:border-0">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded flex items-center justify-center text-sm font-bold">
+                      {item.quantity}
+                    </div>
+                    <span className="text-sm text-gray-900">{item.name || item.product?.name || `Item ${idx + 1}`}</span>
+                  </div>
+                  {item.unit && <span className="text-xs text-gray-400">{item.unit}</span>}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+
         {/* Action Button */}
         {nextAction && delivery.status !== 'delivered' && (
           <motion.button

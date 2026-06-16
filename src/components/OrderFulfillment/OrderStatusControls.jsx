@@ -5,8 +5,10 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
   const [selectedAction, setSelectedAction] = useState(null)
   const [cancellationNote, setCancellationNote] = useState('')
 
-  // Define available status transitions based on current status
+  // Define available status transitions strictly for the VENDOR
   const getAvailableActions = () => {
+    const isDelivery = order.fulfillmentType !== 'pickup';
+
     const actions = {
       pending: [
         {
@@ -14,103 +16,45 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
           label: 'Accept Order',
           icon: '✓',
           color: 'green',
-          description: 'Confirm and start preparing this order',
+          description: 'Confirm this order to begin',
         },
         {
           status: 'cancelled',
           label: 'Reject Order',
           icon: '✕',
           color: 'red',
-          description: 'Cancel this order (requires reason)',
-          requiresNote: true,
-        },
-      ],
-      confirmed: [
-        {
-          status: 'preparing',
-          label: 'Start Preparing',
-          icon: '👨‍🍳',
-          color: 'orange',
-          description: 'Begin preparing the order',
-        },
-        {
-          status: 'cancelled',
-          label: 'Cancel Order',
-          icon: '✕',
-          color: 'red',
           description: 'Cancel this order',
           requiresNote: true,
         },
       ],
-      preparing: [
-        {
-          status: 'ready_for_delivery',
-          label: 'Mark as Ready',
-          icon: '✓',
-          color: 'green',
-          description: 'Order is ready for pickup/delivery',
-        },
+
+      confirmed: [
+        // Vendor's only job here is to go to the Picker Tab and assign someone.
+        // We leave this empty so no quick action buttons show up.
       ],
 
-      // --- PICKER FLOW ---
-      assigned_to_picker: [
-        {
-          status: 'picking',
-          label: 'Start Picking',
-          icon: '🛒',
-          color: 'purple',
-          description: 'Picker is collecting items',
-        },
-      ],
-      picking: [
-        {
-          status: 'packed',
-          label: 'Items Packed',
-          icon: '📦',
-          color: 'indigo',
-          description: 'All items are packed and ready',
-        },
-      ],
-
-      // --- HANDOFF FLOW ---
-      packed: [
-        {
-          status: 'out_for_delivery',
-          label: 'Hand off to Rider',
-          icon: '🚚',
-          color: 'blue',
-          description: 'Verify PIN and give to Rider',
-        },
-      ],
-      ready_for_delivery: [
-        {
-          status: 'out_for_delivery',
-          label: 'Out for Delivery',
-          icon: '🚚',
-          color: 'blue',
-          description: 'Verify PIN and give to Rider',
-        },
-      ],
-
-      // --- FINALIZATION ---
-      out_for_delivery: [
-        {
-          status: 'delivered',
-          label: 'Mark as Delivered',
-          icon: '📍',
-          color: 'teal',
-          description: 'Order has reached the customer',
-        },
-      ],
-      delivered: [
+      // CUSTOMER PICKUP FLOW ONLY
+      // If the picker packed it, and it's a store pickup, the Vendor handles the handoff
+      packed: !isDelivery ? [
         {
           status: 'completed',
-          label: 'Complete Order',
-          icon: '✓',
-          color: 'gray',
-          description: 'Finalize and archive this order',
-        },
-      ],
+          label: 'Hand off to Customer',
+          icon: '🛍️',
+          color: 'teal',
+          description: 'Verify Customer PIN and hand over items',
+          requiresPin: true,
+        }
+      ] : [],
+
+      // CANCELLATION FALLBACKS
+      // Vendors should be able to cancel an order if something goes horribly wrong
+      assigned_to_picker: [{ status: 'cancelled', label: 'Cancel Order', icon: '✕', color: 'red', requiresNote: true }],
+      picking: [{ status: 'cancelled', label: 'Cancel Order', icon: '✕', color: 'red', requiresNote: true }],
+      assigned_to_rider: [],
+      picked_up_by_rider: [],
+      out_for_delivery: [],
+      delivered: [],
+      completed: [],
     }
 
     return actions[order.status] || []
@@ -132,13 +76,11 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
     }
 
     try {
-      // Await the parent update function
       await onStatusUpdate(selectedAction.status, note)
     } catch (error) {
       console.error('Error updating status:', error)
       alert('Failed to update order status. Please try again.')
     } finally {
-      // Clear the modal state AFTER the API call completely finishes
       setShowConfirmDialog(false)
       setSelectedAction(null)
       setCancellationNote('')

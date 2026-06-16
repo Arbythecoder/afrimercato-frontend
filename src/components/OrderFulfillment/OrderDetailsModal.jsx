@@ -80,7 +80,11 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
 
   const handlePickerAssigned = async (pickerId) => {
     try {
-      await handleStatusUpdate('assigned_to_picker', `Picker ${pickerId} assigned`)
+      if (order.status !== 'assigned_to_picker') {
+        await handleStatusUpdate('assigned_to_picker', `Picker ${pickerId} assigned`)
+      } else if (onRefresh) {
+        await onRefresh()
+      }
     } catch (error) {
       console.error('Error assigning picker:', error)
     }

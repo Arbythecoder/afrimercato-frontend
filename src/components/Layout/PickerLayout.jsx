@@ -3,10 +3,10 @@ import { LayoutDashboard, TrendingUp, User } from 'lucide-react'
 import { FaStore } from "react-icons/fa";
 
 const tabs = [
-  { path: '/picker/dashboard',   label: 'Home',        icon: LayoutDashboard },
+  { path: '/picker/dashboard', label: 'Home', icon: LayoutDashboard },
+  { path: '/picker/explore', label: 'Find Stores', icon: FaStore },
   { path: '/picker/performance', label: 'Performance', icon: TrendingUp },
-  { path: '/picker/profile',     label: 'Profile',     icon: User },
-  { path: '/picker/explore',     label: 'Find Stores',     icon: FaStore },
+  { path: '/picker/profile', label: 'Profile', icon: User },
 ]
 
 function PickerLayout({ children }) {
@@ -26,9 +26,8 @@ function PickerLayout({ children }) {
               <button
                 key={path}
                 onClick={() => navigate(path)}
-                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-3 text-xs font-semibold transition-all relative ${
-                  isActive ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`flex flex-col items-center justify-center gap-0.5 flex-1 py-3 text-xs font-semibold transition-all relative ${isActive ? 'text-orange-500' : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 {isActive && (
                   <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-orange-500 rounded-full" />
