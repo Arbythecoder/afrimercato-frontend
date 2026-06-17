@@ -4,146 +4,39 @@ import OrderDetailsModal from '../../components/OrderFulfillment/OrderDetailsMod
 import useVendorStore from '../../stores/useVendorStore'
 
 const statusColors = {
-  pending:            'bg-amber-100 text-amber-800',
-  confirmed:          'bg-blue-100 text-blue-800',
-  preparing:          'bg-orange-100 text-orange-800',
+  pending: 'bg-amber-100 text-amber-800',
+  confirmed: 'bg-blue-100 text-blue-800',
+  preparing: 'bg-orange-100 text-orange-800',
   assigned_to_picker: 'bg-teal-100 text-teal-800',
-  picking:            'bg-teal-100 text-teal-800',
-  packed:             'bg-teal-100 text-teal-800',
+  picking: 'bg-teal-100 text-teal-800',
+  packed: 'bg-teal-100 text-teal-800',
   ready_for_delivery: 'bg-cyan-100 text-cyan-800',
-  assigned_to_rider:  'bg-purple-100 text-purple-800',
-  rider_accepted:     'bg-purple-100 text-purple-800',
+  assigned_to_rider: 'bg-purple-100 text-purple-800',
+  rider_accepted: 'bg-purple-100 text-purple-800',
   picked_up_by_rider: 'bg-purple-100 text-purple-800',
-  out_for_delivery:   'bg-blue-100 text-blue-800',
-  delivered:          'bg-green-100 text-green-800',
-  completed:          'bg-gray-100 text-gray-700',
-  cancelled:          'bg-red-100 text-red-800',
-  failed:             'bg-red-100 text-red-800',
+  out_for_delivery: 'bg-blue-100 text-blue-800',
+  delivered: 'bg-green-100 text-green-800',
+  completed: 'bg-gray-100 text-gray-700',
+  cancelled: 'bg-red-100 text-red-800',
+  failed: 'bg-red-100 text-red-800',
 }
 
 const statusNames = {
-  pending:            'Pending',
-  confirmed:          'Confirmed',
-  preparing:          'Preparing',
+  pending: 'Pending',
+  confirmed: 'Confirmed',
+  preparing: 'Preparing',
   assigned_to_picker: 'Picker Assigned',
-  picking:            'Picking',
-  packed:             'Packed',
+  picking: 'Picking',
+  packed: 'Packed',
   ready_for_delivery: 'Ready for Delivery',
-  assigned_to_rider:  'Rider Assigned',
-  rider_accepted:     'Rider Accepted',
+  assigned_to_rider: 'Rider Assigned',
+  rider_accepted: 'Rider Accepted',
   picked_up_by_rider: 'Picked Up',
-  out_for_delivery:   'Out for Delivery',
-  delivered:          'Delivered',
-  completed:          'Completed',
-  cancelled:          'Cancelled',
-  failed:             'Failed',
-}
-
-// What actions a vendor can take per status
-const VENDOR_ACTIONS = {
-  pending:            [['Confirm', 'confirmed', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  confirmed:          [['Start Preparing', 'preparing', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  preparing:          [['Ready for Delivery', 'ready_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  ready_for_delivery: [['Out for Delivery', 'out_for_delivery', 'primary'], ['Cancel', 'cancelled', 'danger']],
-  assigned_to_picker: [['Cancel', 'cancelled', 'danger']],
-  picking:            [['Cancel', 'cancelled', 'danger']],
-  packed:             [['Cancel', 'cancelled', 'danger']],
-  assigned_to_rider:  [['Cancel', 'cancelled', 'danger']],
-  rider_accepted:     [],
-  picked_up_by_rider: [],
-  out_for_delivery:   [['Mark Delivered', 'delivered', 'primary']],
-  delivered:          [['Complete Order', 'completed', 'primary']],
-  completed:          [],
-  cancelled:          [],
-  failed:             [],
-}
-
-// Action button styles
-const actionBtnClass = {
-  primary: 'bg-green-600 hover:bg-green-700 text-white',
-  danger:  'bg-red-100 hover:bg-red-200 text-red-700 border border-red-200',
-}
-
-function ConfirmModal({ action, order, onConfirm, onCancel, loading }) {
-  if (!action || !order) return null
-  const isCancelling = action[1] === 'cancelled'
-  return (
-    <div
-      style={{ minHeight: 300, background: 'rgba(0,0,0,0.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-      className="fixed inset-0 z-50"
-      onClick={onCancel}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-4 ${isCancelling ? 'bg-red-100' : 'bg-green-100'}`}>
-          <span className="text-2xl">{isCancelling ? '⚠️' : '✓'}</span>
-        </div>
-        <h3 className="text-lg font-bold text-gray-900 text-center mb-1">
-          {isCancelling ? 'Cancel this order?' : `${action[0]} order?`}
-        </h3>
-        <p className="text-sm text-gray-500 text-center mb-1">
-          Order <span className="font-semibold text-gray-700">{order.orderNumber}</span>
-        </p>
-        <p className="text-sm text-gray-500 text-center mb-5">
-          Status will change to{' '}
-          <span className={`font-semibold px-2 py-0.5 rounded-full text-xs ${statusColors[action[1]]}`}>
-            {statusNames[action[1]]}
-          </span>
-        </p>
-        <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={onCancel}
-            disabled={loading}
-            className="flex-1 py-2.5 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition text-sm disabled:opacity-50"
-          >
-            Keep
-          </button>
-          <button
-            type="button"
-            onClick={onConfirm}
-            disabled={loading}
-            className={`flex-1 py-2.5 rounded-xl font-semibold transition text-sm disabled:opacity-50 ${
-              isCancelling
-                ? 'bg-red-600 hover:bg-red-700 text-white'
-                : 'bg-green-600 hover:bg-green-700 text-white'
-            }`}
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-1">
-                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                </svg>
-                Updating...
-              </span>
-            ) : (isCancelling ? 'Yes, Cancel' : action[0])}
-          </button>
-        </div>
-      </div>
-    </div>
-  )
-}
-
-function StatusActions({ order, onAction }) {
-  const actions = VENDOR_ACTIONS[order.status] || []
-  if (actions.length === 0) return <span className="text-xs text-gray-400">—</span>
-  return (
-    <div className="flex items-center gap-1.5 flex-wrap">
-      {actions.map(action => (
-        <button
-          key={action[1]}
-          type="button"
-          onClick={() => onAction(order, action)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${actionBtnClass[action[2]]}`}
-        >
-          {action[0]}
-        </button>
-      ))}
-    </div>
-  )
+  out_for_delivery: 'Out for Delivery',
+  delivered: 'Delivered',
+  completed: 'Completed',
+  cancelled: 'Cancelled',
+  failed: 'Failed',
 }
 
 function Orders() {
@@ -154,10 +47,6 @@ function Orders() {
   const [showOrderModal, setShowOrderModal] = useState(false)
   const [fetchError, setFetchError] = useState('')
   const [updateError, setUpdateError] = useState('')
-
-  // Confirmation modal state
-  const [pendingAction, setPendingAction] = useState(null)   // { order, action }
-  const [actionLoading, setActionLoading] = useState(false)
 
   const [filters, setFilters] = useState({
     status: '', search: '', page: 1, limit: 20,
@@ -206,58 +95,8 @@ function Orders() {
     }
   }
 
-  // Called when user clicks an action button — opens confirmation modal
-  const handleActionClick = (order, action) => {
-    setUpdateError('')
-    setPendingAction({ order, action })
-  }
-
-  // Called when user confirms inside the modal
-  const handleActionConfirm = async () => {
-    if (!pendingAction) return
-    const { order, action } = pendingAction
-    setActionLoading(true)
-    setUpdateError('')
-
-    try {
-      const response = await vendorAPI.updateOrderStatus(order._id, {
-        status: action[1],
-        note: `Status updated to ${action[1]} by vendor`,
-      })
-
-      if (response.success) {
-        setPendingAction(null)
-      } else {
-        setUpdateError(response.message || 'Failed to update status')
-      }
-    } catch (error) {
-      setUpdateError(error.data?.message || error.message || 'Failed to update status')
-    } finally {
-      setActionLoading(false)
-      await fetchOrders()
-      // Refresh detail modal if open
-      if (selectedOrder) {
-        try {
-          const updated = await vendorAPI.getOrder(selectedOrder._id)
-          if (updated.success) setSelectedOrder(updated.data.order)
-        } catch (_e) {}
-      }
-    }
-  }
-
   return (
     <div className="p-6">
-      {/* Confirmation modal */}
-      {pendingAction && (
-        <ConfirmModal
-          action={pendingAction.action}
-          order={pendingAction.order}
-          onConfirm={handleActionConfirm}
-          onCancel={() => !actionLoading && setPendingAction(null)}
-          loading={actionLoading}
-        />
-      )}
-
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-afri-gray-900">Orders</h1>
         <p className="text-afri-gray-600 mt-1">Manage and track all your orders</p>
@@ -276,16 +115,15 @@ function Orders() {
             />
           </div>
           <div className="flex flex-wrap gap-2">
-            {['pending','confirmed','preparing','packed','ready_for_delivery','out_for_delivery','delivered','cancelled'].map(status => (
+            {['pending', 'confirmed', 'preparing', 'packed', 'ready_for_delivery', 'out_for_delivery', 'delivered', 'cancelled'].map(status => (
               <button
                 key={status}
                 type="button"
                 onClick={() => handleStatusFilter(status)}
-                className={`px-3 py-1.5 rounded-lg font-medium text-xs transition ${
-                  filters.status === status
-                    ? 'bg-afri-green text-white'
-                    : 'bg-afri-gray-50 text-afri-gray-700 hover:bg-afri-gray-100'
-                }`}
+                className={`px-3 py-1.5 rounded-lg font-medium text-xs transition ${filters.status === status
+                  ? 'bg-afri-green text-white'
+                  : 'bg-afri-gray-50 text-afri-gray-700 hover:bg-afri-gray-100'
+                  }`}
               >
                 {statusNames[status]}
               </button>
@@ -323,7 +161,7 @@ function Orders() {
       ) : orders.length === 0 ? (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <svg className="w-16 h-16 text-afri-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
           <h3 className="text-lg font-medium text-afri-gray-900 mb-1">No orders found</h3>
           <p className="text-afri-gray-500">
@@ -335,7 +173,7 @@ function Orders() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-afri-gray-50">
               <tr>
-                {['Order', 'Customer', 'Items', 'Total', 'Status', 'Actions', 'Date', ''].map(h => (
+                {['Order', 'Customer', 'Items', 'Total', 'Status', 'Date', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
                     {h}
                   </th>
@@ -362,10 +200,6 @@ function Orders() {
                     <span className={`px-2.5 py-1 inline-flex text-xs font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
                       {statusNames[order.status] || order.status}
                     </span>
-                  </td>
-                  {/* Inline action buttons */}
-                  <td className="px-4 py-4">
-                    <StatusActions order={order} onAction={handleActionClick} />
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-xs text-afri-gray-500">
                     {new Date(order.createdAt).toLocaleDateString()}
@@ -395,11 +229,10 @@ function Orders() {
                 key={i}
                 type="button"
                 onClick={() => setFilters({ ...filters, page: i + 1 })}
-                className={`px-4 py-2 border text-sm font-medium ${
-                  pagination.currentPage === i + 1
-                    ? 'z-10 bg-afri-green text-white border-afri-green'
-                    : 'bg-white border-gray-300 text-afri-gray-700 hover:bg-afri-gray-50'
-                }`}
+                className={`px-4 py-2 border text-sm font-medium ${pagination.currentPage === i + 1
+                  ? 'z-10 bg-afri-green text-white border-afri-green'
+                  : 'bg-white border-gray-300 text-afri-gray-700 hover:bg-afri-gray-50'
+                  }`}
               >
                 {i + 1}
               </button>
@@ -413,10 +246,24 @@ function Orders() {
           order={selectedOrder}
           onClose={() => { setShowOrderModal(false); setSelectedOrder(null) }}
           onStatusUpdate={async (orderId, newStatus, note) => {
-            // Reuse same confirm flow from the modal
-            const action = [statusNames[newStatus], newStatus, newStatus === 'cancelled' ? 'danger' : 'primary']
-            const order = orders.find(o => o._id === orderId) || selectedOrder
-            handleActionClick(order, action)
+            setUpdateError('');
+            try {
+              const response = await vendorAPI.updateOrderStatus(orderId, {
+                status: newStatus,
+                note: note || `Status updated to ${newStatus} by vendor`,
+              });
+
+              if (response.success) {
+                await fetchOrders();
+                // Refresh the modal data
+                const updated = await vendorAPI.getOrder(orderId);
+                if (updated.success) setSelectedOrder(updated.data.order);
+              } else {
+                setUpdateError(response.message || 'Failed to update status');
+              }
+            } catch (error) {
+              setUpdateError(error.message || 'Failed to update status');
+            }
           }}
           onRefresh={fetchOrders}
         />

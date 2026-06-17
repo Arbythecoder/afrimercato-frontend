@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { TrendingUp, Package, RefreshCw, ChevronRight } from 'lucide-react'
 
 const PERIODS = [
-  { id: 'today', label: 'Today',   days: 1 },
-  { id: 'week',  label: '7 Days',  days: 7 },
+  { id: 'today', label: 'Today', days: 1 },
+  { id: 'week', label: '7 Days', days: 7 },
   { id: 'month', label: '30 Days', days: 30 },
-  { id: 'year',  label: '1 Year',  days: 365 },
+  { id: 'year', label: '1 Year', days: 365 },
 ]
 
 function RiderEarnings() {
@@ -26,13 +26,24 @@ function RiderEarnings() {
       const days = PERIODS.find(p => p.id === period)?.days || 7
       const end = new Date()
       const start = new Date()
-      start.setDate(end.getDate() - days)
-      const startDate = start.toISOString().split('T')[0]
-      const endDate = end.toISOString().split('T')[0]
+
+      // If it's "Today", set start to 00:00:00 of today. Otherwise, subtract days.
+      if (period === 'today') {
+        start.setHours(0, 0, 0, 0)
+      } else {
+        start.setDate(end.getDate() - days)
+      }
+
+      const startDate = start.toISOString()
+      const endDate = end.toISOString()
+
       const res = await apiCall(`/riders/earnings?startDate=${startDate}&endDate=${endDate}`)
       const d = res?.data
       if (d) {
-        setSummary({ totalEarnings: parseFloat(d.summary?.totalEarnings || 0), totalDeliveries: d.summary?.totalDeliveries || 0 })
+        setSummary({
+          totalEarnings: parseFloat(d.summary?.totalEarnings || 0),
+          totalDeliveries: d.summary?.totalDeliveries || 0
+        })
         setHistory(d.deliveries || [])
       }
     } catch (_e) {
@@ -47,7 +58,7 @@ function RiderEarnings() {
   const avgPerDelivery = summary.totalDeliveries > 0 ? summary.totalEarnings / summary.totalDeliveries : 0
 
   return (
-    <div className="min-h-screen bg-afri-gray-50">
+    <div className="min-h-screen bg-afri-gray-50 pb-24">
       {/* Hero */}
       <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-28 rounded-b-[2.5rem] relative overflow-hidden">
         <div className="absolute -top-12 -right-12 w-48 h-48 bg-afri-green/10 rounded-full blur-2xl" />
@@ -65,14 +76,13 @@ function RiderEarnings() {
 
       <div className="px-5 -mt-16 space-y-5 pb-4">
         {/* Period pill selector */}
-        <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm">
+        <div className="flex gap-2 bg-white rounded-2xl p-1.5 shadow-sm relative z-10">
           {PERIODS.map(p => (
             <button
               key={p.id}
               onClick={() => setPeriod(p.id)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                period === p.id ? 'bg-afri-green text-white shadow-sm' : 'text-gray-400 hover:text-gray-600'
-              }`}
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all ${period === p.id ? 'bg-afri-green text-white shadow-md' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-50'
+                }`}
             >
               {p.label}
             </button>
@@ -93,14 +103,14 @@ function RiderEarnings() {
         <AnimatePresence mode="wait">
           {!loading && (
             <motion.div key={period} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                 <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center mb-2">
                   <TrendingUp size={18} className="text-emerald-600" />
                 </div>
                 <p className="text-2xl font-black text-gray-900">£{avgPerDelivery.toFixed(2)}</p>
                 <p className="text-xs text-gray-400 mt-0.5">Avg per delivery</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
                 <div className="w-9 h-9 bg-afri-green-pale rounded-xl flex items-center justify-center mb-2">
                   <Package size={18} className="text-afri-green-dark" />
                 </div>
@@ -112,7 +122,7 @@ function RiderEarnings() {
         </AnimatePresence>
 
         {/* Payout info */}
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🏦</div>
             <div className="flex-1 min-w-0">
@@ -129,12 +139,12 @@ function RiderEarnings() {
         <section>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-gray-900 font-bold text-lg">Delivery History</h2>
-            <span className="text-xs text-gray-400">{history.length} records</span>
+            <span className="text-xs font-semibold bg-gray-200 text-gray-600 px-2.5 py-1 rounded-lg">{history.length} records</span>
           </div>
 
           {loading ? (
             <div className="space-y-2">
-              {[1,2,3,4].map(i => (
+              {[1, 2, 3, 4].map(i => (
                 <div key={i} className="bg-white rounded-2xl p-4 animate-pulse flex justify-between">
                   <div className="space-y-1.5">
                     <div className="h-4 bg-gray-200 rounded w-28" />
@@ -145,35 +155,55 @@ function RiderEarnings() {
               ))}
             </div>
           ) : history.length === 0 ? (
-            <div className="bg-white rounded-2xl p-10 text-center shadow-sm">
-              <div className="w-16 h-16 bg-afri-green-pale rounded-full flex items-center justify-center mx-auto mb-3">
-                <Package size={28} className="text-afri-green-light" />
+            <div className="bg-white rounded-2xl p-10 text-center shadow-sm border border-gray-100">
+              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Package size={28} className="text-gray-400" />
               </div>
               <p className="font-semibold text-gray-600">No deliveries in this period</p>
+              <p className="text-xs text-gray-400 mt-1">Accept gigs to start earning.</p>
             </div>
           ) : (
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden divide-y divide-gray-50">
-              {history.map((item, i) => (
-                <div key={item.id || i} className="flex items-center justify-between px-4 py-3.5 hover:bg-gray-50">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Package size={14} className="text-emerald-600" />
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">
+              {history.map((item, i) => {
+                // FIXED DATA EXTRACTION LOGIC
+                const actualVendor = item.vendor || (item.items?.length > 0 ? item.items[0].vendor : null);
+                const vendorName = actualVendor?.storeName || actualVendor?.name || 'Partner Store';
+                const earningsValue = Number(item.riderEarnings || item.earnings || item.deliveryFee || 0).toFixed(2);
+                const deliveryDate = item.timestamps?.delivered || item.updatedAt;
+
+                return (
+                  <div key={item.id || item._id || i} className="flex items-center justify-between px-4 py-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-emerald-50 rounded-xl flex items-center justify-center flex-shrink-0">
+                        <Package size={16} className="text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-bold text-gray-900">{item.orderNumber || `Delivery #${i + 1}`}</p>
+                        <p className="text-xs text-gray-500 font-medium mt-0.5">
+                          {vendorName}
+                        </p>
+                        <div className="flex items-center gap-2 mt-1">
+                          {deliveryDate && (
+                            <p className="text-[10px] text-gray-400">
+                              {new Date(deliveryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                            </p>
+                          )}
+                          {item.distance && (
+                            <>
+                              <span className="w-1 h-1 bg-gray-300 rounded-full"></span>
+                              <p className="text-[10px] text-gray-400">{item.distance} km</p>
+                            </>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-gray-800">{item.orderNumber || `Delivery #${i + 1}`}</p>
-                      <p className="text-xs text-gray-400">
-                        {item.vendor || '—'}
-                        {item.deliveredAt && ` · ${new Date(item.deliveredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}`}
-                      </p>
-                      {item.distance && <p className="text-xs text-gray-300">{item.distance} km</p>}
+                    <div className="text-right flex flex-col items-end gap-1.5">
+                      <p className="text-base font-black text-emerald-600">£{earningsValue}</p>
+                      <span className="text-[10px] bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-md font-bold uppercase tracking-wider">Paid</span>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-emerald-600">£{Number(item.earnings || 0).toFixed(2)}</p>
-                    <span className="text-xs bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full font-medium">Paid</span>
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
         </section>

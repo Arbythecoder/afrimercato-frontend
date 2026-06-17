@@ -19,7 +19,7 @@ function OrderStatusTimeline({ order }) {
       description: 'Vendor accepted the order',
     },
     {
-      status: 'assigned_picker',
+      status: 'assigned_to_picker',
       label: 'Picker Assigned',
       icon: '👤',
       description: 'Order assigned to picker',

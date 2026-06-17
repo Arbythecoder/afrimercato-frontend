@@ -69,21 +69,32 @@ function BulkUploadModal({ onClose, onSuccess }) {
       const formData = new FormData()
       formData.append('file', file)
 
-      const response = await productAPI.bulkUpload(formData)
+      const response = await bulkUploadProducts(formData)
 
-      if (response.data.success) {
+      const responseData = response.data || response;
+
+      if (responseData.success) {
         setUploadResults({
-          success: response.data.data.success || [],
-          errors: response.data.data.errors || []
+          success: responseData.data?.success || [],
+          errors: responseData.data?.errors || []
         })
-        
-        if (response.data.data.success?.length > 0) {
-          // Only call onSuccess if there were any successful uploads
+
+        if (responseData.data?.success?.length > 0) {
           onSuccess()
         }
+      } else {
+        throw responseData;
       }
     } catch (err) {
-      setError(err.response?.data?.message || 'Failed to upload products')
+      console.error("Upload Crash Details:", err);
+
+      // Aggressively extract the error message
+      const actualErrorMessage =
+        err.response?.data?.message ||
+        err.message ||
+        err;
+
+      setError(actualErrorMessage)
     } finally {
       setLoading(false)
     }

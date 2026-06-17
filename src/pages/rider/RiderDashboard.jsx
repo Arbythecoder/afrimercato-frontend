@@ -4,25 +4,19 @@ import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
 import { motion } from 'framer-motion'
 import {
-  Star,
-  Package,
-  ChevronRight,
-  MapPin,
-  Clock,
-  Ruler,
-  RefreshCw,
-  Wifi,
-  WifiOff,
-  AlertTriangle
+  Star, Package, ChevronRight, MapPin, Clock, Ruler,
+  RefreshCw, Wifi, WifiOff, AlertTriangle
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
-  pending:    { label: 'Awaiting Pickup', color: 'bg-amber-100 text-amber-700',   dot: 'bg-amber-400' },
-  accepted:   { label: 'Accepted',        color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-400' },
-  picked_up:  { label: 'Picked Up',       color: 'bg-blue-100 text-blue-700',     dot: 'bg-blue-400' },
-  in_transit: { label: 'In Transit',      color: 'bg-afri-green-pale text-afri-green-dark', dot: 'bg-afri-green' },
-  delivered:  { label: 'Delivered',       color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
+  assigned_to_rider: { label: 'Assigned', color: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400' },
+  rider_accepted: { label: 'Heading to Store', color: 'bg-blue-100 text-blue-700', dot: 'bg-blue-400' },
+  picked_up_by_rider: { label: 'At Store', color: 'bg-indigo-100 text-indigo-700', dot: 'bg-indigo-400' },
+  out_for_delivery: { label: 'In Transit', color: 'bg-afri-green-pale text-afri-green-dark', dot: 'bg-afri-green' },
+  delivered: { label: 'Delivered', color: 'bg-emerald-100 text-emerald-700', dot: 'bg-emerald-500' },
 }
+
+const DEFAULT_STATUS = { label: 'Pending', color: 'bg-gray-100 text-gray-700', dot: 'bg-gray-400' }
 
 function SkeletonCard() {
   return (
@@ -40,7 +34,7 @@ function SkeletonCard() {
 function RiderDashboard() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const [stats, setStats] = useState({ todayDeliveries: 0, todayEarnings: 0, rating: 0, weeklyDeliveries: 0, weeklyEarnings: 0 })
+  const [stats, setStats] = useState({ todayDeliveries: 0, todayEarnings: 0, rating: 0, allTimeDeliveries: 0, allTimeEarnings: 0 })
   const [activeDeliveries, setActiveDeliveries] = useState([])
   const [recentDeliveries, setRecentDeliveries] = useState([])
   const [isOnline, setIsOnline] = useState(true)
@@ -53,33 +47,65 @@ function RiderDashboard() {
     setLoading(true)
     setError(null)
     try {
-      const [profileRes, activeRes, earningsRes] = await Promise.allSettled([
+      const [profileRes, activeRes, earningsRes, statsRes] = await Promise.allSettled([
         apiCall('/rider-auth/profile'),
         apiCall('/riders/deliveries/active'),
         apiCall('/riders/earnings'),
+        apiCall('/riders/stats/today') // NEW: Call our new Today Stats endpoint!
       ])
+
+      // 1. Set Rating from Profile
       if (profileRes.status === 'fulfilled' && profileRes.value?.data) {
-        const s = profileRes.value.data.stats || {}
-        setStats(prev => ({ ...prev, rating: parseFloat(s.averageRating) || 0, weeklyDeliveries: s.totalDeliveries || 0, weeklyEarnings: parseFloat(s.totalEarnings) || 0 }))
+        setStats(prev => ({ ...prev, rating: parseFloat(profileRes.value.data.stats?.averageRating) || 0 }))
       }
+
+      // 2. Set Active Deliveries
       if (activeRes.status === 'fulfilled' && activeRes.value?.data) {
         setActiveDeliveries(activeRes.value.data.deliveries || [])
       }
+
+      // 3. Set All-Time Stats & Recent Deliveries from Earnings
       if (earningsRes.status === 'fulfilled' && earningsRes.value?.data) {
         const d = earningsRes.value.data
         setRecentDeliveries((d.deliveries || []).slice(0, 4))
-        const todayKey = new Date().toISOString().split('T')[0]
-        const todayEntry = (d.earningsByDate || []).find(e => e.date === todayKey)
-        if (todayEntry) {
-          setStats(prev => ({ ...prev, todayDeliveries: todayEntry.deliveries || 0, todayEarnings: parseFloat(todayEntry.earnings) || 0 }))
+        if (d.summary) {
+          setStats(prev => ({
+            ...prev,
+            allTimeDeliveries: d.summary.totalDeliveries || 0,
+            allTimeEarnings: parseFloat(d.summary.totalEarnings) || 0
+          }))
         }
       }
+
+      // 4. Set Today's Stats exactly from our new aggregation engine
+      if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
+        setStats(prev => ({
+          ...prev,
+          todayDeliveries: statsRes.value.data.deliveriesToday || 0,
+          todayEarnings: parseFloat(statsRes.value.data.earningsToday) || 0
+        }))
+      }
+
     } catch (_e) {
       setError('Failed to load. Tap retry.')
     } finally {
       setLoading(false)
     }
   }
+
+  const toggleOnlineStatus = async () => {
+    const newStatus = !isOnline;
+    setIsOnline(newStatus);
+    try {
+      await apiCall('/riders/status', {
+        method: 'PUT',
+        body: JSON.stringify({ isOnline: newStatus })
+      });
+    } catch (error) {
+      setIsOnline(!newStatus);
+      alert('Failed to update status. Check your connection.');
+    }
+  };
 
   if (loading) {
     return (
@@ -89,7 +115,7 @@ function RiderDashboard() {
           <div className="h-4 bg-white/5 rounded w-24 animate-pulse" />
         </div>
         <div className="px-5 -mt-12 space-y-3">
-          {[1,2,3].map(i => <SkeletonCard key={i} />)}
+          {[1, 2, 3].map(i => <SkeletonCard key={i} />)}
         </div>
       </div>
     )
@@ -109,12 +135,10 @@ function RiderDashboard() {
 
   return (
     <div className="min-h-screen bg-afri-gray-50">
-      {/* Hero Header — premium dark with brand green accents */}
-      <div className="bg-gradient-to-br from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
+      {/* Hero Header */}
+      <div className="bg-gradient-to-br mb-10 from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
         <div className="absolute -top-10 -right-10 w-52 h-52 bg-afri-green/10 rounded-full blur-2xl" />
         <div className="absolute bottom-0 -left-8 w-40 h-40 bg-afri-yellow-dark/10 rounded-full blur-2xl" />
-        <div className="absolute top-8 right-6 w-2 h-2 bg-afri-green rounded-full opacity-70" />
-        <div className="absolute top-16 right-16 w-1.5 h-1.5 bg-afri-yellow rounded-full opacity-50" />
 
         <div className="relative flex items-start justify-between mb-6">
           <div>
@@ -130,12 +154,11 @@ function RiderDashboard() {
             )}
           </div>
           <button
-            onClick={() => setIsOnline(o => !o)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${
-              isOnline
-                ? 'bg-afri-green text-white shadow-lg shadow-afri-green/30'
-                : 'bg-white/10 text-white/60 border border-white/20'
-            }`}
+            onClick={toggleOnlineStatus}
+            className={`flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all ${isOnline
+              ? 'bg-afri-green text-white shadow-lg shadow-afri-green/30'
+              : 'bg-white/10 text-white/60 border border-white/20'
+              }`}
           >
             {isOnline ? <Wifi size={15} /> : <WifiOff size={15} />}
             {isOnline ? 'Online' : 'Offline'}
@@ -153,6 +176,29 @@ function RiderDashboard() {
           </div>
         </div>
       </div>
+
+      {isOnline && (
+        <section className="my-16 mx-4">
+          <div
+            onClick={() => navigate('/rider/gigs')}
+            className="bg-gradient-to-r from-afri-yellow to-[#FF8F00] rounded-2xl p-4 shadow-lg shadow-afri-yellow/20 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
+                <span className="absolute inset-0 rounded-full border-2 border-white animate-ping opacity-50"></span>
+                <MapPin size={20} className="text-white" />
+              </div>
+              <div>
+                <h3 className="text-white font-bold text-lg">Gig Radar Active</h3>
+                <p className="text-white/80 text-xs font-medium">Looking for nearby orders...</p>
+              </div>
+            </div>
+            <div className="bg-white text-[#FF8F00] px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+              View Map
+            </div>
+          </div>
+        </section>
+      )}
 
       <div className="px-5 -mt-10 space-y-6 pb-4">
         {/* Active Deliveries */}
@@ -176,7 +222,12 @@ function RiderDashboard() {
             <div className="space-y-3">
               {activeDeliveries.map((d, i) => {
                 const id = d.id || d._id
-                const st = STATUS_CONFIG[d.status] || STATUS_CONFIG.pending
+                const st = STATUS_CONFIG[d.status] || DEFAULT_STATUS
+                const actualVendor = d.vendor || (d.items?.length > 0 ? d.items[0].vendor : null);
+                const vendorName = actualVendor?.storeName || actualVendor?.name || 'Partner Store';
+                const earningsValue = Number(d.riderEarnings || d.earnings || d.deliveryFee || 0)
+                const customerName = d.deliveryAddress?.fullName || (typeof d.customer === 'object' ? d.customer?.name : d.customer) || 'Customer'
+                const addressLine = d.deliveryAddress ? [d.deliveryAddress.street, d.deliveryAddress.city].filter(Boolean).join(', ') : (d.deliveryAddress?.address || '—')
                 return (
                   <motion.div
                     key={id}
@@ -192,24 +243,24 @@ function RiderDashboard() {
                         <div>
                           <div className="flex items-center gap-2 mb-0.5">
                             <span className="font-bold text-afri-gray-900 text-sm">
-                              {d.order?.orderNumber || d.orderNumber || id}
+                              {d.order?.orderNumber || d.orderNumber || id.slice(-6).toUpperCase()}
                             </span>
                             <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${st.color}`}>
                               {st.label}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-400">{d.vendor?.storeName || d.vendor || '—'}</p>
+                          <p className="text-xs text-gray-400">{vendorName}</p>
                         </div>
                         <span className="text-lg font-black text-afri-green-dark">
-                          £{Number(d.riderEarnings || d.earnings || 0).toFixed(2)}
+                          £{earningsValue.toFixed(2)}
                         </span>
                       </div>
 
                       <div className="flex items-center gap-2 mb-3">
                         <MapPin size={14} className="text-afri-green flex-shrink-0" />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium text-gray-800 truncate">{d.customer?.name || 'Customer'}</p>
-                          <p className="text-xs text-gray-400 truncate">{d.deliveryAddress?.street || d.deliveryAddress?.address || '—'}</p>
+                          <p className="text-sm font-medium text-gray-800 truncate">{customerName}</p>
+                          <p className="text-xs text-gray-400 truncate">{addressLine}</p>
                         </div>
                       </div>
 
@@ -242,11 +293,11 @@ function RiderDashboard() {
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
                 <p className="text-gray-400 text-xs mb-0.5">Total Deliveries</p>
-                <p className="text-3xl font-black">{stats.weeklyDeliveries}</p>
+                <p className="text-3xl font-black">{stats.allTimeDeliveries}</p>
               </div>
               <div>
                 <p className="text-gray-400 text-xs mb-0.5">Total Earned</p>
-                <p className="text-3xl font-black text-afri-green-light">£{Number(stats.weeklyEarnings).toFixed(0)}</p>
+                <p className="text-3xl font-black text-afri-green-light">£{stats.allTimeEarnings.toFixed(2)}</p>
               </div>
             </div>
             <button
@@ -263,23 +314,28 @@ function RiderDashboard() {
           <section>
             <h2 className="text-afri-gray-900 font-bold text-lg mb-3">Recent</h2>
             <div className="bg-white rounded-2xl shadow-sm border border-afri-gray-100 overflow-hidden divide-y divide-afri-gray-50">
-              {recentDeliveries.map((d, i) => (
-                <div key={d.id || i} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-afri-green-pale rounded-full flex items-center justify-center">
-                      <Package size={14} className="text-afri-green-dark" />
+              {recentDeliveries.map((d, i) => {
+                const actualVendor = d.vendor || (d.items?.length > 0 ? d.items[0].vendor : null);
+                const vendorName = actualVendor?.storeName || actualVendor?.name || 'Partner Store';
+                const earningsValue = Number(d.riderEarnings || d.earnings || d.deliveryFee || 0).toFixed(2);
+                return (
+                  <div key={d.id || i} className="flex items-center justify-between px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-afri-green-pale rounded-full flex items-center justify-center">
+                        <Package size={14} className="text-afri-green-dark" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-afri-gray-900">{d.orderNumber || `Delivery #${i + 1}`}</p>
+                        <p className="text-xs text-gray-400">{vendorName}</p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-afri-gray-900">{d.orderNumber || `Delivery #${i+1}`}</p>
-                      <p className="text-xs text-gray-400">{d.vendor || '—'}</p>
+                    <div className="text-right">
+                      <p className="text-sm font-bold text-afri-green-dark">£{earningsValue}</p>
+                      {d.timestamps?.delivered && <p className="text-xs text-gray-400">{new Date(d.timestamps.delivered).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-sm font-bold text-afri-green-dark">£{Number(d.earnings || 0).toFixed(2)}</p>
-                    {d.deliveredAt && <p className="text-xs text-gray-400">{new Date(d.deliveredAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</p>}
-                  </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           </section>
         )}
