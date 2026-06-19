@@ -17,7 +17,6 @@ const categories = [
 
 const daysOfWeek = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
-// STRICT: Only UK and Ireland allowed for vendors
 const countries = [
   { code: 'GB', name: 'United Kingdom', region: 'Europe', phoneCodes: ['+44'], postcodeFormat: 'UK Postcode (e.g., SW1A 1AA)' },
   { code: 'IE', name: 'Ireland', region: 'Europe', phoneCodes: ['+353'], postcodeFormat: 'Eircode (e.g., D02 AF30)' },
@@ -29,6 +28,15 @@ const countries = [
   { code: 'CA', name: 'Canada', region: 'North America', phoneCodes: ['+1'], postcodeFormat: 'Postal code (e.g., K1A 0A6)' },
 ]
 
+// Reusable disabled/enabled input className helper
+const inputCls = (isEditing, hasError = false, hasSuccess = false) => {
+  const base = 'w-full px-4 py-3 border rounded-lg transition-all'
+  if (!isEditing) return `${base} bg-gray-50 text-gray-600 cursor-not-allowed border-gray-200`
+  if (hasError) return `${base} border-red-500 bg-red-50 focus:ring-2 focus:ring-red-400 focus:border-transparent`
+  if (hasSuccess) return `${base} border-green-500 bg-green-50 focus:ring-2 focus:ring-afri-green focus:border-transparent`
+  return `${base} border-gray-300 focus:ring-2 focus:ring-afri-green focus:border-transparent`
+}
+
 function Settings() {
   const navigate = useNavigate()
   const { toasts, success, error, warning, removeToast } = useToast()
@@ -37,11 +45,32 @@ function Settings() {
   const [saving, setSaving] = useState(false)
   const [postcodeLoading, setPostcodeLoading] = useState(false)
   const [validationErrors, setValidationErrors] = useState({})
-
-  // Add error state for better UX
   const [loadError, setLoadError] = useState(null)
 
-  // Initialize vendor profile with defaults to prevent undefined errors
+  // ── Edit mode state per tab ──────────────────────────────────────────────
+  const [editingTabs, setEditingTabs] = useState({
+    profile: false,
+    delivery: false,
+    account: false,
+    hours: false,
+    security: false,
+  })
+
+  const isEditing = editingTabs[activeTab]
+
+  const startEditing = () =>
+    setEditingTabs((prev) => ({ ...prev, [activeTab]: true }))
+
+  const cancelEditing = () => {
+    setEditingTabs((prev) => ({ ...prev, [activeTab]: false }))
+    setValidationErrors({})
+    fetchSettings() // revert unsaved changes
+  }
+
+  const stopEditing = () =>
+    setEditingTabs((prev) => ({ ...prev, [activeTab]: false }))
+  // ─────────────────────────────────────────────────────────────────────────
+
   const [vendorProfile, setVendorProfile] = useState({
     storeName: '',
     description: '',
@@ -80,7 +109,6 @@ function Settings() {
     confirmPassword: '',
   })
 
-  // Postcode autocomplete suggestions
   const [postcodeSuggestions, setPostcodeSuggestions] = useState([])
 
   useEffect(() => {
@@ -91,7 +119,6 @@ function Settings() {
     setLoading(true)
     setLoadError(null)
 
-    // Vendor profile — critical, show error if it fails
     let vendorResponse = null
     try {
       vendorResponse = await vendorAPI.getProfile()
@@ -103,36 +130,27 @@ function Settings() {
     }
 
     if (vendorResponse?.success && vendorResponse.data) {
-      // Backend returns vendor data either at data.vendor or data directly
       const vendorData = vendorResponse.data.vendor || vendorResponse.data
       const normalizedVendorData = {
         ...vendorData,
         storeName: vendorData.storeName || vendorData.name || vendorData.businessName || '',
         businessName: vendorData.businessName || vendorData.storeName || vendorData.name || '',
-        name: vendorData.name || vendorData.storeName || vendorData.businessName || ''
+        name: vendorData.name || vendorData.storeName || vendorData.businessName || '',
       }
-      setVendorProfile(prev => ({
+      setVendorProfile((prev) => ({
         ...prev,
         ...normalizedVendorData,
-        address: {
-          ...prev.address,
-          ...(vendorData.address || {})
-        },
-        businessHours: {
-          ...prev.businessHours,
-          ...(vendorData.businessHours || {})
-        }
+        address: { ...prev.address, ...(vendorData.address || {}) },
+        businessHours: { ...prev.businessHours, ...(vendorData.businessHours || {}) },
       }))
     }
 
-    // User profile — non-critical, page still works without it
     try {
       const userResponse = await userAPI.getProfile()
       if (userResponse?.success && userResponse.data) {
-        // Backend returns user either at data.user or data directly
         const userData = userResponse.data.user || userResponse.data
         if (userData && typeof userData === 'object') {
-          setUserProfile(prev => ({
+          setUserProfile((prev) => ({
             name: userData.name || prev.name,
             email: userData.email || prev.email,
             phone: userData.phone || prev.phone,
@@ -140,7 +158,6 @@ function Settings() {
         }
       }
     } catch (err) {
-      // Non-blocking — account tab shows editable fields but not pre-filled
       console.error('User profile load error (non-blocking):', err)
     }
 
@@ -171,10 +188,7 @@ function Settings() {
       ...prev,
       businessHours: {
         ...prev.businessHours,
-        [day]: {
-          ...prev.businessHours[day],
-          [field]: value,
-        },
+        [day]: { ...prev.businessHours[day], [field]: value },
       },
     }))
   }
@@ -187,33 +201,23 @@ function Settings() {
     setPasswordData((prev) => ({ ...prev, [field]: value }))
   }
 
-  // Validate UK/Ireland phone number
   const validatePhone = (phone, country) => {
-    if (!phone) return true // Optional field
-
+    if (!phone) return true
     const cleanPhone = phone.replace(/\s/g, '')
-
     if (country === 'United Kingdom') {
-      // UK: +44 followed by 10 digits, or 07xxx xxxxxx (11 digits)
-      const ukPattern = /^(\+44|0)[1-9]\d{9}$/
-      return ukPattern.test(cleanPhone)
+      return /^(\+44|0)[1-9]\d{9}$/.test(cleanPhone)
     } else if (country === 'Ireland') {
-      // Ireland: +353 followed by 9 digits, or 08x xxx xxxx
-      const iePattern = /^(\+353|0)[1-9]\d{8}$/
-      return iePattern.test(cleanPhone)
+      return /^(\+353|0)[1-9]\d{8}$/.test(cleanPhone)
     }
     return true
   }
 
-  // Validate UK/Ireland postcode — lenient: just check plausible format
   const validatePostcode = (postcode) => {
     if (!postcode) return false
     const clean = postcode.replace(/\s/g, '').toUpperCase()
-    // Accept any 5-8 char alphanumeric that looks like a postcode
     return /^[A-Z0-9]{4,8}$/.test(clean)
   }
 
-  // Autocomplete suggestions using postcodes.io
   const fetchPostcodeSuggestions = async (partial) => {
     if (!partial || partial.length < 2) { setPostcodeSuggestions([]); return }
     try {
@@ -229,27 +233,16 @@ function Settings() {
     const postcode = vendorProfile.address?.postalCode?.trim()
     const country = vendorProfile.address?.country || 'United Kingdom'
 
-    if (!postcode) {
-      warning('Please enter a postcode first')
-      return
-    }
-
-    // Soft-validate postcode format
-    if (!validatePostcode(postcode)) {
-      warning('Postcode format looks unusual. Please double-check it.')
-    }
+    if (!postcode) { warning('Please enter a postcode first'); return }
+    if (!validatePostcode(postcode)) warning('Postcode format looks unusual. Please double-check it.')
 
     try {
       setPostcodeLoading(true)
-
       if (country === 'United Kingdom') {
-        // Using free UK postcode lookup API
         const response = await fetch(`https://api.postcodes.io/postcodes/${encodeURIComponent(postcode)}`)
         const data = await response.json()
-
         if (data.status === 200 && data.result) {
           const result = data.result
-          // Auto-fill city and county
           setVendorProfile((prev) => ({
             ...prev,
             address: {
@@ -263,7 +256,6 @@ function Settings() {
           warning('Postcode not found. Please check and try again.')
         }
       } else {
-        // Ireland - manual entry (no free API available)
         warning('Eircode verified! Please enter your address details manually.')
       }
     } catch (err) {
@@ -275,31 +267,19 @@ function Settings() {
   }
 
   const saveVendorProfile = async () => {
-    // Validate before saving
     const errors = {}
     const country = vendorProfile.address?.country || 'United Kingdom'
 
-    // Validate phone numbers
     if (vendorProfile.phone && !validatePhone(vendorProfile.phone, country)) {
       errors.phone = `Invalid ${country === 'United Kingdom' ? 'UK' : 'Irish'} phone number.`
     }
-
-    // Validate required fields
-    if (!vendorProfile.storeName?.trim()) {
-      errors.storeName = 'Store name is required'
-    }
-    if (!vendorProfile.address?.street?.trim()) {
-      errors.street = 'Street address is required'
-    }
-    if (!vendorProfile.address?.city?.trim()) {
-      errors.city = 'City is required'
-    }
+    if (!vendorProfile.storeName?.trim()) errors.storeName = 'Store name is required'
+    if (!vendorProfile.address?.street?.trim()) errors.street = 'Street address is required'
+    if (!vendorProfile.address?.city?.trim()) errors.city = 'City is required'
 
     setValidationErrors(errors)
-
     if (Object.keys(errors).length > 0) {
-      const errorMessages = Object.values(errors).join('\n')
-      error(`Please fix the following errors:\n\n${errorMessages}`)
+      error(`Please fix the following errors:\n\n${Object.values(errors).join('\n')}`)
       return
     }
 
@@ -309,36 +289,29 @@ function Settings() {
         ...vendorProfile,
         name: vendorProfile.storeName,
         businessName: vendorProfile.storeName,
-      };
+      }
+
       if (!payloadToSave.address.latitude || !payloadToSave.address.longitude) {
         try {
-          const { street, city, state, country } = payloadToSave.address;
-          const searchQuery = encodeURIComponent(`${street}, ${city}, ${state || ''}, ${country}`);
-
-          // Call the free OpenStreetMap API
-          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`);
-          const geoData = await geoRes.json();
-
+          const { street, city, state, country } = payloadToSave.address
+          const searchQuery = encodeURIComponent(`${street}, ${city}, ${state || ''}, ${country}`)
+          const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`)
+          const geoData = await geoRes.json()
           if (geoData && geoData.length > 0) {
-            payloadToSave.address.latitude = geoData[0].lat;
-            payloadToSave.address.longitude = geoData[0].lon;
-          } else {
-            console.warn("Could not auto-detect GPS for this address. Using default/fallback.");
+            payloadToSave.address.latitude = geoData[0].lat
+            payloadToSave.address.longitude = geoData[0].lon
           }
         } catch (geoErr) {
-          console.error("Geocoding failed silently:", geoErr);
+          console.error('Geocoding failed silently:', geoErr)
         }
       }
 
       const response = await vendorAPI.updateProfile(payloadToSave)
-
       if (response?.success) {
         success('Vendor profile updated successfully!')
-
-        if (payloadToSave.address.latitude) {
-          setVendorProfile(payloadToSave);
-        }
+        if (payloadToSave.address.latitude) setVendorProfile(payloadToSave)
         setValidationErrors({})
+        stopEditing()
         await fetchSettings()
       } else {
         error(response?.message || 'Failed to update vendor profile')
@@ -357,6 +330,7 @@ function Settings() {
       const response = await userAPI.updateProfile(userProfile)
       if (response?.success) {
         success('Account updated successfully!')
+        stopEditing()
       } else {
         error(response?.message || 'Failed to update account')
       }
@@ -373,7 +347,6 @@ function Settings() {
       warning('Passwords do not match!')
       return
     }
-
     if (passwordData.newPassword.length < 6) {
       warning('Password must be at least 6 characters!')
       return
@@ -389,6 +362,7 @@ function Settings() {
       if (response.success) {
         success('Password changed successfully!')
         setPasswordData({ currentPassword: '', newPassword: '', confirmPassword: '' })
+        stopEditing()
       } else {
         error(response.message || 'Failed to change password')
       }
@@ -416,7 +390,6 @@ function Settings() {
         success(newValue ? 'Store paused — customers will not see your store' : 'Store is now live!')
       }
     } catch (err) {
-      // Revert on failure
       setVendorProfile((prev) => ({ ...prev, isClosed: !newValue }))
       error('Failed to update store status')
     } finally {
@@ -432,7 +405,60 @@ function Settings() {
     { id: 'security', name: 'Security', icon: '🔒' },
   ]
 
-  // Handle loading state
+  // Reusable footer button group
+  const ActionButtons = ({ onSave, saveLabel = 'Update' }) => (
+    <div className="flex justify-end gap-3 pt-6 border-t">
+      {!isEditing ? (
+        <button
+          onClick={startEditing}
+          className="px-8 py-3 bg-white border-2 border-afri-green text-afri-green rounded-lg font-semibold hover:bg-green-50 transition-all flex items-center gap-2"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+            />
+          </svg>
+          Edit
+        </button>
+      ) : (
+        <>
+          <button
+            onClick={cancelEditing}
+            disabled={saving}
+            className="px-6 py-3 bg-white border border-gray-300 text-gray-600 rounded-lg font-semibold hover:bg-gray-50 transition-all disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onSave}
+            disabled={saving}
+            className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
+          >
+            {saving ? (
+              <>
+                <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  />
+                </svg>
+                Saving...
+              </>
+            ) : (
+              saveLabel
+            )}
+          </button>
+        </>
+      )}
+    </div>
+  )
+  // ─────────────────────────────────────────────────────────────────────────
+
   if (loading && !loadError) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -444,7 +470,6 @@ function Settings() {
     )
   }
 
-  // Handle error state
   if (loadError) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -499,8 +524,8 @@ function Settings() {
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-all duration-200 flex items-center space-x-2 ${activeTab === tab.id
-                  ? 'border-afri-green text-afri-green'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                ? 'border-afri-green text-afri-green'
+                : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
             >
               <span className="text-xl">{tab.icon}</span>
@@ -510,13 +535,20 @@ function Settings() {
         </nav>
       </div>
 
-      {/* Store Profile Tab */}
+      {/* ── Store Profile Tab ────────────────────────────────────────────── */}
       {activeTab === 'profile' && (
         <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
+
           {/* Store Open/Close Toggle */}
-          <div className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all ${vendorProfile.isClosed ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'}`}>
+          <div
+            className={`flex items-center justify-between p-5 rounded-xl border-2 transition-all ${vendorProfile.isClosed ? 'border-red-200 bg-red-50' : 'border-green-200 bg-green-50'
+              }`}
+          >
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${vendorProfile.isClosed ? 'bg-red-100' : 'bg-green-100'}`}>
+              <div
+                className={`w-12 h-12 rounded-full flex items-center justify-center text-2xl ${vendorProfile.isClosed ? 'bg-red-100' : 'bg-green-100'
+                  }`}
+              >
                 {vendorProfile.isClosed ? '🔴' : '🟢'}
               </div>
               <div>
@@ -533,11 +565,11 @@ function Settings() {
             <button
               type="button"
               onClick={toggleStoreClosed}
-              disabled={saving}
+              disabled={saving || !isEditing}
               className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 ${vendorProfile.isClosed
-                  ? 'bg-red-400 focus:ring-red-500'
-                  : 'bg-green-500 focus:ring-green-500'
-                }`}
+                ? 'bg-red-400 focus:ring-red-500'
+                : 'bg-green-500 focus:ring-green-500'
+                } ${!isEditing ? 'cursor-not-allowed' : ''}`}
             >
               <span
                 className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${vendorProfile.isClosed ? 'translate-x-0' : 'translate-x-6'
@@ -565,7 +597,8 @@ function Settings() {
                     <button
                       type="button"
                       onClick={() => {
-                        navigator.clipboard.writeText(`${window.location.origin}/store/${vendorProfile.slug}`)
+                        navigator.clipboard
+                          .writeText(`${window.location.origin}/store/${vendorProfile.slug}`)
                           .then(() => success('Store link copied to clipboard!'))
                           .catch(() => warning('Could not copy — please copy manually'))
                       }}
@@ -591,22 +624,29 @@ function Settings() {
             <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Store Information</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Store Name */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Store Name</label>
                 <input
                   type="text"
                   value={vendorProfile.storeName}
                   onChange={(e) => handleVendorChange('storeName', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing, !!validationErrors.storeName)}
                 />
+                {validationErrors.storeName && (
+                  <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.storeName}</p>
+                )}
               </div>
 
+              {/* Category */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Category</label>
                 <select
                   value={vendorProfile.category}
                   onChange={(e) => handleVendorChange('category', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
@@ -616,16 +656,19 @@ function Settings() {
                 </select>
               </div>
 
+              {/* Description */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Description</label>
                 <textarea
                   value={vendorProfile.description}
                   onChange={(e) => handleVendorChange('description', e.target.value)}
+                  disabled={!isEditing}
                   rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  className={inputCls(isEditing)}
                 />
               </div>
 
+              {/* Primary Phone */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   Primary Phone *
@@ -638,12 +681,11 @@ function Settings() {
                   value={vendorProfile.phone}
                   onChange={(e) => {
                     handleVendorChange('phone', e.target.value)
-                    if (validationErrors.phone) {
-                      setValidationErrors(prev => ({ ...prev, phone: undefined }))
-                    }
+                    if (validationErrors.phone)
+                      setValidationErrors((prev) => ({ ...prev, phone: undefined }))
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.phone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  disabled={!isEditing}
+                  className={inputCls(isEditing, !!validationErrors.phone)}
                   placeholder="+44 7700 900000 or +234 800 555 0001"
                 />
                 {validationErrors.phone && (
@@ -651,6 +693,7 @@ function Settings() {
                 )}
               </div>
 
+              {/* Alternative Phone */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   Alternative Phone (Optional)
@@ -660,12 +703,11 @@ function Settings() {
                   value={vendorProfile.alternativePhone || ''}
                   onChange={(e) => {
                     handleVendorChange('alternativePhone', e.target.value)
-                    if (validationErrors.alternativePhone) {
-                      setValidationErrors(prev => ({ ...prev, alternativePhone: undefined }))
-                    }
+                    if (validationErrors.alternativePhone)
+                      setValidationErrors((prev) => ({ ...prev, alternativePhone: undefined }))
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.alternativePhone ? 'border-red-500 bg-red-50' : 'border-gray-300'
-                    }`}
+                  disabled={!isEditing}
+                  className={inputCls(isEditing, !!validationErrors.alternativePhone)}
                   placeholder="+44 7700 900000 or +234 800 555 0002"
                 />
                 {validationErrors.alternativePhone && (
@@ -675,10 +717,12 @@ function Settings() {
             </div>
           </div>
 
+          {/* Address */}
           <div>
             <h3 className="text-xl font-bold text-afri-gray-900 mb-4">Address</h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Street */}
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Street Address *</label>
                 <input
@@ -686,18 +730,25 @@ function Settings() {
                   value={vendorProfile.address?.street || ''}
                   onChange={(e) => {
                     handleVendorChange('address.street', e.target.value)
-                    if (validationErrors.street) setValidationErrors(prev => ({ ...prev, street: undefined }))
+                    if (validationErrors.street)
+                      setValidationErrors((prev) => ({ ...prev, street: undefined }))
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.street ? 'border-red-500 bg-red-50' : vendorProfile.address?.street?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                    }`}
+                  disabled={!isEditing}
+                  className={inputCls(
+                    isEditing,
+                    !!validationErrors.street,
+                    isEditing && !!vendorProfile.address?.street?.trim() && !validationErrors.street,
+                  )}
                   placeholder="e.g., 12 Brixton Road"
                 />
-                {validationErrors.street
-                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.street}</p>
-                  : vendorProfile.address?.street?.trim() && <p className="text-green-600 text-sm mt-1">Looks good!</p>
-                }
+                {validationErrors.street ? (
+                  <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.street}</p>
+                ) : isEditing && vendorProfile.address?.street?.trim() ? (
+                  <p className="text-green-600 text-sm mt-1">Looks good!</p>
+                ) : null}
               </div>
 
+              {/* City */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">City *</label>
                 <input
@@ -705,18 +756,25 @@ function Settings() {
                   value={vendorProfile.address?.city || ''}
                   onChange={(e) => {
                     handleVendorChange('address.city', e.target.value)
-                    if (validationErrors.city) setValidationErrors(prev => ({ ...prev, city: undefined }))
+                    if (validationErrors.city)
+                      setValidationErrors((prev) => ({ ...prev, city: undefined }))
                   }}
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.city ? 'border-red-500 bg-red-50' : vendorProfile.address?.city?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                    }`}
+                  disabled={!isEditing}
+                  className={inputCls(
+                    isEditing,
+                    !!validationErrors.city,
+                    isEditing && !!vendorProfile.address?.city?.trim() && !validationErrors.city,
+                  )}
                   placeholder="e.g., London"
                 />
-                {validationErrors.city
-                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.city}</p>
-                  : vendorProfile.address?.city?.trim() && <p className="text-green-600 text-sm mt-1">Looks good!</p>
-                }
+                {validationErrors.city ? (
+                  <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.city}</p>
+                ) : isEditing && vendorProfile.address?.city?.trim() ? (
+                  <p className="text-green-600 text-sm mt-1">Looks good!</p>
+                ) : null}
               </div>
 
+              {/* State/County */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   {vendorProfile.address?.country === 'United Kingdom' ? 'County' : 'State/County'}
@@ -725,11 +783,17 @@ function Settings() {
                   type="text"
                   value={vendorProfile.address?.state || ''}
                   onChange={(e) => handleVendorChange('address.state', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
-                  placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., Greater London' : 'State or County'}
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
+                  placeholder={
+                    vendorProfile.address?.country === 'United Kingdom'
+                      ? 'e.g., Greater London'
+                      : 'State or County'
+                  }
                 />
               </div>
 
+              {/* Postcode */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   {vendorProfile.address?.country === 'United Kingdom' ? 'Postcode *' : 'Postal/Zip Code *'}
@@ -742,17 +806,24 @@ function Settings() {
                       onChange={(e) => {
                         const val = e.target.value.toUpperCase()
                         handleVendorChange('address.postalCode', val)
-                        if (validationErrors.postalCode) setValidationErrors(prev => ({ ...prev, postalCode: undefined }))
-                        fetchPostcodeSuggestions(val)
+                        if (validationErrors.postalCode)
+                          setValidationErrors((prev) => ({ ...prev, postalCode: undefined }))
+                        if (isEditing) fetchPostcodeSuggestions(val)
                       }}
                       onBlur={() => setTimeout(() => setPostcodeSuggestions([]), 200)}
-                      className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${validationErrors.postalCode ? 'border-red-500 bg-red-50' : vendorProfile.address?.postalCode?.trim() ? 'border-green-500 bg-green-50' : 'border-gray-300'
-                        }`}
-                      placeholder={vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'}
+                      disabled={!isEditing}
+                      className={inputCls(
+                        isEditing,
+                        !!validationErrors.postalCode,
+                        isEditing && !!vendorProfile.address?.postalCode?.trim() && !validationErrors.postalCode,
+                      )}
+                      placeholder={
+                        vendorProfile.address?.country === 'United Kingdom' ? 'e.g., SW1A 1AA' : 'Postal Code'
+                      }
                     />
-                    {postcodeSuggestions.length > 0 && (
+                    {postcodeSuggestions.length > 0 && isEditing && (
                       <ul className="absolute z-10 bg-white border border-gray-200 rounded-lg shadow-lg w-full mt-1 max-h-48 overflow-y-auto">
-                        {postcodeSuggestions.map(pc => (
+                        {postcodeSuggestions.map((pc) => (
                           <li
                             key={pc}
                             onMouseDown={() => {
@@ -771,14 +842,18 @@ function Settings() {
                     <button
                       type="button"
                       onClick={lookupPostcode}
-                      disabled={postcodeLoading || !vendorProfile.address?.postalCode}
+                      disabled={postcodeLoading || !vendorProfile.address?.postalCode || !isEditing}
                       className="px-4 py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center whitespace-nowrap"
                     >
                       {postcodeLoading ? (
                         <>
                           <svg className="animate-spin h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
                           </svg>
                           Looking up...
                         </>
@@ -793,22 +868,25 @@ function Settings() {
                     </button>
                   )}
                 </div>
-                {validationErrors.postalCode
-                  ? <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.postalCode}</p>
-                  : vendorProfile.address?.postalCode?.trim()
-                    ? <p className="text-green-600 text-sm mt-1">Valid postcode!</p>
-                    : vendorProfile.address?.country === 'United Kingdom' && (
-                      <p className="mt-1 text-xs text-gray-500">Enter your postcode and click "Find Address" to auto-fill city and county</p>
-                    )
-                }
+                {validationErrors.postalCode ? (
+                  <p className="text-red-500 text-sm mt-1 font-semibold">{validationErrors.postalCode}</p>
+                ) : isEditing && vendorProfile.address?.postalCode?.trim() ? (
+                  <p className="text-green-600 text-sm mt-1">Valid postcode!</p>
+                ) : isEditing && vendorProfile.address?.country === 'United Kingdom' ? (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Enter your postcode and click "Find Address" to auto-fill city and county
+                  </p>
+                ) : null}
               </div>
 
+              {/* Country */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Country</label>
                 <select
                   value={vendorProfile.address?.country || 'United Kingdom'}
                   onChange={(e) => handleVendorChange('address.country', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 >
                   {countries.map((country) => (
                     <option key={country.code} value={country.name}>
@@ -817,37 +895,14 @@ function Settings() {
                   ))}
                 </select>
               </div>
-
             </div>
           </div>
 
-          <div className="flex justify-end pt-6 border-t">
-            <button
-              onClick={saveVendorProfile}
-              disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                'Update'
-              )}
-            </button>
-          </div>
+          <ActionButtons onSave={saveVendorProfile} />
         </div>
       )}
 
-      {/* Delivery Tab */}
+      {/* ── Delivery Tab ─────────────────────────────────────────────────── */}
       {activeTab === 'delivery' && (
         <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
           <div>
@@ -855,6 +910,7 @@ function Settings() {
             <p className="text-gray-600 mb-6">Control how delivery works for your store</p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Delivery Fee */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Delivery Fee (£)</label>
                 <input
@@ -862,49 +918,62 @@ function Settings() {
                   min="0"
                   step="0.50"
                   value={vendorProfile.deliveryFee ?? vendorProfile.deliverySettings?.deliveryFee ?? 0}
-                  onChange={(e) => {
-                    const val = parseFloat(e.target.value) || 0
-                    handleVendorChange('deliveryFee', val)
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) => handleVendorChange('deliveryFee', parseFloat(e.target.value) || 0)}
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                   placeholder="e.g., 3.99"
                 />
                 <p className="mt-1 text-xs text-gray-500">Set to 0 for free delivery</p>
               </div>
 
+              {/* Free Delivery Above */}
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Free Delivery Above (£)</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Free Delivery Above (£)
+                </label>
                 <input
                   type="number"
                   min="0"
                   step="1"
                   value={vendorProfile.freeDeliveryAbove ?? ''}
-                  onChange={(e) => {
-                    const val = e.target.value === '' ? undefined : parseFloat(e.target.value)
-                    handleVendorChange('freeDeliveryAbove', val)
-                  }}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  onChange={(e) =>
+                    handleVendorChange(
+                      'freeDeliveryAbove',
+                      e.target.value === '' ? undefined : parseFloat(e.target.value),
+                    )
+                  }
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                   placeholder="e.g., 50"
                 />
-                <p className="mt-1 text-xs text-gray-500">Orders above this amount get free delivery. Leave empty to disable.</p>
+                <p className="mt-1 text-xs text-gray-500">
+                  Orders above this amount get free delivery. Leave empty to disable.
+                </p>
               </div>
 
+              {/* Minimum Order Value */}
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Minimum Order Value (£)</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Minimum Order Value (£)
+                </label>
                 <input
                   type="number"
                   min="0"
                   step="1"
                   value={vendorProfile.deliverySettings?.minimumOrderValue ?? 0}
                   onChange={(e) => handleDeliveryChange('minimumOrderValue', parseFloat(e.target.value) || 0)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                   placeholder="e.g., 10"
                 />
                 <p className="mt-1 text-xs text-gray-500">Customers must order at least this amount</p>
               </div>
 
+              {/* Estimated Prep Time */}
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Estimated Prep Time (mins)</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Estimated Prep Time (mins)
+                </label>
                 <input
                   type="number"
                   min="5"
@@ -912,14 +981,18 @@ function Settings() {
                   step="5"
                   value={vendorProfile.deliverySettings?.estimatedPrepTime ?? 30}
                   onChange={(e) => handleDeliveryChange('estimatedPrepTime', parseInt(e.target.value) || 30)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                   placeholder="e.g., 30"
                 />
                 <p className="mt-1 text-xs text-gray-500">Average time to prepare an order</p>
               </div>
 
+              {/* Delivery Radius */}
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Delivery Radius (km)</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Delivery Radius (km)
+                </label>
                 <input
                   type="number"
                   min="1"
@@ -927,14 +1000,18 @@ function Settings() {
                   step="1"
                   value={vendorProfile.deliveryRadius ?? 5}
                   onChange={(e) => handleVendorChange('deliveryRadius', parseInt(e.target.value) || 5)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                   placeholder="e.g., 5"
                 />
                 <p className="mt-1 text-xs text-gray-500">Maximum distance you deliver to</p>
               </div>
 
+              {/* Max Orders Per Hour */}
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Max Orders Per Hour</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Max Orders Per Hour
+                </label>
                 <input
                   type="number"
                   min="1"
@@ -942,7 +1019,8 @@ function Settings() {
                   step="1"
                   value={vendorProfile.deliverySettings?.maxOrdersPerHour ?? 20}
                   onChange={(e) => handleDeliveryChange('maxOrdersPerHour', parseInt(e.target.value) || 20)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                   placeholder="e.g., 20"
                 />
                 <p className="mt-1 text-xs text-gray-500">Limit incoming orders to avoid overload</p>
@@ -953,13 +1031,22 @@ function Settings() {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg mt-6">
               <div>
                 <p className="font-semibold text-gray-900">Accepting Orders</p>
-                <p className="text-sm text-gray-600">Temporarily stop accepting new orders without pausing your store</p>
+                <p className="text-sm text-gray-600">
+                  Temporarily stop accepting new orders without pausing your store
+                </p>
               </div>
               <button
                 type="button"
-                onClick={() => handleDeliveryChange('acceptingOrders', !(vendorProfile.deliverySettings?.acceptingOrders ?? true))}
-                className={`relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${(vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'bg-green-500' : 'bg-gray-300'
-                  }`}
+                onClick={() =>
+                  isEditing &&
+                  handleDeliveryChange(
+                    'acceptingOrders',
+                    !(vendorProfile.deliverySettings?.acceptingOrders ?? true),
+                  )
+                }
+                disabled={!isEditing}
+                className={`relative inline-flex h-7 w-12 flex-shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${(vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'bg-green-500' : 'bg-gray-300'
+                  } ${isEditing ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}
               >
                 <span
                   className={`pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${(vendorProfile.deliverySettings?.acceptingOrders ?? true) ? 'translate-x-5' : 'translate-x-0'
@@ -969,98 +1056,60 @@ function Settings() {
             </div>
           </div>
 
-          <div className="flex justify-end pt-6 border-t">
-            <button
-              onClick={saveVendorProfile}
-              disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                'Save Delivery Settings'
-              )}
-            </button>
-          </div>
+          <ActionButtons onSave={saveVendorProfile} saveLabel="Save Delivery Settings" />
         </div>
       )}
 
-      {/* Account Tab */}
+      {/* ── Account Tab ──────────────────────────────────────────────────── */}
       {activeTab === 'account' && (
         <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
           <div>
             <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Account Information</h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Full Name */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Full Name</label>
                 <input
                   type="text"
                   value={userProfile.name}
                   onChange={(e) => handleUserChange('name', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 />
               </div>
 
+              {/* Email */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Email Address</label>
                 <input
                   type="email"
                   value={userProfile.email}
                   onChange={(e) => handleUserChange('email', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 />
               </div>
 
+              {/* Phone */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Phone Number</label>
                 <input
                   type="tel"
                   value={userProfile.phone || ''}
                   onChange={(e) => handleUserChange('phone', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end pt-6 border-t">
-            <button
-              onClick={saveUserProfile}
-              disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
+          <ActionButtons onSave={saveUserProfile} saveLabel="Save Changes" />
         </div>
       )}
 
-      {/* Business Hours Tab */}
+      {/* ── Business Hours Tab ───────────────────────────────────────────── */}
       {activeTab === 'hours' && (
         <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
           <div>
@@ -1068,17 +1117,22 @@ function Settings() {
 
             <div className="space-y-4">
               {daysOfWeek.map((day) => (
-                <div key={day} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
+                <div
+                  key={day}
+                  className={`flex items-center gap-4 p-4 rounded-lg transition-colors ${isEditing ? 'bg-gray-50 hover:bg-gray-100' : 'bg-gray-50 opacity-80'
+                    }`}
+                >
                   <div className="w-32">
                     <span className="font-semibold text-afri-gray-900 capitalize">{day}</span>
                   </div>
 
-                  <label className="flex items-center cursor-pointer">
+                  <label className={`flex items-center ${isEditing ? 'cursor-pointer' : 'cursor-not-allowed'}`}>
                     <input
                       type="checkbox"
                       checked={vendorProfile.businessHours?.[day]?.isOpen}
-                      onChange={(e) => handleBusinessHoursChange(day, 'isOpen', e.target.checked)}
-                      className="h-5 w-5 text-afri-green focus:ring-afri-green border-gray-300 rounded cursor-pointer"
+                      onChange={(e) => isEditing && handleBusinessHoursChange(day, 'isOpen', e.target.checked)}
+                      disabled={!isEditing}
+                      className="h-5 w-5 text-afri-green focus:ring-afri-green border-gray-300 rounded cursor-pointer disabled:cursor-not-allowed"
                     />
                     <span className="ml-2 text-sm text-afri-gray-700">Open</span>
                   </label>
@@ -1089,14 +1143,22 @@ function Settings() {
                         type="time"
                         value={vendorProfile.businessHours?.[day]?.open || '09:00'}
                         onChange={(e) => handleBusinessHoursChange(day, 'open', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent"
+                        disabled={!isEditing}
+                        className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${!isEditing
+                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200'
+                          : 'border-gray-300'
+                          }`}
                       />
                       <span className="text-gray-500">to</span>
                       <input
                         type="time"
                         value={vendorProfile.businessHours?.[day]?.close || '18:00'}
                         onChange={(e) => handleBusinessHoursChange(day, 'close', e.target.value)}
-                        className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent"
+                        disabled={!isEditing}
+                        className={`px-3 py-2 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${!isEditing
+                          ? 'bg-gray-100 text-gray-500 cursor-not-allowed border-gray-200'
+                          : 'border-gray-300'
+                          }`}
                       />
                     </>
                   ) : (
@@ -1107,95 +1169,59 @@ function Settings() {
             </div>
           </div>
 
-          <div className="flex justify-end pt-6 border-t">
-            <button
-              onClick={saveVendorProfile}
-              disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Saving...
-                </>
-              ) : (
-                'Save Changes'
-              )}
-            </button>
-          </div>
+          <ActionButtons onSave={saveVendorProfile} saveLabel="Save Changes" />
         </div>
       )}
 
-      {/* Security Tab */}
+      {/* ── Security Tab ─────────────────────────────────────────────────── */}
       {activeTab === 'security' && (
         <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
           <div>
             <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Change Password</h2>
 
             <div className="max-w-md space-y-4">
+              {/* Current Password */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Current Password</label>
                 <input
                   type="password"
                   value={passwordData.currentPassword}
                   onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 />
               </div>
 
+              {/* New Password */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">New Password</label>
                 <input
                   type="password"
                   value={passwordData.newPassword}
                   onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 />
                 <p className="mt-1 text-sm text-gray-500">Must be at least 6 characters</p>
               </div>
 
+              {/* Confirm Password */}
               <div>
-                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Confirm New Password</label>
+                <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
+                  Confirm New Password
+                </label>
                 <input
                   type="password"
                   value={passwordData.confirmPassword}
                   onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all"
+                  disabled={!isEditing}
+                  className={inputCls(isEditing)}
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end pt-6 border-t">
-            <button
-              onClick={savePassword}
-              disabled={saving}
-              className="px-8 py-3 bg-gradient-to-r from-afri-green to-afri-green-dark text-white rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center"
-            >
-              {saving ? (
-                <>
-                  <svg className="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    />
-                  </svg>
-                  Changing...
-                </>
-              ) : (
-                'Change Password'
-              )}
-            </button>
-          </div>
+          <ActionButtons onSave={savePassword} saveLabel="Change Password" />
         </div>
       )}
 

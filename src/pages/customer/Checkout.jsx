@@ -22,12 +22,12 @@ const CARD_ELEMENT_OPTIONS = {
 
 const getStripeErrorMessage = (error) => {
   switch (error.code) {
-    case 'card_declined':      return 'Your card was declined. Please try a different card.'
+    case 'card_declined': return 'Your card was declined. Please try a different card.'
     case 'insufficient_funds': return 'Your card has insufficient funds.'
-    case 'incorrect_cvc':      return 'The security code (CVC) is incorrect. Please check and try again.'
-    case 'expired_card':       return 'Your card has expired. Please use a different card.'
-    case 'incorrect_number':   return 'Your card number is incorrect.'
-    case 'processing_error':   return 'A processing error occurred. Please try again in a moment.'
+    case 'incorrect_cvc': return 'The security code (CVC) is incorrect. Please check and try again.'
+    case 'expired_card': return 'Your card has expired. Please use a different card.'
+    case 'incorrect_number': return 'Your card number is incorrect.'
+    case 'processing_error': return 'A processing error occurred. Please try again in a moment.'
     default: return error.message || 'Payment failed. Please try again.'
   }
 }
@@ -116,8 +116,8 @@ function CheckoutForm() {
       if (data.status === 200 && data.result) {
         setAddress(prev => ({
           ...prev,
-          city:    data.result.admin_district || data.result.parish || prev.city,
-          county:  data.result.admin_county   || data.result.region || '',
+          city: data.result.admin_district || data.result.parish || prev.city,
+          county: data.result.admin_county || data.result.region || '',
           country: 'United Kingdom',
         }))
         setPostcodeError('')
@@ -283,6 +283,18 @@ function CheckoutForm() {
     loadRepurchaseItems()
   }, [isAuthenticated, isCustomer])
 
+  // Auto-redirect to checkout when user logs in (from login page or modal)
+  useEffect(() => {
+    if (isAuthenticated && isCustomer && !authChecking) {
+      const checkoutPending = localStorage.getItem('checkout_redirect') === 'true'
+      if (checkoutPending) {
+        localStorage.removeItem('checkout_redirect')
+        // User is now authenticated as a customer stay on checkout page and reload cart
+        setCartLoading(true)
+      }
+    }
+  }, [isAuthenticated, isCustomer, authChecking])
+
   // Pre-fill delivery address from user profile
   useEffect(() => {
     if (!isAuthenticated || !isCustomer) return
@@ -298,13 +310,13 @@ function CheckoutForm() {
 
         if (savedAddr?.street) {
           setAddress(prev => ({
-            fullName:     prev.fullName     || profile.name  || '',
-            phone:        prev.phone        || profile.phone || savedAddr.phone || '',
-            street:       prev.street       || savedAddr.street,
-            city:         prev.city         || savedAddr.city,
-            county:       prev.county       || savedAddr.county   || '',
-            postcode:     prev.postcode     || savedAddr.postcode,
-            country:      'United Kingdom',
+            fullName: prev.fullName || profile.name || '',
+            phone: prev.phone || profile.phone || savedAddr.phone || '',
+            street: prev.street || savedAddr.street,
+            city: prev.city || savedAddr.city,
+            county: prev.county || savedAddr.county || '',
+            postcode: prev.postcode || savedAddr.postcode,
+            country: 'United Kingdom',
             instructions: prev.instructions || ''
           }))
           return // done, no need to fetch orders
@@ -315,7 +327,7 @@ function CheckoutForm() {
         console.log('[Prefill] No saved address — checking last order')
         try {
           const ordersRes = await getUserOrders()
-           const lastOrder = ordersRes?.data?.[0] || ordersRes?.orders?.[0]
+          const lastOrder = ordersRes?.data?.[0] || ordersRes?.orders?.[0]
           // const lastOrder = ordersRes?.data?.orders?.[0] || ordersRes?.data?.[0]
           const orderAddr = lastOrder?.deliveryAddress
 
@@ -323,37 +335,37 @@ function CheckoutForm() {
 
           if (orderAddr?.street) {
             setAddress(prev => ({
-              fullName:     prev.fullName     || orderAddr.fullName || profile.name || '',
-              phone:        prev.phone        || orderAddr.phone    || profile.phone || '',
-              street:       prev.street       || orderAddr.street,
-              city:         prev.city         || orderAddr.city,
-              county:       prev.county       || orderAddr.county   || '',
-              postcode:     prev.postcode     || orderAddr.postcode,
-              country:      'United Kingdom',
+              fullName: prev.fullName || orderAddr.fullName || profile.name || '',
+              phone: prev.phone || orderAddr.phone || profile.phone || '',
+              street: prev.street || orderAddr.street,
+              city: prev.city || orderAddr.city,
+              county: prev.county || orderAddr.county || '',
+              postcode: prev.postcode || orderAddr.postcode,
+              country: 'United Kingdom',
               instructions: prev.instructions || ''
             }))
 
             // ── 3. Also fix the root cause: save it now so next time ──
             // addresses array won't be empty again after this
             userAPI.saveDefaultAddress({
-              street:    orderAddr.street,
-              city:      orderAddr.city,
-              county:    orderAddr.county    || '',
-              postcode:  orderAddr.postcode,
-              country:   'United Kingdom',
-              fullName:  orderAddr.fullName,
-              phone:     orderAddr.phone,
-              label:     'Home',
+              street: orderAddr.street,
+              city: orderAddr.city,
+              county: orderAddr.county || '',
+              postcode: orderAddr.postcode,
+              country: 'United Kingdom',
+              fullName: orderAddr.fullName,
+              phone: orderAddr.phone,
+              label: 'Home',
               isDefault: true
             })
-            .then(() => console.log('[Prefill] ✓ Backfilled address from last order'))
-            .catch(err => console.error('[Prefill] Backfill failed:', err.message))
+              .then(() => console.log('[Prefill] ✓ Backfilled address from last order'))
+              .catch(err => console.error('[Prefill] Backfill failed:', err.message))
           }
         } catch (orderErr) {
           console.warn('[Prefill] Could not fetch last order:', orderErr.message)
         }
 
-      } catch (_e) {}
+      } catch (_e) { }
     }
     prefillAddress()
   }, [isAuthenticated, isCustomer])
@@ -595,27 +607,43 @@ function CheckoutForm() {
             ))
           } catch (_e) { /* localStorage full — ignore */ }
 
+          // Clear Local Storage
           localStorage.removeItem('afrimercato_cart')
           localStorage.removeItem('repeatPurchaseFrequency')
 
+          //  Clear Backend Cart!
+          if (isAuthenticated && isCustomer) {
+            try {
+              await cartAPI.clear()
+            } catch (clearErr) {
+              console.error('[Checkout] Failed to clear backend cart:', clearErr.message)
+            }
+          }
+
+          // 3. Clear React State and notify the header icon
+          setCart([])
+          window.dispatchEvent(new Event('cartUpdated'))
+
+          // Save Address
           if (isAuthenticated && address.street) {
             userAPI.saveDefaultAddress({
-              street:    address.street,
-              city:      address.city,
-              county:    address.county || '',
-              postcode:  address.postcode,
-              country:   'United Kingdom',
-              fullName:  address.fullName,
-              phone:     address.phone,
-              label:     'Home',
+              street: address.street,
+              city: address.city,
+              county: address.county || '',
+              postcode: address.postcode,
+              country: 'United Kingdom',
+              fullName: address.fullName,
+              phone: address.phone,
+              label: 'Home',
               isDefault: true
             })
-            .then(() => console.log('[Checkout] ✓ Address saved to profile'))
-            .catch((err) => console.error('[Checkout] saveDefaultAddress failed:', err.message))
+              .then(() => console.log('[Checkout] ✓ Address saved to profile'))
+              .catch((err) => console.error('[Checkout] saveDefaultAddress failed:', err.message))
           }
 
           navigate(`/payment/verify?payment_intent_id=${paymentIntent.id}&order_id=${orderId}`)
-        } else {
+        }
+        else {
           setOrderError('Payment was not completed. Please try again.')
           window.scrollTo({ top: 0, behavior: 'smooth' })
         }
@@ -696,12 +724,12 @@ function CheckoutForm() {
     const effectiveRole = user?.role || (Array.isArray(user?.roles) && user.roles[0]) || 'unknown'
     const currentRole = effectiveRole === 'vendor' ? 'Vendor'
       : effectiveRole === 'rider' ? 'Rider'
-      : effectiveRole === 'picker' ? 'Picker'
-      : effectiveRole === 'admin' ? 'Admin'
-      : 'Non-Customer'
+        : effectiveRole === 'picker' ? 'Picker'
+          : effectiveRole === 'admin' ? 'Admin'
+            : 'Non-Customer'
     const roleIcon = effectiveRole === 'vendor' ? '🏪'
       : effectiveRole === 'rider' ? '🏍️'
-      : effectiveRole === 'picker' ? '📦' : '⚠️'
+        : effectiveRole === 'picker' ? '📦' : '⚠️'
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
@@ -764,20 +792,20 @@ function CheckoutForm() {
               if (parsed.length > 0) {
                 setCart(parsed)
               }
-            } catch (_e) {}
+            } catch (_e) { }
           }
           window._loginRedirect = null
           setShowAuthModal(false)
           setStep(2)
         } else if (result.roleBlocked) {
-            const roleLabel = result.actualRole === 'vendor' ? 'Vendor'
-              : result.actualRole === 'rider' ? 'Rider'
+          const roleLabel = result.actualRole === 'vendor' ? 'Vendor'
+            : result.actualRole === 'rider' ? 'Rider'
               : result.actualRole === 'picker' ? 'Picker'
-              : result.actualRole === 'admin' ? 'Admin'
-              : 'Non-Customer'
-            setAuthError(`This account is registered as a ${roleLabel}. Please use a customer account.`)
+                : result.actualRole === 'admin' ? 'Admin'
+                  : 'Non-Customer'
+          setAuthError(`This account is registered as a ${roleLabel}. Please use a customer account.`)
         } else {
-            setAuthError(result.message || 'Incorrect email or password.')
+          setAuthError(result.message || 'Incorrect email or password.')
         }
         // On success isAuthenticated flips → loadCart effect re-runs automatically
       } catch (_e) {
@@ -804,10 +832,10 @@ function CheckoutForm() {
               className="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-300 rounded-xl text-gray-700 font-medium hover:bg-gray-50 transition mb-5"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
               </svg>
               Continue with Google
             </a>
@@ -847,8 +875,8 @@ function CheckoutForm() {
               >
                 {authLoading ? (
                   <svg className="animate-spin h-5 w-5 mx-auto text-white" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                   </svg>
                 ) : 'Sign In'}
               </button>
@@ -1066,8 +1094,7 @@ function CheckoutForm() {
                             }
                           }}
                           className={`flex-1 px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 
-                            focus:border-transparent min-h-[44px] ${
-                              postcodeError ? 'border-red-400 bg-red-50' : 'border-gray-300'
+                            focus:border-transparent min-h-[44px] ${postcodeError ? 'border-red-400 bg-red-50' : 'border-gray-300'
                             }`}
                           placeholder="SW1A 1AA"
                         />
@@ -1149,128 +1176,128 @@ function CheckoutForm() {
 
                 {stripe && (<>
 
-                {cardError && (
-                  <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
-                    <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                    <p className="text-red-700 text-sm font-medium">{cardError}</p>
-                  </div>
-                )}
+                  {cardError && (
+                    <div className="mb-4 bg-red-50 border border-red-200 rounded-xl p-3 flex items-start gap-2">
+                      <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
+                      <p className="text-red-700 text-sm font-medium">{cardError}</p>
+                    </div>
+                  )}
 
-                {/* Cardholder Name */}
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Cardholder Name *
-                  </label>
-                  <input
-                    type="text"
-                    value={cardholderName}
-                    onChange={e => { setCardholderName(e.target.value); setCardError('') }}
-                    placeholder="Name exactly as it appears on card"
-                    autoComplete="cc-name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px] text-gray-900"
-                  />
-                </div>
-
-                {/* Card Number */}
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Card Number *
-                  </label>
-                  <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
-                    <CardNumberElement
-                      options={{ ...CARD_ELEMENT_OPTIONS, showIcon: true }}
-                      onChange={e => {
-                        setCardComplete(prev => ({ ...prev, number: e.complete }))
-                        if (e.error) setCardError(e.error.message)
-                        else setCardError('')
-                      }}
+                  {/* Cardholder Name */}
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Cardholder Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={cardholderName}
+                      onChange={e => { setCardholderName(e.target.value); setCardError('') }}
+                      placeholder="Name exactly as it appears on card"
+                      autoComplete="cc-name"
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px] text-gray-900"
                     />
                   </div>
-                </div>
 
-                {/* Expiry + CVC */}
-                <div className="grid grid-cols-2 gap-4 mb-5">
-                  <div>
+                  {/* Card Number */}
+                  <div className="mb-4">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Expiry Date *
+                      Card Number *
                     </label>
                     <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
-                      <CardExpiryElement
-                        options={CARD_ELEMENT_OPTIONS}
+                      <CardNumberElement
+                        options={{ ...CARD_ELEMENT_OPTIONS, showIcon: true }}
                         onChange={e => {
-                          setCardComplete(prev => ({ ...prev, expiry: e.complete }))
+                          setCardComplete(prev => ({ ...prev, number: e.complete }))
                           if (e.error) setCardError(e.error.message)
                           else setCardError('')
                         }}
                       />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      CVC *
-                    </label>
-                    <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
-                      <CardCvcElement
-                        options={CARD_ELEMENT_OPTIONS}
-                        onChange={e => {
-                          setCardComplete(prev => ({ ...prev, cvc: e.complete }))
-                          if (e.error) setCardError(e.error.message)
-                          else setCardError('')
-                        }}
-                      />
+
+                  {/* Expiry + CVC */}
+                  <div className="grid grid-cols-2 gap-4 mb-5">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        Expiry Date *
+                      </label>
+                      <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
+                        <CardExpiryElement
+                          options={CARD_ELEMENT_OPTIONS}
+                          onChange={e => {
+                            setCardComplete(prev => ({ ...prev, expiry: e.complete }))
+                            if (e.error) setCardError(e.error.message)
+                            else setCardError('')
+                          }}
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2">
+                        CVC *
+                      </label>
+                      <div className="px-4 py-3.5 border border-gray-300 rounded-lg focus-within:ring-2 focus-within:ring-green-500 focus-within:border-transparent bg-white">
+                        <CardCvcElement
+                          options={CARD_ELEMENT_OPTIONS}
+                          onChange={e => {
+                            setCardComplete(prev => ({ ...prev, cvc: e.complete }))
+                            if (e.error) setCardError(e.error.message)
+                            else setCardError('')
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Accepted cards */}
-                <div className="flex items-center gap-2 mb-6 flex-wrap">
-                  <span className="text-xs text-gray-400 font-medium">Accepted:</span>
-                  {['Visa', 'Mastercard', 'Amex', 'Discover'].map(brand => (
-                    <span key={brand} className="text-xs bg-gray-100 border border-gray-200 px-2 py-0.5 rounded font-medium text-gray-600">{brand}</span>
-                  ))}
-                </div>
-
-                {/* Test card hint (dev only) */}
-                {import.meta.env.DEV && (
-                  <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
-                    <strong>Test card:</strong> 4242 4242 4242 4242 · Any future date · Any CVC
+                  {/* Accepted cards */}
+                  <div className="flex items-center gap-2 mb-6 flex-wrap">
+                    <span className="text-xs text-gray-400 font-medium">Accepted:</span>
+                    {['Visa', 'Mastercard', 'Amex', 'Discover'].map(brand => (
+                      <span key={brand} className="text-xs bg-gray-100 border border-gray-200 px-2 py-0.5 rounded font-medium text-gray-600">{brand}</span>
+                    ))}
                   </div>
-                )}
 
-                <div className="flex gap-4">
-                  <button
-                    type="button"
-                    onClick={() => { setStep(1); setCardError('') }}
-                    className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
-                  >
-                    ← Back
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCardReview}
-                    disabled={
-                      loading ||
-                      !stripe ||
-                      !cardholderName.trim() ||
-                      !cardComplete.number ||
-                      !cardComplete.expiry ||
-                      !cardComplete.cvc
-                    }
-                    className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-                        </svg>
-                        Verifying...
-                      </span>
-                    ) : 'Review Order →'}
-                  </button>
-                </div>
+                  {/* Test card hint (dev only) */}
+                  {import.meta.env.DEV && (
+                    <div className="mb-4 bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 text-xs text-blue-700">
+                      <strong>Test card:</strong> 4242 4242 4242 4242 · Any future date · Any CVC
+                    </div>
+                  )}
+
+                  <div className="flex gap-4">
+                    <button
+                      type="button"
+                      onClick={() => { setStep(1); setCardError('') }}
+                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-lg font-bold hover:bg-gray-300 transition min-h-[44px]"
+                    >
+                      ← Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleCardReview}
+                      disabled={
+                        loading ||
+                        !stripe ||
+                        !cardholderName.trim() ||
+                        !cardComplete.number ||
+                        !cardComplete.expiry ||
+                        !cardComplete.cvc
+                      }
+                      className="flex-1 bg-gradient-to-r from-green-600 to-green-700 text-white py-3 rounded-lg font-bold hover:shadow-lg transition min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {loading ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Verifying...
+                        </span>
+                      ) : 'Review Order →'}
+                    </button>
+                  </div>
                 </>)}
               </div>
             )}
@@ -1424,11 +1451,10 @@ function CheckoutForm() {
                               type="button"
                               onClick={() => handleAddRepurchaseItem(item)}
                               disabled={alreadyInCart}
-                              className={`text-xs font-semibold px-4 py-2 rounded-lg transition ${
-                                alreadyInCart
-                                  ? 'bg-gray-200 text-gray-400 cursor-default'
-                                  : 'bg-green-600 text-white hover:bg-green-700'
-                              }`}
+                              className={`text-xs font-semibold px-4 py-2 rounded-lg transition ${alreadyInCart
+                                ? 'bg-gray-200 text-gray-400 cursor-default'
+                                : 'bg-green-600 text-white hover:bg-green-700'
+                                }`}
                             >
                               {alreadyInCart ? '✓ In Cart' : '+ Add'}
                             </button>
@@ -1481,25 +1507,24 @@ function CheckoutForm() {
                         const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
                         return !minCheck.meetsMinimum && minCheck.minimumOrder > 0
                       })()}
-                      className={`flex-1 py-3 rounded-lg font-bold transition min-h-[44px] ${
-                        (() => {
-                          const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
-                          const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
-                          if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
-                            return 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          }
-                          if (!paymentMethodId) return 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                          return loading
-                            ? 'bg-gradient-to-r from-green-600 to-green-700 text-white opacity-50'
-                            : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg'
-                        })()
-                      }`}
+                      className={`flex-1 py-3 rounded-lg font-bold transition min-h-[44px] ${(() => {
+                        const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
+                        const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                        if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
+                          return 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        }
+                        if (!paymentMethodId) return 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                        return loading
+                          ? 'bg-gradient-to-r from-green-600 to-green-700 text-white opacity-50'
+                          : 'bg-gradient-to-r from-green-600 to-green-700 text-white hover:shadow-lg'
+                      })()
+                        }`}
                     >
                       {loading ? (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
                           Processing Payment...
                         </span>
@@ -1613,12 +1638,12 @@ function CheckoutForm() {
                     <span>-£{couponDiscount.toFixed(2)}</span>
                   </div>
                 )}
-                
+
                 {/* Minimum Order Check */}
                 {(() => {
                   const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                   const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
-                  
+
                   if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                     return (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
@@ -1641,7 +1666,7 @@ function CheckoutForm() {
                   }
                   return null
                 })()}
-                
+
                 <div className="flex justify-between text-xl font-bold text-gray-900 border-t pt-2">
                   <span>Total</span>
                   <span>£{total.toFixed(2)}</span>
