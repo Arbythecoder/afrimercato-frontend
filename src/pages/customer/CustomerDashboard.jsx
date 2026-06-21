@@ -10,6 +10,7 @@ import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
 import { apiCall, getUserProfile } from '../../services/api';
 import { CiLogout } from 'react-icons/ci';
 import { useAuth } from '../../context/AuthContext';
+import { useCustomerStore } from '../../stores';
 
 function CustomerDashboard() {
   const { logout } = useAuth()
@@ -24,6 +25,9 @@ function CustomerDashboard() {
   })
   const [recentOrders, setRecentOrders] = useState([])
   const [recommendedProducts, setRecommendedProducts] = useState([])
+
+  const cart = useCustomerStore(state => state.cart);
+  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   useEffect(() => {
     fetchDashboardData()
@@ -169,81 +173,28 @@ function CustomerDashboard() {
     <div className="min-h-screen bg-gray-50 pb-12">
       {/* Header */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white flex justify-between py-8 animate-slideDown">
-        <div className=" px-4 sm:px-6 lg:px-8">
+        <div className="px-4 sm:px-6 lg:px-8">
           <h1 className="text-3xl font-bold mb-2">Welcome Back {firstName || 'there!'}! 👋</h1>
-          <p className="text-afri-green-light">Here's what's happening with your orders</p>
+          <p className="text-white">Here's what's happening with your orders</p>
         </div>
 
-        <div className='px-3'>
-          <MdShoppingCart onClick={() => navigate('/cart')} className='sm:text-4xl cursor-pointer text-4xl' />
+        <div className='px-4 sm:px-8 mt-2'>
+          {/* THE FIX: Re-added the relative inline-flex wrapper so the badge anchors to the icon! */}
+          <div className='relative inline-flex items-center cursor-pointer' onClick={() => navigate('/cart')}>
+            <MdShoppingCart className='text-3xl sm:text-4xl hover:text-gray-200 transition-colors' />
+
+            {cartCount > 0 && (
+              <span className='absolute -top-2 -right-2 bg-red-500 border-2 border-afri-green-dark text-white text-[10px] sm:text-xs font-bold rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center shadow-lg'>
+                {cartCount}
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
-        {/* Stats Cards */}
-        {/* <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn">
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-yellow-400 to-yellow-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Package className='text-white' size={20} />
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">{stats.activeOrders}</p>
-                <p className="text-sm text-gray-500">Active Orders</p>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-yellow-400 to-yellow-500 h-2 rounded-full" style={{ width: '70%' }}></div>
-            </div>
-          </div>
 
-          <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '100ms' }}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <BarChart2 className='text-white' size={20} />
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">{stats.totalOrders}</p>
-                <p className="text-sm text-gray-500">Total Orders</p>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-blue-400 to-blue-500 h-2 rounded-full" style={{ width: '100%' }}></div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '200ms' }}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-500 rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Heart className='text-white' size={20} />
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">{stats.wishlistItems}</p>
-                <p className="text-sm text-gray-500">Wishlist Items</p>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-red-400 to-red-500 h-2 rounded-full" style={{ width: '85%' }}></div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl shadow-lg p-6 transform hover:scale-105 transition-all duration-300 animate-fadeIn" style={{ animationDelay: '300ms' }}>
-            <div className="flex items-center justify-between mb-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-[#1B4D3E] to-[#0D2B22] rounded-lg flex items-center justify-center text-2xl shadow-lg">
-                <Star className='text-white' size={20} />
-              </div>
-              <div className="text-right">
-                <p className="text-2xl font-bold text-gray-900">{stats.rewardPoints}</p>
-                <p className="text-sm text-gray-500">Reward Points</p>
-              </div>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] h-2 rounded-full" style={{ width: '60%' }}></div>
-            </div>
-          </div>
-        </div> */}
-
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 -mt-4">
+        <div>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
 

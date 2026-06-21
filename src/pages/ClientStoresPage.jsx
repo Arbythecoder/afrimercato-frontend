@@ -12,13 +12,13 @@ import { SUGGESTED_CITIES } from '../constants/locations'
 import useCustomerStore from '../stores/useCustomerStore'
 
 const CATEGORIES = [
-  { id: 'all',       label: 'All Stores',    Icon: Store },
-  { id: 'groceries', label: 'Groceries',     Icon: ShoppingBag },
-  { id: 'fresh',     label: 'Fresh Produce', Icon: Leaf },
-  { id: 'spices',    label: 'Spices',        Icon: Flame },
-  { id: 'african',   label: 'African Food',  Icon: Globe },
-  { id: 'drinks',    label: 'Drinks',        Icon: Coffee },
-  { id: 'snacks',    label: 'Snacks',        Icon: Package },
+  { id: 'all', label: 'All Stores', Icon: Store },
+  { id: 'groceries', label: 'Groceries', Icon: ShoppingBag },
+  { id: 'fresh', label: 'Fresh Produce', Icon: Leaf },
+  { id: 'spices', label: 'Spices', Icon: Flame },
+  { id: 'african', label: 'African Food', Icon: Globe },
+  { id: 'drinks', label: 'Drinks', Icon: Coffee },
+  { id: 'snacks', label: 'Snacks', Icon: Package },
 ]
 
 function StoreCardSkeleton() {
@@ -77,16 +77,28 @@ export default function ClientStoresPage() {
 
     let filtered = [...stores]
 
+    // Apply category filter first (if not 'all')
+    if (activeCategory !== 'all') {
+      filtered = filtered.filter(s =>
+        (s.category || 'groceries').toLowerCase().includes(activeCategory.toLowerCase())
+      )
+    }
+
     switch (activeFilter) {
       case 'top':
         // Sort by rating descending
         filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
         break
       case 'featured':
-        // Show only verified/high-rated stores (4.7+)
+        // Show verified stores, sorted by rating (with fallback for new stores with 0 rating)
         filtered = filtered
-          .filter((s) => s.verified !== false && (s.rating || 0) >= 4.5)
-          .sort((a, b) => (b.rating || 0) - (a.rating || 0))
+          .filter((s) => s.verified !== false)
+          .sort((a, b) => {
+            const ratingA = a.rating || 0
+            const ratingB = b.rating || 0
+            // If ratings are equal, maintain original order; otherwise sort descending
+            return ratingB - ratingA
+          })
         break
       case 'nearby':
       default:
@@ -138,7 +150,7 @@ export default function ClientStoresPage() {
               >
                 Sign Up
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
               </Link>
             </div>
@@ -209,11 +221,11 @@ export default function ClientStoresPage() {
                 )}
               </form>
 
-              <div className="flex items-center justify-center gap-2">
+              {/* <div className="flex items-center justify-center gap-2">
                 <span className="bg-white/10 border border-white/20 px-4 py-1.5 rounded-full text-sm font-medium text-white/80">
                   4,320+ Vendors across the UK
                 </span>
-              </div>
+              </div> */}
             </div>
           </div>
         </section>
@@ -292,11 +304,10 @@ export default function ClientStoresPage() {
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${
-                  activeCategory === cat.id
-                    ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
-                    : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
-                }`}
+                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${activeCategory === cat.id
+                  ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
+                  : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
+                  }`}
               >
                 <cat.Icon size={16} />
                 {cat.label}
@@ -311,11 +322,10 @@ export default function ClientStoresPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
-                  className={`px-6 py-2 rounded-full font-medium text-sm capitalize transition-all ${
-                    activeTab === tab
-                      ? 'bg-[#1B4D3E] text-white'
-                      : 'text-gray-700 hover:bg-gray-200'
-                  }`}
+                  className={`px-6 py-2 rounded-full font-medium text-sm capitalize transition-all ${activeTab === tab
+                    ? 'bg-[#1B4D3E] text-white'
+                    : 'text-gray-700 hover:bg-gray-200'
+                    }`}
                 >
                   {tab}
                 </button>
@@ -363,36 +373,35 @@ export default function ClientStoresPage() {
 
           {/* Filter Tabs - Only show for stores */}
           {activeTab === 'stores' && (
-          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-            <div className="flex flex-wrap items-center gap-4">
-              {[
-                { id: 'nearby', label: 'Stores near by' },
-                { id: 'top', label: 'Top stores' },
-                { id: 'featured', label: 'Featured stores' }
-              ].map((filter) => (
-                <button
-                  key={filter.id}
-                  onClick={() => setActiveFilter(filter.id)}
-                  className={`font-medium pb-1 transition-colors ${
-                    activeFilter === filter.id
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+              <div className="flex flex-wrap items-center gap-4">
+                {[
+                  { id: 'nearby', label: 'Stores near by' },
+                  { id: 'top', label: 'Top stores' },
+                  { id: 'featured', label: 'Featured stores' }
+                ].map((filter) => (
+                  <button
+                    key={filter.id}
+                    onClick={() => setActiveFilter(filter.id)}
+                    className={`font-medium pb-1 transition-colors ${activeFilter === filter.id
                       ? 'text-[#1B4D3E] border-b-2 border-[#1B4D3E]'
                       : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {filter.label}
-                </button>
-              ))}
-            </div>
+                      }`}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
 
-            <div className="flex items-center gap-4">
-              <Link
-                to="/partner"
-                className="flex items-center gap-2 px-4 py-2 border border-[#1B4D3E] rounded-full text-[#1B4D3E] hover:bg-[#FDF8F0] font-medium text-sm transition-all"
-              >
-                + Onboard your store
-              </Link>
+              <div className="flex items-center gap-4">
+                <Link
+                  to="/partner"
+                  className="flex items-center gap-2 px-4 py-2 border border-[#1B4D3E] rounded-full text-[#1B4D3E] hover:bg-[#FDF8F0] font-medium text-sm transition-all"
+                >
+                  + Onboard your store
+                </Link>
+              </div>
             </div>
-          </div>
           )}
 
           {/* Skeleton loading */}

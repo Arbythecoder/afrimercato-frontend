@@ -20,13 +20,13 @@ const FALLBACK_STORES = [
 ]
 
 const CATEGORIES = [
-  { id: 'all',       label: 'All Stores',    Icon: Store },
-  { id: 'groceries', label: 'Groceries',     Icon: ShoppingBag },
-  { id: 'fresh',     label: 'Fresh Produce', Icon: Leaf },
-  { id: 'spices',    label: 'Spices',        Icon: Flame },
-  { id: 'african',   label: 'African Food',  Icon: Globe },
-  { id: 'drinks',    label: 'Drinks',        Icon: Coffee },
-  { id: 'snacks',    label: 'Snacks',        Icon: Package },
+  { id: 'all', label: 'All Stores', Icon: Store },
+  { id: 'groceries', label: 'Groceries', Icon: ShoppingBag },
+  { id: 'fresh', label: 'Fresh Produce', Icon: Leaf },
+  { id: 'spices', label: 'Spices', Icon: Flame },
+  { id: 'african', label: 'African Food', Icon: Globe },
+  { id: 'drinks', label: 'Drinks', Icon: Coffee },
+  { id: 'snacks', label: 'Snacks', Icon: Package },
 ]
 
 export default function ClientLandingPage() {
@@ -167,7 +167,7 @@ export default function ClientLandingPage() {
       return [...stores].sort((a, b) => (b.rating || 0) - (a.rating || 0))
     }
     return stores
-  })().slice(0, 3)
+  })().slice(0, 4)
 
   // Handle search
   const handleFindStore = (e) => {
@@ -220,9 +220,8 @@ export default function ClientLandingPage() {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-white/80 backdrop-blur-sm'
-        }`}
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-lg' : 'bg-white/80 backdrop-blur-sm'
+          }`}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16 sm:h-20">
@@ -233,9 +232,8 @@ export default function ClientLandingPage() {
 
             {/* Desktop Nav */}
             <div className="hidden md:flex items-center">
-              <div className={`flex items-center gap-1 px-2 py-2 rounded-full ${
-                isScrolled ? 'bg-gray-100' : 'bg-white/90 backdrop-blur-sm'
-              } shadow-sm`}>
+              <div className={`flex items-center gap-1 px-2 py-2 rounded-full ${isScrolled ? 'bg-gray-100' : 'bg-white/90 backdrop-blur-sm'
+                } shadow-sm`}>
                 <NavLink href="/stores" active>Stores</NavLink>
                 <NavLink href="/about">About us</NavLink>
                 <NavLink href="/contact">Contact us</NavLink>
@@ -662,11 +660,10 @@ export default function ClientLandingPage() {
                 key={cat.id}
                 type="button"
                 onClick={() => setActiveCategory(cat.id)}
-                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${
-                  activeCategory === cat.id
-                    ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
-                    : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
-                }`}
+                className={`flex-shrink-0 flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium border transition-all whitespace-nowrap cursor-pointer ${activeCategory === cat.id
+                  ? 'border-[#1B4D3E] text-[#1B4D3E] bg-[#FDF8F0]'
+                  : 'bg-white border-gray-200 hover:border-[#1B4D3E] hover:text-[#1B4D3E]'
+                  }`}
               >
                 <cat.Icon size={16} />
                 {cat.label}
@@ -676,12 +673,12 @@ export default function ClientLandingPage() {
 
           {/* Meet Our Partners */}
           <div className="text-center mb-8">
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Meet Our Founding Partners</h3>
+            {/* <h3 className="text-xl font-semibold text-gray-900 mb-2">Meet Our Founding Partners</h3>
             <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
-            <p className="text-gray-500 text-sm mb-8">The people behind Afrimercato</p>
+            <p className="text-gray-500 text-sm mb-8">The people behind Afrimercato</p> */}
 
             {/* Founding partner profiles */}
-            <div className="flex items-center justify-center gap-6 sm:gap-12 mb-8 flex-wrap">
+            {/* <div className="flex items-center justify-center gap-6 sm:gap-12 mb-8 flex-wrap">
               {[
                 {
                   id: 'stores',
@@ -731,7 +728,7 @@ export default function ClientLandingPage() {
                   </div>
                 </button>
               ))}
-            </div>
+            </div> */}
 
             {/* Section separator before community role tabs */}
             <div className="w-full my-10 border-t border-gray-100" />
@@ -746,10 +743,10 @@ export default function ClientLandingPage() {
             {/* Role tabs: Stores | Pickers | Riders | Vendors */}
             <div className="grid grid-cols-4 gap-4 sm:gap-8 mb-8 max-w-sm sm:max-w-md mx-auto">
               {[
-                { id: 'stores',  label: 'Stores',  Icon: Store,          gradient: 'from-[#1B4D3E] to-[#2D6A4F]',               shadow: 'shadow-green-300' },
-                { id: 'pickers', label: 'Pickers', Icon: ShoppingBasket, gradient: 'from-[#E53E3E] to-[#C53030]',               shadow: 'shadow-red-300' },
-                { id: 'riders',  label: 'Riders',  Icon: Zap,            gradient: 'from-[#FFB800] to-[#FF8C00]',               shadow: 'shadow-amber-300' },
-                { id: 'vendors', label: 'Vendors', Icon: Briefcase,      gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]', shadow: 'shadow-red-300' },
+                { id: 'stores', label: 'Stores', Icon: Store, gradient: 'from-[#1B4D3E] to-[#2D6A4F]', shadow: 'shadow-green-300' },
+                { id: 'pickers', label: 'Pickers', Icon: ShoppingBasket, gradient: 'from-[#E53E3E] to-[#C53030]', shadow: 'shadow-red-300' },
+                { id: 'riders', label: 'Riders', Icon: Zap, gradient: 'from-[#FFB800] to-[#FF8C00]', shadow: 'shadow-amber-300' },
+                { id: 'vendors', label: 'Vendors', Icon: Briefcase, gradient: 'from-[#991B1B] via-[#DC2626] to-[#F87171]', shadow: 'shadow-red-300' },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -757,9 +754,8 @@ export default function ClientLandingPage() {
                   onClick={() => setActivePartnerTab(tab.id)}
                   className="flex flex-col items-center gap-2 group"
                 >
-                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center shadow-md transition-all duration-200 group-hover:scale-110 group-hover:shadow-xl ${
-                    activePartnerTab === tab.id ? `ring-4 ring-[#FFB800] ring-offset-2 scale-110 shadow-xl ${tab.shadow}` : ''
-                  }`}>
+                  <div className={`w-20 h-20 rounded-full bg-gradient-to-br ${tab.gradient} flex items-center justify-center shadow-md transition-all duration-200 group-hover:scale-110 group-hover:shadow-xl ${activePartnerTab === tab.id ? `ring-4 ring-[#FFB800] ring-offset-2 scale-110 shadow-xl ${tab.shadow}` : ''
+                    }`}>
                     <tab.Icon size={28} color="white" strokeWidth={1.8} />
                   </div>
                   <span className={`font-semibold text-sm transition-colors leading-tight ${activePartnerTab === tab.id ? 'text-[#1A1A1A]' : 'text-gray-500'}`}>
@@ -781,11 +777,10 @@ export default function ClientLandingPage() {
                     key={f.id}
                     type="button"
                     onClick={() => setActiveFilter(f.id)}
-                    className={`font-medium pb-1 transition-colors ${
-                      activeFilter === f.id
-                        ? 'text-[#1B4D3E] border-b-2 border-[#1B4D3E]'
-                        : 'text-gray-600 hover:text-gray-900'
-                    }`}
+                    className={`font-medium pb-1 transition-colors ${activeFilter === f.id
+                      ? 'text-[#1B4D3E] border-b-2 border-[#1B4D3E]'
+                      : 'text-gray-600 hover:text-gray-900'
+                      }`}
                   >
                     {f.label}
                   </button>
@@ -811,7 +806,7 @@ export default function ClientLandingPage() {
             <>
               {storesLoading ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {[1, 2, 3].map((i) => (
+                  {[1, 2, 3, 4].map((i) => (
                     <div key={i} className="bg-gray-100 rounded-2xl animate-pulse h-80" />
                   ))}
                 </div>
@@ -1285,9 +1280,8 @@ function NavLink({ href, children, active }) {
   return (
     <Link
       to={href}
-      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-        active ? 'bg-[#1B4D3E] text-white' : 'text-gray-800 hover:bg-white/50'
-      }`}
+      className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${active ? 'bg-[#1B4D3E] text-white' : 'text-gray-800 hover:bg-white/50'
+        }`}
     >
       {children}
     </Link>

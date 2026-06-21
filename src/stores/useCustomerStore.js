@@ -25,17 +25,19 @@ const useCustomerStore = create((set, get) => ({
     const existing = cart.find(i => i._id === item._id && i.vendorId === item.vendorId)
     const updated = existing
       ? cart.map(i => i._id === item._id && i.vendorId === item.vendorId
-          ? { ...i, quantity: i.quantity + (item.quantity || 1) }
-          : i)
+        ? { ...i, quantity: i.quantity + (item.quantity || 1) }
+        : i)
       : [...cart, { ...item, quantity: item.quantity || 1 }]
     localStorage.setItem(CART_KEY, JSON.stringify(updated))
     set({ cart: updated })
+    window.dispatchEvent(new Event('cartUpdated')) // Keep everything in sync
   },
 
   removeFromCart: (itemId, vendorId) => {
     const updated = get().cart.filter(i => !(i._id === itemId && i.vendorId === vendorId))
     localStorage.setItem(CART_KEY, JSON.stringify(updated))
     set({ cart: updated })
+    window.dispatchEvent(new Event('cartUpdated'))
   },
 
   updateCartQuantity: (itemId, vendorId, quantity) => {
@@ -44,15 +46,14 @@ const useCustomerStore = create((set, get) => ({
       : get().cart.map(i => i._id === itemId && i.vendorId === vendorId ? { ...i, quantity } : i)
     localStorage.setItem(CART_KEY, JSON.stringify(updated))
     set({ cart: updated })
+    window.dispatchEvent(new Event('cartUpdated'))
   },
 
   clearCart: () => {
     localStorage.removeItem(CART_KEY)
     set({ cart: [] })
+    window.dispatchEvent(new Event('cartUpdated'))
   },
-
-  cartTotal: () => get().cart.reduce((sum, i) => sum + i.price * i.quantity, 0),
-  cartCount: () => get().cart.reduce((sum, i) => sum + i.quantity, 0),
 
   // Orders
   fetchOrders: async () => {
@@ -69,24 +70,18 @@ const useCustomerStore = create((set, get) => ({
     }
   },
 
-  // Stores — uses same endpoint as homepage (/products/featured-vendors) so data is always in sync
+  // Stores
   fetchStores: async (location = '') => {
     if (get().loading.stores) return
     set(s => ({ loading: { ...s.loading, stores: true }, error: { ...s.error, stores: null } }))
     try {
-      const res = await apiCall('/products/featured-vendors?limit=50')
+      const endpoint = location
+        ? `/products/featured-vendors?limit=50&location=${encodeURIComponent(location)}`
+        : '/products/featured-vendors?limit=50'
+
+      const res = await apiCall(endpoint)
       if (res?.success) {
         let rawVendors = res.data?.vendors || res.data || []
-
-        // Client-side location filter when a location is specified
-        if (location) {
-          const loc = location.toLowerCase()
-          rawVendors = rawVendors.filter(v =>
-            (v.address?.city || v.location || '').toLowerCase().includes(loc) ||
-            (v.storeName || v.businessName || v.name || '').toLowerCase().includes(loc) ||
-            (v.address?.postcode || v.postcode || '').toLowerCase().includes(loc)
-          )
-        }
 
         const vendors = rawVendors.map(v => ({
           _id: v._id,
@@ -119,5 +114,12 @@ const useCustomerStore = create((set, get) => ({
     error: { orders: null, stores: null }
   })
 }))
+
+// THE MAGIC BRIDGE: Sync Zustand whenever localStorage is changed by non-Zustand pages!
+if (typeof window !== 'undefined') {
+  window.addEventListener('cartUpdated', () => {
+    useCustomerStore.setState({ cart: loadCartFromStorage() })
+  })
+}
 
 export default useCustomerStore

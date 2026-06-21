@@ -376,6 +376,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
     const newErrors = {};
 
     if (!formData.name.trim()) newErrors.name = 'Product name is required';
+    if (!formData.unit.trim()) newErrors.unit = 'Unit quantity is required';
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
     }
@@ -450,7 +451,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
           submitData.append('variants', JSON.stringify(variants))
 
           if (hasNewImages) {
-            if (attempt === 1) { 
+            if (attempt === 1) {
               const totalSize = images.reduce((sum, img) => sum + img.size, 0)
               const totalSizeKB = (totalSize / 1024).toFixed(1)
               console.log(`📸 Sending ${images.length} new image(s), total: ${totalSizeKB}KB`)
@@ -476,7 +477,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
             response = await vendorAPI.createProduct(submitData)
           }
 
-          break 
+          break
 
         } catch (err) {
           lastError = err
@@ -574,8 +575,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                 <div className="flex items-center">
                   <div
                     className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-semibold ${currentStep >= step.id
-                        ? 'bg-green-500 text-white'
-                        : 'bg-gray-200 text-gray-600'
+                      ? 'bg-green-500 text-white'
+                      : 'bg-gray-200 text-gray-600'
                       }`}
                   >
                     {currentStep > step.id ? <FiCheck className="w-3 h-3 sm:w-4 sm:h-4" /> : step.id}
@@ -603,7 +604,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Name *
+                    Product Name * <span className='text-xs text-green-500'>(required)</span>
                   </label>
                   <input
                     type="text"
@@ -620,7 +621,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Description *
+                    Description * <span className='text-xs text-green-500'>(required)</span>
                   </label>
                   <textarea
                     name="description"
@@ -640,7 +641,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Category * (Free Text)
+                    Category * (Free Text) <span className='text-xs text-green-500'>(required)</span>
                   </label>
                   <input
                     type="text"
@@ -673,7 +674,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
               >
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Product Images * (1-5 images, max 5MB each)
+                    Product Images * (1-5 images, max 5MB each) <span className='text-xs text-green-500'>(required)</span>
                   </label>
 
                   <div className="grid grid-cols-5 gap-4 mb-4">
@@ -714,9 +715,9 @@ function ProductCreationForm({ product, onClose, onSave }) {
                     )}
                   </div>
 
-                  <p className={`text-sm ${errors.images ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
-                    {errors.images ? '⚠️ At least 1 image is required!' : 'First image will be the main product image. Drag to reorder (coming soon).'}
-                  </p>
+                  {/* <p className={`text-sm ${errors.images ? 'text-red-500 font-semibold' : 'text-gray-500'}`}>
+                    {errors.images ? 'At least 1 image is required!' : 'First image will be the main product image. Drag to reorder (coming soon).'}
+                  </p> */}
                   {errors.images && <p className="text-red-500 text-sm mt-2 font-semibold bg-red-50 p-3 rounded-lg">{errors.images}</p>}
                 </div>
               </motion.div>
@@ -732,7 +733,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Price * (£)
+                      Price * (£) <span className='text-xs text-green-500'>(required)</span>
                     </label>
                     <input
                       type="number"
@@ -750,7 +751,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Original Price (£) - optional
+                      Original Price * (£)  - optional
                     </label>
                     <input
                       type="number"
@@ -769,7 +770,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Unit *
+                      Unit * <span className='text-xs text-green-500'>(required)</span>
                     </label>
                     <select
                       name="unit"
@@ -783,11 +784,12 @@ function ProductCreationForm({ product, onClose, onSave }) {
                         </option>
                       ))}
                     </select>
+                    {errors.price && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.price}</p>}
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Unit Quantity
+                      Unit Quantity * <span className='text-xs text-green-500'>(required)</span>
                     </label>
                     <input
                       type="number"
@@ -799,13 +801,15 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                       placeholder="e.g., 0.5 for 500g"
                     />
+
+                    {errors.unit && <p className="text-red-500 text-sm mt-1 font-semibold">{errors.unit}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Stock Quantity *
+                      Stock Quantity * <span className='text-xs text-green-500'>(required)</span>
                     </label>
                     <input
                       type="number"
@@ -815,7 +819,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
                       min="0"
                       disabled={formData.unlimitedStock}
                       className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 ${formData.unlimitedStock ? 'bg-gray-100 border-gray-300' :
-                          errors.stock ? 'border-red-500 bg-red-50' : 'border-gray-300'
+                        errors.stock ? 'border-red-500 bg-red-50' : 'border-gray-300'
                         }`}
                       placeholder="50"
                     />
@@ -824,7 +828,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Low Stock Alert
+                      Low Stock Alert * <span className='text-xs text-green-500'>(required)</span>
                     </label>
                     <input
                       type="number"
@@ -940,8 +944,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
                         type="button"
                         onClick={() => toggleTag(tag)}
                         className={`px-4 py-2 rounded-full text-sm font-medium transition ${formData.tags.includes(tag)
-                            ? 'bg-green-500 text-white'
-                            : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                          ? 'bg-green-500 text-white'
+                          : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                           }`}
                       >
                         {tag}
@@ -992,7 +996,7 @@ function ProductCreationForm({ product, onClose, onSave }) {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Preparation Time (minutes)
+                      Preparation Time (minutes) <span className='text-xs text-green-500'>(required)</span>
                     </label>
                     <input
                       type="number"
@@ -1100,8 +1104,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
             </div>
           </div>
         </div>
-      </motion.div>
-    </div>
+      </motion.div >
+    </div >
   );
 }
 

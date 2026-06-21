@@ -150,15 +150,15 @@ function ProductModal({ product, onClose, onSave }) {
       console.error('Product save error:', error)
       // apiCall throws Error with message directly
       const errorMessage = error.message || 'Failed to save product'
-      
+
       // Check for specific error types
       if (errorMessage.includes('401') || errorMessage.includes('Session expired') || error.code === 'AUTH_EXPIRED') {
-        alert('❌ Your session has expired. Please log in again.')
+        alert('Your session has expired. Please log in again.')
         navigate('/login')
       } else if (errorMessage.includes('501')) {
-        alert('❌ This feature is not yet available. Coming soon!')
+        alert('This feature is not yet available. Coming soon!')
       } else {
-        alert(`❌ ${errorMessage}`)
+        alert(`${errorMessage}`)
       }
     } finally {
       setSaving(false)
@@ -200,9 +200,8 @@ function ProductModal({ product, onClose, onSave }) {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                  errors.name ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${errors.name ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="e.g., Fresh Organic Tomatoes"
               />
               {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name}</p>}
@@ -218,9 +217,8 @@ function ProductModal({ product, onClose, onSave }) {
                 value={formData.description}
                 onChange={handleChange}
                 rows={4}
-                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                  errors.description ? 'border-red-500' : 'border-gray-300'
-                }`}
+                className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${errors.description ? 'border-red-500' : 'border-gray-300'
+                  }`}
                 placeholder="Describe your product..."
               />
               {errors.description && <p className="mt-1 text-sm text-red-500">{errors.description}</p>}
@@ -274,9 +272,8 @@ function ProductModal({ product, onClose, onSave }) {
                   onChange={handleChange}
                   step="0.01"
                   min="0"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                    errors.price ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${errors.price ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="0.00"
                 />
                 {errors.price && <p className="mt-1 text-sm text-red-500">{errors.price}</p>}
@@ -310,9 +307,8 @@ function ProductModal({ product, onClose, onSave }) {
                   value={formData.stock}
                   onChange={handleChange}
                   min="0"
-                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${
-                    errors.stock ? 'border-red-500' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green focus:border-transparent transition-all ${errors.stock ? 'border-red-500' : 'border-gray-300'
+                    }`}
                   placeholder="0"
                 />
                 {errors.stock && <p className="mt-1 text-sm text-red-500">{errors.stock}</p>}

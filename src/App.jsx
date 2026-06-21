@@ -125,11 +125,7 @@ function RoleBasedRedirect() {
         localStorage.removeItem('post_login_redirect')
         return <Navigate to={pendingRedirect} replace />
       }
-      const checkoutPending = localStorage.getItem('checkout_redirect') === 'true'
-      if (checkoutPending) {
-        localStorage.removeItem('checkout_redirect')
-        return <Navigate to="/checkout" replace />
-      }
+      // Let Checkout page handle the checkout_redirect flag instead of consuming it here
       return <Navigate to="/my-dashboard" replace />
     }
   }
@@ -566,7 +562,7 @@ function ThemeToggle() {
 
 // Live Chat floating button — WhatsApp direct link
 function LiveChatButton() {
-  const phone = '447778285855' // +44 7778 285855
+  const phone = '+447482635800' // +44 7778 285855
   const message = encodeURIComponent('Hi Afrimercato, I need help with my order.')
   return (
     <a

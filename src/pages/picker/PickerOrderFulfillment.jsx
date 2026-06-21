@@ -6,10 +6,10 @@ import { ArrowLeft, CheckCircle2, AlertTriangle, MapPin } from 'lucide-react'
 import DeliveryChat from '../../components/DeliveryChat'
 
 const ISSUE_OPTIONS = [
-  { reason: 'out_of_stock',    label: 'Out of Stock',     desc: 'Item is not available',          icon: '📦' },
-  { reason: 'quality_issue',   label: 'Quality Issue',    desc: "Doesn't meet quality standards", icon: '⚠️' },
-  { reason: 'wrong_item',      label: 'Wrong Item',       desc: "Can't find the correct item",    icon: '🔍' },
-  { reason: 'partial_quantity',label: 'Partial Quantity', desc: 'Less stock than ordered',        icon: '⚖️' },
+  { reason: 'out_of_stock', label: 'Out of Stock', desc: 'Item is not available', icon: '📦' },
+  { reason: 'quality_issue', label: 'Quality Issue', desc: "Doesn't meet quality standards", icon: '⚠️' },
+  { reason: 'wrong_item', label: 'Wrong Item', desc: "Can't find the correct item", icon: '🔍' },
+  { reason: 'partial_quantity', label: 'Partial Quantity', desc: 'Less stock than ordered', icon: '⚖️' },
 ]
 
 function PickerOrderFulfillment() {
@@ -38,7 +38,7 @@ function PickerOrderFulfillment() {
         setOrder(foundOrder)
         // Transition order to 'picking' status if still assigned — sets startedAt for accurate timing
         if (foundOrder.status === 'assigned_to_picker') {
-          await apiCall(`/pickers/${orderId}/start`, { method: 'POST' }).catch(() => {})
+          await apiCall(`/pickers/${orderId}/start`, { method: 'POST' }).catch(() => { })
         }
       }
     } catch (err) {
@@ -52,7 +52,7 @@ function PickerOrderFulfillment() {
             const found = (ordersRes?.data?.orders || []).find(o => (o.id || o._id) === orderId)
             setOrder(found || { id: orderId, orderNumber: orderId })
             // Start picking after auto-claim
-            await apiCall(`/pickers/${orderId}/start`, { method: 'POST' }).catch(() => {})
+            await apiCall(`/pickers/${orderId}/start`, { method: 'POST' }).catch(() => { })
           }
         } catch (_e) {
           setError('Could not load this order. It may have already been claimed by someone else.')
@@ -139,7 +139,7 @@ function PickerOrderFulfillment() {
           <div className="h-4 bg-white/10 rounded w-20 animate-pulse" />
         </div>
         <div className="px-5 py-5 space-y-3">
-          {[1,2,3,4,5].map(i => (
+          {[1, 2, 3, 4, 5].map(i => (
             <div key={i} className="bg-white rounded-2xl h-20 animate-pulse" />
           ))}
         </div>
@@ -234,7 +234,7 @@ function PickerOrderFulfillment() {
               const isLoading = actionLoading === itemId
               const productName = item.product?.name || `Item ${idx + 1}`
               const productImage = item.product?.images?.[0]
-              
+
               return (
                 <motion.div
                   key={itemId}
@@ -279,11 +279,10 @@ function PickerOrderFulfillment() {
                       <button
                         onClick={() => handlePickItem(item)}
                         disabled={isLoading || isUnavailable}
-                        className={`w-11 h-11 border border-gray-300 rounded-2xl flex items-center justify-center transition-all ${
-                          isPicked
-                            ? 'bg-emerald-700 text-white'
-                            : 'bg-emerald-500 text-white hover:bg-emerald-700 hover:text-emerald-400'
-                        } disabled:opacity-40`}
+                        className={`w-11 h-11 border border-gray-300 rounded-2xl flex items-center justify-center transition-all ${isPicked
+                          ? 'bg-emerald-700 text-white'
+                          : 'bg-emerald-500 text-white hover:bg-emerald-700 hover:text-emerald-400'
+                          } disabled:opacity-40`}
                       >
                         {isLoading
                           ? <div className="w-4 h-4 border border-gray-400 rounded-full animate-spin" />
@@ -330,13 +329,12 @@ function PickerOrderFulfillment() {
               onClick={handleComplete}
               disabled={isDisabled}
               whileTap={!isDisabled ? { scale: 0.97 } : {}}
-              className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${
-                isAlreadyCompleted
-                  ? 'bg-afri-green-pale text-afri-green-dark cursor-not-allowed' // Already done style
-                  : allDone && !completeLoading
-                    ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' // Ready to click style
-                    : 'bg-gray-100 text-gray-400' // Incomplete style
-              }`}
+              className={`w-full py-4 rounded-2xl font-bold text-base transition-all ${isAlreadyCompleted
+                ? 'bg-afri-green-pale text-afri-green-dark cursor-not-allowed' // Already done style
+                : allDone && !completeLoading
+                  ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-200' // Ready to click style
+                  : 'bg-gray-100 text-gray-400' // Incomplete style
+                }`}
             >
               {completeLoading ? (
                 <span className="flex items-center justify-center gap-2">
