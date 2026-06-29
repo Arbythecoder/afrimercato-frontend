@@ -37,7 +37,7 @@ function CustomerDashboard() {
     const confirmed = window.confirm('Are you sure you want to logout?')
     if (confirmed) {
       logout()
-      navigate('/login')
+      navigate('/#')
     }
   }
 
@@ -179,7 +179,6 @@ function CustomerDashboard() {
         </div>
 
         <div className='px-4 sm:px-8 mt-2'>
-          {/* THE FIX: Re-added the relative inline-flex wrapper so the badge anchors to the icon! */}
           <div className='relative inline-flex items-center cursor-pointer' onClick={() => navigate('/cart')}>
             <MdShoppingCart className='text-3xl sm:text-4xl hover:text-gray-200 transition-colors' />
 

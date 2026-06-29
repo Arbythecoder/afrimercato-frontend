@@ -76,6 +76,11 @@ const VendorOnboarding = lazy(() => import('./components/VendorOnboarding'))
 const VerifyEmail = lazy(() => import('./pages/VerifyEmail'))
 const ForgotPassword = lazy(() => import('./pages/ForgotPassword'))
 const ResetPassword = lazy(() => import('./pages/ResetPassword'))
+const VendorPayoutSettings = lazy(() => import('./pages/vendor/PayoutSettings'))
+const PickerPayoutSettings = lazy(() => import('./pages/picker/PayoutSettings'))
+const RiderPayoutSettings = lazy(() => import('./pages/rider/PayoutSettings'))
+const AdminPayouts = lazy(() => import('./pages/admin/AdminPayout'))
+
 
 // Layout & Components
 import VendorLayout from './components/Layout/VendorLayout'
@@ -254,8 +259,8 @@ function AppContent() {
           />
 
           {/* Checkout & Order Routes */}
-          <Route path="/checkout" element={<Checkout />} />
           <Route path="/order-confirmation/:orderId" element={<OrderConfirmation />} />
+          <Route path="/checkout" element={<Checkout />} />
           <Route path="/track-order/:orderId" element={<OrderTracking />} />
 
           {/* Rider Routes — require rider role */}
@@ -264,6 +269,7 @@ function AppContent() {
           <Route path="/rider/delivery/:deliveryId" element={isAuthenticated && user?.role === 'rider' ? <RiderDeliveryDetail /> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
           <Route path="/rider/earnings" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderEarnings /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
           <Route path="/rider/profile" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderProfile /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+          <Route path="/rider/payout" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderPayoutSettings /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
           <Route path="/rider/gigs" element={isAuthenticated && user?.role === 'rider' ? <RiderLayout><RiderRadar /></RiderLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
           {/* Picker Routes — require picker role.
@@ -274,6 +280,7 @@ function AppContent() {
           <Route path="/picker/performance" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerPerformance /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
           <Route path="/picker/profile" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerProfile /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
           <Route path="/picker/explore" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerStoreExplore /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
+          <Route path="/picker/payout-settings" element={isAuthenticated && (user?.role === 'picker' || user?.roles?.includes('picker')) ? <PickerLayout><PickerPayoutSettings /></PickerLayout> : isAuthenticated ? <RoleBasedRedirect /> : <Navigate to="/login" />} />
 
           <Route
             path="/login"
@@ -395,6 +402,24 @@ function AppContent() {
               )
             }
           />
+
+          <Route
+            path="/payout-settings"
+            element={
+              isAuthenticated ? (
+                user?.role === 'vendor' ? (
+                  <VendorLayout>
+                    <VendorPayoutSettings />
+                  </VendorLayout>
+                ) : (
+                  <RoleBasedRedirect />
+                )
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+
           <Route
             path="/reports"
             element={
@@ -451,6 +476,7 @@ function AppContent() {
             { path: '/admin/riders', Page: AdminRiderManagement },
             { path: '/admin/pickers', Page: AdminPickerManagement },
             { path: '/admin/customers', Page: AdminCustomerManagement },
+            { path: '/admin/payout', Page: AdminPayouts },
             { path: '/admin/orders', Page: AdminOrders },
             { path: '/admin/audit-logs', Page: AdminAuditLogs },
             { path: '/admin/analytics', Page: AdminAnalytics },

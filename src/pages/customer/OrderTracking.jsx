@@ -156,11 +156,10 @@ function OrderTracking() {
                   Order #{order.orderNumber}
                 </p>
               </div>
-              <div className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                order.status === 'delivered'
-                  ? 'bg-green-100 text-green-700'
-                  : 'bg-yellow-100 text-yellow-700'
-              }`}>
+              <div className={`px-4 py-2 rounded-full text-sm font-semibold ${order.status === 'delivered'
+                ? 'bg-green-100 text-green-700'
+                : 'bg-yellow-100 text-yellow-700'
+                }`}>
                 {order.status?.replace('-', ' ').toUpperCase()}
               </div>
             </div>
@@ -191,9 +190,8 @@ function OrderTracking() {
               {/* Step 1: Order Placed */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
                     {currentStep > 1 ? '✓' : '1'}
                   </div>
                   {currentStep > 1 && <div className="w-1 h-16 bg-green-600 mt-2"></div>}
@@ -211,9 +209,8 @@ function OrderTracking() {
               {/* Step 2: Confirmed */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    currentStep >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
                     {currentStep > 2 ? '✓' : '2'}
                   </div>
                   {currentStep > 2 && <div className="w-1 h-16 bg-green-600 mt-2"></div>}
@@ -228,9 +225,8 @@ function OrderTracking() {
               {/* Step 3: Picking */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
                     {currentStep > 3 ? '✓' : '3'}
                   </div>
                   {currentStep > 3 && <div className="w-1 h-16 bg-green-600 mt-2"></div>}
@@ -245,9 +241,8 @@ function OrderTracking() {
               {/* Step 4: Ready for Pickup */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    currentStep >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 4 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
                     {currentStep > 4 ? '✓' : '4'}
                   </div>
                   {currentStep > 4 && <div className="w-1 h-16 bg-green-600 mt-2"></div>}
@@ -262,9 +257,8 @@ function OrderTracking() {
               {/* Step 5: Out for Delivery */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    currentStep >= 5 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 5 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
                     {currentStep > 5 ? '✓' : '5'}
                   </div>
                   {currentStep > 5 && <div className="w-1 h-16 bg-green-600 mt-2"></div>}
@@ -287,9 +281,8 @@ function OrderTracking() {
               {/* Step 6: Delivered */}
               <div className="flex gap-4">
                 <div className="flex flex-col items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                    currentStep >= 6 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
-                  }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center ${currentStep >= 6 ? 'bg-green-600 text-white' : 'bg-gray-200 text-gray-500'
+                    }`}>
                     {currentStep >= 6 ? '✓' : '6'}
                   </div>
                 </div>
@@ -306,7 +299,7 @@ function OrderTracking() {
             <h2 className="text-xl font-bold text-gray-900 mb-4">Order Items</h2>
             {groupItemsByVendor(order.items).map((group) => {
               const groupSubtotal = group.items.reduce((s, i) => s + i.price * i.quantity, 0)
-              
+
               console.log("Orders grouped by vendor:", order.items, group)
               return (
                 <div key={group.vendorId} className="mb-4">
@@ -341,34 +334,34 @@ function OrderTracking() {
 
           {/* Delivery Address */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-              <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Name:</span> {order.customer?.name}
-              </p>
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Email:</span> {order.customer?.email}
-              </p>
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
-              </p>
+            <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
+            <p className="text-gray-700 text-sm">
+              <span className="font-semibold">Name:</span> {order.customer?.name}
+            </p>
+            <p className="text-gray-700 text-sm">
+              <span className="font-semibold">Email:</span> {order.customer?.email}
+            </p>
+            <p className="text-gray-700 text-sm">
+              <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
+            </p>
 
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Address:</span>{' '}
-                {[
-                  order.deliveryAddress?.street,
-                  order.deliveryAddress?.city,
-                  order.deliveryAddress?.county,
-                  order.deliveryAddress?.postcode,
-                  order.deliveryAddress?.country,
-                ].filter(Boolean).join(', ')}
-              </p>
+            <p className="text-gray-700 text-sm">
+              <span className="font-semibold">Address:</span>{' '}
+              {[
+                order.deliveryAddress?.street,
+                order.deliveryAddress?.city,
+                order.deliveryAddress?.county,
+                order.deliveryAddress?.postcode,
+                order.deliveryAddress?.country,
+              ].filter(Boolean).join(', ')}
+            </p>
 
-              {order.deliveryAddress?.instructions && (
-                <p className="text-gray-700 text-sm">
-                  <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
-                </p>
-              )}
-            </div>
+            {order.deliveryAddress?.instructions && (
+              <p className="text-gray-700 text-sm">
+                <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
+              </p>
+            )}
+          </div>
 
           {/* Actions */}
           {order.status === 'delivered' && (

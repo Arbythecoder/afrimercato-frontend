@@ -138,11 +138,10 @@ export default function PickerProfile() {
         {/* Message */}
         {message.text && (
           <div
-            className={`mb-6 p-4 rounded-lg ${
-              message.type === 'success'
-                ? 'bg-green-100 text-green-800'
-                : 'bg-red-100 text-red-800'
-            }`}
+            className={`mb-6 p-4 rounded-lg ${message.type === 'success'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+              }`}
           >
             {message.text}
           </div>
@@ -155,11 +154,10 @@ export default function PickerProfile() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-orange-500 border-b-2 border-orange-500 bg-orange-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                  ? 'text-orange-500 border-b-2 border-orange-500 bg-orange-50'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -220,7 +218,7 @@ export default function PickerProfile() {
                     </div>
                     <div className="bg-orange-50 rounded-xl p-4 text-center">
                       <p className="text-2xl font-black text-orange-600">
-                        {stats.avgPickTime > 0 ? `${stats.avgPickTime}m` : '—'}
+                        {stats.avgPickTime > 0 ? `${stats.averageTimePerOrder}m` : '15mins'}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">Avg Pick Time</p>
                     </div>

@@ -3,18 +3,20 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, Store, Bike, ClipboardList, Users,
-  ShieldCheck, BarChart2, ShoppingBag, LogOut
+  ShieldCheck, BarChart2, ShoppingBag, LogOut, CreditCard
 } from 'lucide-react'
+<CreditCard />
 
 const NAV_ITEMS = [
-  { icon: LayoutDashboard, label: 'Dashboard',  path: '/admin/dashboard' },
-  { icon: Store,           label: 'Vendors',    path: '/admin/vendors' },
-  { icon: Bike,            label: 'Riders',     path: '/admin/riders' },
-  { icon: ClipboardList,   label: 'Pickers',    path: '/admin/pickers' },
-  { icon: Users,           label: 'Customers',  path: '/admin/customers' },
-  { icon: ShoppingBag,     label: 'Orders',     path: '/admin/orders' },
-  { icon: ShieldCheck,     label: 'Audit Logs', path: '/admin/audit-logs' },
-  { icon: BarChart2,       label: 'Analytics',  path: '/admin/analytics' },
+  { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
+  { icon: Store, label: 'Vendors', path: '/admin/vendors' },
+  { icon: Bike, label: 'Riders', path: '/admin/riders' },
+  { icon: ClipboardList, label: 'Pickers', path: '/admin/pickers' },
+  { icon: Users, label: 'Customers', path: '/admin/customers' },
+  { icon: CreditCard, label: 'Payout', path: '/admin/payout' },
+  { icon: ShoppingBag, label: 'Orders', path: '/admin/orders' },
+  { icon: ShieldCheck, label: 'Audit Logs', path: '/admin/audit-logs' },
+  { icon: BarChart2, label: 'Analytics', path: '/admin/analytics' },
 ]
 
 function Sidebar({ location, user, logout, onNavClick }) {
@@ -42,11 +44,10 @@ function Sidebar({ location, user, logout, onNavClick }) {
               key={path}
               to={path}
               onClick={onNavClick}
-              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                active
-                  ? 'bg-afri-green/15 text-afri-green border border-afri-green/20'
-                  : 'text-gray-400 hover:text-white hover:bg-white/8'
-              }`}
+              className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${active
+                ? 'bg-afri-green/15 text-afri-green border border-afri-green/20'
+                : 'text-gray-400 hover:text-white hover:bg-white/8'
+                }`}
             >
               <Icon size={18} />
               {label}
@@ -83,7 +84,7 @@ export default function AdminLayout({ children }) {
     <div className="flex h-screen bg-afri-gray-50 overflow-hidden">
       {/* Desktop sidebar */}
       <div className="hidden lg:flex flex-col flex-shrink-0 shadow-xl">
-        <Sidebar location={location} user={user} logout={logout} onNavClick={() => {}} />
+        <Sidebar location={location} user={user} logout={logout} onNavClick={() => { }} />
       </div>
 
       {/* Mobile sidebar overlay */}
@@ -114,9 +115,9 @@ export default function AdminLayout({ children }) {
             aria-label="Open menu"
           >
             <svg width="18" height="14" viewBox="0 0 18 14" fill="none">
-              <rect width="18" height="2" rx="1" fill="currentColor"/>
-              <rect y="6" width="13" height="2" rx="1" fill="currentColor"/>
-              <rect y="12" width="18" height="2" rx="1" fill="currentColor"/>
+              <rect width="18" height="2" rx="1" fill="currentColor" />
+              <rect y="6" width="13" height="2" rx="1" fill="currentColor" />
+              <rect y="12" width="18" height="2" rx="1" fill="currentColor" />
             </svg>
           </button>
           <span className="text-white font-semibold text-sm">Afrimercato Admin</span>

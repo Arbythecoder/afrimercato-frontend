@@ -3,12 +3,15 @@ import { Link } from 'react-router-dom'
 import { apiCall } from '../../services/api'
 import { motion } from 'framer-motion'
 import { Search, ChevronLeft, CheckCircle, XCircle, PauseCircle, RefreshCw, User } from 'lucide-react'
+import { MdOutlineFileDownload } from "react-icons/md";
+import { IoCalendarNumberOutline } from "react-icons/io5";
+import { CiMail } from "react-icons/ci";
 
 const STATUS_MAP = {
-  active:    { label: 'Active',    color: 'bg-emerald-100 text-emerald-700' },
-  pending:   { label: 'Pending',   color: 'bg-amber-100 text-amber-700' },
+  active: { label: 'Active', color: 'bg-emerald-100 text-emerald-700' },
+  pending: { label: 'Pending', color: 'bg-amber-100 text-amber-700' },
   suspended: { label: 'Suspended', color: 'bg-red-100 text-red-600' },
-  inactive:  { label: 'Inactive',  color: 'bg-gray-100 text-gray-500' },
+  inactive: { label: 'Inactive', color: 'bg-gray-100 text-gray-500' },
 }
 
 export default function AdminRiderManagement() {
@@ -52,7 +55,7 @@ export default function AdminRiderManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 pb-12">
       {/* Header */}
       <div className="bg-white border-b border-gray-100 px-6 py-4 flex items-center gap-3">
         <Link to="/admin/dashboard" className="flex items-center gap-1.5 text-gray-400 hover:text-gray-700 text-sm font-medium">
@@ -63,124 +66,153 @@ export default function AdminRiderManagement() {
         <span className="ml-auto text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded-full">{pagination.total || 0} riders</span>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 py-6">
-        {/* Search */}
-        <div className="relative mb-5">
-          <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+      <div className="max-w-7xl mx-auto px-4 py-6">
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">🚴 Rider Management</h2>
+          <p className="text-sm text-gray-500 mt-1">Approve, reject, suspend, or audit platform delivery personnel profiles</p>
+        </div>
+
+        {/* Search Input Bar */}
+        <div className="relative mb-6">
+          <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
-            placeholder="Search by name or email…"
+            placeholder="Search riders by name, email, or credentials..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-afri-green"
+            className="w-full pl-11 pr-4 py-3 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-afri-green shadow-sm transition"
           />
         </div>
 
+        {/* Error State Banner */}
         {error && (
-          <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-4 flex items-center justify-between">
-            <p className="text-red-600 text-sm">{error}</p>
-            <button onClick={fetchRiders} className="text-red-500 text-sm font-semibold flex items-center gap-1">
-              <RefreshCw size={13} /> Retry
+          <div className="bg-red-50 border border-red-100 rounded-xl p-4 mb-6 flex items-center justify-between animate-fadeIn">
+            <p className="text-red-600 text-sm font-medium">{error}</p>
+            <button onClick={fetchRiders} className="text-red-500 text-sm font-bold flex items-center gap-1 hover:underline">
+              <RefreshCw size={13} /> Retry Connection
             </button>
           </div>
         )}
 
+        {/* Loading Skeleton Cards */}
         {loading ? (
-          <div className="space-y-3">
-            {[1,2,3,4,5].map(i => <div key={i} className="bg-white rounded-xl h-16 animate-pulse" />)}
+          <div className="space-y-4">
+            {[1, 2, 3].map(i => (
+              <div key={i} className="bg-white border border-gray-100 rounded-2xl h-32 animate-pulse shadow-sm" />
+            ))}
           </div>
         ) : riders.length === 0 ? (
-          <div className="bg-white rounded-2xl p-12 text-center shadow-sm">
-            <User size={40} className="mx-auto mb-3 text-gray-200" />
-            <p className="text-gray-500 font-medium">No riders found</p>
+          /* Empty State Illustration View */
+          <div className="bg-white rounded-2xl p-16 text-center border border-gray-100 shadow-sm animate-fadeIn">
+            <User size={44} className="mx-auto mb-3 text-gray-300 bg-gray-50 p-2.5 rounded-full" />
+            <p className="text-gray-600 font-semibold text-base">No Riders Registered</p>
+            <p className="text-gray-400 text-xs mt-1">There are no riders matching your filter parameters right now.</p>
           </div>
         ) : (
-          <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 text-xs text-gray-400 uppercase tracking-wide">
-                  <th className="px-5 py-3 text-left font-semibold">Rider</th>
-                  <th className="px-5 py-3 text-left font-semibold hidden md:table-cell">Phone</th>
-                  <th className="px-5 py-3 text-left font-semibold">Status</th>
-                  <th className="px-5 py-3 text-left font-semibold hidden lg:table-cell">Joined</th>
-                  <th className="px-5 py-3 text-right font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {riders.map((rider, i) => {
-                  const st = STATUS_MAP[rider.status] || STATUS_MAP.inactive
-                  const id = rider._id
-                  return (
-                    <motion.tr
-                      key={id}
-                      initial={{ opacity: 0, y: 6 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: i * 0.03 }}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 bg-afri-green-pale rounded-full flex items-center justify-center text-afri-green-dark font-bold text-xs flex-shrink-0">
-                            {rider.name?.[0]?.toUpperCase() || 'R'}
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-900">{rider.name || '—'}</p>
-                            <p className="text-xs text-gray-400">{rider.email}</p>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-5 py-3.5 text-gray-500 hidden md:table-cell">{rider.phone || '—'}</td>
-                      <td className="px-5 py-3.5">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${st.color}`}>{st.label}</span>
-                      </td>
-                      <td className="px-5 py-3.5 text-gray-400 text-xs hidden lg:table-cell">
-                        {new Date(rider.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                      </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex items-center justify-end gap-1.5">
-                          {rider.status === 'pending' && (
-                            <button
-                              onClick={() => doAction(id, 'approve')}
-                              disabled={!!actionLoading}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-semibold hover:bg-emerald-100 disabled:opacity-50"
-                            >
-                              {actionLoading === id + 'approve' ? '...' : <><CheckCircle size={13} /> Approve</>}
-                            </button>
-                          )}
-                          {rider.status === 'active' && (
-                            <button
-                              onClick={() => doAction(id, 'suspend')}
-                              disabled={!!actionLoading}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-red-50 text-red-500 rounded-lg text-xs font-semibold hover:bg-red-100 disabled:opacity-50"
-                            >
-                              {actionLoading === id + 'suspend' ? '...' : <><PauseCircle size={13} /> Suspend</>}
-                            </button>
-                          )}
-                          {rider.status === 'suspended' && (
-                            <button
-                              onClick={() => doAction(id, 'reactivate')}
-                              disabled={!!actionLoading}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-afri-green-pale text-afri-green rounded-lg text-xs font-semibold hover:bg-afri-green-pale/70 disabled:opacity-50"
-                            >
-                              {actionLoading === id + 'reactivate' ? '...' : <><RefreshCw size={13} /> Reactivate</>}
-                            </button>
-                          )}
-                          {rider.status !== 'pending' && rider.status !== 'active' && rider.status !== 'suspended' && (
-                            <button
-                              onClick={() => doAction(id, 'approve')}
-                              disabled={!!actionLoading}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-emerald-50 text-emerald-600 rounded-lg text-xs font-semibold hover:bg-emerald-100 disabled:opacity-50"
-                            >
-                              {actionLoading === id + 'approve' ? '...' : <><CheckCircle size={13} /> Approve</>}
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </motion.tr>
-                  )
-                })}
-              </tbody>
-            </table>
+          /* ================================================================= */
+          /* PREMIUM CARD LIST LAYOUT (MATCHES VENDOR MANAGEMENT STYLE)        */
+          /* ================================================================= */
+          <div className="space-y-4">
+            {riders.map((rider, i) => {
+              const st = STATUS_MAP[rider.status] || STATUS_MAP.inactive;
+              const id = rider._id;
+
+              return (
+                <motion.div
+                  key={id}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.05 }}
+                  className="bg-white border border-gray-200/70 rounded-2xl p-5 shadow-sm hover:shadow-md/50 transition flex flex-col md:flex-row items-start md:items-center justify-between gap-5 relative overflow-hidden"
+                >
+                  {/* Left Column: Rider Core Profiles & Attached Verification Docs */}
+                  <div className="space-y-3.5 flex-1 min-w-0">
+                    <div className="flex items-center gap-3.5 flex-wrap">
+                      <h3 className="font-bold text-gray-900 text-lg tracking-tight truncate">{rider.name}</h3>
+                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${st.color.replace('bg-', 'border-').split(' ')[0]} ${st.color}`}>
+                        {st.label.toLowerCase()}
+                      </span>
+                    </div>
+
+                    {/* Metadata Context Fields */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 text-sm text-gray-500">
+                      <p className="flex items-center gap-1.5 truncate"><CiMail className='text-gray-800' size={22} /> {rider.email}</p>
+                      {rider.phone && <p className="flex items-center gap-1.5">📞 {rider.phone}</p>}
+                      <p className="flex items-center gap-1.5 text-xs text-gray-400 sm:col-span-2 mt-0.5">
+                        <IoCalendarNumberOutline className='text-gray-700' size={20} /> Joined: {new Date(rider.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      </p>
+                    </div>
+
+                    {/* Sub-Section Row: Cloudinary Uploaded Documents Tags */}
+                    <div className="pt-2 flex flex-wrap gap-2 items-center">
+                      {rider.documents && rider.documents.length > 0 ? (
+                        rider.documents.map((doc, idx) => (
+                          <a
+                            key={idx}
+                            href={doc.url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-gray-300 hover:bg-gray-100 rounded-xl text-xs font-bold text-gray-600 shadow-sm transition active:scale-95"
+                          >
+                            <span>{doc.label}</span>
+                            <span className="text text-sm font-normal"><MdOutlineFileDownload /></span>
+                          </a>
+                        ))
+                      ) : (
+                        <span className="text-xs text-gray-400 italic bg-gray-50 border border-dashed border-gray-200 px-3 py-1 rounded-xl">
+                          No document files uploaded yet
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Premium Action Control Callouts */}
+                  <div className="w-full md:w-auto flex-shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-gray-100 flex justify-end">
+                    {rider.status === 'pending' && (
+                      <button
+                        onClick={() => doAction(id, 'approve')}
+                        disabled={!!actionLoading}
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white font-bold text-sm rounded-xl hover:bg-emerald-700 active:scale-95 transition shadow-sm shadow-emerald-600/10 disabled:opacity-50 min-w-[120px]"
+                      >
+                        {actionLoading === id + 'approve' ? (
+                          <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          '✓ Approve Rider'
+                        )}
+                      </button>
+                    )}
+
+                    {rider.status === 'active' && (
+                      <button
+                        onClick={() => doAction(id, 'suspend')}
+                        disabled={!!actionLoading}
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-slate-800 text-white font-bold text-sm rounded-xl hover:bg-slate-900 active:scale-95 transition shadow-sm disabled:opacity-50 min-w-[120px]"
+                      >
+                        {actionLoading === id + 'suspend' ? (
+                          <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          '⚠ Suspend Account'
+                        )}
+                      </button>
+                    )}
+
+                    {rider.status === 'suspended' && (
+                      <button
+                        onClick={() => doAction(id, 'reactivate')}
+                        disabled={!!actionLoading}
+                        className="w-full md:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white font-bold text-sm rounded-xl hover:bg-blue-700 active:scale-95 transition shadow-sm shadow-blue-600/10 disabled:opacity-50 min-w-[120px]"
+                      >
+                        {actionLoading === id + 'reactivate' ? (
+                          <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
+                        ) : (
+                          '⟳ Reactivate Profile'
+                        )}
+                      </button>
+                    )}
+                  </div>
+                </motion.div>
+              );
+            })}
           </div>
         )}
       </div>

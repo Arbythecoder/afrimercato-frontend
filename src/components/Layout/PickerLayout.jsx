@@ -1,11 +1,13 @@
 import { useLocation, useNavigate } from 'react-router-dom'
 import { LayoutDashboard, TrendingUp, User } from 'lucide-react'
 import { FaStore } from "react-icons/fa";
+import { FaRegPenToSquare } from "react-icons/fa6";
 
 const tabs = [
   { path: '/picker/dashboard', label: 'Home', icon: LayoutDashboard },
   { path: '/picker/explore', label: 'Find Stores', icon: FaStore },
   { path: '/picker/performance', label: 'Performance', icon: TrendingUp },
+  { path: '/picker/payout-settings', label: 'Payout Settings', icon: FaRegPenToSquare },
   { path: '/picker/profile', label: 'Profile', icon: User },
 ]
 
