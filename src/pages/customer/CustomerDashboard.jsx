@@ -1,19 +1,18 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { customerAPI } from '../../services/api'
+import { customerAPI, cartAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { BsGraphUpArrow } from "react-icons/bs";
 import { FaStar } from "react-icons/fa6";
 import { LuShoppingBag } from 'react-icons/lu';
 import { MdShoppingCart } from 'react-icons/md';
 import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
-import { apiCall, getUserProfile } from '../../services/api';
+import { getUserProfile } from '../../services/api';
 import { CiLogout } from 'react-icons/ci';
 import { useAuth } from '../../context/AuthContext';
-import { useCustomerStore } from '../../stores';
 
 function CustomerDashboard() {
-  const { logout } = useAuth()
+  const { logout, isAuthenticated, user } = useAuth()
   const navigate = useNavigate()
   const [loading, setLoading] = useState(true)
   const [firstName, setFirstName] = useState('');
@@ -25,19 +24,55 @@ function CustomerDashboard() {
   })
   const [recentOrders, setRecentOrders] = useState([])
   const [recommendedProducts, setRecommendedProducts] = useState([])
-
-  const cart = useCustomerStore(state => state.cart);
+  const [cart, setCart] = useState([]);
   const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   useEffect(() => {
     fetchDashboardData()
+    loadCart()
+    window.addEventListener('cartUpdated', loadCart)
+    return () => window.removeEventListener('cartUpdated', loadCart)
   }, [])
+
+  useEffect(() => {
+    loadCart()
+  }, [isAuthenticated])
+
+  const loadCart = async () => {
+    try {
+      if (isAuthenticated && user?.roles?.includes('customer')) {
+        const response = await cartAPI.get();
+        if (response.success && response.data && response.data.length > 0) {
+          const backendCart = response.data.map(item => ({
+            _id: item.productId?.toString() || item.productId,
+            name: item.name || 'Product',
+            price: item.price,
+            quantity: item.quantity,
+            unit: item.unit || 'piece',
+            images: item.images,
+            vendor: item.vendor
+          }));
+          setCart(backendCart);
+        } else {
+          const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+          setCart(savedCart);
+        }
+      } else {
+        const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        setCart(savedCart);
+      }
+    } catch (error) {
+      console.error('Failed to load cart on dashboard:', error);
+      const savedCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+      setCart(savedCart);
+    }
+  };
 
   const handleLogout = () => {
     const confirmed = window.confirm('Are you sure you want to logout?')
     if (confirmed) {
       logout()
-      navigate('/login')
+      navigate('/#')
     }
   }
 
@@ -179,7 +214,6 @@ function CustomerDashboard() {
         </div>
 
         <div className='px-4 sm:px-8 mt-2'>
-          {/* THE FIX: Re-added the relative inline-flex wrapper so the badge anchors to the icon! */}
           <div className='relative inline-flex items-center cursor-pointer' onClick={() => navigate('/cart')}>
             <MdShoppingCart className='text-3xl sm:text-4xl hover:text-gray-200 transition-colors' />
 

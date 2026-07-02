@@ -149,7 +149,6 @@ function CheckoutForm() {
     saveCard: false
   })
 
-  // Load cart — critical path, has fallback to localStorage
   useEffect(() => {
     const loadCart = async () => {
       setCartLoading(true)

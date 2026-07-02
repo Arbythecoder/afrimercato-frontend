@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import NotificationDropdown from '../Notifications/NotificationDropdown'
 import { IoIosHourglass } from "react-icons/io";
 import { Users } from 'lucide-react';
-
+import { FaRegPenToSquare } from "react-icons/fa6";
 import { vendorAPI } from '../../services/api'
 
 function VendorLayout({ children }) {
@@ -22,6 +22,7 @@ function VendorLayout({ children }) {
     { name: 'Orders', path: '/vendor/orders', icon: '🛒' },
     { name: 'Staff & Team', path: '/vendor/staff', icon: <Users size={18} /> },
     { name: 'Reports', path: '/reports', icon: '📈' },
+    { name: 'Payout Settings', path: '/payout-settings', icon: <FaRegPenToSquare size={18} /> },
     { name: 'Subscription', path: '/subscription', icon: '💳' },
     { name: 'Settings', path: '/settings', icon: '⚙️' },
   ]
@@ -263,9 +264,8 @@ function VendorLayout({ children }) {
 
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
@@ -305,11 +305,10 @@ function VendorLayout({ children }) {
                 key={item.name}
                 to={item.path}
                 onClick={closeSidebar}
-                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${
-                  isActive(item.path)
-                    ? 'bg-afri-green text-white'
-                    : 'text-gray-700 hover:bg-gray-100'
-                }`}
+                className={`flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors ${isActive(item.path)
+                  ? 'bg-afri-green text-white'
+                  : 'text-gray-700 hover:bg-gray-100'
+                  }`}
               >
                 <span className="text-xl">{item.icon}</span>
                 <span className="font-medium">{item.name}</span>

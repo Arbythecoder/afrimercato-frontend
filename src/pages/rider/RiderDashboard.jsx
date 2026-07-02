@@ -5,7 +5,7 @@ import { apiCall } from '../../services/api'
 import { motion } from 'framer-motion'
 import {
   Star, Package, ChevronRight, MapPin, Clock, Ruler,
-  RefreshCw, Wifi, WifiOff, AlertTriangle
+  RefreshCw, Wifi, WifiOff, AlertTriangle, FileText, Lock
 } from 'lucide-react'
 
 const STATUS_CONFIG = {
@@ -33,7 +33,10 @@ function SkeletonCard() {
 
 function RiderDashboard() {
   const navigate = useNavigate()
-  const { user } = useAuth()
+  const { user, checkAuth } = useAuth()
+  const [riderProfile, setRiderProfile] = useState(null);
+  const isVerified = riderProfile?.approvalStatus === 'approved' || riderProfile?.status === 'active';
+
   const [stats, setStats] = useState({ todayDeliveries: 0, todayEarnings: 0, rating: 0, allTimeDeliveries: 0, allTimeEarnings: 0 })
   const [activeDeliveries, setActiveDeliveries] = useState([])
   const [recentDeliveries, setRecentDeliveries] = useState([])
@@ -41,7 +44,13 @@ function RiderDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => { fetchDashboardData() }, [])
+  useEffect(() => {
+    fetchDashboardData();
+
+    if (checkAuth) {
+      checkAuth();
+    }
+  }, []);
 
   const fetchDashboardData = async () => {
     setLoading(true)
@@ -51,20 +60,19 @@ function RiderDashboard() {
         apiCall('/rider-auth/profile'),
         apiCall('/riders/deliveries/active'),
         apiCall('/riders/earnings'),
-        apiCall('/riders/stats/today') // NEW: Call our new Today Stats endpoint!
+        apiCall('/riders/stats/today')
       ])
 
-      // 1. Set Rating from Profile
       if (profileRes.status === 'fulfilled' && profileRes.value?.data) {
+        setRiderProfile(profileRes.value.data)
+
         setStats(prev => ({ ...prev, rating: parseFloat(profileRes.value.data.stats?.averageRating) || 0 }))
       }
 
-      // 2. Set Active Deliveries
       if (activeRes.status === 'fulfilled' && activeRes.value?.data) {
         setActiveDeliveries(activeRes.value.data.deliveries || [])
       }
 
-      // 3. Set All-Time Stats & Recent Deliveries from Earnings
       if (earningsRes.status === 'fulfilled' && earningsRes.value?.data) {
         const d = earningsRes.value.data
         setRecentDeliveries((d.deliveries || []).slice(0, 4))
@@ -77,7 +85,6 @@ function RiderDashboard() {
         }
       }
 
-      // 4. Set Today's Stats exactly from our new aggregation engine
       if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
         setStats(prev => ({
           ...prev,
@@ -94,6 +101,8 @@ function RiderDashboard() {
   }
 
   const toggleOnlineStatus = async () => {
+    if (!isVerified) return alert("You must be verified to go online.");
+
     const newStatus = !isOnline;
     setIsOnline(newStatus);
     try {
@@ -134,9 +143,9 @@ function RiderDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-afri-gray-50">
+    <div className="min-h-screen bg-afri-gray-50 pb-8">
       {/* Hero Header */}
-      <div className="bg-gradient-to-br mb-10 from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-24 rounded-b-[2.5rem] relative overflow-hidden">
+      <div className="bg-gradient-to-br mb-6 from-afri-gray-900 via-[#1A1A1A] to-[#2B3632] px-5 pt-14 pb-20 rounded-b-[2.5rem] relative overflow-hidden z-0">
         <div className="absolute -top-10 -right-10 w-52 h-52 bg-afri-green/10 rounded-full blur-2xl" />
         <div className="absolute bottom-0 -left-8 w-40 h-40 bg-afri-yellow-dark/10 rounded-full blur-2xl" />
 
@@ -145,7 +154,14 @@ function RiderDashboard() {
             <p className="text-afri-green-light text-sm font-medium">
               Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}
             </p>
-            <h1 className="text-white text-2xl font-bold mt-0.5">{user?.name?.split(' ')[0] || 'Rider'}</h1>
+            <h1 className="text-white text-2xl font-bold mt-0.5 flex items-center gap-2">
+              {user?.name?.split(' ')[0] || 'Rider'}
+              {!isVerified && (
+                <span className="bg-amber-500/20 text-amber-300 text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-amber-500/30">
+                  Unverified
+                </span>
+              )}
+            </h1>
             {stats.rating > 0 && (
               <div className="flex items-center gap-1 mt-1">
                 <Star size={13} className="fill-afri-yellow text-afri-yellow" />
@@ -177,30 +193,104 @@ function RiderDashboard() {
         </div>
       </div>
 
-      {isOnline && (
-        <section className="my-16 mx-4">
-          <div
-            onClick={() => navigate('/rider/gigs')}
-            className="bg-gradient-to-r from-afri-yellow to-[#FF8F00] rounded-2xl p-4 shadow-lg shadow-afri-yellow/20 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
-                <span className="absolute inset-0 rounded-full border-2 border-white animate-ping opacity-50"></span>
-                <MapPin size={20} className="text-white" />
-              </div>
-              <div>
-                <h3 className="text-white font-bold text-lg">Gig Radar Active</h3>
-                <p className="text-white/80 text-xs font-medium">Looking for nearby orders...</p>
-              </div>
-            </div>
-            <div className="bg-white text-[#FF8F00] px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
-              View Map
-            </div>
-          </div>
-        </section>
-      )}
+      <div className="relative z-10 -mt-10 px-5 space-y-6">
+        {/* DYNAMIC VERIFICATION BANNER */}
+        {!isVerified && (() => {
+          const sourceDocs = riderProfile?.documents || user?.documents || [];
+          const docsList = Array.isArray(sourceDocs) ? sourceDocs : Object.values(sourceDocs);
 
-      <div className="px-5 -mt-10 space-y-6 pb-4">
+          const isUnderReview = docsList.some(doc => doc?.status === 'pending' || doc?.status === 'verified');
+
+          if (isUnderReview) {
+            return (
+              <div className="bg-white border border-gray-200 border-l-4 border-l-amber-500 p-5 rounded-xl shadow-sm">
+                <div className="flex items-start gap-4">
+                  <div className="bg-amber-50 p-2.5 rounded-full flex-shrink-0">
+                    <Clock className="text-amber-500 w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-bold text-gray-900 text-base">Documents Under Review</h3>
+                    <p className="text-gray-500 text-sm mt-1 mb-4 leading-relaxed">
+                      We've received your verification documents. Our admin team is currently auditing them. We'll unlock your Gig Radar the moment they are verified.
+                    </p>
+                    <button
+                      onClick={() => navigate('/rider/profile')}
+                      className="inline-flex items-center gap-2 bg-amber-100 text-amber-800 px-4 py-2 rounded-lg font-bold hover:bg-amber-200 transition-all active:scale-95 shadow-sm text-xs"
+                    >
+                      <FileText className="w-3.5 h-3.5" />
+                      Check Status
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div className="bg-white border border-gray-200 border-l-4 border-l-red-500 p-5 rounded-xl shadow-sm">
+              <div className="flex items-start gap-4">
+                <div className="bg-red-50 p-2.5 rounded-full flex-shrink-0">
+                  <AlertTriangle className="text-red-500 w-5 h-5" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="font-bold text-gray-900 text-base">Action Required</h3>
+                  <p className="text-gray-500 text-sm mt-1 mb-4 leading-relaxed">
+                    You cannot accept delivery gigs until your identity, vehicle, and insurance documents have been approved by the admin.
+                  </p>
+                  <button
+                    onClick={() => navigate('/rider/profile')}
+                    className="inline-flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg font-bold hover:bg-red-600 transition-all active:scale-95 shadow-sm text-xs"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Upload Documents Now
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Gig Radar - Conditional Rendering based on Verification */}
+        {isOnline && (
+          <section>
+            {isVerified ? (
+              <div
+                onClick={() => navigate('/rider/gigs')}
+                className="bg-gradient-to-r from-afri-yellow to-[#FF8F00] rounded-2xl p-4 shadow-lg shadow-afri-yellow/20 flex items-center justify-between cursor-pointer active:scale-95 transition-all"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center relative">
+                    <span className="absolute inset-0 rounded-full border-2 border-white animate-ping opacity-50"></span>
+                    <MapPin size={20} className="text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-white font-bold text-lg">Gig Radar Active</h3>
+                    <p className="text-white/80 text-xs font-medium">Looking for nearby orders...</p>
+                  </div>
+                </div>
+                <div className="bg-white text-[#FF8F00] px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                  View Map
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gray-200 rounded-2xl p-4 flex items-center justify-between opacity-80 cursor-not-allowed border border-gray-300 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                    <Lock size={20} className="text-gray-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-gray-600 font-bold text-lg">Gig Radar Locked</h3>
+                    <p className="text-gray-500 text-xs font-medium">Verification required to accept gigs</p>
+                  </div>
+                </div>
+                <div className="bg-gray-300 text-gray-500 px-3 py-1.5 rounded-full text-xs font-bold shadow-inner">
+                  Locked
+                </div>
+              </div>
+            )}
+          </section>
+        )}
+
         {/* Active Deliveries */}
         <section>
           <div className="flex items-center justify-between mb-3">

@@ -21,7 +21,7 @@ function VendorStaff() {
         vendorAPI.getPendingStaff(),
         vendorAPI.getActiveStaff()
       ]);
-      
+
       if (pendingRes?.data) setPendingRequests(pendingRes.data);
       if (activeRes?.data) setActiveStaff(activeRes.data);
     } catch (error) {
@@ -36,7 +36,7 @@ function VendorStaff() {
     try {
       await vendorAPI.approveStaff(staffId);
       setPendingRequests(prev => prev.filter(req => req._id !== staffId));
-      fetchStaffData(); 
+      fetchStaffData();
     } catch (error) {
       alert('Failed to approve request. Please try again.');
     } finally {
@@ -54,9 +54,8 @@ function VendorStaff() {
       <div className="flex space-x-2 border-b border-gray-200 mb-6">
         <button
           onClick={() => setActiveTab('pending')}
-          className={`pb-3 px-4 font-semibold text-sm transition-colors relative ${
-            activeTab === 'pending' ? 'text-afri-green' : 'text-gray-500 hover:text-gray-700'
-          }`}
+          className={`pb-3 px-4 font-semibold text-sm transition-colors relative ${activeTab === 'pending' ? 'text-afri-green' : 'text-gray-500 hover:text-gray-700'
+            }`}
         >
           Pending Requests
           {pendingRequests.length > 0 && (
@@ -70,9 +69,8 @@ function VendorStaff() {
         </button>
         <button
           onClick={() => setActiveTab('active')}
-          className={`pb-3 px-4 font-semibold text-sm transition-colors relative ${
-            activeTab === 'active' ? 'text-afri-green' : 'text-gray-500 hover:text-gray-700'
-          }`}
+          className={`pb-3 px-4 font-semibold text-sm transition-colors relative ${activeTab === 'active' ? 'text-afri-green' : 'text-gray-500 hover:text-gray-700'
+            }`}
         >
           Active Team
           {activeTab === 'active' && (
@@ -121,7 +119,7 @@ function VendorStaff() {
                         </div>
                       </div>
                     </div>
-                    
+
                     <button
                       onClick={() => handleApprove(req._id)}
                       disabled={actionLoading === req._id}
@@ -153,14 +151,19 @@ function VendorStaff() {
                 </div>
               ) : (
                 activeStaff.map(staff => (
-                  <div key={staff._id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col items-center text-center">
+                  <div key={staff._id} className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm flex flex-col items- enter ">
                     <div className="w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-3">
                       <UserCheck className="text-afri-green" size={28} />
                     </div>
-                    <h3 className="font-bold text-gray-800">{staff.user?.name || 'Unknown User'}</h3>
-                    <span className="capitalize text-xs font-semibold px-2 py-0.5 bg-green-100 text-green-700 rounded-full mt-2 inline-block">
-                      {staff.role}
-                    </span>
+                    <div>
+                      <h3 className="font-bold text-gray-800">{staff.user?.name || 'Unknown User'}</h3>
+                      <p className="font-normal text-xs text-gray-800"><span className="font-semibold">Phone:</span> {staff.user?.phone}</p>
+                      <p className="font-normal text-xs text-gray-800"><span className="font-semibold">Email:</span> {staff.user?.email}</p>
+                      {/* <p className="font-normal text-sm text-gray-800">{staff.status}</p> */}
+                      <span className="capitalize text-xs font-semibold px-2 py-0.5 bg-green-100 text-green-700 rounded-full mt-2 inline-block">
+                        {staff.role}
+                      </span>
+                    </div>
 
                     <p className="text-xs text-gray-400 mt-3 border-t border-gray-50 pt-3 w-full">
                       Joined {new Date(staff.joinedAt || staff.updatedAt || Date.now()).toLocaleDateString()}
@@ -169,10 +172,11 @@ function VendorStaff() {
                 ))
               )}
             </motion.div>
-          )}
-        </AnimatePresence>
+          )
+          }
+        </AnimatePresence >
       )}
-    </div>
+    </div >
   );
 }
 

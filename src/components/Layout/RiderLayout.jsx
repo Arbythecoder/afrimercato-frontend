@@ -6,11 +6,13 @@ import {
   Banknote,
   UserCircle,
 } from 'lucide-react'
+import { FaRegPenToSquare } from 'react-icons/fa6'
 
 const tabs = [
   { path: '/rider/dashboard', label: 'Home', icon: LayoutDashboard },
   { path: '/rider/gigs', label: 'Gigs', icon: PackageSearch },
   { path: '/rider/deliveries', label: 'Deliveries', icon: Package },
+  { path: '/rider/payout', label: 'Payout', icon: FaRegPenToSquare },
   { path: '/rider/earnings', label: 'Earnings', icon: Banknote },
   { path: '/rider/profile', label: 'Profile', icon: UserCircle },
 ]

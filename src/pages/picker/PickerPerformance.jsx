@@ -52,10 +52,10 @@ function AccuracyRing({ accuracy }) {
 }
 
 const ACHIEVEMENTS = [
-  { id: 'first50',   icon: Zap,    label: 'Speed Demon',   desc: '50 orders completed',  threshold: (o) => o >= 50 },
-  { id: 'perfect',   icon: Target, label: 'Perfect Record', desc: '100% accuracy',        threshold: (_, a) => a >= 100 },
-  { id: 'century',   icon: Star,   label: 'Century Club',  desc: '100 orders picked',    threshold: (o) => o >= 100 },
-  { id: 'elite',     icon: Trophy, label: 'Elite Picker',  desc: '500 orders picked',    threshold: (o) => o >= 500 },
+  { id: 'first50', icon: Zap, label: 'Speed Demon', desc: '50 orders completed', threshold: (o) => o >= 50 },
+  { id: 'perfect', icon: Target, label: 'Perfect Record', desc: '100% accuracy', threshold: (_, a) => a >= 100 },
+  { id: 'century', icon: Star, label: 'Century Club', desc: '100 orders picked', threshold: (o) => o >= 100 },
+  { id: 'elite', icon: Trophy, label: 'Elite Picker', desc: '500 orders picked', threshold: (o) => o >= 500 },
 ]
 
 function PickerPerformance() {
@@ -87,7 +87,7 @@ function PickerPerformance() {
           <div className="h-4 bg-white/10 rounded w-24 animate-pulse" />
         </div>
         <div className="px-5 -mt-10 space-y-3">
-          {[1,2,3].map(i => <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />)}
+          {[1, 2, 3].map(i => <div key={i} className="bg-white rounded-2xl h-24 animate-pulse" />)}
         </div>
       </div>
     )
@@ -201,9 +201,8 @@ function PickerPerformance() {
                   transition={{ delay: i * 0.07 }}
                   className={`rounded-2xl p-4 text-center ${unlocked ? 'bg-white shadow-sm' : 'bg-gray-100 opacity-50'}`}
                 >
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-2 ${
-                    unlocked ? 'bg-orange-50' : 'bg-gray-200'
-                  }`}>
+                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-2 ${unlocked ? 'bg-orange-50' : 'bg-gray-200'
+                    }`}>
                     {unlocked
                       ? <Icon size={22} className="text-orange-500" />
                       : <Lock size={18} className="text-gray-400" />

@@ -542,7 +542,7 @@ export default function ClientLandingPage() {
                   onChange={(e) => { setLocation(e.target.value); setShowLocationDropdown(true) }}
                   onFocus={() => setShowLocationDropdown(true)}
                   onBlur={() => setTimeout(() => setShowLocationDropdown(false), 200)}
-                  placeholder="Enter postcode or area..."
+                  placeholder="Enter your location to see nearby store"
                   className="text-lg flex-1 px-4 py-3 outline-none bg-transparent text-gray-900 placeholder-gray-400"
                 />
                 <motion.button

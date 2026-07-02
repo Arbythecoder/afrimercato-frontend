@@ -1,134 +1,42 @@
-// import { useState, useEffect } from 'react'
-// import { useNavigate } from 'react-router-dom'
-// import { apiCall } from '../../services/api'
-// import { motion } from 'framer-motion'
-// import { MapPin, Navigation, Package, RefreshCw } from 'lucide-react'
-
-// function RiderRadar() {
-//     const navigate = useNavigate()
-//     const [availableGigs, setAvailableGigs] = useState([])
-//     const [loading, setLoading] = useState(true)
-//     const [acceptingId, setAcceptingId] = useState(null)
-
-//     const fetchGigs = async () => {
-//         setLoading(true)
-//         try {
-//             // This hits the endpoint we wrote yesterday!
-//             const res = await apiCall('/riders/gigs/available')
-//             setAvailableGigs(res?.data || [])
-//         } catch (error) {
-//             console.error("Failed to fetch radar", error)
-//         } finally {
-//             setLoading(false)
-//         }
-//     }
-
-//     useEffect(() => {
-//         fetchGigs()
-//         const interval = setInterval(fetchGigs, 15000)
-//         return () => clearInterval(interval)
-//     }, [])
-
-//     const handleAcceptGig = async (orderId) => {
-//         setAcceptingId(orderId)
-//         try {
-//             await apiCall(`/riders/gigs/${orderId}/accept`, { method: 'POST' })
-//             alert("Gig Accepted! Head to the store.")
-//             navigate(`/rider/delivery/${orderId}`)
-//         } catch (error) {
-//             alert("Too slow! Another rider might have grabbed this gig.")
-//             fetchGigs()
-//         } finally {
-//             setAcceptingId(null)
-//         }
-//     }
-
-//     return (
-//         <div className="min-h-screen bg-afri-gray-50">
-//             <div className="bg-[#1A1A1A] px-5 pt-14 pb-8 rounded-b-[2rem] shadow-lg">
-//                 <div className="flex justify-between items-center mb-2">
-//                     <h1 className="text-white text-2xl font-bold flex items-center gap-2">
-//                         <span className="relative flex h-3 w-3">
-//                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-afri-green opacity-75"></span>
-//                             <span className="relative inline-flex rounded-full h-3 w-3 bg-afri-green"></span>
-//                         </span>
-//                         Live Radar
-//                     </h1>
-//                     <button onClick={fetchGigs} className="text-afri-green p-2 bg-white/10 rounded-full">
-//                         <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-//                     </button>
-//                 </div>
-//                 <p className="text-gray-400 text-sm">Scanning for nearby orders...</p>
-//             </div>
-
-//             <div className="px-5 py-6 space-y-4">
-//                 {loading && availableGigs.length === 0 ? (
-//                     <p className="text-center text-gray-500 mt-10 animate-pulse">Scanning area...</p>
-//                 ) : availableGigs.length === 0 ? (
-//                     <div className="text-center mt-16">
-//                         <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-4 opacity-50">
-//                             <Navigation size={30} className="text-gray-400" />
-//                         </div>
-//                         <p className="font-bold text-gray-700">No gigs nearby</p>
-//                         <p className="text-sm text-gray-400 mt-1">Stay online, orders update in real-time.</p>
-//                     </div>
-//                 ) : (
-//                     availableGigs.map((gig, i) => (
-//                         <motion.div
-//                             key={gig._id}
-//                             initial={{ opacity: 0, y: 20 }}
-//                             animate={{ opacity: 1, y: 0 }}
-//                             transition={{ delay: i * 0.1 }}
-//                             className="bg-white rounded-2xl p-5 shadow-md border-l-4 border-afri-yellow"
-//                         >
-//                             <div className="flex justify-between items-start mb-4">
-//                                 <div>
-//                                     <h3 className="font-bold text-lg text-gray-900">{gig.vendor?.storeName || 'Store'}</h3>
-//                                     <div className="flex items-center gap-1 text-xs text-gray-500 mt-1">
-//                                         <MapPin size={12} /> {gig.vendor?.address?.city || 'City Center'}
-//                                     </div>
-//                                 </div>
-//                                 <div className="text-right">
-//                                     <p className="text-xl font-black text-afri-green-dark">£{(gig.deliveryFee || 5).toFixed(2)}</p>
-//                                     <p className="text-xs text-gray-400 font-semibold uppercase tracking-wider">Payout</p>
-//                                 </div>
-//                             </div>
-
-//                             <div className="flex items-center gap-2 mb-5 text-sm font-medium text-gray-600 bg-gray-50 p-3 rounded-xl">
-//                                 <Package size={16} className="text-afri-green" />
-//                                 <span>Order {gig.orderNumber} is Packed & Ready</span>
-//                             </div>
-
-//                             <button
-//                                 onClick={() => handleAcceptGig(gig._id)}
-//                                 disabled={acceptingId === gig._id}
-//                                 className="w-full py-3 bg-[#FF8F00] hover:bg-[#E68100] text-white font-bold rounded-xl text-lg shadow-md transition-colors active:scale-95 disabled:opacity-50"
-//                             >
-//                                 {acceptingId === gig._id ? 'Securing Gig...' : 'Accept Gig'}
-//                             </button>
-//                         </motion.div>
-//                     ))
-//                 )}
-//             </div>
-//         </div>
-//     )
-// }
-
-// export default RiderRadar
-
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
 import { motion } from 'framer-motion'
-import { MapPin, Navigation, Package, RefreshCw } from 'lucide-react'
+import { Lock, RefreshCw, Navigation, Package, FileText } from 'lucide-react'
 
-function RiderRadar() {
+export default function RiderRadar() {
     const navigate = useNavigate()
+    const { user } = useAuth()
+
     const [availableGigs, setAvailableGigs] = useState([])
     const [loading, setLoading] = useState(true)
     const [acceptingId, setAcceptingId] = useState(null)
 
+    // Set local state for verification to bypass global cache
+    const [isVerified, setIsVerified] = useState(user?.status === 'active' || user?.approvalStatus === 'approved')
+    const [checkingAuth, setCheckingAuth] = useState(true)
+
+    // FORCE check the real database the second the Radar opens
+    useEffect(() => {
+        const verifyRider = async () => {
+            try {
+                const res = await apiCall('/rider-auth/profile')
+                if (res?.data) {
+                    const actuallyVerified = res.data.approvalStatus === 'approved' || res.data.status === 'active';
+                    setIsVerified(actuallyVerified);
+                }
+            } catch (error) {
+                console.error("Failed to verify rider status", error);
+            } finally {
+                setCheckingAuth(false);
+            }
+        };
+        verifyRider();
+    }, []);
+
     const fetchGigs = async () => {
+        if (!isVerified) return;
         setLoading(true)
         try {
             const res = await apiCall('/riders/gigs/available')
@@ -140,11 +48,14 @@ function RiderRadar() {
         }
     }
 
+    // Only start scanning AFTER we confirm they are verified
     useEffect(() => {
-        fetchGigs()
-        const interval = setInterval(fetchGigs, 15000)
-        return () => clearInterval(interval)
-    }, [])
+        if (isVerified && !checkingAuth) {
+            fetchGigs()
+            const interval = setInterval(fetchGigs, 15000)
+            return () => clearInterval(interval)
+        }
+    }, [isVerified, checkingAuth])
 
     const handleAcceptGig = async (orderId) => {
         setAcceptingId(orderId)
@@ -159,10 +70,42 @@ function RiderRadar() {
         }
     }
 
+    // SHOW BLANK SCREEN FOR A SPLIT SECOND WHILE CHECKING (Prevents Red Flash)
+    if (checkingAuth) {
+        return <div className="min-h-screen bg-[#1A1A1A]"></div>
+    }
+
+    // If Rider is Unverified
+    if (!isVerified) {
+        return (
+            <div className="min-h-screen bg-[#1A1A1A] px-5 py-12 flex flex-col items-center justify-center text-center relative overflow-hidden">
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-red-500/20 rounded-full" />
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-red-500/40 rounded-full" />
+
+                <div className="relative z-10 w-24 h-24 bg-red-500/20 rounded-full flex items-center justify-center mb-6 border-2 border-red-500/50 backdrop-blur-sm">
+                    <Lock size={40} className="text-red-400" />
+                </div>
+
+                <h1 className="text-white text-3xl font-black mb-3 relative z-10">Radar Locked</h1>
+                <p className="text-gray-400 font-medium mb-8 max-w-xs relative z-10">
+                    Your account must be verified by an administrator before you can scan for live deliveries.
+                </p>
+
+                <button
+                    onClick={() => navigate('/rider/profile')}
+                    className="relative z-10 flex items-center gap-2 bg-white text-[#1A1A1A] px-8 py-4 rounded-2xl font-black hover:bg-gray-200 active:scale-95 transition-all shadow-xl"
+                >
+                    <FileText size={20} />
+                    Go to Documents
+                </button>
+            </div>
+        )
+    }
+
+    // NORMAL RADAR STATE
     return (
-        <div className="min-h-screen bg-afri-gray-50 pb-20">
+        <div className="min-h-screen bg-gray-50 pb-20">
             <div className="bg-[#1A1A1A] px-5 pt-14 pb-8 rounded-b-[2.5rem] shadow-lg relative overflow-hidden">
-                {/* Decorative radar rings */}
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 border border-white/5 rounded-full animate-[ping_3s_linear_infinite]" />
                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border border-white/10 rounded-full animate-[ping_3s_linear_infinite_0.5s]" />
 
@@ -187,7 +130,7 @@ function RiderRadar() {
             <div className="px-5 py-6 space-y-4">
                 {loading && availableGigs.length === 0 ? (
                     <div className="flex flex-col items-center justify-center mt-20 space-y-4">
-                        <div className="w-12 h-12 border-4 border-afri-gray-200 border-t-afri-green rounded-full animate-spin" />
+                        <div className="w-12 h-12 border-4 border-gray-200 border-t-amber-500 rounded-full animate-spin" />
                         <p className="text-gray-500 font-semibold animate-pulse">Syncing with satellite...</p>
                     </div>
                 ) : availableGigs.length === 0 ? (
@@ -200,20 +143,16 @@ function RiderRadar() {
                     </div>
                 ) : (
                     availableGigs.map((gig, i) => {
-                        // Extracting vendor details properly based on the JSON payload
                         const actualVendor = gig.vendor || (gig.items?.length > 0 ? gig.items[0].vendor : null);
+                        const vendorName = typeof actualVendor === 'object' && actualVendor?.storeName ? actualVendor.storeName : 'Partner Store';
+                        const pickupCity = typeof actualVendor === 'object' && actualVendor?.address?.city ? actualVendor.address.city : 'Store Location';
 
-                        // We check if it's an object with a storeName, otherwise we fallback gracefully
-                        const vendorName = typeof actualVendor === 'object' && actualVendor?.storeName
-                            ? actualVendor.storeName
-                            : 'Partner Store';
-
-                        const pickupCity = typeof actualVendor === 'object' && actualVendor?.address?.city
-                            ? actualVendor.address.city
-                            : 'City Center';
+                        const dropoffCity = gig.deliveryAddress?.city || 'Customer Location';
+                        const dropoffPostcode = gig.deliveryAddress?.postcode || '';
 
                         const earningsValue = Number(gig.deliveryFee || gig.earnings || gig.riderEarnings || 5).toFixed(2);
-                        const itemTotal = gig.items?.length || 0;
+                        const itemTotal = gig.items?.reduce((sum, item) => sum + (item.quantity || 1), 0) || gig.items?.length || 0;
+                        const distance = gig.distance || null;
 
                         return (
                             <motion.div
@@ -221,33 +160,54 @@ function RiderRadar() {
                                 initial={{ opacity: 0, scale: 0.95, y: 20 }}
                                 animate={{ opacity: 1, scale: 1, y: 0 }}
                                 transition={{ delay: i * 0.1, type: "spring", stiffness: 300, damping: 24 }}
-                                className="bg-white rounded-3xl p-5 shadow-lg shadow-afri-gray-200/40 border-2 border-transparent hover:border-[#FFB300] transition-colors"
+                                className="bg-white rounded-3xl p-5 shadow-lg shadow-gray-200/40 border-2 border-transparent hover:border-[#FFB300] transition-colors"
                             >
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="flex-1 pr-4">
-                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-2">
+                                        <div className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gray-100 rounded-lg text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-3">
                                             <Package size={12} /> {itemTotal} item{itemTotal !== 1 && 's'}
                                         </div>
-                                        <h3 className="font-black text-xl text-gray-900 leading-tight">
-                                            {vendorName}
-                                        </h3>
-                                        <div className="flex items-center gap-1 text-xs text-gray-500 mt-1 font-medium">
-                                            <MapPin size={12} className="text-gray-400" /> {pickupCity}
+
+                                        {/* ROUTE DISPLAY */}
+                                        <div className="relative pl-6 space-y-4">
+                                            <div className="absolute top-1 bottom-1 left-2 w-0.5 bg-gray-200" />
+
+                                            <div className="relative">
+                                                <div className="absolute -left-7 top-1 w-3 h-3 rounded-full bg-blue-500 border-2 border-white shadow-sm" />
+                                                <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Pickup</p>
+                                                <p className="font-bold text-gray-900 leading-tight">{vendorName}</p>
+                                                <p className="text-xs text-gray-500">{pickupCity}</p>
+                                            </div>
+
+                                            <div className="relative">
+                                                <div className="absolute -left-7 top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
+                                                <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Dropoff</p>
+                                                <p className="font-bold text-gray-900 leading-tight">{dropoffCity}</p>
+                                                <p className="text-xs text-gray-500">{dropoffPostcode}</p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="text-right bg-emerald-50 rounded-2xl p-3 border border-emerald-100 min-w-[80px]">
-                                        <p className="text-xs text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Payout</p>
-                                        <p className="text-2xl font-black text-emerald-700">£{earningsValue}</p>
+                                    {/* Payout Block */}
+                                    <div className="flex flex-col items-end gap-2">
+                                        <div className="text-right bg-emerald-50 rounded-2xl p-3 border border-emerald-100 min-w-[80px]">
+                                            <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Payout</p>
+                                            <p className="text-xl font-black text-emerald-700">£{earningsValue}</p>
+                                        </div>
+                                        {distance && (
+                                            <div className="bg-gray-100 px-3 py-1 rounded-lg text-xs font-bold text-gray-600">
+                                                {distance} km total
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
                                 <div className="flex items-center gap-2 mb-5 text-xs font-semibold text-gray-600 bg-gray-50 p-3 rounded-xl border border-gray-100">
                                     <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-afri-green opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-afri-green"></span>
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                                     </span>
-                                    <span>Order <span className="font-mono text-gray-900">{gig.orderNumber?.slice(-6) || gig._id.slice(-6)}</span> is Packed & Ready</span>
+                                    <span>Ready for pickup right now</span>
                                 </div>
 
                                 <button
@@ -263,8 +223,6 @@ function RiderRadar() {
                                     ) : (
                                         'Accept Gig'
                                     )}
-
-                                    {/* Shimmer effect */}
                                     <div className="absolute top-0 -inset-full h-full w-1/2 z-5 block transform -skew-x-12 bg-gradient-to-r from-transparent to-white opacity-20 animate-[shimmer_2s_infinite]" />
                                 </button>
                             </motion.div>
@@ -275,5 +233,3 @@ function RiderRadar() {
         </div>
     )
 }
-
-export default RiderRadar
