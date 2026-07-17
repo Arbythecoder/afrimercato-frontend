@@ -3,10 +3,12 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useAuth } from '../context/AuthContext'
 import { HERO_IMAGES } from '../utils/defaultImages'
+import { useNoIndex } from '../hooks/useNoIndex'
 
 const ALL_ROLES = ['customer', 'vendor', 'rider', 'picker']
 
 function Register() {
+  useNoIndex()
   const navigate = useNavigate()
   const { register } = useAuth()
   const [searchParams] = useSearchParams()

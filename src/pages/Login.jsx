@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNoIndex } from '../hooks/useNoIndex';
 
 function Login() {
+  useNoIndex()
   const navigate = useNavigate()
   const location = useLocation()
   const { login } = useAuth()

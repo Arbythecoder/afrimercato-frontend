@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { vendorAPI } from '../../services/api';
+import { vendorAPI, createProductForVendor } from '../../services/api';
 import { FiUpload, FiX, FiPlus, FiTrash2, FiCheck } from 'react-icons/fi';
 
 // =================================================================
@@ -137,7 +137,7 @@ const DIETARY_TAGS = [
   '💪 High Protein'
 ];
 
-function ProductCreationForm({ product, onClose, onSave }) {
+function ProductCreationForm({ product, onClose, onSave, vendorId, vendorName }) {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [saving, setSaving] = useState(false);
@@ -473,6 +473,8 @@ function ProductCreationForm({ product, onClose, onSave }) {
 
           if (product) {
             response = await vendorAPI.updateProduct(product._id, submitData)
+          } else if (vendorId) {
+            response = await createProductForVendor(vendorId, submitData)
           } else {
             response = await vendorAPI.createProduct(submitData)
           }
@@ -556,9 +558,14 @@ function ProductCreationForm({ product, onClose, onSave }) {
       >
         {/* Header - Mobile Optimized */}
         <div className="flex justify-between items-center p-4 sm:p-6 border-b">
-          <h2 className="text-lg sm:text-2xl font-bold text-gray-800">
-            {product ? 'Edit Product' : 'Create New Product'}
-          </h2>
+          <div>
+            <h2 className="text-lg sm:text-2xl font-bold text-gray-800">
+              {product ? 'Edit Product' : 'Create New Product'}
+            </h2>
+            {vendorName && (
+              <p className="text-sm text-gray-500 mt-0.5">for {vendorName}</p>
+            )}
+          </div>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-full transition min-w-[44px] min-h-[44px] flex items-center justify-center"

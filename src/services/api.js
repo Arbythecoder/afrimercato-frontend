@@ -582,6 +582,41 @@ export const getAllOrders = async () => {
   return apiCall('/admin/orders');
 };
 
+export const createProductForVendor = async (vendorId, productData) => {
+  const isFormData = productData instanceof FormData;
+
+  return apiCall(`/admin/vendors/${vendorId}/products`, {
+    method: 'POST',
+    body: isFormData ? productData : JSON.stringify(productData),
+    timeout: isFormData ? 180000 : 10000
+  });
+};
+
+// Category management
+export const getCategories = async () => {
+  return apiCall('/admin/categories');
+};
+
+export const createCategory = async (name) => {
+  return apiCall('/admin/categories', {
+    method: 'POST',
+    body: JSON.stringify({ name })
+  });
+};
+
+export const updateCategory = async (categoryId, updates) => {
+  return apiCall(`/admin/categories/${categoryId}`, {
+    method: 'PUT',
+    body: JSON.stringify(updates)
+  });
+};
+
+export const deactivateCategory = async (categoryId) => {
+  return apiCall(`/admin/categories/${categoryId}/deactivate`, {
+    method: 'PATCH'
+  });
+};
+
 // FILE UPLOADS
 // FILE UPLOADS
 export const uploadImage = async (file, type = 'general') => {
@@ -1003,13 +1038,32 @@ export const checkoutAPI = {
   getRepurchaseItems
 };
 
+// PRIVACY / GDPR
+export const exportMyData = async () => {
+  return apiCall('/privacy/my-data/export', { method: 'POST' });
+};
+
+export const requestAccountDeletion = async () => {
+  return apiCall('/privacy/request-deletion', { method: 'POST' });
+};
+
+export const submitPrivacyComplaint = async (message) => {
+  return apiCall('/privacy/complaint', {
+    method: 'POST',
+    body: JSON.stringify({ message })
+  });
+};
+
 export const userAPI = {
   getProfile: getUserProfile,
   updateProfile: updateUserProfile,
   changePassword,
   addAddress: addCustomerAddress,
   updateAddress: updateCustomerAddress,
-  saveDefaultAddress
+  saveDefaultAddress,
+  exportMyData,
+  requestAccountDeletion,
+  submitPrivacyComplaint
 };
 
 export const subscriptionAPI = {

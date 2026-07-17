@@ -61,6 +61,8 @@ const PickerProfile = lazy(() => import('./pages/picker/PickerProfile'))
 const PickerStoreExplore = lazy(() => import('./pages/picker/StoreExplore'))
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'))
 const VendorManagement = lazy(() => import('./pages/admin/VendorManagement'))
+const AdminCreateProduct = lazy(() => import('./pages/admin/AdminCreateProduct'))
+const AdminCategoryManagement = lazy(() => import('./pages/admin/AdminCategoryManagement'))
 const AdminRiderManagement = lazy(() => import('./pages/admin/AdminRiderManagement'))
 const AdminPickerManagement = lazy(() => import('./pages/admin/AdminPickerManagement'))
 const AdminCustomerManagement = lazy(() => import('./pages/admin/AdminCustomerManagement'))
@@ -474,6 +476,8 @@ function AppContent() {
           {[
             { path: '/admin/dashboard', Page: AdminDashboard },
             { path: '/admin/vendors', Page: VendorManagement },
+            { path: '/admin/vendors/create-product', Page: AdminCreateProduct },
+            { path: '/admin/categories', Page: AdminCategoryManagement },
             { path: '/admin/riders', Page: AdminRiderManagement },
             { path: '/admin/pickers', Page: AdminPickerManagement },
             { path: '/admin/customers', Page: AdminCustomerManagement },

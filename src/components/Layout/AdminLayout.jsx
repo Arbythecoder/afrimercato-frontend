@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
+import { useNoIndex } from '../../hooks/useNoIndex'
 import {
   LayoutDashboard, Store, Bike, ClipboardList, Users,
   ShieldCheck, BarChart2, ShoppingBag, LogOut, CreditCard, Cog
 } from 'lucide-react'
-<CreditCard />
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
@@ -77,6 +77,7 @@ function Sidebar({ location, user, logout, onNavClick }) {
 }
 
 export default function AdminLayout({ children }) {
+  useNoIndex()
   const { user, logout } = useAuth()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
