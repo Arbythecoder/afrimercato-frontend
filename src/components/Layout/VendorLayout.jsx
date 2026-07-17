@@ -283,16 +283,26 @@ function VendorLayout({ children }) {
             </button>
           </div>
 
-          {/* User info */}
           <div className="px-6 py-4 border-b border-gray-200">
+            {/* User info */}
             <div className="flex items-center space-x-3">
               <div className="flex-shrink-0">
-                <div className="w-10 h-10 rounded-full bg-afri-green text-white flex items-center justify-center font-bold">
-                  {user?.name?.charAt(0).toUpperCase() || 'V'}
-                </div>
+                {vendorStatus?.logo ? (
+                  <img
+                    src={vendorStatus.logo}
+                    alt="Store Logo"
+                    className="w-10 h-10 rounded-full object-cover border-2 border-green-100 shadow-sm"
+                  />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-afri-green text-white flex items-center justify-center font-bold shadow-sm">
+                    {vendorStatus?.storeName?.charAt(0).toUpperCase() || user?.name?.charAt(0).toUpperCase() || 'V'}
+                  </div>
+                )}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-gray-900 truncate">{user?.name || 'Vendor'}</p>
+                <p className="text-sm font-semibold text-gray-900 truncate">
+                  {vendorStatus?.storeName || user?.name || 'Vendor'}
+                </p>
                 <p className="text-xs text-gray-500 truncate">{user?.email || ''}</p>
               </div>
             </div>

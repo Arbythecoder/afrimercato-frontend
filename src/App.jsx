@@ -67,6 +67,7 @@ const AdminCustomerManagement = lazy(() => import('./pages/admin/AdminCustomerMa
 const AdminAuditLogs = lazy(() => import('./pages/admin/AdminAuditLogs'))
 const AdminAnalytics = lazy(() => import('./pages/admin/AdminAnalytics'))
 const AdminOrders = lazy(() => import('./pages/admin/AdminOrders'))
+const AdminSettings = lazy(() => import('./pages/admin/Settings'))
 const DeliverySettings = lazy(() => import('./pages/vendor/DeliverySettings'))
 const PaymentVerify = lazy(() => import('./pages/customer/PaymentVerify'))
 const CustomerSupport = lazy(() => import('./pages/customer/CustomerSupport'))
@@ -480,6 +481,7 @@ function AppContent() {
             { path: '/admin/orders', Page: AdminOrders },
             { path: '/admin/audit-logs', Page: AdminAuditLogs },
             { path: '/admin/analytics', Page: AdminAnalytics },
+            { path: '/admin/settings', Page: AdminSettings },
           ].map(({ path, Page }) => (
             <Route
               key={path}
@@ -588,7 +590,7 @@ function ThemeToggle() {
 
 // Live Chat floating button — WhatsApp direct link
 function LiveChatButton() {
-  const phone = '+447482635800' // +44 7778 285855
+  const phone = '+4407428653800' // +44 7778 285855
   const message = encodeURIComponent('Hi Afrimercato, I need help with my order.')
   return (
     <a

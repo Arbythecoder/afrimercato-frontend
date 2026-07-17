@@ -341,7 +341,7 @@ export default function ClientVendorStorefront() {
             </div>
 
             <div className="hidden lg:block relative">
-              <img src={vendor?.logo || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
+              <img src={vendor?.coverImage || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent to-[#1A1A1A]/40" />
             </div>
           </div>

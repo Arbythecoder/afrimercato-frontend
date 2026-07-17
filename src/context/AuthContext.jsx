@@ -34,12 +34,12 @@ export const AuthProvider = ({ children }) => {
     try {
       // If the 15m token is expired, your apiCall interceptor will silently refresh it before returning!
       const response = await authAPI.me()
-      
+
       if (response?.success && response.data) {
         const normalizedUser = normalizeUserRoles(response.data)
         setUser(normalizedUser)
         setIsAuthenticated(true)
-        
+
         // Save ONLY non-sensitive user data for fast UI rendering
         localStorage.setItem('afrimercato_role', normalizedUser.role)
         localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
@@ -53,9 +53,12 @@ export const AuthProvider = ({ children }) => {
     }
   }
 
-  const login = async (email, password, { requiredRole } = {}) => {
+  const login = async (email, password, twoFactorCode = null, { requiredRole } = {}) => {
     try {
-      const response = await authAPI.login({ email, password })
+      const payload = { email, password }
+      if (twoFactorCode) payload.twoFactorCode = twoFactorCode
+
+      const response = await authAPI.login(payload)
 
       if (response && response.success) {
         const { user } = response.data
@@ -63,9 +66,8 @@ export const AuthProvider = ({ children }) => {
 
         // Role gate
         if (requiredRole && normalizedUser.role !== requiredRole) {
-          // If role fails, we should immediately ask backend to clear the cookies it just set
-          apiCall('/auth/logout', { method: 'POST' }).catch(() => {})
-          
+          apiCall('/auth/logout', { method: 'POST' }).catch(() => { })
+
           return {
             success: false,
             roleBlocked: true,
@@ -74,7 +76,6 @@ export const AuthProvider = ({ children }) => {
           }
         }
 
-        // Store ONLY the user details. The browser handles the cookies!
         localStorage.setItem('afrimercato_role', normalizedUser.role)
         localStorage.setItem('afrimercato_user', JSON.stringify(normalizedUser))
 
@@ -94,10 +95,19 @@ export const AuthProvider = ({ children }) => {
       } else {
         return {
           success: false,
+          requires2FA: response?.requires2FA, // Catch it if returned as a 200 OK
           message: response?.message || 'Login failed'
         }
       }
     } catch (error) {
+      if (error.data && error.data.requires2FA) {
+        return {
+          success: false,
+          requires2FA: true,
+          message: '2FA code required'
+        }
+      }
+
       return {
         success: false,
         message: error.message || 'Login failed'
@@ -179,27 +189,27 @@ export const AuthProvider = ({ children }) => {
 
   const hardLogout = () => {
     // MUST tell the server to destroy the HttpOnly cookies
-    apiCall('/auth/logout', { method: 'POST' }).catch(() => {})
+    apiCall('/auth/logout', { method: 'POST' }).catch(() => { })
 
     //  Clear ALL legacy auth tokens and user data from localStorage
     localStorage.removeItem('afrimercato_token')
     localStorage.removeItem('afrimercato_refresh_token')
-    
+
     localStorage.removeItem('afrimercato_role')
     localStorage.removeItem('afrimercato_user')
     localStorage.removeItem('afrimercato_cart')
     localStorage.removeItem('afrimercato_last_order_items')
     localStorage.removeItem('repeatPurchaseFrequency')
     localStorage.removeItem('vendor_lock')
-    
+
     Object.keys(localStorage).forEach(key => {
       if (key.startsWith('vendor_') || key.startsWith('afrimercato_vendor_')) {
         localStorage.removeItem(key)
       }
     })
-    
+
     sessionStorage.clear()
-    
+
     setUser(null)
     setIsAuthenticated(false)
 
@@ -223,6 +233,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     isAuthenticated,
     loading,
     login,

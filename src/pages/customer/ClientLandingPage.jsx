@@ -1099,7 +1099,7 @@ export default function ClientLandingPage() {
             <div>
               <h4 className="font-bold mb-4">Cities</h4>
               <ul className="space-y-2 text-gray-400">
-                {['Bristol', 'London', 'Leicester', 'Liverpool', 'Birmingham', 'Manchester'].map((city) => (
+                {['Bristol', 'London', 'Leicester', 'Liverpool', 'Birmingham', 'Manchester', 'Newport'].map((city) => (
                   <li key={city}>
                     <button
                       type="button"

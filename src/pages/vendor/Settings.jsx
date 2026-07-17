@@ -47,6 +47,35 @@ function Settings() {
   const [validationErrors, setValidationErrors] = useState({})
   const [loadError, setLoadError] = useState(null)
 
+  const [logoFile, setLogoFile] = useState(null)
+  const [logoPreview, setLogoPreview] = useState(null)
+  const [coverFile, setCoverFile] = useState(null)
+  const [coverPreview, setCoverPreview] = useState(null)
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        warning('Image must be less than 5MB')
+        return
+      }
+      setLogoFile(file)
+      setLogoPreview(URL.createObjectURL(file))
+    }
+  }
+
+  const handleCoverChange = (e) => {
+    const file = e.target.files[0]
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        warning('Cover image must be less than 5MB')
+        return
+      }
+      setCoverFile(file)
+      setCoverPreview(URL.createObjectURL(file))
+    }
+  }
+
   // ── Edit mode state per tab ──────────────────────────────────────────────
   const [editingTabs, setEditingTabs] = useState({
     profile: false,
@@ -285,31 +314,56 @@ function Settings() {
 
     try {
       setSaving(true)
-      let payloadToSave = {
-        ...vendorProfile,
-        name: vendorProfile.storeName,
-        businessName: vendorProfile.storeName,
-      }
 
-      if (!payloadToSave.address.latitude || !payloadToSave.address.longitude) {
+      let updatedAddress = { ...vendorProfile.address }
+      if (!updatedAddress.latitude || !updatedAddress.longitude) {
         try {
-          const { street, city, state, country } = payloadToSave.address
+          const { street, city, state, country } = updatedAddress
           const searchQuery = encodeURIComponent(`${street}, ${city}, ${state || ''}, ${country}`)
           const geoRes = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${searchQuery}&limit=1`)
           const geoData = await geoRes.json()
           if (geoData && geoData.length > 0) {
-            payloadToSave.address.latitude = geoData[0].lat
-            payloadToSave.address.longitude = geoData[0].lon
+            updatedAddress.latitude = geoData[0].lat
+            updatedAddress.longitude = geoData[0].lon
           }
         } catch (geoErr) {
           console.error('Geocoding failed silently:', geoErr)
         }
       }
 
-      const response = await vendorAPI.updateProfile(payloadToSave)
+      const formData = new FormData();
+
+      // Append the logo file if they selected a new one!
+      if (logoFile) {
+        formData.append('logo', logoFile);
+      }
+      if (coverFile) formData.append('coverImage', coverFile);
+
+      // Append standard text fields
+      formData.append('storeName', vendorProfile.storeName);
+      formData.append('description', vendorProfile.description || '');
+      formData.append('category', vendorProfile.category || '');
+      formData.append('phone', vendorProfile.phone || '');
+      if (vendorProfile.alternativePhone) formData.append('alternativePhone', vendorProfile.alternativePhone);
+      formData.append('deliveryRadius', vendorProfile.deliveryRadius || 5);
+      formData.append('deliveryFee', vendorProfile.deliveryFee || 0);
+
+      formData.append('address', JSON.stringify(updatedAddress));
+      formData.append('businessHours', JSON.stringify(vendorProfile.businessHours));
+      if (vendorProfile.deliverySettings) {
+        formData.append('deliverySettings', JSON.stringify(vendorProfile.deliverySettings));
+      }
+
+      const response = await vendorAPI.updateProfile(formData)
+
       if (response?.success) {
         success('Vendor profile updated successfully!')
-        if (payloadToSave.address.latitude) setVendorProfile(payloadToSave)
+
+        setLogoFile(null)
+
+        if (updatedAddress.latitude) {
+          setVendorProfile(prev => ({ ...prev, address: updatedAddress }))
+        }
         setValidationErrors({})
         stopEditing()
         await fetchSettings()
@@ -621,7 +675,79 @@ function Settings() {
           )}
 
           <div>
-            <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Store Information</h2>
+            <h2 className="text-2xl font-bold text-afri-gray-900 mb-4">Store Branding</h2>
+
+            {/* ── Store Visuals (Cover + Logo Overlap) ──────────────────────── */}
+            <div className="mb-8 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+
+              {/* 1. Cover Image Banner */}
+              <div className="relative h-48 w-full bg-gray-100 group flex items-center justify-center">
+                {coverPreview || vendorProfile.coverImage ? (
+                  <img
+                    src={coverPreview || vendorProfile.coverImage}
+                    alt="Store Cover"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-gray-400 flex flex-col items-center">
+                    <svg className="w-10 h-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <span className="text-sm font-medium">Add a cover image (16:9 recommended)</span>
+                  </div>
+                )}
+
+                {isEditing && (
+                  <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-200">
+                    <div className="flex items-center gap-2 bg-black bg-opacity-60 px-4 py-2 rounded-lg font-semibold backdrop-blur-sm hover:bg-opacity-80 transition-all">
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      </svg>
+                      Change Cover
+                    </div>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
+                  </label>
+                )}
+              </div>
+
+              <div className="px-6 pb-6 relative">
+                <div className="flex items-end justify-between sm:flex-row flex-col sm:items-end gap-4">
+                  <div className="relative group -mt-12 sm:-mt-16 flex-shrink-0 z-10">
+                    <div className={`w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden flex items-center justify-center bg-white shadow-md border-4 transition-colors ${isEditing ? 'border-afri-green' : 'border-white'}`}>
+                      {logoPreview || vendorProfile.logo ? (
+                        <img
+                          src={logoPreview || vendorProfile.logo}
+                          alt="Store Logo"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-4xl sm:text-5xl">🏪</span>
+                      )}
+                    </div>
+
+                    {isEditing && (
+                      <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white opacity-0 group-hover:opacity-100 rounded-full cursor-pointer transition-opacity duration-200">
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                        </svg>
+                        <input type="file" accept="image/*" className="hidden" onChange={handleLogoChange} />
+                      </label>
+                    )}
+                  </div>
+
+                  {/* Explainer Text */}
+                  <div className="flex-1 pt-2 sm:pt-0">
+                    <h3 className="text-lg font-bold text-gray-900">Brand Identity</h3>
+                    {isEditing ? (
+                      <p className="text-sm text-afri-green font-semibold">Hover and click the images to update them.</p>
+                    ) : (
+                      <p className="text-sm text-gray-500">Click 'Edit' below to update your store logo and cover banner.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* ───────────────────────────────────────────────────────────── */}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Store Name */}

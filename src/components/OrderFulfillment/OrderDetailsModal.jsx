@@ -169,9 +169,9 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
                 isUpdating={isUpdating}
               />
 
-              {/* NEW: QUICK ACTION BYPASS FOR SMALL VENDORS */}
+              {/* QUICK ACTION BYPASS FOR SMALL VENDORS */}
               {['pending', 'confirmed', 'preparing', 'assigned_to_picker', 'picking'].includes(order.status) && (
-                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm">
+                <div className="bg-amber-50 border border-amber-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm mb-6">
                   <div>
                     <h4 className="font-bold text-amber-900 flex items-center gap-2 text-lg">
                       <Package size={20} className="text-amber-600" /> Quick Action: Packed & Ready
@@ -186,6 +186,47 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
                     className="whitespace-nowrap w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-black rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
                   >
                     {isUpdating ? 'Updating...' : '📦 Mark as Packed'}
+                  </button>
+                </div>
+              )}
+
+              {['packed', 'ready_for_delivery'].includes(order.status) && !order.rider && (
+                <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm mb-6">
+                  <div>
+                    <h4 className="font-bold text-emerald-900 flex items-center gap-2 text-lg">
+                      <UserCheck size={20} className="text-emerald-600" /> Manual Delivery / Pickup
+                    </h4>
+                    <p className="text-sm text-emerald-800 mt-1 max-w-xl">
+                      Don't need a platform rider? Skip the rider assignment phase and instantly mark this order as delivered (useful for in-house deliveries or customer pickups).
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleStatusUpdate('delivered', 'Vendor bypassed rider and manually completed delivery')}
+                    disabled={isUpdating}
+                    className="whitespace-nowrap w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-black rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isUpdating ? 'Updating...' : '✅ Mark as Delivered'}
+                  </button>
+                </div>
+              )}
+
+              {/* QUICK ACTION FOR FINAL COMPLETION */}
+              {order.status === 'delivered' && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-sm mb-6">
+                  <div>
+                    <h4 className="font-bold text-slate-900 flex items-center gap-2 text-lg">
+                      <ShieldCheck size={20} className="text-slate-600" /> Finalize Order
+                    </h4>
+                    <p className="text-sm text-slate-800 mt-1 max-w-xl">
+                      The customer has received their items. Mark this order as completed to finalize the transaction, lock the records, and clear it from your active queue.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => handleStatusUpdate('completed', 'Order finalized and completed')}
+                    disabled={isUpdating}
+                    className="whitespace-nowrap w-full sm:w-auto px-6 py-3.5 bg-gradient-to-r from-slate-700 to-slate-800 hover:from-slate-800 hover:to-slate-900 text-white font-black rounded-xl shadow-md transition-all active:scale-95 disabled:opacity-50"
+                  >
+                    {isUpdating ? 'Updating...' : '🏁 Mark as Completed'}
                   </button>
                 </div>
               )}

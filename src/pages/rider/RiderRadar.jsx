@@ -179,10 +179,20 @@ export default function RiderRadar() {
                                                 <p className="text-xs text-gray-500">{pickupCity}</p>
                                             </div>
 
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Order Number</p>
+                                                <p className="font-bold text-gray-900 leading-tight text-[14px]">{gig?.orderNumber}</p>
+                                            </div>
+
+                                            <div>
+                                                <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Product</p>
+                                                <p className="font-bold text-gray-900 leading-tight text-[14px]">{gig.items?.map(item => item.name).join(', ')}</p>
+                                            </div>
+
                                             <div className="relative">
                                                 <div className="absolute -left-7 top-1 w-3 h-3 rounded-full bg-emerald-500 border-2 border-white shadow-sm" />
                                                 <p className="text-xs text-gray-400 font-bold uppercase mb-0.5">Dropoff</p>
-                                                <p className="font-bold text-gray-900 leading-tight">{dropoffCity}</p>
+                                                <p className="font-bold text-gray-900 leading-tight text-[14px]">{dropoffCity}</p>
                                                 <p className="text-xs text-gray-500">{dropoffPostcode}</p>
                                             </div>
                                         </div>
@@ -194,11 +204,11 @@ export default function RiderRadar() {
                                             <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Payout</p>
                                             <p className="text-xl font-black text-emerald-700">£{earningsValue}</p>
                                         </div>
-                                        {distance && (
+                                        {/* {distance && (
                                             <div className="bg-gray-100 px-3 py-1 rounded-lg text-xs font-bold text-gray-600">
                                                 {distance} km total
                                             </div>
-                                        )}
+                                        )} */}
                                     </div>
                                 </div>
 
