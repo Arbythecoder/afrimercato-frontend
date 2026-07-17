@@ -6,6 +6,7 @@ import { cartAPI, getVendorById, getVendorBySlug } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 import { MdShoppingCart } from 'react-icons/md'
 import { FaArrowLeft, FaArrowLeftLong } from 'react-icons/fa6'
+import { useNoIndex } from '../../hooks/useNoIndex'
 
 // Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
 const isValidMongoId = (id) => {
@@ -33,6 +34,7 @@ const groupCartByVendor = (cart) => {
 }
 
 function ShoppingCart() {
+  useNoIndex()
   const navigate = useNavigate()
   const { isAuthenticated, user } = useAuth()
   const [cart, setCart] = useState([])

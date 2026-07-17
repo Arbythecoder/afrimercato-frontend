@@ -5,6 +5,7 @@ import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall,
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js'
+import { useNoIndex } from '../../hooks/useNoIndex'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
@@ -1687,6 +1688,8 @@ function CheckoutForm() {
 }
 
 function Checkout() {
+  useNoIndex()
+
   return (
     <Elements stripe={stripePromise}>
       <CheckoutForm />

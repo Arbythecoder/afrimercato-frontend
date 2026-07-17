@@ -2,9 +2,12 @@ import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { userAPI, orderAPI } from '../../services/api'
+import { FiDownload } from 'react-icons/fi'
+import { useNoIndex } from '../../hooks/useNoIndex'
 import { LuShoppingBag } from 'react-icons/lu'
 
 function CustomerProfile() {
+  useNoIndex()
   const { user, updateUser, logout } = useAuth()
   const [activeTab, setActiveTab] = useState('profile')
   const [loading, setLoading] = useState(false)
@@ -110,11 +113,54 @@ function CustomerProfile() {
     if (deleteConfirm !== 'DELETE') return
     setDeleteLoading(true)
     try {
-      await userAPI.deleteAccount?.()
+      await userAPI.requestAccountDeletion()
       logout()
     } catch (error) {
       setMessage({ type: 'error', text: error.message || 'Failed to delete account. Please contact support.' })
       setDeleteLoading(false)
+    }
+  }
+
+  const [exportLoading, setExportLoading] = useState(false)
+  const [complaintMessage, setComplaintMessage] = useState('')
+  const [complaintLoading, setComplaintLoading] = useState(false)
+
+  const handleExportData = async () => {
+    setExportLoading(true)
+    try {
+      const data = await userAPI.exportMyData()
+
+      // Hand straight to the browser as a download, don't keep it around after
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `afrimercato-my-data-${Date.now()}.json`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to export your data' })
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
+    } finally {
+      setExportLoading(false)
+    }
+  }
+
+  const handleSubmitComplaint = async (e) => {
+    e.preventDefault()
+    if (!complaintMessage.trim()) return
+    setComplaintLoading(true)
+    try {
+      await userAPI.submitPrivacyComplaint(complaintMessage.trim())
+      setMessage({ type: 'success', text: 'Complaint submitted. We will respond within one month.' })
+      setComplaintMessage('')
+    } catch (error) {
+      setMessage({ type: 'error', text: error.message || 'Failed to submit complaint' })
+    } finally {
+      setComplaintLoading(false)
+      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
     }
   }
 
@@ -159,6 +205,7 @@ function CustomerProfile() {
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'addresses', label: 'Addresses', icon: '📍' },
     { id: 'security', label: 'Security', icon: '🔒' },
+    { id: 'privacy', label: 'Privacy & My Data', icon: '🛡️' },
     { id: 'preferences', label: 'Preferences', icon: '⚙️' }
   ]
 
@@ -457,34 +504,87 @@ function CustomerProfile() {
                 </button>
               </form>
 
-              {/* Danger Zone — GDPR */}
-              <div className="mt-8 border border-red-200 rounded-xl p-5 bg-red-50">
-                <h3 className="font-bold text-red-700 mb-1">Danger Zone</h3>
-                <p className="text-sm text-red-600 mb-4">
-                  Permanently delete your account and all associated data. This action cannot be undone.
-                </p>
-                <div className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    Type <span className="font-mono font-bold">DELETE</span> to confirm
-                  </label>
-                  <input
-                    type="text"
-                    value={deleteConfirm}
-                    onChange={e => setDeleteConfirm(e.target.value)}
-                    placeholder="DELETE"
-                    className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400 bg-white"
-                  />
+              <p className="mt-8 pt-6 border-t text-sm text-gray-500">
+                Want to export your data or delete your account? Head to the{' '}
+                <button type="button" onClick={() => setActiveTab('privacy')} className="text-afri-green font-semibold hover:underline">
+                  Privacy & My Data
+                </button> tab.
+              </p>
+              </>
+            )}
+
+            {/* Privacy & My Data Tab — GDPR */}
+            {activeTab === 'privacy' && (
+              <div className="space-y-8">
+                {/* Request My Data */}
+                <div className="border rounded-xl p-5">
+                  <h3 className="font-bold text-gray-900 mb-1">Request My Data</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Download a copy of everything we hold on you — profile, orders, and reviews — as a JSON file.
+                  </p>
                   <button
                     type="button"
-                    onClick={handleDeleteAccount}
-                    disabled={deleteConfirm !== 'DELETE' || deleteLoading}
-                    className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    onClick={handleExportData}
+                    disabled={exportLoading}
+                    className="flex items-center gap-2 px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
                   >
-                    {deleteLoading ? 'Deleting...' : 'Delete My Account'}
+                    <FiDownload />
+                    {exportLoading ? 'Preparing download...' : 'Download My Data'}
                   </button>
                 </div>
+
+                {/* Submit a Complaint */}
+                <div className="border rounded-xl p-5">
+                  <h3 className="font-bold text-gray-900 mb-1">Submit a Complaint</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Have a concern about how we handle your data? Let us know and we'll respond within one month.
+                  </p>
+                  <form onSubmit={handleSubmitComplaint} className="space-y-3">
+                    <textarea
+                      value={complaintMessage}
+                      onChange={e => setComplaintMessage(e.target.value)}
+                      rows={4}
+                      placeholder="Describe your complaint..."
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    />
+                    <button
+                      type="submit"
+                      disabled={complaintLoading || !complaintMessage.trim()}
+                      className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
+                    >
+                      {complaintLoading ? 'Submitting...' : 'Submit Complaint'}
+                    </button>
+                  </form>
+                </div>
+
+                {/* Danger Zone */}
+                <div className="border border-red-200 rounded-xl p-5 bg-red-50">
+                  <h3 className="font-bold text-red-700 mb-1">Delete My Account</h3>
+                  <p className="text-sm text-red-600 mb-4">
+                    Permanently anonymizes your account. This action cannot be undone.
+                  </p>
+                  <div className="space-y-3">
+                    <label className="block text-sm font-medium text-gray-700">
+                      Type <span className="font-mono font-bold">DELETE</span> to confirm
+                    </label>
+                    <input
+                      type="text"
+                      value={deleteConfirm}
+                      onChange={e => setDeleteConfirm(e.target.value)}
+                      placeholder="DELETE"
+                      className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400 bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleDeleteAccount}
+                      disabled={deleteConfirm !== 'DELETE' || deleteLoading}
+                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                    >
+                      {deleteLoading ? 'Deleting...' : 'Delete My Account'}
+                    </button>
+                  </div>
+                </div>
               </div>
-              </>
             )}
 
             {/* Preferences Tab */}

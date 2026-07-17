@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import {
   Users, Store, ShoppingBag, DollarSign, TrendingUp,
   Clock, CheckCircle, XCircle, Package, ArrowUpRight,
-  RefreshCw, Bell, Bike, ShieldCheck
+  RefreshCw, Bell, Bike, ShieldCheck, PackagePlus, Tag
 } from 'lucide-react'
 
 function StatCard({ icon: Icon, label, value, sub, subType = 'neutral', color, delay = 0 }) {
@@ -230,6 +230,8 @@ function AdminDashboard() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {[
                 { label: 'Manage Vendors', desc: 'Approve, reject, suspend', path: '/admin/vendors', icon: Store, gradient: 'from-afri-green to-afri-green-dark' },
+                { label: 'Create Product', desc: 'Add a product for a vendor', path: '/admin/vendors/create-product', icon: PackagePlus, gradient: 'from-[#2E7D32] to-[#1B5E20]' },
+                { label: 'Categories', desc: 'Add, rename, deactivate', path: '/admin/categories', icon: Tag, gradient: 'from-[#8D6E63] to-[#5D4037]' },
                 { label: 'Manage Riders', desc: 'Approve & monitor riders', path: '/admin/riders', icon: Bike, gradient: 'from-afri-gray-900 to-[#1A1A1A]' },
                 { label: 'Manage Customers', desc: 'View, suspend, delete', path: '/admin/customers', icon: Users, gradient: 'from-afri-yellow-dark to-[#E07000]' },
                 { label: 'Audit Logs', desc: 'Full activity trail', path: '/admin/audit-logs', icon: ShieldCheck, gradient: 'from-[#2B3632] to-afri-gray-900' },
