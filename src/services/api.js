@@ -399,16 +399,14 @@ export const getVendorById = async (id) => {
   return apiCall(`/products/vendor/${id}`);
 };
 
-export const getVendorBySlug = async (slug) => {
-  // /products/vendors/slug/:slug does not exist as a backend route.
-  // GET /api/products/vendor/:vendorId already handles slugs:
-  // when the param is not a 24-hex ObjectId, the controller does
-  //   Vendor.findOne({ slug: vendorId.toLowerCase() })
-  return apiCall(`/products/vendor/${slug}`);
+export const getVendorBySlug = async (slug, params = {}) => {
+  const queryParams = new URLSearchParams({ limit: 1000, ...params }).toString();
+  return apiCall(`/products/vendor/${slug}?${queryParams}`);
 };
 
-export const getVendorProductsByVendorId = async (vendorId) => {
-  return apiCall(`/products/vendor/${vendorId}`);
+export const getVendorProductsByVendorId = async (vendorId, params = {}) => {
+  const queryParams = new URLSearchParams({ limit: 1000, ...params }).toString();
+  return apiCall(`/products/vendor/${vendorId}?${queryParams}`);
 };
 
 // PRODUCTS (Customer)
@@ -468,9 +466,10 @@ export const getOrderById = async (id) => {
   return apiCall(`/customers/orders/${id}`);
 };
 
-export const cancelOrder = async (id) => {
+export const cancelOrder = async (id, reason = 'Cancelled by customer') => {
   return apiCall(`/customers/orders/${id}/cancel`, {
-    method: 'PATCH'
+    method: 'POST',
+    body: JSON.stringify({ reason })
   });
 };
 

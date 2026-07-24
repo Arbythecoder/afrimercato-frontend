@@ -6,11 +6,25 @@
 
 import React from 'react'
 import ReactDOM from 'react-dom/client'
+import * as Sentry from '@sentry/react'
 import App from './App'
 import './index.css'
 import './styles/client-theme.css'  // ✅ CLIENT'S EXACT COLORS
 import './styles/animations.css'    // ✅ SMOOTH ANIMATIONS (800x BETTER)
 import { HashRouter } from 'react-router-dom'
+
+if (import.meta.env.VITE_SENTRY_DSN) {
+  Sentry.init({
+    dsn: import.meta.env.VITE_SENTRY_DSN,
+    integrations: [
+      Sentry.browserTracingIntegration(),
+      Sentry.replayIntegration()
+    ],
+    tracesSampleRate: 0.2,
+    replaysSessionSampleRate: 0.1,
+    replaysOnErrorSampleRate: 1.0,
+  })
+}
 
 // Enhanced error boundary wrapper
 class ErrorBoundary extends React.Component {
@@ -28,8 +42,10 @@ class ErrorBoundary extends React.Component {
       error: error,
       errorInfo: errorInfo
     })
-    // Log to console for debugging
     console.error('ErrorBoundary caught an error:', error, errorInfo)
+    if (import.meta.env.VITE_SENTRY_DSN) {
+      Sentry.captureException(error, { extra: { componentStack: errorInfo?.componentStack } })
+    }
   }
 
   render() {

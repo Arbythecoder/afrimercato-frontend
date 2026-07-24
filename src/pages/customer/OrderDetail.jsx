@@ -458,7 +458,7 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { orderAPI } from '../../services/api'
+import { orderAPI, cancelOrder } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { IoImageOutline } from 'react-icons/io5'
 
@@ -494,6 +494,7 @@ function OrderDetail() {
   const [order, setOrder] = useState(null)
   const [loading, setLoading] = useState(true)
   const [reordered, setReordered] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
 
   useEffect(() => {
     fetchOrder()
@@ -536,6 +537,27 @@ function OrderDetail() {
     window.dispatchEvent(new Event('cartUpdated'))
     setReordered(true)
     setTimeout(() => navigate('/cart'), 800)
+  }
+
+  const handleCancelOrder = async () => {
+    if (!order) return
+    if (!confirm('Are you sure you want to cancel this order?')) return
+
+    try {
+      setCancelling(true)
+      const res = await cancelOrder(order._id || orderId, 'Cancelled by customer')
+      if (res.success || res.status === 'success') {
+        alert('Order cancelled successfully')
+        fetchOrder()
+      } else {
+        alert(res.message || 'Failed to cancel order')
+      }
+    } catch (error) {
+      console.error('Cancel order error:', error)
+      alert(error.message || 'Failed to cancel order')
+    } finally {
+      setCancelling(false)
+    }
   }
 
   // THE FIX: Smart mapping for the 5-step customer progress bar!
@@ -848,17 +870,13 @@ function OrderDetail() {
                   ⭐ Write a Review
                 </button>
               )}
-              {['pending', 'confirmed'].includes(order.status) && (
+              {['pending', 'confirmed', 'preparing'].includes(order.status) && (
                 <button
-                  className="w-full py-3 border-2 border-red-500 text-red-500 rounded-xl font-semibold hover:bg-red-50"
-                  onClick={() => {
-                    if (confirm('Are you sure you want to cancel this order?')) {
-                      // Cancel order logic
-                      alert('Cancellation request submitted')
-                    }
-                  }}
+                  disabled={cancelling}
+                  className="w-full py-3 border-2 border-red-500 text-red-500 rounded-xl font-semibold hover:bg-red-50 disabled:opacity-50 transition-all cursor-pointer"
+                  onClick={handleCancelOrder}
                 >
-                  Cancel Order
+                  {cancelling ? 'Cancelling Order...' : 'Cancel Order'}
                 </button>
               )}
               <button

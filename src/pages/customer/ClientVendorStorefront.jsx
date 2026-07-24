@@ -5,6 +5,7 @@ import { getVendorProductsByVendorId, cartAPI } from '../../services/api'
 import { useAuth } from '../../context/AuthContext'
 import { getProductImage } from '../../utils/defaultImages'
 import { checkVendorLock, checkMinimumOrder } from '../../utils/cartVendorLock'
+import { getCartCount, getCartSubtotal } from '../../utils/cartUtils'
 import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
 import { Clock, MapPin, Tag, PackageX } from 'lucide-react'
 
@@ -224,8 +225,8 @@ export default function ClientVendorStorefront() {
     }
   }
 
-  const cartTotal = cart.reduce((sum, item) => sum + ((item.price || 0) * (item.quantity || 1)), 0)
-  const cartItemCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0)
+  const cartTotal = getCartSubtotal(cart)
+  const cartItemCount = getCartCount(cart)
 
   const filteredProducts = products.filter(product => {
     const matchesCategory = selectedCategory === 'All' || product.category === selectedCategory
@@ -369,25 +370,25 @@ export default function ClientVendorStorefront() {
         // RENDER PRODUCTS: Normal view
         <>
           {/* Category Navigation */}
-          <div className="bg-white border-b sticky top-[104px] z-40">
+          <div className="bg-white border-b sticky top-16 sm:top-[104px] z-40 shadow-sm">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 gap-4">
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between py-3 gap-3">
+                <div className="flex items-center gap-2 overflow-x-auto flex-nowrap py-1 max-w-full scroll-smooth [ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden -mx-4 px-4 sm:mx-0 sm:px-0">
                   {categoryTabs.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`whitespace-nowrap px-5 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${selectedCategory === cat ? 'bg-[#1B4D3E] text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      className={`flex-shrink-0 whitespace-nowrap px-4 py-2 rounded-full text-sm font-semibold transition-all cursor-pointer ${selectedCategory === cat ? 'bg-[#1B4D3E] text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
                     >
                       {cat}
                     </button>
                   ))}
                 </div>
-                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 w-full sm:w-auto min-w-[200px]">
-                  <svg className="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-4 py-2 w-full md:w-auto min-w-[200px]">
+                  <svg className="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
-                  <input type="text" placeholder="Search products..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent outline-none flex-1 text-gray-900 w-full" />
+                  <input type="text" placeholder="Search products..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="bg-transparent outline-none flex-1 text-gray-900 w-full text-sm" />
                 </div>
               </div>
             </div>

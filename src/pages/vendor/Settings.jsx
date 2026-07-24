@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { vendorAPI, userAPI } from '../../services/api'
+import GdprPrivacyTab from '../../components/GdprPrivacyTab'
 import Toast from '../../components/Notification/Toast'
 import { useToast } from '../../hooks/useToast'
 
@@ -457,6 +458,7 @@ function Settings() {
     { id: 'account', name: 'Account', icon: '👤' },
     { id: 'hours', name: 'Business Hours', icon: '🕐' },
     { id: 'security', name: 'Security', icon: '🔒' },
+    { id: 'privacy', name: 'Privacy & My Data', icon: '🛡️' },
   ]
 
   // Reusable footer button group
@@ -1348,6 +1350,13 @@ function Settings() {
           </div>
 
           <ActionButtons onSave={savePassword} saveLabel="Change Password" />
+        </div>
+      )}
+
+      {/* ── Privacy & My Data (GDPR) Tab ──────────────────────────────── */}
+      {activeTab === 'privacy' && (
+        <div className="bg-white rounded-xl shadow-lg p-6 space-y-6 animate-fadeIn">
+          <GdprPrivacyTab roleTitle="Vendor" />
         </div>
       )}
 

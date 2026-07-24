@@ -2,7 +2,6 @@
 // Handles: offline caching + Web Push notifications
 
 const CACHE_NAME = 'afrimercato-v1'
-const API_ORIGIN = 'afrimercato-backend.fly.dev'
 
 // Static shell to pre-cache on install
 const PRECACHE_URLS = [
@@ -42,8 +41,8 @@ self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (request.method !== 'GET') return
 
-  // Network-only for API calls
-  if (url.hostname.includes(API_ORIGIN) || url.pathname.startsWith('/api/')) {
+// Network-only for API calls
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('onrender.com')) {
     event.respondWith(fetch(request))
     return
   }
