@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { apiCall } from '../services/api'
+import { getCartCount as calcCartCount } from '../utils/cartUtils'
 
 const CART_KEY = 'afrimercato_cart'
 
@@ -18,6 +19,9 @@ const useCustomerStore = create((set, get) => ({
   stores: [],
   loading: { orders: false, stores: false },
   error: { orders: null, stores: null },
+
+  // Getters
+  getCartCount: () => calcCartCount(get().cart),
 
   // Cart actions
   addToCart: (item) => {

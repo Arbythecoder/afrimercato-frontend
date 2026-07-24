@@ -89,17 +89,27 @@ const compressImage = (file, maxWidth = 1200, maxHeight = 1200, quality = 0.8) =
 
 // UK Standard Categories Suggestions
 const CATEGORY_SUGGESTIONS = [
-  'Fresh Produce',
-  'Meat & Seafood',
-  'Dairy & Eggs',
-  'Bakery',
-  'Pantry Staples',
-  'Beverages',
-  'Snacks',
-  'Specialty Items',
   'African Foods',
-  'Organic Products',
-  'Frozen Foods'
+  'Bakery & Bread',
+  'Beverages & Drinks',
+  'Canned & Jarred Foods',
+  'Cooking Oils & Fats',
+  'Dairy & Eggs',
+  'Dried Fish & Seafood',
+  'Dried Meats & Poultry',
+  'Fresh Fruits',
+  'Fresh Produce',
+  'Fresh Vegetables',
+  'Grains & Flours',
+  'Legumes, Beans & Pulses',
+  'Meat, Poultry & Seafood',
+  'Nuts & Seeds',
+  'Pasta & Noodles',
+  'Ready Mixes & Flour',
+  'Seasonings & Spices',
+  'Snacks & Confectionery',
+  'Soups & Soup Thickeners',
+  'Specialty & Traditional Items'
 ];
 
 // UK Standard Units

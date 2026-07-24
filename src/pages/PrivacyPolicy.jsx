@@ -1,11 +1,19 @@
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 /**
  * Privacy Policy Page
  * GDPR-compliant privacy policy for Afrimercato
  */
 function PrivacyPolicy() {
+  const { isAuthenticated, user } = useAuth();
+  const getPrivacyPath = () => {
+    if (user?.role === 'vendor') return '/vendor/settings';
+    if (user?.role === 'rider') return '/rider/profile';
+    if (user?.role === 'picker' || user?.roles?.includes('picker')) return '/picker/profile';
+    return '/profile?tab=privacy';
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -128,8 +136,32 @@ function PrivacyPolicy() {
               <li><strong>Right to Object:</strong> Object to processing of your data</li>
               <li><strong>Right to Withdraw Consent:</strong> Withdraw consent at any time</li>
             </ul>
+            <div className="mt-6 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border border-green-200 rounded-xl shadow-sm">
+              <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
+                <span>🛡️</span> Interactive Data Rights Portal
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                You can directly export your data, submit privacy complaints, or request account deletion inside your account settings.
+              </p>
+              {isAuthenticated ? (
+                <Link
+                  to={getPrivacyPath()}
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-afri-green text-white rounded-lg font-semibold text-sm hover:bg-afri-green-dark transition-all shadow"
+                >
+                  Manage My Privacy & Data Rights →
+                </Link>
+              ) : (
+                <Link
+                  to="/login"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-afri-green text-white rounded-lg font-semibold text-sm hover:bg-afri-green-dark transition-all shadow"
+                >
+                  Log In to Access My Data Tools →
+                </Link>
+              )}
+            </div>
+
             <p className="text-gray-700 leading-relaxed mt-4">
-              To exercise any of these rights, please contact us at{' '}
+              To exercise any of these rights or ask questions, you can also contact us at{' '}
               <a href="mailto:privacy@afrimercato.com" className="text-afri-green hover:underline">
                 privacy@afrimercato.com
               </a>

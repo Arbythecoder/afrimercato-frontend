@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { customerAPI, cartAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
+import { getCartCount } from '../../utils/cartUtils'
 import { BsGraphUpArrow } from "react-icons/bs";
 import { FaStar } from "react-icons/fa6";
 import { LuShoppingBag } from 'react-icons/lu';
@@ -25,7 +26,7 @@ function CustomerDashboard() {
   const [recentOrders, setRecentOrders] = useState([])
   const [recommendedProducts, setRecommendedProducts] = useState([])
   const [cart, setCart] = useState([]);
-  const cartCount = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const cartCount = getCartCount(cart);
 
   useEffect(() => {
     fetchDashboardData()
@@ -190,6 +191,17 @@ function CustomerDashboard() {
       description: 'View saved items',
       action: () => navigate('/wishlist'),
       color: 'from-red-500 to-red-600'
+    },
+    {
+      icon: (
+        <svg className="w-8 h-8 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z" />
+        </svg>
+      ),
+      title: 'Privacy & Profile',
+      description: 'Export data & settings',
+      action: () => navigate('/profile?tab=privacy'),
+      color: 'from-purple-600 to-indigo-600'
     }
   ];
 
@@ -213,7 +225,15 @@ function CustomerDashboard() {
           <p className="text-white">Here's what's happening with your orders</p>
         </div>
 
-        <div className='px-4 sm:px-8 mt-2'>
+        <div className='px-4 sm:px-8 mt-2 flex items-center gap-3'>
+          <button
+            onClick={() => navigate('/profile?tab=privacy')}
+            className="flex items-center gap-1.5 bg-white/15 hover:bg-white/25 text-white px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all backdrop-blur-sm border border-white/20 shadow-sm"
+          >
+            <span>🛡️</span>
+            <span>Privacy & Profile</span>
+          </button>
+
           <div className='relative inline-flex items-center cursor-pointer' onClick={() => navigate('/cart')}>
             <MdShoppingCart className='text-3xl sm:text-4xl hover:text-gray-200 transition-colors' />
 
