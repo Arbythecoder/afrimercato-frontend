@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { userAPI, orderAPI } from '../../services/api'
 import { FiDownload } from 'react-icons/fi'
+import GdprPrivacyTab from '../../components/GdprPrivacyTab'
 import { useNoIndex } from '../../hooks/useNoIndex'
 import { LuShoppingBag } from 'react-icons/lu'
+import { FaArrowLeft } from "react-icons/fa6";
+import { useNavigate } from 'react-router-dom'
 
 function CustomerProfile() {
   useNoIndex()
@@ -14,6 +17,7 @@ function CustomerProfile() {
   const [message, setMessage] = useState({ type: '', text: '' })
   const [recentOrders, setRecentOrders] = useState([])
   const [ordersLoading, setOrdersLoading] = useState(true)
+  const navigate = useNavigate()
 
   const [profile, setProfile] = useState({
     name: user?.name || '',
@@ -33,10 +37,20 @@ function CustomerProfile() {
     confirm: ''
   })
 
+  const location = useLocation()
+
   useEffect(() => {
     fetchProfile()
     fetchRecentOrders()
   }, [])
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const tabParam = searchParams.get('tab') || location.hash.replace('#', '')
+    if (tabParam && ['profile', 'addresses', 'security', 'privacy', 'preferences'].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [location])
 
   const fetchRecentOrders = async () => {
     try {
@@ -215,15 +229,15 @@ function CustomerProfile() {
         <div className="max-w-4xl mx-auto px-4">
           <h1 className="text-3xl font-bold">My Profile</h1>
           <p className="text-afri-green-light mt-1">Manage your account settings</p>
+          <button onClick={() => navigate('/my-dashboard')} className='flex gap-3 text-sm mt-2 hover:underline cursor-pointer'><FaArrowLeft className='cursor-pointer' size={20} /> back to dashboard</button>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Message */}
         {message.text && (
-          <div className={`mb-6 p-4 rounded-lg ${
-            message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-          }`}>
+          <div className={`mb-6 p-4 rounded-lg ${message.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+            }`}>
             {message.text}
           </div>
         )}
@@ -235,11 +249,10 @@ function CustomerProfile() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${
-                  activeTab === tab.id
-                    ? 'text-afri-green border-b-2 border-afri-green bg-gray-50'
-                    : 'text-gray-500 hover:text-gray-700'
-                }`}
+                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                  ? 'text-afri-green border-b-2 border-afri-green bg-gray-50'
+                  : 'text-gray-500 hover:text-gray-700'
+                  }`}
               >
                 <span>{tab.icon}</span>
                 {tab.label}
@@ -251,106 +264,106 @@ function CustomerProfile() {
             {/* Profile Tab */}
             {activeTab === 'profile' && (
               <>
-              <form onSubmit={handleProfileUpdate} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
-                  <input
-                    type="text"
-                    value={profile.name}
-                    onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                  <input
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="w-full px-4 py-3 border rounded-lg bg-gray-50 text-gray-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
-                  <input
-                    type="tel"
-                    value={profile.phone}
-                    onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
-                >
-                  {loading ? 'Saving...' : 'Save Changes'}
-                </button>
-              </form>
-
-              {/* Recent Orders Summary */}
-              <div className="mt-8 pt-6 border-t">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-bold text-gray-900">Recent Orders</h3>
-                  <Link to="/orders" className="text-sm text-afri-green font-semibold hover:underline">
-                    View all →
-                  </Link>
-                </div>
-                {ordersLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map(i => (
-                      <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />
-                    ))}
+                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                    <input
+                      type="text"
+                      value={profile.name}
+                      onChange={(e) => setProfile({ ...profile, name: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    />
                   </div>
-                ) : recentOrders.length === 0 ? (
-                  <div className="text-center py-6 bg-gray-50 rounded-xl">
-                    
-                    <LuShoppingBag className="mx-auto text-gray-500" />
-                    <p className="text-gray-400 text-sm">No orders yet</p>
-                    <Link to="/stores" className="mt-2 inline-block text-afri-green text-sm font-semibold hover:underline">
-                      Browse stores →
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input
+                      type="email"
+                      value={profile.email}
+                      disabled
+                      className="w-full px-4 py-3 border rounded-lg bg-gray-50 text-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Phone</label>
+                    <input
+                      type="tel"
+                      value={profile.phone}
+                      onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
+                  >
+                    {loading ? 'Saving...' : 'Save Changes'}
+                  </button>
+                </form>
+
+                {/* Recent Orders Summary */}
+                <div className="mt-8 pt-6 border-t">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="font-bold text-gray-900">Recent Orders</h3>
+                    <Link to="/orders" className="text-sm text-afri-green font-semibold hover:underline">
+                      View all →
                     </Link>
                   </div>
-                ) : (
-                  <div className="space-y-3">
-                    {recentOrders.map((order) => {
-                      const statusColors = {
-                        delivered:  'bg-green-100 text-green-700',
-                        pending:    'bg-yellow-100 text-yellow-700',
-                        processing: 'bg-blue-100 text-blue-700',
-                        cancelled:  'bg-red-100 text-red-700',
-                      }
-                      const status = order.status || 'pending'
-                      return (
-                        <Link
-                          key={order._id}
-                          to={`/order/${order._id}`}
-                          className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-                        >
-                          <div>
-                            <p className="font-semibold text-gray-900 text-sm">
-                              Order #{(order._id || '').slice(-6).toUpperCase()}
-                            </p>
-                            <p className="text-xs text-gray-500 mt-0.5">
-                              {order.createdAt
-                                ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-                                : '—'}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${statusColors[status] || 'bg-gray-100 text-gray-600'}`}>
-                              {status}
-                            </span>
-                            <span className="font-bold text-gray-900 text-sm">
-                              £{(order.pricing?.total || order.total || 0).toFixed(2)}
-                            </span>
-                          </div>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
+                  {ordersLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map(i => (
+                        <div key={i} className="h-14 bg-gray-100 rounded-lg animate-pulse" />
+                      ))}
+                    </div>
+                  ) : recentOrders.length === 0 ? (
+                    <div className="text-center py-6 bg-gray-50 rounded-xl">
+
+                      <LuShoppingBag className="mx-auto text-gray-500" />
+                      <p className="text-gray-400 text-sm">No orders yet</p>
+                      <Link to="/stores" className="mt-2 inline-block text-afri-green text-sm font-semibold hover:underline">
+                        Browse stores →
+                      </Link>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentOrders.map((order) => {
+                        const statusColors = {
+                          delivered: 'bg-green-100 text-green-700',
+                          pending: 'bg-yellow-100 text-yellow-700',
+                          processing: 'bg-blue-100 text-blue-700',
+                          cancelled: 'bg-red-100 text-red-700',
+                        }
+                        const status = order.status || 'pending'
+                        return (
+                          <Link
+                            key={order._id}
+                            to={`/order/${order._id}`}
+                            className="flex items-center justify-between p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
+                          >
+                            <div>
+                              <p className="font-semibold text-gray-900 text-sm">
+                                Order #{(order._id || '').slice(-6).toUpperCase()}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-0.5">
+                                {order.createdAt
+                                  ? new Date(order.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                                  : '—'}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-3">
+                              <span className={`text-xs px-2.5 py-1 rounded-full font-semibold capitalize ${statusColors[status] || 'bg-gray-100 text-gray-600'}`}>
+                                {status}
+                              </span>
+                              <span className="font-bold text-gray-900 text-sm">
+                                £{(order.pricing?.total || order.total || 0).toFixed(2)}
+                              </span>
+                            </div>
+                          </Link>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
               </>
             )}
 
@@ -467,124 +480,55 @@ function CustomerProfile() {
             {/* Security Tab */}
             {activeTab === 'security' && (
               <>
-              <form onSubmit={handlePasswordChange} className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
-                  <input
-                    type="password"
-                    value={passwords.current}
-                    onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
-                  <input
-                    type="password"
-                    value={passwords.new}
-                    onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    value={passwords.confirm}
-                    onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
-                    className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
-                >
-                  {loading ? 'Updating...' : 'Change Password'}
-                </button>
-              </form>
+                <form onSubmit={handlePasswordChange} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Current Password</label>
+                    <input
+                      type="password"
+                      value={passwords.current}
+                      onChange={(e) => setPasswords({ ...passwords, current: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">New Password</label>
+                    <input
+                      type="password"
+                      value={passwords.new}
+                      onChange={(e) => setPasswords({ ...passwords, new: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={passwords.confirm}
+                      onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })}
+                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
+                  >
+                    {loading ? 'Updating...' : 'Change Password'}
+                  </button>
+                </form>
 
-              <p className="mt-8 pt-6 border-t text-sm text-gray-500">
-                Want to export your data or delete your account? Head to the{' '}
-                <button type="button" onClick={() => setActiveTab('privacy')} className="text-afri-green font-semibold hover:underline">
-                  Privacy & My Data
-                </button> tab.
-              </p>
+                <p className="mt-8 pt-6 border-t text-sm text-gray-500">
+                  Want to export your data or delete your account? Head to the{' '}
+                  <button type="button" onClick={() => setActiveTab('privacy')} className="text-afri-green font-semibold hover:underline">
+                    Privacy & My Data
+                  </button> tab.
+                </p>
               </>
             )}
 
             {/* Privacy & My Data Tab — GDPR */}
             {activeTab === 'privacy' && (
-              <div className="space-y-8">
-                {/* Request My Data */}
-                <div className="border rounded-xl p-5">
-                  <h3 className="font-bold text-gray-900 mb-1">Request My Data</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Download a copy of everything we hold on you — profile, orders, and reviews — as a JSON file.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleExportData}
-                    disabled={exportLoading}
-                    className="flex items-center gap-2 px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
-                  >
-                    <FiDownload />
-                    {exportLoading ? 'Preparing download...' : 'Download My Data'}
-                  </button>
-                </div>
-
-                {/* Submit a Complaint */}
-                <div className="border rounded-xl p-5">
-                  <h3 className="font-bold text-gray-900 mb-1">Submit a Complaint</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Have a concern about how we handle your data? Let us know and we'll respond within one month.
-                  </p>
-                  <form onSubmit={handleSubmitComplaint} className="space-y-3">
-                    <textarea
-                      value={complaintMessage}
-                      onChange={e => setComplaintMessage(e.target.value)}
-                      rows={4}
-                      placeholder="Describe your complaint..."
-                      className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-afri-green"
-                    />
-                    <button
-                      type="submit"
-                      disabled={complaintLoading || !complaintMessage.trim()}
-                      className="px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark disabled:opacity-50"
-                    >
-                      {complaintLoading ? 'Submitting...' : 'Submit Complaint'}
-                    </button>
-                  </form>
-                </div>
-
-                {/* Danger Zone */}
-                <div className="border border-red-200 rounded-xl p-5 bg-red-50">
-                  <h3 className="font-bold text-red-700 mb-1">Delete My Account</h3>
-                  <p className="text-sm text-red-600 mb-4">
-                    Permanently anonymizes your account. This action cannot be undone.
-                  </p>
-                  <div className="space-y-3">
-                    <label className="block text-sm font-medium text-gray-700">
-                      Type <span className="font-mono font-bold">DELETE</span> to confirm
-                    </label>
-                    <input
-                      type="text"
-                      value={deleteConfirm}
-                      onChange={e => setDeleteConfirm(e.target.value)}
-                      placeholder="DELETE"
-                      className="w-full px-4 py-3 border border-red-300 rounded-lg focus:ring-2 focus:ring-red-400 bg-white"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleDeleteAccount}
-                      disabled={deleteConfirm !== 'DELETE' || deleteLoading}
-                      className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition"
-                    >
-                      {deleteLoading ? 'Deleting...' : 'Delete My Account'}
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <GdprPrivacyTab roleTitle="Customer" />
             )}
 
             {/* Preferences Tab */}

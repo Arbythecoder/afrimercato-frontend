@@ -134,10 +134,10 @@ function ProductBrowsing() {
     try {
       // Get current cart
       const currentCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-      
+
       // Check vendor lock
       const lockCheck = checkVendorLock(product, currentCart)
-      
+
       if (lockCheck.needsConfirmation) {
         // Show modal
         setVendorSwitchModal({
@@ -186,7 +186,7 @@ function ProductBrowsing() {
     // Clear cart and vendor lock completely
     localStorage.setItem('afrimercato_cart', JSON.stringify([]))
     localStorage.removeItem('vendor_lock')
-    
+
     if (isAuthenticated) {
       try {
         await cartAPI.clear()
@@ -194,15 +194,15 @@ function ProductBrowsing() {
         console.log('Backend cart clear deferred:', error.message)
       }
     }
-    
+
     // Close modal
     setVendorSwitchModal({ isOpen: false, currentStoreName: '', newStoreName: '', pendingProduct: null })
-    
+
     // Add new product from new vendor
     if (vendorSwitchModal.pendingProduct) {
       await performAddToCart(vendorSwitchModal.pendingProduct)
     }
-    
+
     // Notify cart update
     window.dispatchEvent(new Event('cartUpdated'))
   }
@@ -212,7 +212,7 @@ function ProductBrowsing() {
       {/* Header */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
         <div className="max-w-7xl mx-auto ">
-          <FaArrowLeft className='mb-3 cursor-pointer' onClick={()=> navigate(-1)} />
+          <FaArrowLeft className='mb-3 cursor-pointer' onClick={() => navigate(-1)} />
           <h1 className="text-3xl font-bold mb-4 px-4">Browse Products</h1>
 
           {/* Search Bar */}
@@ -251,11 +251,10 @@ function ProductBrowsing() {
                   <button
                     key={cat.id}
                     onClick={() => handleFilterChange('category', cat.id)}
-                    className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${
-                      filters.category === cat.id
-                        ? 'bg-afri-green text-white'
-                        : 'hover:bg-gray-100'
-                    }`}
+                    className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${filters.category === cat.id
+                      ? 'bg-afri-green text-white'
+                      : 'hover:bg-gray-100'
+                      }`}
                   >
                     <span>{cat.icon}</span>
                     <span>{cat.name}</span>
@@ -296,7 +295,7 @@ function ProductBrowsing() {
           </div>
 
           {/* Products Grid */}
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             {/* View Toggle & Results Count */}
             <div className="flex items-center justify-between mb-6">
               <p className="text-gray-600">
@@ -350,9 +349,8 @@ function ProductBrowsing() {
                 {products.map((product) => (
                   <div
                     key={product._id}
-                    className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all group ${
-                      viewMode === 'list' ? 'flex' : ''
-                    }`}
+                    className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all group ${viewMode === 'list' ? 'flex' : ''
+                      }`}
                   >
                     <div
                       className={`relative cursor-pointer ${viewMode === 'list' ? 'w-48 flex-shrink-0' : ''}`}
@@ -361,9 +359,8 @@ function ProductBrowsing() {
                       <img
                         src={getProductImage(product)}
                         alt={product.name}
-                        className={`w-full object-cover group-hover:scale-105 transition-transform ${
-                          viewMode === 'list' ? 'h-full' : 'h-48'
-                        }`}
+                        className={`w-full object-cover group-hover:scale-105 transition-transform ${viewMode === 'list' ? 'h-full' : 'h-48'
+                          }`}
                       />
                       {product.originalPrice && product.originalPrice > product.price && (
                         <span className="absolute top-2 left-2 bg-red-500 text-white text-xs px-2 py-1 rounded-full">
@@ -378,7 +375,7 @@ function ProductBrowsing() {
                       </button>
                     </div>
 
-                    <div className="p-4 flex-1">
+                    <div className="p-4 flex-1 min-w-0">
                       <p className="text-xs text-afri-green font-semibold mb-1">
                         {product.vendor?.storeName || 'AfriMercato'}
                       </p>
@@ -421,11 +418,10 @@ function ProductBrowsing() {
                   <button
                     key={i}
                     onClick={() => setPagination(prev => ({ ...prev, page: i + 1 }))}
-                    className={`w-10 h-10 rounded-lg ${
-                      pagination.page === i + 1
-                        ? 'bg-afri-green text-white'
-                        : 'bg-white hover:bg-gray-100'
-                    }`}
+                    className={`w-10 h-10 rounded-lg ${pagination.page === i + 1
+                      ? 'bg-afri-green text-white'
+                      : 'bg-white hover:bg-gray-100'
+                      }`}
                   >
                     {i + 1}
                   </button>

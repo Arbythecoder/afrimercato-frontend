@@ -4,7 +4,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useNoIndex } from '../../hooks/useNoIndex'
 import {
   LayoutDashboard, Store, Bike, ClipboardList, Users,
-  ShieldCheck, BarChart2, ShoppingBag, LogOut, CreditCard
+  ShieldCheck, BarChart2, ShoppingBag, LogOut, CreditCard, Cog
 } from 'lucide-react'
 
 const NAV_ITEMS = [
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { icon: ShoppingBag, label: 'Orders', path: '/admin/orders' },
   { icon: ShieldCheck, label: 'Audit Logs', path: '/admin/audit-logs' },
   { icon: BarChart2, label: 'Analytics', path: '/admin/analytics' },
+  { icon: Cog, label: 'Settings', path: '/admin/settings' },
 ]
 
 function Sidebar({ location, user, logout, onNavClick }) {

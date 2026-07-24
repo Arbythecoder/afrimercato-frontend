@@ -608,6 +608,10 @@ export default function ClientStoresPage() {
                 <li><button onClick={() => navigate('/stores?location=London')} className="hover:text-yellow-500">London</button></li>
                 <li><button onClick={() => navigate('/stores?location=Manchester')} className="hover:text-yellow-500">Manchester</button></li>
                 <li><button onClick={() => navigate('/stores?location=Birmingham')} className="hover:text-yellow-500">Birmingham</button></li>
+                <li><button onClick={() => navigate('/stores?location=Bristol')} className="hover:text-yellow-500">Bristol</button></li>
+                <li><button onClick={() => navigate('/stores?location=Leicester')} className="hover:text-yellow-500">Leicester</button></li>
+                <li><button onClick={() => navigate('/stores?location=Newport')} className="hover:text-yellow-500">Newport</button></li>
+                <li><button onClick={() => navigate('/stores?location=Liverpool')} className="hover:text-yellow-500">Liverpool</button></li>
               </ul>
             </div>
             <div>

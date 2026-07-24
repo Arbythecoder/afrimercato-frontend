@@ -58,7 +58,7 @@ function ProductDetail() {
 
   const checkWishlistStatus = async () => {
     if (!isAuthenticated) return
-    
+
     try {
       const response = await customerAPI.getWishlist()
       if (response.success && response.data) {
@@ -76,10 +76,10 @@ function ProductDetail() {
     try {
       // Get current cart
       const currentCart = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
-      
+
       // Check vendor lock
       const lockCheck = checkVendorLock(product, currentCart)
-      
+
       if (lockCheck.needsConfirmation) {
         // Show modal
         setVendorSwitchModal({
@@ -132,7 +132,7 @@ function ProductDetail() {
     // Clear cart and vendor lock completely
     localStorage.setItem('afrimercato_cart', JSON.stringify([]))
     localStorage.removeItem('vendor_lock')
-    
+
     if (isAuthenticated) {
       try {
         await cartAPI.clear()
@@ -140,10 +140,10 @@ function ProductDetail() {
         console.log('Backend cart clear deferred:', error.message)
       }
     }
-    
+
     // Close modal
     setVendorSwitchModal({ isOpen: false, currentStoreName: '', newStoreName: '', pendingProduct: null, pendingQuantity: 1 })
-    
+
     // Add new product from new vendor
     if (vendorSwitchModal.pendingProduct) {
       await performAddToCart(
@@ -151,7 +151,7 @@ function ProductDetail() {
         vendorSwitchModal.pendingQuantity
       )
     }
-    
+
     // Notify cart update
     window.dispatchEvent(new Event('cartUpdated'))
   }
@@ -246,9 +246,8 @@ function ProductDetail() {
                   <button
                     key={i}
                     onClick={() => setSelectedImage(i)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImage === i ? 'border-afri-green' : 'border-transparent'
-                    }`}
+                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${selectedImage === i ? 'border-afri-green' : 'border-transparent'
+                      }`}
                   >
                     <img src={img} alt="" className="w-full h-full object-cover" />
                   </button>
@@ -365,11 +364,10 @@ function ProductDetail() {
                 </button>
                 <button
                   onClick={toggleWishlist}
-                  className={`p-4 rounded-xl border-2 transition-colors ${
-                    isWishlisted
+                  className={`p-4 rounded-xl border-2 transition-colors ${isWishlisted
                       ? 'border-red-500 text-red-500 bg-red-50'
                       : 'border-gray-300 text-gray-500 hover:border-red-500 hover:text-red-500'
-                  }`}
+                    }`}
                 >
                   {isWishlisted ? '❤️' : '🤍'}
                 </button>

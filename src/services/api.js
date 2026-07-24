@@ -116,16 +116,23 @@ export const apiCall = async (endpoint, options = {}, isRetry = false) => {
           processQueue(refreshError);
           isRefreshing = false;
 
-          const authError = new Error('Incorrect email/password');
-          authError.code = 'AUTH_EXPIRED';
+          // The refresh failed. This could be because the refresh token is invalid,
+          // OR it could be that the original 401 was for something else,
+          // like invalid credentials or a failed 2FA check.
+          // We should prioritize the original error message if it exists.
+          const message = errorData.message || 'Your session has expired. Please log in again.';
+          const authError = new Error(message);
+          authError.code = errorData.code || 'AUTH_EXPIRED'; // Preserve original code
+          authError.data = errorData;
           throw authError;
         }
       }
 
       // If we hit 401 even after retrying, throw the auth error
       if (response.status === 401) {
-        const authError = new Error('Incorrect email/password');
-        authError.code = 'AUTH_EXPIRED';
+        const authError = new Error(errorData.message || 'Authentication failed.');
+        authError.code = errorData.code || 'AUTH_EXPIRED';
+        authError.data = errorData;
         throw authError;
       }
 
@@ -159,6 +166,12 @@ export const loginUser = async (credentials) => {
     timeout: 30000 // 30s – backend may cold-start + bcrypt is CPU-heavy
   });
   return response;
+};
+
+export const securityAPI = {
+  setup2FA: () => apiCall('/auth/2fa/setup', { method: 'POST' }),
+  verify2FA: (token) => apiCall('/auth/2fa/verify', { method: 'POST', body: JSON.stringify({ token }) }),
+  disable2FA: (data) => apiCall('/auth/2fa/disable', { method: 'POST', body: JSON.stringify(data) })
 };
 
 export const registerUser = async (userData) => {
@@ -386,16 +399,14 @@ export const getVendorById = async (id) => {
   return apiCall(`/products/vendor/${id}`);
 };
 
-export const getVendorBySlug = async (slug) => {
-  // /products/vendors/slug/:slug does not exist as a backend route.
-  // GET /api/products/vendor/:vendorId already handles slugs:
-  // when the param is not a 24-hex ObjectId, the controller does
-  //   Vendor.findOne({ slug: vendorId.toLowerCase() })
-  return apiCall(`/products/vendor/${slug}`);
+export const getVendorBySlug = async (slug, params = {}) => {
+  const queryParams = new URLSearchParams({ limit: 1000, ...params }).toString();
+  return apiCall(`/products/vendor/${slug}?${queryParams}`);
 };
 
-export const getVendorProductsByVendorId = async (vendorId) => {
-  return apiCall(`/products/vendor/${vendorId}`);
+export const getVendorProductsByVendorId = async (vendorId, params = {}) => {
+  const queryParams = new URLSearchParams({ limit: 1000, ...params }).toString();
+  return apiCall(`/products/vendor/${vendorId}?${queryParams}`);
 };
 
 // PRODUCTS (Customer)
@@ -455,9 +466,10 @@ export const getOrderById = async (id) => {
   return apiCall(`/customers/orders/${id}`);
 };
 
-export const cancelOrder = async (id) => {
+export const cancelOrder = async (id, reason = 'Cancelled by customer') => {
   return apiCall(`/customers/orders/${id}/cancel`, {
-    method: 'PATCH'
+    method: 'POST',
+    body: JSON.stringify({ reason })
   });
 };
 

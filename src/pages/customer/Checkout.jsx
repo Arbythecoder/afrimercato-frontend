@@ -283,19 +283,28 @@ function CheckoutForm() {
     loadRepurchaseItems()
   }, [isAuthenticated, isCustomer])
 
-  // Auto-redirect to checkout when user logs in (from login page or modal)
   useEffect(() => {
     if (isAuthenticated && isCustomer && !authChecking) {
+      const savedAddress = localStorage.getItem('checkout_address_backup')
+      if (savedAddress) {
+        try {
+          const parsedAddress = JSON.parse(savedAddress)
+          setAddress(prev => ({ ...prev, ...parsedAddress }))
+          setStep(2) // skip straight to payment — address was already collected pre-login
+        } catch (_e) {
+
+        }
+        localStorage.removeItem('checkout_address_backup')
+      }
+
       const checkoutPending = localStorage.getItem('checkout_redirect') === 'true'
       if (checkoutPending) {
         localStorage.removeItem('checkout_redirect')
-        // User is now authenticated as a customer stay on checkout page and reload cart
         setCartLoading(true)
       }
     }
   }, [isAuthenticated, isCustomer, authChecking])
 
-  // Pre-fill delivery address from user profile
   useEffect(() => {
     if (!isAuthenticated || !isCustomer) return
     const prefillAddress = async () => {
@@ -345,7 +354,6 @@ function CheckoutForm() {
               instructions: prev.instructions || ''
             }))
 
-            // ── 3. Also fix the root cause: save it now so next time ──
             // addresses array won't be empty again after this
             userAPI.saveDefaultAddress({
               street: orderAddr.street,
@@ -474,15 +482,13 @@ function CheckoutForm() {
       localStorage.setItem('post_login_redirect', '/checkout')
       localStorage.setItem('checkout_redirect', 'true')
       localStorage.setItem('checkout_cart_backup', JSON.stringify(cart))
+      localStorage.setItem('checkout_address_backup', JSON.stringify(address))
       setShowAuthModal(true)
       return
     }
     setStep(2)
   }
 
-  // Tokenize card details with Stripe when user advances from Step 2 → Step 3.
-  // createPaymentMethod does NOT charge the card — it just validates and returns a PM ID
-  // which we store and use later when confirming the actual PaymentIntent on Step 3.
   const handleCardReview = async () => {
     if (!stripe || !elements) return
     if (!cardholderName.trim()) {
@@ -773,7 +779,10 @@ function CheckoutForm() {
 
   // Sign-in gate — shown when user hits checkout without being logged in
   if (showAuthModal && !isAuthenticated) {
-    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.onrender.com'}/api/auth/google`
+    // Tell the backend where to send the user after Google OAuth completes.
+    // Without this, the backend falls back to its default redirect (dashboard)
+    // instead of bringing the user back to finish checkout.
+    const GOOGLE_URL = `${import.meta.env.VITE_API_URL || 'https://afrimercato-backend.onrender.com'}/api/auth/google?redirect=/checkout`
 
     const handleAuthLogin = async (e) => {
       e.preventDefault()
@@ -794,6 +803,9 @@ function CheckoutForm() {
               }
             } catch (_e) { }
           }
+          // Address never left memory in this in-page flow, so the backup is unused —
+          // clear it so a stale copy can't leak into a future checkout session.
+          localStorage.removeItem('checkout_address_backup')
           window._loginRedirect = null
           setShowAuthModal(false)
           setStep(2)
@@ -885,8 +897,7 @@ function CheckoutForm() {
             <p className="text-center text-sm text-gray-500 mt-5">
               No account?{' '}
               <a
-                // href="/register"
-                onClick={() => localStorage.setItem('checkout_redirect', 'true'), navigate('/register')}
+                onClick={() => { localStorage.setItem('checkout_redirect', 'true'); navigate('/register') }}
                 className="text-green-600 hover:text-green-700 font-medium"
               >
                 Create one free →

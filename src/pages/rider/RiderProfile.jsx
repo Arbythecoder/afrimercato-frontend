@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
 import { CheckCircle, Clock, UploadCloud, FileText, AlertCircle, Trash2, MapPin, Search } from 'lucide-react'
+import GdprPrivacyTab from '../../components/GdprPrivacyTab'
 
 function RiderProfile() {
   const navigate = useNavigate()
@@ -264,7 +265,8 @@ function RiderProfile() {
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'vehicle', label: 'Vehicle', icon: '🚲' },
     { id: 'documents', label: 'Documents', icon: '📄' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' }
+    { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'privacy', label: 'Privacy & My Data', icon: '🛡️' }
   ]
 
   const vehicleTypes = [
@@ -746,6 +748,13 @@ function RiderProfile() {
                     Sign Out of Account
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Privacy & My Data Tab — GDPR */}
+            {activeTab === 'privacy' && (
+              <div className="p-6">
+                <GdprPrivacyTab roleTitle="Rider" />
               </div>
             )}
           </div>

@@ -4,6 +4,7 @@ import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
 import { cartAPI, getVendorById, getVendorBySlug } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
+import { getCartCount } from '../../utils/cartUtils'
 import { MdShoppingCart } from 'react-icons/md'
 import { FaArrowLeft, FaArrowLeftLong } from 'react-icons/fa6'
 import { useNoIndex } from '../../hooks/useNoIndex'
@@ -570,7 +571,7 @@ function ShoppingCart() {
 
                 <div className="space-y-3 pb-4 border-b">
                   <div className="flex justify-between text-gray-600">
-                    <span>Subtotal ({cart.reduce((sum, item) => sum + item.quantity, 0)} items)</span>
+                    <span>Subtotal ({getCartCount(cart)} items)</span>
                     <span>£{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">

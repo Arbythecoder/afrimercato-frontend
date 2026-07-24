@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { getVendorById, getVendorProductsByVendorId } from '../../services/api'
 import { getProductImage, getStoreBanner } from '../../utils/defaultImages'
+import { getCartCount, getCartSubtotal } from '../../utils/cartUtils'
 
 function VendorStorefront() {
   const { vendorId } = useParams()
@@ -88,8 +89,8 @@ function VendorStorefront() {
     setCart(cart.filter(item => item._id !== productId))
   }
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const cartItemCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const cartTotal = getCartSubtotal(cart)
+  const cartItemCount = getCartCount(cart)
 
   // Filter products
   const filteredProducts = products.filter(product => {

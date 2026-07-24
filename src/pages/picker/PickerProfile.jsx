@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
+import GdprPrivacyTab from '../../components/GdprPrivacyTab'
 
 export default function PickerProfile() {
   const navigate = useNavigate()
@@ -78,6 +79,7 @@ export default function PickerProfile() {
   const tabs = [
     { id: 'profile', label: 'Profile', icon: '👤' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
+    { id: 'privacy', label: 'Privacy & My Data', icon: '🛡️' }
   ]
 
   return (
@@ -281,6 +283,11 @@ export default function PickerProfile() {
                   </button>
                 </div>
               </div>
+            )}
+
+            {/* Privacy & My Data Tab — GDPR */}
+            {activeTab === 'privacy' && (
+              <GdprPrivacyTab roleTitle="Picker" />
             )}
           </div>
         </div>
