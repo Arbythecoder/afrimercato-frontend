@@ -591,6 +591,24 @@ export const createProductForVendor = async (vendorId, productData) => {
   });
 };
 
+export const bulkCreateProductsForVendor = async (vendorId, productsArray) => {
+  return apiCall(`/admin/vendors/${vendorId}/products/bulk`, {
+    method: 'POST',
+    body: JSON.stringify({ products: productsArray })
+  });
+};
+
+export const deleteProductForVendor = async (vendorId, productId) => {
+  return apiCall(`/admin/vendors/${vendorId}/products/${productId}`, {
+    method: 'DELETE'
+  });
+};
+
+export const getProductsByVendor = async (vendorId) => {
+  return apiCall(`/products/vendor/${vendorId}`);
+};
+
+
 // Category management
 export const getCategories = async () => {
   return apiCall('/admin/categories');

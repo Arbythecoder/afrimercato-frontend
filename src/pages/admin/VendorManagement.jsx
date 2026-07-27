@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Store,
@@ -10,10 +11,12 @@ import {
   AlertTriangle,
   MapPin,
   Mail,
-  Calendar
+  Calendar,
+  PackagePlus
 } from 'lucide-react';
 import { apiCall } from '../../services/api';
 import useAdminStore from '../../stores/useAdminStore';
+
 
 /**
  * Vendor Management Page
@@ -223,14 +226,24 @@ function VendorManagement() {
                         </>
                       )}
                       {vendor.approvalStatus === 'approved' && (
-                        <button
-                          onClick={() => openActionModal(vendor, 'suspend')}
-                          className="bg-gray-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-gray-700 transition flex items-center justify-center gap-2"
-                        >
-                          <AlertTriangle className="w-4 h-4" />
-                          Suspend
-                        </button>
+                        <>
+                          <Link
+                            to={`/admin/vendors/create-product?vendorId=${vendor._id}`}
+                            className="bg-afri-green text-white px-4 py-2 rounded-lg font-semibold hover:bg-afri-green-dark transition flex items-center justify-center gap-2 text-sm shadow-sm"
+                          >
+                            <PackagePlus className="w-4 h-4" />
+                            Upload Products
+                          </Link>
+                          <button
+                            onClick={() => openActionModal(vendor, 'suspend')}
+                            className="bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2 rounded-lg font-semibold transition flex items-center justify-center gap-2 text-sm"
+                          >
+                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            Suspend
+                          </button>
+                        </>
                       )}
+
                     </div>
                   </div>
                 </div>
