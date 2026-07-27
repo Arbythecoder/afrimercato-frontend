@@ -3,13 +3,14 @@ import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { useNoIndex } from '../../hooks/useNoIndex'
 import {
-  LayoutDashboard, Store, Bike, ClipboardList, Users,
+  LayoutDashboard, Store, PackagePlus, Bike, ClipboardList, Users,
   ShieldCheck, BarChart2, ShoppingBag, LogOut, CreditCard, Cog
 } from 'lucide-react'
 
 const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
   { icon: Store, label: 'Vendors', path: '/admin/vendors' },
+  { icon: PackagePlus, label: 'Vendor Products', path: '/admin/vendors/create-product' },
   { icon: Bike, label: 'Riders', path: '/admin/riders' },
   { icon: ClipboardList, label: 'Pickers', path: '/admin/pickers' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { icon: BarChart2, label: 'Analytics', path: '/admin/analytics' },
   { icon: Cog, label: 'Settings', path: '/admin/settings' },
 ]
+
 
 function Sidebar({ location, user, logout, onNavClick }) {
   return (
