@@ -262,7 +262,6 @@ function RiderProfile() {
   }
 
   const tabs = [
-  const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'vehicle', label: 'Vehicle', icon: Bike },
     { id: 'documents', label: 'Documents', icon: FileText },

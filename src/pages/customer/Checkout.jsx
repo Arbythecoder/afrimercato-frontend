@@ -1146,9 +1146,9 @@ function CheckoutForm() {
                         </button>
                       </div>
                       {postcodeError && <span className="text-red-600 text-xs flex items-center gap-1 mt-1">
-                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                            {postcodeError}
-                          </span>
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        {postcodeError}
+                      </span>
                       }
                     </div>
 
@@ -1678,7 +1678,10 @@ function CheckoutForm() {
                 )}
 
                 {/* Minimum Order Check */}
-                  } else if (minCheck.minimumOrder > 0) {
+                {(() => {
+                  const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
+                  const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
+                  if (minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                     return (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-2 mt-2">
                         <p className="text-xs text-green-700">
