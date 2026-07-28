@@ -473,6 +473,20 @@ export const cancelOrder = async (id, reason = 'Cancelled by customer') => {
   });
 };
 
+export const updateOrderAddress = async (orderId, addressData) => {
+  return apiCall(`/customer/orders/${orderId}/address`, {
+    method: 'PUT',
+    body: JSON.stringify(addressData)
+  });
+};
+
+export const calculateDeliveryFee = async (data) => {
+  return apiCall('/customer/orders/calculate-fee', {
+    method: 'POST',
+    body: JSON.stringify(data)
+  });
+};
+
 // BOTTOMLESS DRINKS
 export const createBottomlessOrder = async (orderData) => {
   return apiCall('/bottomless', {
@@ -651,12 +665,19 @@ export const uploadProductImages = async (files) => {
   const formData = new FormData();
 
   files.forEach((file) => {
-    formData.append('productImages', file);
+    formData.append('images', file);
   });
 
   return apiCall('/vendor/upload/images', {
     method: 'POST',
     body: formData
+  });
+};
+
+export const bulkCreateVendorProducts = async (productsArray) => {
+  return apiCall('/vendor/products/bulk', {
+    method: 'POST',
+    body: JSON.stringify({ products: productsArray })
   });
 };
 
@@ -796,6 +817,7 @@ export const vendorAPI = {
   getOrdersReport,
   getRevenueReport,
   uploadProductImages,
+  bulkCreateProducts: bulkCreateVendorProducts,
   bulkDeleteProducts,
   bulkUpdateStatus,
   bulkUpdatePrices,

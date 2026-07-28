@@ -684,7 +684,7 @@ function Settings() {
 
               {/* 1. Cover Image Banner */}
               <div className="relative h-48 w-full bg-gray-100 group flex items-center justify-center">
-                {coverPreview || vendorProfile.coverImage ? (
+                {/* {coverPreview || vendorProfile.coverImage ? (
                   <img
                     src={coverPreview || vendorProfile.coverImage}
                     alt="Store Cover"
@@ -697,9 +697,9 @@ function Settings() {
                     </svg>
                     <span className="text-sm font-medium">Add a cover image (16:9 recommended)</span>
                   </div>
-                )}
+                )} */}
 
-                {isEditing && (
+                {/* {isEditing && (
                   <label className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 text-white opacity-0 group-hover:opacity-100 cursor-pointer transition-all duration-200">
                     <div className="flex items-center gap-2 bg-black bg-opacity-60 px-4 py-2 rounded-lg font-semibold backdrop-blur-sm hover:bg-opacity-80 transition-all">
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -709,7 +709,7 @@ function Settings() {
                     </div>
                     <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
                   </label>
-                )}
+                )} */}
               </div>
 
               <div className="px-6 pb-6 relative">

@@ -9,7 +9,7 @@ import { LuShoppingBag } from 'react-icons/lu';
 import { MdShoppingCart } from 'react-icons/md';
 import { MapPin, Package, Heart, Star, BarChart2 } from 'lucide-react'
 import { getUserProfile } from '../../services/api';
-import { CiLogout } from 'react-icons/ci';
+import { IoMdLogOut } from "react-icons/io";
 import { useAuth } from '../../context/AuthContext';
 
 function CustomerDashboard() {
@@ -547,10 +547,11 @@ function CustomerDashboard() {
         }
       `}</style>
 
-      <div className="fixed bottom-3 ml-4 left-14 bg-red-500 text-white px-4 py-2 rounded-full shadow-lg hover:bg-red-600 transition-all">
-        <CiLogout onClick={handleLogout} className='text-2xl cursor-pointer' size={20}
+      <button onClick={handleLogout} className="fixed flex items-center bottom-3 gap-1 ml-4 -left-0.5 bg-red-500 text-white px-2 py-2 rounded-full shadow-lg hover:bg-red-600 transition-all">
+        <IoMdLogOut className='text-2xl cursor-pointer' size={16}
         />
-      </div>
+        <span className='text-sm cursor-pointer'>Logout</span>
+      </button>
     </div>
   )
 }

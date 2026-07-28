@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { productAPI, reviewAPI } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { useAuth } from '../../context/AuthContext'
+import { Edit3, FileText, ThumbsUp, Star } from 'lucide-react'
 
 function ProductReviews() {
   const { productId } = useParams()
@@ -232,9 +233,9 @@ function ProductReviews() {
           canReview ? (
             <button
               onClick={() => setShowReviewForm(!showReviewForm)}
-              className="w-full mb-6 py-3 bg-afri-green text-white rounded-xl font-semibold hover:bg-afri-green-dark"
+              className="w-full mb-6 py-3 bg-afri-green text-white rounded-xl font-semibold hover:bg-afri-green-dark flex items-center justify-center gap-2"
             >
-              {showReviewForm ? 'Cancel' : '✍️ Write a Review'}
+              {showReviewForm ? 'Cancel' : <><Edit3 className="w-4 h-4" /> Write a Review</>}
             </button>
           ) : (
             <div className="mb-6 p-4 bg-gray-100 rounded-xl text-center text-gray-600">
@@ -334,7 +335,7 @@ function ProductReviews() {
         <div className="space-y-4">
           {reviews.length === 0 ? (
             <div className="text-center py-12 bg-white rounded-xl shadow-lg">
-              <span className="text-5xl">📝</span>
+              <FileText className="w-12 h-12 text-gray-400 mx-auto" />
               <p className="text-gray-500 mt-4">No reviews yet. Be the first to review!</p>
             </div>
           ) : (
@@ -374,9 +375,9 @@ function ProductReviews() {
                 <div className="mt-4 flex items-center gap-4">
                   <button
                     onClick={() => handleMarkHelpful(review._id)}
-                    className="text-sm text-gray-500 hover:text-afri-green flex items-center gap-1"
+                    className="text-sm text-gray-500 hover:text-afri-green flex items-center gap-1.5"
                   >
-                    👍 Helpful ({review.helpful?.count || 0})
+                    <ThumbsUp className="w-4 h-4 text-gray-400" /> Helpful ({review.helpful?.count || 0})
                   </button>
                 </div>
 

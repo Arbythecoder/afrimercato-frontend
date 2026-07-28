@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { orderAPI } from '../../services/api'
+import { AlertTriangle, Frown, ShoppingCart, Package, CreditCard, Banknote, CheckCircle2 } from 'lucide-react'
 
 function OrderConfirmation() {
   const { orderId } = useParams()
@@ -19,31 +20,24 @@ function OrderConfirmation() {
         } else {
           setError(response.message || 'Failed to load order')
         }
-      } catch (error) {
-        console.error('Error fetching order:', error)
-        // Check for timeout error
-        if (error.message === 'Request timed out') {
-          setError('Request timed out. Please check your connection and try again.')
-        } else if (error.code === 'AUTH_EXPIRED') {
-          setError('Session expired. Please log in again.')
-          setTimeout(() => navigate('/login'), 2000)
-        } else {
-          setError(error.message || 'Failed to load order. Please try again.')
-        }
+      } catch (err) {
+        setError(err.message || 'Error fetching order details')
       } finally {
         setLoading(false)
       }
     }
 
-    fetchOrder()
-  }, [orderId, navigate])
+    if (orderId) {
+      fetchOrder()
+    }
+  }, [orderId])
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-green-600 mx-auto"></div>
-          <p className="text-gray-600 mt-4">Loading order...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-green-600 border-t-transparent mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading order details...</p>
         </div>
       </div>
     )
@@ -53,7 +47,9 @@ function OrderConfirmation() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <p className="text-4xl mb-4">⚠️</p>
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Order</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="flex gap-4 justify-center">
@@ -79,7 +75,7 @@ function OrderConfirmation() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <p className="text-2xl mb-4">😔</p>
+          <Frown className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 mb-4">Order not found</p>
           <Link to="/stores" className="text-green-600 hover:underline">
             Continue Shopping
@@ -96,110 +92,117 @@ function OrderConfirmation() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🛒</span>
+              <ShoppingCart className="w-6 h-6 text-green-600" />
               <span className="text-xl font-bold text-gray-900">Afrimercato</span>
             </div>
-            <Link to="/stores" className="text-gray-600 hover:text-gray-900">
+            <Link
+              to="/stores"
+              className="text-green-600 hover:underline text-sm font-semibold"
+            >
               Continue Shopping
             </Link>
           </div>
         </div>
       </header>
 
-      <div className="container mx-auto px-6 py-12">
-        {/* Success Message */}
-        <div className="max-w-2xl mx-auto text-center mb-8">
-          <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <span className="text-4xl">✓</span>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Order Placed Successfully!
-          </h1>
-          <p className="text-gray-600 mb-4">
-            Thank you for your order. We've received your order and will start preparing it shortly.
-          </p>
-          <p className="text-sm text-gray-500">
-            Order Number: <span className="font-bold text-gray-900">{order.orderNumber}</span>
-          </p>
-        </div>
-
-        {/* Order Details */}
+      {/* Main Content */}
+      <div className="container mx-auto px-4 py-8">
         <div className="max-w-2xl mx-auto">
+          {/* Success Banner */}
+          <div className="bg-white rounded-xl shadow-md p-8 text-center mb-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="w-10 h-10 text-green-600" />
+            </div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
+              Order Confirmed!
+            </h1>
+            <p className="text-gray-600 mb-4">
+              Thank you for your order. We've sent a confirmation email.
+            </p>
+            <div className="bg-gray-50 rounded-lg p-4 inline-block">
+              <p className="text-sm text-gray-500">Order Number</p>
+              <p className="text-lg font-bold text-gray-900">
+                {order.orderNumber || order._id}
+              </p>
+            </div>
+          </div>
+
+          {/* Delivery Address */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Order Details</h2>
-
-            {/* Delivery Address */}
-            <div className="mb-6 pb-6 border-b">
-              <h3 className="font-semibold text-gray-700 mb-2">Delivery Address</h3>
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Name:</span> {order.customer?.name}
-              </p>
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Email:</span> {order.customer?.email}
-              </p>
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
-              </p>
-
-              <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Address:</span>{' '}
-                {[
-                  order.deliveryAddress?.street,
-                  order.deliveryAddress?.city,
-                  order.deliveryAddress?.county,
-                  order.deliveryAddress?.postcode,
-                  order.deliveryAddress?.country,
-                ].filter(Boolean).join(', ')}
-              </p>
-
-              {order.deliveryAddress?.instructions && (
-                <p className="text-gray-700 text-sm">
-                  <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
+            <h2 className="text-xl font-bold text-gray-900 mb-4">
+              Delivery Details
+            </h2>
+            {order.deliveryAddress && (
+              <div className="space-y-1 text-gray-700">
+                <p className="font-semibold">
+                  {order.deliveryAddress.fullName || order.customer?.name}
                 </p>
-              )}
-            </div>
+                <p>{order.deliveryAddress.street}</p>
+                <p>
+                  {order.deliveryAddress.city},{' '}
+                  {order.deliveryAddress.postcode}
+                </p>
+                {order.deliveryAddress.phone && (
+                  <p className="text-gray-500 text-sm mt-2">
+                    Phone: {order.deliveryAddress.phone}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
 
-            {/* Items */}
-            <div className="mb-6 pb-6 border-b">
-              <h3 className="font-semibold text-gray-700 mb-3">Order Items</h3>
-              <div className="space-y-3">
-                {order.items?.map((item, index) => (
-                  <div key={index} className="flex justify-between">
+          {/* Order Items */}
+          <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+            <h2 className="text-xl font-bold text-gray-900 mb-4">Order Summary</h2>
+            <div className="space-y-4 mb-6">
+              {order.items?.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-2 border-b last:border-0"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="bg-gray-100 text-gray-700 font-semibold px-2.5 py-1 rounded-md text-sm">
+                      {item.quantity}x
+                    </span>
                     <div>
-                      <p className="text-gray-900">{item.name}</p>
-                      <p className="text-sm text-gray-500">Qty: {item.quantity}</p>
+                      <p className="font-medium text-gray-900">{item.name}</p>
+                      <p className="text-xs text-gray-500">£{item.price?.toFixed(2)} each</p>
                     </div>
-                    <p className="font-semibold text-gray-900">
-                      £{(item.price * item.quantity).toFixed(2)}
-                    </p>
                   </div>
-                ))}
-              </div>
+                  <p className="font-semibold text-gray-900">
+                    £{(item.price * item.quantity).toFixed(2)}
+                  </p>
+                </div>
+              ))}
             </div>
 
-            {/* Pricing */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-gray-700">
+            {/* Price Breakdown */}
+            <div className="border-t pt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-gray-600">
                 <span>Subtotal</span>
-                <span>£{order.pricing?.subtotal?.toFixed(2)}</span>
+                <span>£{order.pricing?.subtotal?.toFixed(2) || (order.totalAmount - (order.deliveryFee || 0)).toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-gray-700">
+              <div className="flex justify-between text-gray-600">
                 <span>Delivery Fee</span>
-                <span>£{order.pricing?.deliveryFee?.toFixed(2)}</span>
+                <span>
+                  {order.deliveryFee === 0
+                    ? 'FREE'
+                    : `£${order.deliveryFee?.toFixed(2)}`}
+                </span>
               </div>
-              <div className="flex justify-between text-xl font-bold text-gray-900 border-t pt-2">
+              <div className="flex justify-between text-lg font-bold text-gray-900 pt-2 border-t">
                 <span>Total</span>
-                <span>£{order.pricing?.total?.toFixed(2)}</span>
+                <span className="text-green-600">£{order.totalAmount?.toFixed(2)}</span>
               </div>
             </div>
           </div>
 
-          {/* Order Status */}
+          {/* Order Status Card */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Order Status</h2>
             <div className="flex items-center gap-4">
               <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-                <span className="text-2xl">📦</span>
+                <Package className="w-6 h-6 text-yellow-700" />
               </div>
               <div>
                 <p className="font-semibold text-gray-900 capitalize">
@@ -222,11 +225,11 @@ function OrderConfirmation() {
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">Payment</h2>
             <div className="sm:flex justify-between items-center">
-              <p className="text-gray-700">
+              <p className="text-gray-700 flex items-center gap-2">
                 <span className="font-semibold">Method:</span>{' '}
-{order.paymentMethod === 'card' ? '💳 Card Payment' : '💵 Cash on Delivery'}
+                {order.paymentMethod === 'card' ? <><CreditCard className="w-4 h-4 text-gray-600 inline" /> Card Payment</> : <><Banknote className="w-4 h-4 text-green-600 inline" /> Cash on Delivery</>}
               </p>
-              <div className='flex'>
+              <div className='flex items-center gap-2'>
                 <p className="text-gray-700 font-semibold">Status:</p>
                 <span className={`px-3 py-1 rounded-full text-sm font-semibold ${
                   order.paymentStatus === 'paid'
@@ -259,21 +262,21 @@ function OrderConfirmation() {
         {/* What's Next */}
         <div className="max-w-2xl mx-auto mt-8 bg-blue-50 rounded-xl p-6">
           <h3 className="font-bold text-gray-900 mb-3">What happens next?</h3>
-          <ul className="space-y-2 text-sm text-gray-700">
-            <li className="flex items-start gap-2">
-              <span>1️⃣</span>
+          <ul className="space-y-3 text-sm text-gray-700">
+            <li className="flex items-start gap-2.5">
+              <span className="bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0 mt-0.5">1</span>
               <span>Your order will be picked and packed by our team</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span>2️⃣</span>
+            <li className="flex items-start gap-2.5">
+              <span className="bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0 mt-0.5">2</span>
               <span>A rider will be assigned to deliver your order</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span>3️⃣</span>
+            <li className="flex items-start gap-2.5">
+              <span className="bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0 mt-0.5">3</span>
               <span>You'll receive real-time updates on delivery status</span>
             </li>
-            <li className="flex items-start gap-2">
-              <span>4️⃣</span>
+            <li className="flex items-start gap-2.5">
+              <span className="bg-blue-600 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center font-bold shrink-0 mt-0.5">4</span>
               <span>Estimated delivery time: 20-40 minutes</span>
             </li>
           </ul>

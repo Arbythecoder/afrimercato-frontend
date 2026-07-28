@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext'
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNoIndex } from '../hooks/useNoIndex';
+import { Eye, EyeOff } from 'lucide-react';
 
 function Login() {
   useNoIndex()
@@ -252,9 +253,9 @@ function Login() {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
                       >
-                        {showPassword ? '👁️' : '👁️‍🗨️'}
+                        {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                       </button>
                     </div>
                   </div>
@@ -364,9 +365,22 @@ function Login() {
                 <button
                   type="button"
                   onClick={() => {
-                    // ... your existing google auth logic ...
+                    // Check if we need to redirect to checkout after Google Login
+                    const checkoutPending = localStorage.getItem('checkout_redirect') === 'true'
+                    const customRedirect = localStorage.getItem('redirect_after_login')
+
+                    let redirectPath = ''
+                    if (checkoutPending) {
+                      redirectPath = '?redirect=/checkout'
+                    } else if (customRedirect) {
+                      redirectPath = `?redirect=${customRedirect}`
+                    }
+
+                    // Append the redirect path to the backend URL
+                    const baseUrl = import.meta.env.VITE_API_URL || 'https://afrimercato-backend.onrender.com'
+                    window.location.href = `${baseUrl}/api/auth/google${redirectPath}`
                   }}
-                  className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer"
+                  className="w-full inline-flex justify-center items-center py-3 px-4 border border-gray-300 rounded-lg shadow-sm bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 transition cursor-pointer pointer-events-auto"
                 >
                   <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

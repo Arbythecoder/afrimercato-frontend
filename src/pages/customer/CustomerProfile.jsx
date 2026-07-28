@@ -8,6 +8,7 @@ import { useNoIndex } from '../../hooks/useNoIndex'
 import { LuShoppingBag } from 'react-icons/lu'
 import { FaArrowLeft } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom'
+import { User, MapPin, Lock, Shield, Settings } from 'lucide-react'
 
 function CustomerProfile() {
   useNoIndex()
@@ -216,11 +217,11 @@ function CustomerProfile() {
   }
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'addresses', label: 'Addresses', icon: '📍' },
-    { id: 'security', label: 'Security', icon: '🔒' },
-    { id: 'privacy', label: 'Privacy & My Data', icon: '🛡️' },
-    { id: 'preferences', label: 'Preferences', icon: '⚙️' }
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'addresses', label: 'Addresses', icon: MapPin },
+    { id: 'security', label: 'Security', icon: Lock },
+    { id: 'privacy', label: 'Privacy & My Data', icon: Shield },
+    { id: 'preferences', label: 'Preferences', icon: Settings }
   ]
 
   return (
@@ -228,8 +229,7 @@ function CustomerProfile() {
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
         <div className="max-w-4xl mx-auto px-4">
           <h1 className="text-3xl font-bold">My Profile</h1>
-          <p className="text-afri-green-light mt-1">Manage your account settings</p>
-          <button onClick={() => navigate('/my-dashboard')} className='flex gap-3 text-sm mt-2 hover:underline cursor-pointer'><FaArrowLeft className='cursor-pointer' size={20} /> back to dashboard</button>
+          <p className="text-white/80 mt-1">Manage your account settings and preferences</p>
         </div>
       </div>
 
@@ -245,19 +245,22 @@ function CustomerProfile() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b overflow-x-auto">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
-                  ? 'text-afri-green border-b-2 border-afri-green bg-gray-50'
-                  : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map(tab => {
+              const IconComponent = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                    ? 'text-afri-green border-b-2 border-afri-green bg-gray-50'
+                    : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                  <IconComponent className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              )
+            })}
           </div>
 
           <div className="p-6">

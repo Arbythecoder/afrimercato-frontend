@@ -111,7 +111,7 @@ function PickerPerformance() {
   const totalOrders = overall.totalOrders || 0
   const totalEarnings = parseFloat(overall.totalEarnings || 0)
 
-  const accuracyLabel = accuracy >= 99 ? 'Excellent 🏆' : accuracy >= 97 ? 'Good 👍' : 'Needs Work'
+  const accuracyLabel = accuracy >= 99 ? 'Excellent' : accuracy >= 97 ? 'Good' : 'Needs Work'
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -170,7 +170,7 @@ function PickerPerformance() {
 
         {/* Tips */}
         <div className="bg-gradient-to-br from-orange-500 to-orange-700 rounded-2xl p-5 text-white">
-          <p className="font-bold mb-3">💡 Pro Tips</p>
+          <p className="font-bold mb-3 flex items-center gap-1.5"><Zap className="w-4 h-4 text-amber-300 fill-amber-300" /> Pro Tips</p>
           <div className="space-y-3">
             {[
               'Group items by aisle to cut picking time by 30%',

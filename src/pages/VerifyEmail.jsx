@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { ShoppingCart } from 'lucide-react'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
 import { useAuth } from '../context/AuthContext'
 import { apiCall } from '../services/api'
@@ -93,7 +94,7 @@ export default function VerifyEmail() {
         {/* Logo */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-gradient-to-br from-green-600 to-yellow-500 rounded-xl flex items-center justify-center mx-auto mb-4">
-            <span className="text-white font-bold text-2xl">🛒</span>
+            <ShoppingCart className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">
             Afri<span className="text-green-600">Hub</span>

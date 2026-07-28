@@ -138,7 +138,7 @@ function PrivacyPolicy() {
             </ul>
             <div className="mt-6 p-5 bg-gradient-to-r from-emerald-50 to-green-50 border border-green-200 rounded-xl shadow-sm">
               <h3 className="text-lg font-bold text-gray-900 mb-1 flex items-center gap-2">
-                <span>🛡️</span> Interactive Data Rights Portal
+                <Shield className="w-5 h-5 text-afri-green shrink-0" /> Interactive Data Rights Portal
               </h3>
               <p className="text-sm text-gray-600 mb-4">
                 You can directly export your data, submit privacy complaints, or request account deletion inside your account settings.
