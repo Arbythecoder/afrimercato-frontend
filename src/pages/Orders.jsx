@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { vendorAPI } from '../services/api'
+import { Package, FileText, Tag } from 'lucide-react'
 
 function Orders() {
   const [orders, setOrders] = useState([])
@@ -108,7 +109,7 @@ function Orders() {
       {/* Orders List */}
       {filteredOrders.length === 0 ? (
         <div className="bg-white rounded-xl shadow-sm p-12 text-center">
-          <div className="text-6xl mb-4">📦</div>
+          <Package className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders found</h3>
           <p className="text-gray-600">
             {filterStatus === 'all'
@@ -307,23 +308,23 @@ function OrderDetailModal({ order, onClose }) {
               <button
                 onClick={() => handleGenerateDocument('invoice')}
                 disabled={loading.invoice}
-                className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition disabled:opacity-50"
+                className="px-3 py-1 text-sm bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition disabled:opacity-50 flex items-center gap-1"
               >
-                {loading.invoice ? 'Generating...' : '📄 Invoice'}
+                <FileText className="w-3.5 h-3.5" /> {loading.invoice ? 'Generating...' : 'Invoice'}
               </button>
               <button
                 onClick={() => handleGenerateDocument('shipping')}
                 disabled={loading.shipping}
-                className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition disabled:opacity-50"
+                className="px-3 py-1 text-sm bg-green-50 text-green-600 rounded-lg hover:bg-green-100 transition disabled:opacity-50 flex items-center gap-1"
               >
-                {loading.shipping ? 'Generating...' : '🏷️ Shipping Label'}
+                <Tag className="w-3.5 h-3.5" /> {loading.shipping ? 'Generating...' : 'Shipping Label'}
               </button>
               <button
                 onClick={() => handleGenerateDocument('packing')}
                 disabled={loading.packing}
-                className="px-3 py-1 text-sm bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition disabled:opacity-50"
+                className="px-3 py-1 text-sm bg-purple-50 text-purple-600 rounded-lg hover:bg-purple-100 transition disabled:opacity-50 flex items-center gap-1"
               >
-                {loading.packing ? 'Generating...' : '📦 Packing Slip'}
+                <Package className="w-3.5 h-3.5" /> {loading.packing ? 'Generating...' : 'Packing Slip'}
               </button>
             </div>
           </div>

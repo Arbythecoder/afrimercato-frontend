@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { orderAPI } from '../../services/api'
 import DeliveryChat from '../../components/DeliveryChat'
+import { AlertTriangle, ShoppingCart, Truck } from 'lucide-react'
 
 // Chat is only available when the rider is actively en route — SRS requirement
 const CHAT_ACTIVE_STATUSES = ['out-for-delivery']
@@ -88,7 +89,9 @@ function OrderTracking() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <p className="text-4xl mb-4">⚠️</p>
+          <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8" />
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 mb-2">Unable to Load Tracking</h2>
           <p className="text-gray-600 mb-6">{error}</p>
           <div className="flex gap-4 justify-center">
@@ -133,7 +136,7 @@ function OrderTracking() {
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-2xl">🛒</span>
+              <ShoppingCart className="w-6 h-6 text-afri-green" />
               <span className="text-xl font-bold text-gray-900">Afrimercato</span>
             </div>
             <Link to="/my-dashboard" className="text-gray-600 hover:text-gray-900">
@@ -168,7 +171,9 @@ function OrderTracking() {
             {order.status !== 'delivered' && (
               <div className="bg-blue-50 rounded-lg p-4">
                 <div className="flex items-center gap-3">
-                  <span className="text-3xl">🚚</span>
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <Truck className="w-5 h-5 text-blue-600" />
+                  </div>
                   <div>
                     <p className="font-semibold text-gray-900">
                       Estimated Delivery Time

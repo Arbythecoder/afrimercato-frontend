@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
   { icon: Store, label: 'Vendors', path: '/admin/vendors' },
   { icon: PackagePlus, label: 'Vendor Products', path: '/admin/vendors/create-product' },
+  { icon: PackagePlus, label: 'Products Categories', path: '/admin/categories' },
   { icon: Bike, label: 'Riders', path: '/admin/riders' },
   { icon: ClipboardList, label: 'Pickers', path: '/admin/pickers' },
   { icon: Users, label: 'Customers', path: '/admin/customers' },

@@ -7,7 +7,8 @@ import { getProductImage } from '../../utils/defaultImages'
 import { checkVendorLock, checkMinimumOrder } from '../../utils/cartVendorLock'
 import { getCartCount, getCartSubtotal } from '../../utils/cartUtils'
 import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
-import { Clock, MapPin, Tag, PackageX } from 'lucide-react'
+import ProductDetailModal from '../../components/customer/ProductDetailModal'
+import { Clock, MapPin, Tag, PackageX, Eye, Star } from 'lucide-react'
 
 // Helper to check if an ID is a valid MongoDB ObjectId (24 hex characters)
 const isValidMongoId = (id) => {
@@ -38,6 +39,7 @@ export default function ClientVendorStorefront() {
     }
   })
   const [showCart, setShowCart] = useState(false)
+  const [selectedProductForDetail, setSelectedProductForDetail] = useState(null)
   const [countdown, setCountdown] = useState({ hours: 10, minutes: 56, seconds: 21 })
   const [vendorSwitchModal, setVendorSwitchModal] = useState({
     isOpen: false,
@@ -342,7 +344,7 @@ export default function ClientVendorStorefront() {
             </div>
 
             <div className="hidden lg:block relative">
-              <img src={vendor?.coverImage || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
+              <img src={vendor?.logo || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent to-[#1A1A1A]/40" />
             </div>
           </div>
@@ -412,7 +414,12 @@ export default function ClientVendorStorefront() {
               ) : (
                 <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                   {filteredProducts.map((product, index) => (
-                    <ProductCard key={product.id || product._id || index} product={product} onAddToCart={() => addToCart(product)} />
+                    <ProductCard
+                      key={product.id || product._id || index}
+                      product={product}
+                      onAddToCart={() => addToCart(product)}
+                      onOpenDetail={() => setSelectedProductForDetail(product)}
+                    />
                   ))}
                 </div>
               )}
@@ -554,15 +561,29 @@ export default function ClientVendorStorefront() {
         newStoreName={vendorSwitchModal.newStoreName}
         onConfirmSwitch={handleVendorSwitch}
       />
+
+      <ProductDetailModal
+        product={selectedProductForDetail}
+        isOpen={!!selectedProductForDetail}
+        onClose={() => setSelectedProductForDetail(null)}
+        onAddToCart={async (prod, qty) => {
+          const times = qty || 1
+          for (let i = 0; i < times; i++) {
+            await addToCart(prod)
+          }
+        }}
+        vendor={vendor}
+      />
     </div>
   )
 }
 
-function ProductCard({ product, onAddToCart, isDiscount }) {
+function ProductCard({ product, onAddToCart, onOpenDetail, isDiscount }) {
   const [added, setAdded] = useState(false)
   const outOfStock = product.stock === 0 || product.inStock === false
 
-  const handleAdd = () => {
+  const handleAdd = (e) => {
+    e.stopPropagation()
     if (outOfStock) return
     onAddToCart()
     setAdded(true)
@@ -572,42 +593,70 @@ function ProductCard({ product, onAddToCart, isDiscount }) {
   const imageUrl = getProductImage(product)
 
   return (
-    <motion.div whileHover={{ y: outOfStock ? 0 : -4 }} className={`group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden ${outOfStock ? 'opacity-60' : ''}`}>
-      <div className="relative overflow-hidden">
-        <img
-          src={imageUrl}
-          alt={product.name}
-          className="h-44 w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
-          onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200' }}
-        />
-        {outOfStock && (
-          <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-            <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">Out of Stock</span>
+    <motion.div
+      whileHover={{ y: outOfStock ? 0 : -4 }}
+      onClick={onOpenDetail}
+      className={`group bg-white rounded-2xl shadow-sm border border-gray-100 hover:shadow-lg transition-all duration-300 overflow-hidden cursor-pointer flex flex-col justify-between ${outOfStock ? 'opacity-60' : ''}`}
+    >
+      <div>
+        <div className="relative overflow-hidden">
+          <img
+            src={imageUrl}
+            alt={product.name}
+            className="h-44 w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200' }}
+          />
+
+          {/* Quick Details Hover Badge */}
+          <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
+            <span className="bg-white/95 text-[#1B4D3E] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">
+              <Eye size={12} /> View Details
+            </span>
           </div>
-        )}
-        {!outOfStock && (isDiscount || product.originalPrice) && (
-          <span className="absolute top-3 left-3 bg-[#E53E3E] text-white text-xs font-bold px-2 py-1 rounded-full">Sale</span>
-        )}
-      </div>
 
-      <div className="p-4">
-        <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold mb-1">{product.category || 'Groceries'}</p>
-        <h3 className="font-bold text-gray-900 text-sm mb-2 truncate">{product.name}</h3>
-
-        <div className="flex items-center gap-2 mb-4">
-          {product.originalPrice && (
-            <span className="text-sm text-gray-400 line-through">£{product.originalPrice.toFixed(2)}</span>
+          {outOfStock && (
+            <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+              <span className="bg-red-500 text-white px-3 py-1 rounded-full text-xs font-bold">Out of Stock</span>
+            </div>
           )}
-          <span className="font-black text-[#1B4D3E] text-lg">£{(product.price || 0).toFixed(2)}</span>
+          {!outOfStock && (isDiscount || product.originalPrice) && (
+            <span className="absolute top-3 left-3 bg-[#E53E3E] text-white text-xs font-bold px-2.5 py-1 rounded-full shadow">Sale</span>
+          )}
         </div>
 
+        <div className="p-4">
+          <div className="flex items-center justify-between text-xs text-gray-400 mb-1">
+            <span className="uppercase tracking-wider font-semibold truncate">{product.category || 'Groceries'}</span>
+            <span className="flex items-center text-amber-500 font-bold gap-0.5">
+              <Star size={10} className="fill-amber-400" />
+              {product.rating || '4.8'}
+            </span>
+          </div>
+
+          <h3 className="font-bold text-gray-900 text-sm mb-2 truncate group-hover:text-[#1B4D3E] transition-colors">
+            {product.name}
+          </h3>
+
+          <div className="flex items-center gap-2 mb-3">
+            {product.originalPrice && (
+              <span className="text-sm text-gray-400 line-through">£{product.originalPrice.toFixed(2)}</span>
+            )}
+            <span className="font-black text-[#1B4D3E] text-lg">£{(product.price || 0).toFixed(2)}</span>
+            {product.unit && (
+              <span className="text-xs text-gray-400">/{product.unit}</span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className="px-4 pb-4">
         <button
           onClick={handleAdd}
           disabled={outOfStock}
           className={`w-full py-2.5 rounded-xl text-sm font-bold transition-all ${outOfStock
             ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
             : added
-              ? 'bg-green-500 text-white'
+              ? 'bg-emerald-600 text-white'
               : 'bg-gray-100 hover:bg-[#1B4D3E] text-gray-800 hover:text-white'
             }`}
         >

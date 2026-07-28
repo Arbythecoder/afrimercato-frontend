@@ -1,4 +1,6 @@
 import { useState, useEffect } from 'react'
+import { useAuth } from '../context/AuthContext'
+import { Sprout, Rocket, Star, Crown } from 'lucide-react'
 import { subscriptionAPI } from '../services/api'
 
 function Subscription() {
@@ -108,11 +110,11 @@ function Subscription() {
 
               <div className="p-6">
                 {/* Plan Icon */}
-                <div className="text-4xl mb-4">
-                  {plan.id === 'free' && '🌱'}
-                  {plan.id === 'standard' && '🚀'}
-                  {plan.id === 'premium' && '⭐'}
-                  {plan.id === 'enterprise' && '👑'}
+                <div className="mb-4">
+                  {plan.id === 'free' && <Sprout className="w-8 h-8 text-green-600" />}
+                  {plan.id === 'standard' && <Rocket className="w-8 h-8 text-blue-600" />}
+                  {plan.id === 'premium' && <Star className="w-8 h-8 text-amber-500 fill-amber-500" />}
+                  {plan.id === 'enterprise' && <Crown className="w-8 h-8 text-purple-600" />}
                 </div>
 
                 {/* Plan Name */}
