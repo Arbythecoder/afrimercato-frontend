@@ -296,61 +296,117 @@ export default function ClientVendorStorefront() {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-[#1B4D3E] to-[#0D2B22] py-14 relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-2 gap-8 items-center">
-            <div>
-              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="text-sm font-semibold text-afri-green-light uppercase tracking-widest mb-2">
-                Welcome to
-              </motion.p>
-              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="text-4xl sm:text-5xl font-black text-white mb-2 leading-tight">
+      {/* Hero Section with Vendor Image Background */}
+      <section className="relative py-14 sm:py-16 overflow-hidden min-h-[380px] flex items-center">
+        {/* Background Image (Vendor Image / Logo / Store Image) */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src={vendor?.banner || vendor?.storeImage || vendor?.logo || vendor?.image || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1200"}
+            alt={vendor?.storeName || "Store Background"}
+            className="w-full h-full object-cover object-center scale-105 filter blur-[1px] transition-transform duration-700 hover:scale-100"
+          />
+          {/* Dark Overlay Gradient for Maximum Text Readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-slate-950/60 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
+        </div>
+
+        {/* Content Container */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
+          <div className="grid lg:grid-cols-12 gap-8 items-center">
+            
+            {/* Left Column: Store Text & Actions */}
+            <div className="lg:col-span-8">
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-3">
+                <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-400/40 backdrop-blur-md rounded-full text-xs font-bold uppercase tracking-widest text-emerald-300">
+                  Official Store
+                </span>
+                {vendor?.category && (
+                  <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-full text-xs font-semibold text-white/80 capitalize">
+                    {vendor.category}
+                  </span>
+                )}
+              </motion.div>
+
+              <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="text-4xl sm:text-6xl font-black text-white mb-2 leading-tight drop-shadow-md">
                 {vendor?.storeName || vendor?.businessName || 'African Store'}
               </motion.h1>
+
               <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="text-2xl text-[#FFB800] font-semibold mb-3">
                 Got You.
               </motion.p>
-              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-base text-gray-300 mb-5">
-                Authentic African groceries delivered straight to your door
+
+              <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="text-base sm:text-lg text-gray-200 mb-6 max-w-xl leading-relaxed">
+                {vendor?.storeDescription || vendor?.description || "Authentic African groceries delivered straight to your door"}
               </motion.p>
 
               {vendor?.deliverySettings?.minimumOrderValue > 0 && (
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="inline-flex items-center gap-2 bg-white/10 border border-white/20 px-4 py-2 rounded-lg mb-5">
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="inline-flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 px-4 py-2 rounded-xl mb-6 shadow-md">
                   <span className="text-white font-semibold text-sm">📦 Minimum order: £{vendor.deliverySettings.minimumOrderValue.toFixed(2)}</span>
                 </motion.div>
               )}
 
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }} className="flex flex-wrap gap-3">
                 {products.length > 0 && (
-                  <button onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#FFB800] hover:bg-[#E6A600] text-[#1B4D3E] px-8 py-3 rounded-full font-bold transition-all shadow-lg">
+                  <button onClick={() => document.getElementById('products-section')?.scrollIntoView({ behavior: 'smooth' })} className="bg-[#FFB800] hover:bg-[#E6A600] text-[#1B4D3E] px-8 py-3.5 rounded-full font-bold transition-all shadow-xl active:scale-95 flex items-center gap-2">
                     Shop Now →
                   </button>
                 )}
-                <Link to="/stores" className="border-2 border-white text-white rounded-full px-8 py-3 font-semibold hover:bg-white/10 transition-all">
+                <Link to="/stores" className="border-2 border-white/80 bg-white/10 backdrop-blur-md text-white rounded-full px-8 py-3.5 font-semibold hover:bg-white hover:text-gray-900 transition-all active:scale-95">
                   Browse More Stores
                 </Link>
               </motion.div>
 
-              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex items-center gap-4 mt-6">
-                <div className="flex items-center gap-2 bg-white/10 border border-white/20 px-3 py-1.5 rounded-full text-sm text-white/80">
-                  <span className="w-2 h-2 rounded-full bg-afri-green animate-pulse"></span> ADT {vendor?.deliveryTime || '20 mins'}
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }} className="flex flex-wrap items-center gap-4 mt-6">
+                <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full text-sm text-white font-medium shadow-sm">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span> ADT {vendor?.deliveryTime || '20 mins'}
                 </div>
                 {vendor?.rating > 0 && (
-                  <div className="flex items-center gap-1.5 bg-white/10 border border-white/20 px-3 py-1.5 rounded-full text-sm text-white/80">
+                  <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full text-sm text-white font-medium shadow-sm">
                     ⭐ {vendor.rating} rating
+                  </div>
+                )}
+                {vendor?.location?.city && (
+                  <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md border border-white/20 px-3.5 py-1.5 rounded-full text-sm text-white/90 font-medium shadow-sm">
+                    📍 {vendor.location.city}
                   </div>
                 )}
               </motion.div>
             </div>
 
-            <div className="hidden lg:block relative">
-              <img src={vendor?.logo || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent to-[#1A1A1A]/40" />
+            {/* Right Column: Glassmorphism Store Branding Badge */}
+            <div className="lg:col-span-4 hidden lg:flex justify-center">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }} 
+                animate={{ opacity: 1, scale: 1 }} 
+                transition={{ delay: 0.2 }}
+                className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl text-center w-full max-w-xs relative overflow-hidden group"
+              >
+                <div className="w-28 h-28 mx-auto rounded-2xl bg-white p-3 shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden mb-4 transition-transform duration-300 group-hover:scale-105">
+                  <img 
+                    src={vendor?.logo || vendor?.storeLogo || vendor?.storeImage || vendor?.image || "/logo.svg"} 
+                    alt={vendor?.storeName || "Vendor Logo"} 
+                    className="w-full h-full object-contain"
+                    onError={(e) => { e.target.src = "/logo.svg" }}
+                  />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-1 truncate">{vendor?.storeName || 'Store'}</h3>
+                <p className="text-xs text-emerald-300 font-semibold uppercase tracking-wider mb-3">Verified Partner Store</p>
+                <div className="pt-3 border-t border-white/15 flex items-center justify-around text-xs text-gray-300">
+                  <div>
+                    <span className="block font-bold text-white text-sm">{products.length}</span>
+                    <span>Products</span>
+                  </div>
+                  <div className="h-6 w-px bg-white/20" />
+                  <div>
+                    <span className="block font-bold text-emerald-400 text-sm">Active</span>
+                    <span>Delivery</span>
+                  </div>
+                </div>
+              </motion.div>
             </div>
+
           </div>
         </div>
-        <div className="absolute top-0 right-0 w-80 h-80 bg-afri-green/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-64 h-64 bg-afri-yellow-dark/10 rounded-full blur-3xl pointer-events-none"></div>
       </section>
 
       {/* Main Content Area */}
