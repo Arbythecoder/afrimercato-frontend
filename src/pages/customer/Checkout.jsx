@@ -70,6 +70,10 @@ function CheckoutForm() {
   const [cartLoading, setCartLoading] = useState(true)
   const [vendor, setVendor] = useState(null)
 
+  // Derived state from cart (must be declared before useEffect hooks)
+  const vendorInfo = useMemo(() => getCartVendorInfo(cart), [cart])
+  const cartTotal = useMemo(() => cart.reduce((sum, item) => sum + (item.price * item.quantity), 0), [cart])
+
   // Auth modal state — shown when user reaches checkout without being logged in
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authEmail, setAuthEmail] = useState('')
@@ -88,7 +92,13 @@ function CheckoutForm() {
   const [lookingUpPostcode, setLookingUpPostcode] = useState(false)
 
   // Stripe card state
-  const [cardholderName, setCardholderName] = useState('')
+  const [cardholderName, setCardholderName] = useState(() => {
+    try {
+      return sessionStorage.getItem('afrimercato_checkout_cardholder') || ''
+    } catch (_e) {
+      return ''
+    }
+  })
   const [cardError, setCardError] = useState('')
   const [cardComplete, setCardComplete] = useState({ number: false, expiry: false, cvc: false })
   const [paymentMethodId, setPaymentMethodId] = useState(null)
@@ -133,18 +143,60 @@ function CheckoutForm() {
     }
   }
 
-  // Address form
+  // Address form draft initialization from storage
+  const getInitialAddress = () => {
+    try {
+      const savedDraft = sessionStorage.getItem('afrimercato_checkout_draft_address') || localStorage.getItem('checkout_address_backup')
+      if (savedDraft) {
+        const parsed = JSON.parse(savedDraft)
+        if (parsed && typeof parsed === 'object') {
+          return {
+            fullName: parsed.fullName || '',
+            phone: parsed.phone || '',
+            street: parsed.street || '',
+            city: parsed.city || '',
+            county: parsed.county || '',
+            postcode: parsed.postcode || '',
+            country: 'United Kingdom',
+            instructions: parsed.instructions || ''
+          }
+        }
+      }
+    } catch (_e) { }
+    return {
+      fullName: '',
+      phone: '',
+      street: '',
+      city: '',
+      county: '',
+      postcode: '',
+      country: 'United Kingdom',
+      instructions: ''
+    }
+  }
+
   const [postcodeError, setPostcodeError] = useState('')
-  const [address, setAddress] = useState({
-    fullName: '',
-    phone: '',
-    street: '',
-    city: '',
-    county: '',
-    postcode: '',
-    country: 'United Kingdom', // always locked
-    instructions: ''
-  })
+  const [address, setAddress] = useState(getInitialAddress)
+
+  // Auto-persist address draft whenever input changes
+  useEffect(() => {
+    try {
+      if (address && (address.fullName || address.street || address.postcode || address.phone || address.city || address.instructions)) {
+        sessionStorage.setItem('afrimercato_checkout_draft_address', JSON.stringify(address))
+        localStorage.setItem('checkout_address_backup', JSON.stringify(address))
+      }
+    } catch (_e) { }
+  }, [address])
+
+  // Auto-persist cardholder name draft
+  useEffect(() => {
+    try {
+      if (cardholderName) {
+        sessionStorage.setItem('afrimercato_checkout_cardholder', cardholderName)
+      }
+    } catch (_e) { }
+  }, [cardholderName])
+
   // Payment form
   const [payment, setPayment] = useState({
     method: 'card',
@@ -395,7 +447,6 @@ function CheckoutForm() {
         return
       }
 
-      const vendorInfo = getCartVendorInfo(cart)
       if (!vendorInfo || !vendorInfo.vendorId) return
 
       try {
@@ -429,7 +480,7 @@ function CheckoutForm() {
     }
 
     fetchVendorData()
-  }, [cart])
+  }, [cart, vendorInfo])
 
   // Coupon state
   const [couponCode, setCouponCode] = useState('')
@@ -481,9 +532,8 @@ function CheckoutForm() {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [address.postcode, address.street, cartTotal])
+  }, [address.postcode, address.street, cartTotal, vendorInfo, cart])
 
-  const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
   const deliveryFee = distanceFeeInfo ? distanceFeeInfo.deliveryFee : (cartTotal >= 50 ? 0 : 3.99)
   // For multi-vendor carts, each vendor has their own minimum — don't block on a single vendor's value
   const isMultiVendorCart = groupCartByVendor(cart).length > 1
@@ -668,9 +718,12 @@ function CheckoutForm() {
             ))
           } catch (_e) { /* localStorage full — ignore */ }
 
-          // Clear Local Storage
+          // Clear Local Storage & Draft Storage
           localStorage.removeItem('afrimercato_cart')
           localStorage.removeItem('repeatPurchaseFrequency')
+          sessionStorage.removeItem('afrimercato_checkout_draft_address')
+          sessionStorage.removeItem('afrimercato_checkout_cardholder')
+          localStorage.removeItem('checkout_address_backup')
 
           //  Clear Backend Cart!
           if (isAuthenticated && isCustomer) {
