@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
-import { CheckCircle, Clock, UploadCloud, FileText, AlertCircle, Trash2, MapPin, Search } from 'lucide-react'
+import { CheckCircle, Clock, UploadCloud, FileText, AlertCircle, Trash2, MapPin, Search, User, Bike, Settings, Shield, Car, Truck } from 'lucide-react'
 import GdprPrivacyTab from '../../components/GdprPrivacyTab'
 
 function RiderProfile() {
@@ -262,18 +262,18 @@ function RiderProfile() {
   }
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'vehicle', label: 'Vehicle', icon: '🚲' },
-    { id: 'documents', label: 'Documents', icon: '📄' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
-    { id: 'privacy', label: 'Privacy & My Data', icon: '🛡️' }
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'vehicle', label: 'Vehicle', icon: Bike },
+    { id: 'documents', label: 'Documents', icon: FileText },
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'privacy', label: 'Privacy & My Data', icon: Shield }
   ]
 
   const vehicleTypes = [
-    { id: 'bicycle', label: 'Bicycle', icon: '🚲' },
-    { id: 'motorbike', label: 'Motorbike', icon: '🏍️' },
-    { id: 'car', label: 'Car', icon: '🚗' },
-    { id: 'van', label: 'Van', icon: '🚐' }
+    { id: 'bicycle', label: 'Bicycle', icon: Bike },
+    { id: 'motorbike', label: 'Motorbike', icon: Bike },
+    { id: 'car', label: 'Car', icon: Car },
+    { id: 'van', label: 'Van', icon: Truck }
   ]
 
   const renderDocStatus = (status) => {
@@ -400,7 +400,7 @@ function RiderProfile() {
                   : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
-                <span>{tab.icon}</span>
+                <span><tab.icon size={18} /></span>
                 {tab.label}
                 {tab.id === 'documents' && !isVerified && (
                   <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -538,7 +538,7 @@ function RiderProfile() {
                           : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
                           }`}
                       >
-                        <span className="text-3xl block mb-2">{v.icon}</span>
+                        <span className="text-3xl block mb-2"><v.icon size={28} /></span>
                         <span className={`font-semibold text-sm ${profile.vehicleType === v.id ? 'text-afri-green-dark' : 'text-gray-700'}`}>{v.label}</span>
                       </button>
                     ))}
@@ -653,7 +653,7 @@ function RiderProfile() {
                 {['motorbike', 'car', 'van'].includes(profile.vehicleType) ? (
                   <div className="p-5 border border-gray-200 rounded-2xl bg-white shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-start gap-4">
-                      <div className="p-3 bg-amber-50 text-amber-600 rounded-xl text-xl">🛡️</div>
+                      <div className="p-3 bg-amber-50 text-amber-600 rounded-xl"><Shield className="w-6 h-6" /></div>
                       <div>
                         <p className="font-bold text-gray-900">Vehicle Insurance</p>
                         <p className="text-xs text-gray-500 mt-0.5">Certificate of motor insurance</p>
@@ -704,7 +704,7 @@ function RiderProfile() {
                   </div>
                 ) : (
                   <div className="p-5 border border-dashed border-gray-300 rounded-2xl bg-gray-50 flex items-center gap-4 opacity-70">
-                    <div className="p-3 bg-gray-200 text-gray-500 rounded-xl text-xl opacity-50">🛡️</div>
+                    <div className="p-3 bg-gray-200 text-gray-500 rounded-xl opacity-50"><Shield className="w-6 h-6" /></div>
                     <div>
                       <p className="font-bold text-gray-700 line-through decoration-gray-400">Vehicle Insurance</p>
                       <p className="text-sm text-gray-500 mt-0.5">Not required for bicycle accounts</p>

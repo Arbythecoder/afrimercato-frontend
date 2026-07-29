@@ -344,7 +344,7 @@ export default function ClientVendorStorefront() {
             </div>
 
             <div className="hidden lg:block relative">
-              <img src={vendor?.coverImage || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
+              <img src={vendor?.logo || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=600"} alt="Store Cover" className="w-full h-72 object-cover rounded-2xl shadow-2xl opacity-80" />
               <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent to-[#1A1A1A]/40" />
             </div>
           </div>
@@ -606,7 +606,7 @@ function ProductCard({ product, onAddToCart, onOpenDetail, isDiscount }) {
             className="h-44 w-full object-cover rounded-t-2xl group-hover:scale-105 transition-transform duration-300"
             onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200' }}
           />
-          
+
           {/* Quick Details Hover Badge */}
           <div className="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none">
             <span className="bg-white/95 text-[#1B4D3E] text-xs font-bold px-3 py-1.5 rounded-full shadow-lg flex items-center gap-1">

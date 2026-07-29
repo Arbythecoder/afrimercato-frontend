@@ -5,13 +5,13 @@ import { motion } from 'framer-motion'
 import { ChevronLeft, RefreshCw, ShieldCheck, Search, Filter } from 'lucide-react'
 
 const ACTION_COLORS = {
-  create:   'bg-emerald-100 text-emerald-700',
-  update:   'bg-afri-yellow-light text-afri-yellow-dark',
-  delete:   'bg-red-100 text-red-600',
-  login:    'bg-afri-green-pale text-afri-green-dark',
-  logout:   'bg-gray-100 text-gray-500',
-  approve:  'bg-teal-100 text-teal-700',
-  suspend:  'bg-orange-100 text-orange-600',
+  create: 'bg-emerald-100 text-emerald-700',
+  update: 'bg-afri-yellow-light text-afri-yellow-dark',
+  delete: 'bg-red-100 text-red-600',
+  login: 'bg-afri-green-pale text-afri-green-dark',
+  logout: 'bg-gray-100 text-gray-500',
+  approve: 'bg-teal-100 text-teal-700',
+  suspend: 'bg-orange-100 text-orange-600',
   reactivate: 'bg-cyan-100 text-cyan-700',
 }
 
@@ -19,7 +19,7 @@ const ACTION_ICONS = {
   create: '✚',
   update: '✎',
   delete: '✕',
-  login:  '→',
+  login: '→',
   logout: '←',
   approve: '✓',
   suspend: '⏸',
@@ -115,11 +115,10 @@ export default function AdminAuditLogs() {
               <button
                 key={f.id}
                 onClick={() => setRoleFilter(f.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
-                  roleFilter === f.id
-                    ? 'bg-white text-gray-900 shadow-sm'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${roleFilter === f.id
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-400 hover:text-gray-600'
+                  }`}
               >
                 {f.label}
               </button>
@@ -166,11 +165,13 @@ export default function AdminAuditLogs() {
                 {logs.map((log, i) => {
                   const actionColor = getActionColor(log.action)
                   const actionIcon = getActionIcon(log.action)
-                  const actorName = log.actor?.name || log.performedBy?.name || log.user?.name || '—'
-                  const actorRole = log.actor?.role || log.performedBy?.role || log.userRole || ''
-                  const resource = log.resource || log.entity || log.targetType || '—'
-                  const resourceId = log.resourceId || log.targetId || ''
-                  const details = log.details || log.description || log.metadata?.summary || ''
+                  const actorName = log.admin?.name || log.adminEmail || log.actor?.name || log.performedBy?.name || log.user?.name || '—'
+                  const actorRole = Array.isArray(log.admin?.roles)
+                    ? log.admin.roles.join(', ')
+                    : log.admin?.roles || log.actor?.role || log.performedBy?.role || log.userRole || ''
+                  const resource = log.targetType || log.resource || log.entity || '—'
+                  const resourceId = log.targetId || log.resourceId || ''
+                  const details = log.notes || log.reason || log.targetIdentifier || log.details || log.description || log.metadata?.summary || (log.changes ? JSON.stringify(log.changes) : '')
                   const timestamp = log.createdAt || log.timestamp || log.performedAt
 
                   return (
@@ -181,8 +182,8 @@ export default function AdminAuditLogs() {
                       transition={{ delay: i * 0.02 }}
                       className="hover:bg-gray-50 transition-colors"
                     >
-                      {/* Action */}
-                      <td className="px-5 py-3.5">
+                      <td>
+                        {/* Action */}
                         <div className="flex items-center gap-2.5">
                           <span className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold flex-shrink-0 ${actionColor}`}>
                             {actionIcon}
@@ -269,6 +270,6 @@ export default function AdminAuditLogs() {
           </div>
         )}
       </div>
-    </div>
+    </div >
   )
 }

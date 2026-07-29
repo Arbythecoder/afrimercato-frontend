@@ -594,7 +594,7 @@ function ThemeToggle() {
 
 // Live Chat floating button — WhatsApp direct link
 function LiveChatButton() {
-  const phone = '+4407428653800' // +44 7778 285855
+  const phone = '+447778285855' // +44 7778 285855
   const message = encodeURIComponent('Hi Afrimercato, I need help with my order.')
   return (
     <a

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { apiCall } from '../../services/api'
 import GdprPrivacyTab from '../../components/GdprPrivacyTab'
+import { User, Settings, Shield, Package } from 'lucide-react'
 
 export default function PickerProfile() {
   const navigate = useNavigate()
@@ -77,9 +78,9 @@ export default function PickerProfile() {
   }
 
   const tabs = [
-    { id: 'profile', label: 'Profile', icon: '👤' },
-    { id: 'settings', label: 'Settings', icon: '⚙️' },
-    { id: 'privacy', label: 'Privacy & My Data', icon: '🛡️' }
+    { id: 'profile', label: 'Profile', icon: User },
+    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'privacy', label: 'Privacy & My Data', icon: Shield }
   ]
 
   return (
@@ -95,8 +96,8 @@ export default function PickerProfile() {
           </button>
 
           <div className="flex items-center gap-5">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center text-3xl flex-shrink-0">
-              📦
+            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center flex-shrink-0 text-orange-600">
+              <Package className="w-10 h-10" />
             </div>
             <div className="min-w-0">
               <h1 className="text-2xl font-bold truncate">{profile.name}</h1>
@@ -152,19 +153,22 @@ export default function PickerProfile() {
         <div className="bg-white rounded-xl shadow-lg overflow-hidden">
           {/* Tabs */}
           <div className="flex border-b overflow-x-auto">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
-                  ? 'text-orange-500 border-b-2 border-orange-500 bg-orange-50'
-                  : 'text-gray-500 hover:text-gray-700'
-                  }`}
-              >
-                <span>{tab.icon}</span>
-                {tab.label}
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const IconComp = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 px-6 py-4 font-medium whitespace-nowrap transition-colors ${activeTab === tab.id
+                    ? 'text-orange-500 border-b-2 border-orange-500 bg-orange-50'
+                    : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                >
+                  <IconComp className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              )
+            })}
           </div>
 
           <div className="p-6">

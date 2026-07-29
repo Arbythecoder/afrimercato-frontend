@@ -7,16 +7,18 @@ import { checkVendorLock } from '../../utils/cartVendorLock'
 import VendorSwitchModal from '../../components/customer/VendorSwitchModal'
 import { FaArrowLeft } from 'react-icons/fa6'
 
+import { ShoppingCart, Apple, Beef, Milk, Wheat, Flame, Wine, ShoppingBag, Heart } from 'lucide-react'
+
 const categories = [
-  { id: 'all', name: 'All Products', icon: '🛒' },
-  { id: 'fresh-produce', name: 'Fresh Produce', icon: '🥬' },
-  { id: 'fruits', name: 'Fruits', icon: '🍎' },
-  { id: 'vegetables', name: 'Vegetables', icon: '🥕' },
-  { id: 'meat-fish', name: 'Meat & Fish', icon: '🥩' },
-  { id: 'dairy', name: 'Dairy', icon: '🥛' },
-  { id: 'grains', name: 'Grains & Cereals', icon: '🌾' },
-  { id: 'spices', name: 'Spices', icon: '🌶️' },
-  { id: 'beverages', name: 'Beverages', icon: '🍹' }
+  { id: 'all', name: 'All Products', icon: ShoppingCart },
+  { id: 'fresh-produce', name: 'Fresh Produce', icon: ShoppingBag },
+  { id: 'fruits', name: 'Fruits', icon: Apple },
+  { id: 'vegetables', name: 'Vegetables', icon: Apple },
+  { id: 'meat-fish', name: 'Meat & Fish', icon: Beef },
+  { id: 'dairy', name: 'Dairy', icon: Milk },
+  { id: 'grains', name: 'Grains & Cereals', icon: Wheat },
+  { id: 'spices', name: 'Spices', icon: Flame },
+  { id: 'beverages', name: 'Beverages', icon: Wine }
 ]
 
 const sortOptions = [
@@ -247,19 +249,22 @@ function ProductBrowsing() {
             <div className="bg-white rounded-xl shadow-lg p-6 sticky top-4">
               <h3 className="font-bold text-lg mb-4">Categories</h3>
               <div className="space-y-2">
-                {categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => handleFilterChange('category', cat.id)}
-                    className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${filters.category === cat.id
-                      ? 'bg-afri-green text-white'
-                      : 'hover:bg-gray-100'
-                      }`}
-                  >
-                    <span>{cat.icon}</span>
-                    <span>{cat.name}</span>
-                  </button>
-                ))}
+                {categories.map(cat => {
+                  const IconComp = cat.icon
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() => handleFilterChange('category', cat.id)}
+                      className={`w-full text-left px-4 py-2 rounded-lg flex items-center gap-2 transition-all ${filters.category === cat.id
+                        ? 'bg-afri-green text-white'
+                        : 'hover:bg-gray-100'
+                        }`}
+                    >
+                      <IconComp className="w-4 h-4 shrink-0" />
+                      <span>{cat.name}</span>
+                    </button>
+                  )
+                })}
               </div>
 
               <hr className="my-6" />
@@ -371,7 +376,7 @@ function ProductBrowsing() {
                         onClick={(e) => { e.stopPropagation(); toggleWishlist(product._id) }}
                         className="absolute top-2 right-2 w-8 h-8 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
                       >
-                        {wishlist.includes(product._id) ? '❤️' : '🤍'}
+                        {wishlist.includes(product._id) ? <Heart className="w-4 h-4 fill-red-500 text-red-500" /> : <Heart className="w-4 h-4 text-gray-400" />}
                       </button>
                     </div>
 

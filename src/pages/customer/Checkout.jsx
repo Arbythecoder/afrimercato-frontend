@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
-import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall, getUserOrders, createPaymentIntent } from '../../services/api'
+import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall, getUserOrders, createPaymentIntent, calculateDeliveryFee } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js'
 import { useNoIndex } from '../../hooks/useNoIndex'
+import { ShoppingCart, ArrowLeft, AlertCircle, AlertTriangle, CreditCard, ShoppingBag, Info, Sparkles, Lock, Store, Bike, Package } from 'lucide-react'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
@@ -458,8 +459,32 @@ function CheckoutForm() {
     }
   }
 
+  const [distanceFeeInfo, setDistanceFeeInfo] = useState(null)
+
+  useEffect(() => {
+    if (!address.postcode || address.postcode.trim().length < 3) return
+
+    const timer = setTimeout(async () => {
+      try {
+        const vendorId = vendorInfo?.vendorId || cart[0]?.vendor?._id || cart[0]?.vendor
+        const res = await calculateDeliveryFee({
+          deliveryAddress: address,
+          vendorId,
+          subtotal: cartTotal
+        })
+        if (res?.success && res?.data) {
+          setDistanceFeeInfo(res.data)
+        }
+      } catch (e) {
+        console.warn('Checkout fee calc notice:', e)
+      }
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [address.postcode, address.street, cartTotal])
+
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const deliveryFee = cartTotal >= 50 ? 0 : 5
+  const deliveryFee = distanceFeeInfo ? distanceFeeInfo.deliveryFee : (cartTotal >= 50 ? 0 : 3.99)
   // For multi-vendor carts, each vendor has their own minimum — don't block on a single vendor's value
   const isMultiVendorCart = groupCartByVendor(cart).length > 1
   const couponDiscount = coupon
@@ -592,7 +617,37 @@ function CheckoutForm() {
 
         if (stripeError) {
           if (import.meta.env.DEV) console.error('[Checkout] Stripe confirm error:', stripeError.code, stripeError.message)
-          setOrderError(getStripeErrorMessage(stripeError))
+          const errorMsg = getStripeErrorMessage(stripeError)
+          setOrderError(`Payment Failed: ${errorMsg}. Order could not be placed.`)
+          
+          if (orderId) {
+            try {
+              await apiCall('/payments/stripe/report-failure', {
+                method: 'POST',
+                body: JSON.stringify({ orderId, reason: errorMsg })
+              })
+            } catch (_err) { /* silent catch */ }
+          }
+          
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+
+        if (paymentIntent?.status !== 'succeeded') {
+          const failMsg = `Payment status: ${paymentIntent?.status || 'failed'}. Order could not be placed.`
+          setOrderError(failMsg)
+          
+          if (orderId) {
+            try {
+              await apiCall('/payments/stripe/report-failure', {
+                method: 'POST',
+                body: JSON.stringify({ orderId, reason: failMsg })
+              })
+            } catch (_err) { /* silent catch */ }
+          }
+
+          setLoading(false)
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return
         }
@@ -733,16 +788,16 @@ function CheckoutForm() {
         : effectiveRole === 'picker' ? 'Picker'
           : effectiveRole === 'admin' ? 'Admin'
             : 'Non-Customer'
-    const roleIcon = effectiveRole === 'vendor' ? '🏪'
-      : effectiveRole === 'rider' ? '🏍️'
-        : effectiveRole === 'picker' ? '📦' : '⚠️'
+    const roleIcon = effectiveRole === 'vendor' ? <Store className="w-8 h-8 text-afri-green" />
+      : effectiveRole === 'rider' ? <Bike className="w-8 h-8 text-afri-green" />
+        : effectiveRole === 'picker' ? <Package className="w-8 h-8 text-afri-green" /> : <AlertTriangle className="w-8 h-8 text-amber-500" />
 
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center px-4">
         <div className="max-w-md w-full">
           <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
             <div className="w-20 h-20 rounded-full bg-[#E0F2F1] flex items-center justify-center mx-auto mb-6">
-              <span className="text-4xl">{roleIcon}</span>
+              {roleIcon}
             </div>
             <h1 className="text-2xl font-bold text-gray-900 mb-3">Wrong Account Type</h1>
             <p className="text-gray-600 mb-1">You're currently signed in as a</p>
@@ -936,15 +991,15 @@ function CheckoutForm() {
         <div className="container mx-auto px-4 sm:px-6 py-3 sm:py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-xl sm:text-2xl">🛒</span>
+              <ShoppingCart className="w-6 h-6 text-afri-green" />
               <span className="text-base sm:text-xl font-bold text-gray-900">Afrimercato Checkout</span>
             </div>
             <button
               type="button"
               onClick={() => navigate(-1)}
-              className="text-gray-600 hover:text-gray-900 min-h-[44px] min-w-[44px] flex items-center justify-center"
+              className="text-gray-600 hover:text-gray-900 min-h-[44px] min-w-[44px] flex items-center justify-center gap-1"
             >
-              ⬅️ <span className="hidden sm:inline ml-1">Back</span>
+              <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Back</span>
             </button>
           </div>
         </div>
@@ -1120,11 +1175,11 @@ function CheckoutForm() {
                           {lookingUpPostcode ? '…' : 'Find'}
                         </button>
                       </div>
-                      {postcodeError && (
-                        <p className="text-red-600 text-xs mt-1 flex items-center gap-1">
-                          ⚠️ {postcodeError}
-                        </p>
-                      )}
+                      {postcodeError && <span className="text-red-600 text-xs flex items-center gap-1 mt-1">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                        {postcodeError}
+                      </span>
+                      }
                     </div>
 
                     {/* Locked country field */}
@@ -1345,7 +1400,7 @@ function CheckoutForm() {
                 <div className="mb-6 pb-6 border-b">
                   <h3 className="font-semibold text-gray-900 mb-3">Payment Method</h3>
                   <div className="flex items-center gap-2">
-                    <span className="text-gray-700">💳 Card Payment</span>
+                    <span className="text-gray-700 flex items-center gap-1.5 font-medium"><CreditCard className="w-4 h-4 text-gray-600" /> Card Payment</span>
                     {paymentMethodId && (
                       <span className="text-xs text-green-700 font-semibold bg-green-50 border border-green-200 px-2 py-0.5 rounded-full">
                         Card verified ✓
@@ -1437,7 +1492,7 @@ function CheckoutForm() {
                 {/* Repurchase from previous orders — ALWAYS VISIBLE for better UX */}
                 <div className="mb-6 pb-6 border-b">
                   <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                    <span>🛍️</span>
+                    <span className="flex items-center justify-center text-afri-green"><ShoppingBag className="w-4 h-4" /></span>
                     Buy Again (Quick Add)
                   </h3>
                   {repurchaseLoading ? (
@@ -1473,16 +1528,16 @@ function CheckoutForm() {
                         )
                       })}
                       {repurchaseError && (
-                        <p className="text-xs text-amber-600 mt-1 flex items-center gap-1">
-                          <span>⚠️</span>
-                          Showing cached items (working offline)
-                        </p>
+                        <div className="flex items-center gap-2 text-amber-600 text-xs mt-1">
+                          <span><AlertTriangle className="w-4 h-4 text-amber-500" /></span>
+                          <span>We could not load your quick reorder items</span>
+                        </div>
                       )}
                     </div>
                   ) : (
-                    <p className="text-sm text-gray-500 py-2 bg-gray-50 rounded-lg px-3">
-                      💡 No previous orders yet. Items from past orders will appear here for quick reordering.
-                    </p>
+                    <div className="text-sm text-gray-500 bg-gray-50 p-4 rounded-xl text-center border border-gray-100 flex items-center justify-center gap-1.5">
+                      <Info className="w-4 h-4 text-blue-500 shrink-0" /> No previous orders yet. Items from past orders will appear here for quick reordering.
+                    </div>
                   )}
                 </div>
 
@@ -1640,8 +1695,10 @@ function CheckoutForm() {
                   <span>Delivery Fee</span>
                   <span>{deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}</span>
                 </div>
-                {cartTotal >= 50 && (
-                  <p className="text-xs text-green-600">🎉 Free delivery on orders over £50</p>
+                {cartTotal >= 50 ? (
+                  <p className="text-xs text-green-600 flex items-center justify-center gap-1"><Sparkles className="w-3.5 h-3.5 text-green-600" /> Free delivery on orders over £50</p>
+                ) : (
+                  <p className="text-xs text-gray-500 text-center">Standard UK Delivery Fee applied</p>
                 )}
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-green-600 font-semibold">
@@ -1654,19 +1711,7 @@ function CheckoutForm() {
                 {(() => {
                   const minimumOrderValue = isMultiVendorCart ? 0 : (vendor?.deliverySettings?.minimumOrderValue || 0)
                   const minCheck = checkMinimumOrder(cartTotal, minimumOrderValue)
-
-                  if (!minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
-                    return (
-                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 mt-2">
-                        <p className="text-sm text-red-800 font-semibold">
-                          ⚠️ Minimum order: £{minCheck.minimumOrder.toFixed(2)}
-                        </p>
-                        <p className="text-xs text-red-700 mt-1">
-                          Add £{minCheck.shortfall.toFixed(2)} more items to place order
-                        </p>
-                      </div>
-                    )
-                  } else if (minCheck.minimumOrder > 0) {
+                  if (minCheck.meetsMinimum && minCheck.minimumOrder > 0) {
                     return (
                       <div className="bg-green-50 border border-green-200 rounded-lg p-2 mt-2">
                         <p className="text-xs text-green-700">

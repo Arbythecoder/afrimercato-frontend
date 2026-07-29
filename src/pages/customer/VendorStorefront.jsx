@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { getVendorById, getVendorProductsByVendorId } from '../../services/api'
 import { getProductImage, getStoreBanner } from '../../utils/defaultImages'
 import { getCartCount, getCartSubtotal } from '../../utils/cartUtils'
+import { ArrowLeft, ShoppingCart, User, ShoppingBag, Zap, Phone, Trash2, Star, Check, Plus } from 'lucide-react'
 
 function VendorStorefront() {
   const { vendorId } = useParams()
@@ -138,12 +139,12 @@ function VendorStorefront() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate(-1)}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 flex items-center gap-1"
               >
-                ⬅️ Go Back
+                <ArrowLeft className="w-4 h-4" /> Go Back
               </button>
               <div className="flex items-center gap-2">
-                <span className="text-2xl">🛒</span>
+                <ShoppingCart className="w-6 h-6 text-afri-green" />
                 <span className="text-xl font-bold text-gray-900">Afrimercato</span>
               </div>
             </div>
@@ -151,15 +152,15 @@ function VendorStorefront() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/login')}
-                className="text-gray-600 hover:text-gray-900"
+                className="text-gray-600 hover:text-gray-900 flex items-center gap-1"
               >
-                👤 Account
+                <User className="w-4 h-4" /> Account
               </button>
               <button
                 onClick={() => setShowCart(!showCart)}
-                className="relative bg-[#FFB300] text-white px-4 py-2 rounded-lg hover:bg-[#FFA726] transition"
+                className="relative bg-[#FFB300] text-white px-4 py-2 rounded-lg hover:bg-[#FFA726] transition flex items-center gap-1.5 font-bold"
               >
-                🛒 Cart
+                <ShoppingCart className="w-4 h-4" /> Cart
                 {cartItemCount > 0 && (
                   <span className="absolute -top-2 -right-2 bg-red-500 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
                     {cartItemCount}
@@ -186,9 +187,9 @@ function VendorStorefront() {
               </p>
 
               <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                <span>🛍️ Shopping Method: In-Shopping, Delivery</span>
-                <span>⚡ Deliveries in 20-30 mins</span>
-                <span>📞 {vendor.phone || '+44 - 2071 - 234567'}</span>
+                <span className="flex items-center gap-1.5"><ShoppingBag className="w-4 h-4 text-afri-green" /> Shopping Method: In-Shopping, Delivery</span>
+                <span className="flex items-center gap-1.5"><Zap className="w-4 h-4 text-amber-500" /> Deliveries in 20-30 mins</span>
+                <span className="flex items-center gap-1.5"><Phone className="w-4 h-4 text-afri-green" /> {vendor.phone || '+44 - 2071 - 234567'}</span>
               </div>
             </div>
 
@@ -320,7 +321,7 @@ function VendorStorefront() {
               {/* Cart Items */}
               {cart.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-2xl mb-2">🛒</p>
+                  <ShoppingCart className="w-10 h-10 text-gray-400 mx-auto mb-2" />
                   <p className="text-gray-600">Your cart is empty</p>
                 </div>
               ) : (
@@ -355,9 +356,9 @@ function VendorStorefront() {
                             </button>
                             <button type="button"
                               onClick={() => removeFromCart(item._id)}
-                              className="ml-auto text-red-500 hover:text-red-700"
+                              className="ml-auto text-red-500 hover:text-red-700 p-1"
                             >
-                              🗑️
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -448,9 +449,7 @@ function ProductCard({ product, onAddToCart }) {
         {/* Rating */}
         <div className="flex items-center gap-1 mb-2">
           {[...Array(5)].map((_, i) => (
-            <span key={i} className={i < 4 ? 'text-yellow-400 text-sm' : 'text-gray-300 text-sm'}>
-              ⭐
-            </span>
+            <Star key={i} className={`w-3.5 h-3.5 ${i < 4 ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} />
           ))}
         </div>
 
@@ -469,13 +468,13 @@ function ProductCard({ product, onAddToCart }) {
         {/* Add to Cart Button */}
         <button
           onClick={handleAdd}
-          className={`w-full py-2 rounded-lg font-semibold transition ${
+          className={`w-full py-2 rounded-lg font-semibold transition flex items-center justify-center gap-1.5 ${
             added
               ? 'bg-green-500 text-white'
               : 'bg-gradient-to-r from-[#FFB300] to-[#FFA726] text-white hover:shadow-lg'
           }`}
         >
-          {added ? '✓ Added!' : '🛒 Add'}
+          {added ? <><Check className="w-4 h-4" /> Added!</> : <><Plus className="w-4 h-4" /> Add</>}
         </button>
       </div>
     </div>
