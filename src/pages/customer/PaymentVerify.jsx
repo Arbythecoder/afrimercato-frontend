@@ -33,22 +33,15 @@ function PaymentVerify() {
           setStatus('success')
           setOrderData(data.data)
           localStorage.removeItem('pending_order_id')
-        } else if (data.success) {
-          // Backend may not yet have a verify-by-intent endpoint; use orderId fallback
-          if (import.meta.env.DEV) console.warn('[PaymentVerify] verify endpoint returned success=false — trying orderId fallback')
-          setStatus('success')
-          setOrderData({ order: { _id: orderId } })
-          localStorage.removeItem('pending_order_id')
         } else {
+          if (import.meta.env.DEV) console.warn('[PaymentVerify] ✗ Payment verification failed:', data)
           setStatus('failed')
-          setError(data.message || 'Payment verification failed')
+          setError(data.message || 'Payment failed or was not completed. Order cannot be placed.')
         }
       } catch (err) {
-        if (import.meta.env.DEV) console.warn('[PaymentVerify] verify by intent failed:', err.message, '— using orderId fallback')
-        // Payment was confirmed by Stripe client-side; trust that and go to confirmation
-        setStatus('success')
-        setOrderData({ order: { _id: orderId } })
-        localStorage.removeItem('pending_order_id')
+        if (import.meta.env.DEV) console.error('[PaymentVerify] Verification error:', err.message)
+        setStatus('failed')
+        setError('Payment verification failed. Order cannot be placed.')
       }
       return
     }

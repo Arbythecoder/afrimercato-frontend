@@ -126,10 +126,10 @@ function RiderEarnings() {
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-amber-50 rounded-xl flex items-center justify-center text-xl flex-shrink-0">🏦</div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-800">Auto-Payout Active</p>
-              <p className="text-xs text-gray-400">Paid every Friday via bank transfer</p>
+              <p className="text-sm font-semibold text-gray-800">Bi-Weekly Auto-Payout Active</p>
+              <p className="text-xs text-gray-400">Paid every other Friday (work done this week is paid next Friday)</p>
             </div>
-            <button onClick={() => navigate('/rider/profile')} className="text-afri-green">
+            <button onClick={() => navigate('/rider/payout-settings')} className="text-afri-green">
               <ChevronRight size={18} />
             </button>
           </div>

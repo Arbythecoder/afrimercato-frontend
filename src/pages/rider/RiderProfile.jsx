@@ -400,7 +400,7 @@ function RiderProfile() {
                   : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50'
                   }`}
               >
-                <span>{tab.icon}</span>
+                <span><tab.icon size={18} /></span>
                 {tab.label}
                 {tab.id === 'documents' && !isVerified && (
                   <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
@@ -538,7 +538,7 @@ function RiderProfile() {
                           : 'border-gray-200 hover:border-gray-300 bg-white hover:bg-gray-50'
                           }`}
                       >
-                        <span className="text-3xl block mb-2">{v.icon}</span>
+                        <span className="text-3xl block mb-2"><v.icon size={28} /></span>
                         <span className={`font-semibold text-sm ${profile.vehicleType === v.id ? 'text-afri-green-dark' : 'text-gray-700'}`}>{v.label}</span>
                       </button>
                     ))}

@@ -274,7 +274,7 @@
 **[VISUAL]** Rider earnings page
 
 **[VOICEOVER]**
-> "Track all your earnings in the Earnings section. See your daily totals, weekly summary, and payout history. Earnings are transferred to your account on a weekly basis."
+> "Track all your earnings in the Earnings section. See your daily totals, weekly summary, and payout history. Earnings are transferred to your account every other Friday, covering all work completed in the previous week."
 
 **[VISUAL]** Show performance metrics
 

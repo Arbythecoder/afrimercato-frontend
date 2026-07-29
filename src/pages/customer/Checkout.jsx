@@ -617,7 +617,37 @@ function CheckoutForm() {
 
         if (stripeError) {
           if (import.meta.env.DEV) console.error('[Checkout] Stripe confirm error:', stripeError.code, stripeError.message)
-          setOrderError(getStripeErrorMessage(stripeError))
+          const errorMsg = getStripeErrorMessage(stripeError)
+          setOrderError(`Payment Failed: ${errorMsg}. Order could not be placed.`)
+          
+          if (orderId) {
+            try {
+              await apiCall('/payments/stripe/report-failure', {
+                method: 'POST',
+                body: JSON.stringify({ orderId, reason: errorMsg })
+              })
+            } catch (_err) { /* silent catch */ }
+          }
+          
+          setLoading(false)
+          window.scrollTo({ top: 0, behavior: 'smooth' })
+          return
+        }
+
+        if (paymentIntent?.status !== 'succeeded') {
+          const failMsg = `Payment status: ${paymentIntent?.status || 'failed'}. Order could not be placed.`
+          setOrderError(failMsg)
+          
+          if (orderId) {
+            try {
+              await apiCall('/payments/stripe/report-failure', {
+                method: 'POST',
+                body: JSON.stringify({ orderId, reason: failMsg })
+              })
+            } catch (_err) { /* silent catch */ }
+          }
+
+          setLoading(false)
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return
         }
