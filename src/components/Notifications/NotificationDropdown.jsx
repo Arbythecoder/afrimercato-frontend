@@ -1,14 +1,38 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { notificationAPI } from '../../services/api'
+import { useAuth } from '../../context/AuthContext'
 
 function NotificationDropdown() {
   const navigate = useNavigate()
+  const { user } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const dropdownRef = useRef(null)
+
+  const resolveNotificationUrl = (notification) => {
+    if (!notification) return '/notifications'
+    if (notification.actionUrl) return notification.actionUrl
+    if (notification.orderId) {
+      const role = user?.role || (user?.roles?.[0])
+      if (role === 'vendor') {
+        return '/notifications'
+      }
+      if (role === 'rider') {
+        return '/rider/deliveries'
+      }
+      if (role === 'picker') {
+        return `/picker/order/${notification.orderId}`
+      }
+      if (role === 'admin') {
+        return '/admin/orders'
+      }
+      return `/order/${notification.orderId}`
+    }
+    return '/notifications'
+  }
 
   useEffect(() => {
     fetchUnreadCount()
@@ -66,21 +90,21 @@ function NotificationDropdown() {
 
   const handleNotificationClick = async (notification) => {
     try {
+      setIsOpen(false)
       // Mark as read
-      if (!notification.isRead) {
-        await notificationAPI.markAsRead(notification._id)
+      if (!notification.isRead && !notification.read) {
+        await notificationAPI.markAsRead(notification._id || notification.id)
         setUnreadCount(prev => Math.max(0, prev - 1))
         setNotifications(prev =>
           prev.map(n =>
-            n._id === notification._id ? { ...n, isRead: true } : n
+            (n._id || n.id) === (notification._id || notification.id) ? { ...n, isRead: true, read: true } : n
           )
         )
       }
 
-      // Navigate to action URL if available
-      if (notification.actionUrl) {
-        navigate(notification.actionUrl)
-      }
+      // Navigate to action URL or order page based on role
+      const targetUrl = resolveNotificationUrl(notification)
+      navigate(targetUrl)
     } catch (error) {
       console.error('Error marking notification as read:', error)
     }
@@ -182,11 +206,10 @@ function NotificationDropdown() {
                   <div
                     key={notification._id}
                     onClick={() => handleNotificationClick(notification)}
-                    className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${
-                      notification.isRead
-                        ? 'bg-white hover:bg-gray-50'
-                        : 'bg-blue-50 hover:bg-blue-100'
-                    }`}
+                    className={`px-4 py-3 border-b border-gray-100 cursor-pointer transition-colors ${notification.isRead
+                      ? 'bg-white hover:bg-gray-50'
+                      : 'bg-blue-50 hover:bg-blue-100'
+                      }`}
                   >
                     <div className="flex items-start space-x-3">
                       {/* Icon */}

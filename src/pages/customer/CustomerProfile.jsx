@@ -9,6 +9,7 @@ import { LuShoppingBag } from 'react-icons/lu'
 import { FaArrowLeft } from "react-icons/fa6";
 import { useNavigate } from 'react-router-dom'
 import { User, MapPin, Lock, Shield, Settings } from 'lucide-react'
+import { IoMdArrowBack } from "react-icons/io";
 
 function CustomerProfile() {
   useNoIndex()
@@ -230,6 +231,10 @@ function CustomerProfile() {
         <div className="max-w-4xl mx-auto px-4">
           <h1 className="text-3xl font-bold">My Profile</h1>
           <p className="text-white/80 mt-1">Manage your account settings and preferences</p>
+          <button
+            onClick={() => window.history.back()}
+            className="flex items-center mt-2 hover:underline" ><IoMdArrowBack /> Back
+          </button>
         </div>
       </div>
 
