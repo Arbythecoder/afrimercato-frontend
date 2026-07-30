@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { orderAPI, cancelOrder } from '../../services/api'
 import { getProductImage } from '../../utils/defaultImages'
 import { IoImageOutline } from 'react-icons/io5'
-import { Mail, Phone, CreditCard, Banknote, Star, Edit3, CheckCircle, Clock, Truck, Package, ChefHat, FileText, Check } from 'lucide-react'
+import { Mail, Phone, CreditCard, Banknote, Star, Edit3, CheckCircle, Clock, Truck, Package, ChefHat, FileText, Check, Store } from 'lucide-react'
 import EditOrderAddressModal from '../../components/Customer/EditOrderAddressModal'
 
 const statusSteps = [
@@ -415,9 +415,8 @@ function OrderDetail() {
                       <Edit3 className="w-3.5 h-3.5" /> Edit Address
                     </button>
                   )}
-                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                    order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
-                  }`}>
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
+                    }`}>
                     {order.fulfillmentType === 'store_pickup' ? '🏪 Self Pickup' : '🚚 Rider Delivery'}
                   </span>
                 </div>
