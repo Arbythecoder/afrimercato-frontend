@@ -7,7 +7,7 @@ function OrderStatusControls({ order, onStatusUpdate, isUpdating }) {
 
   // Define available status transitions strictly for the VENDOR
   const getAvailableActions = () => {
-    const isDelivery = order.fulfillmentType !== 'pickup';
+    const isDelivery = order.fulfillmentType !== 'store_pickup' && order.fulfillmentType !== 'pickup';
 
     const actions = {
       pending: [

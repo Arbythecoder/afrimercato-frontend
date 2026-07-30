@@ -85,6 +85,23 @@ function OrderConfirmation() {
     )
   }
 
+  const vendorObj = order.vendor || (order.items && order.items[0] && typeof order.items[0].vendor === 'object' ? order.items[0].vendor : null)
+  const vendorAddressString = (() => {
+    if (!vendorObj) return null
+    if (typeof vendorObj.address === 'string' && vendorObj.address.trim()) return vendorObj.address
+    if (vendorObj.address && typeof vendorObj.address === 'object') {
+      const p = [vendorObj.address.street, vendorObj.address.city, vendorObj.address.county, vendorObj.address.postcode].filter(Boolean)
+      if (p.length > 0) return p.join(', ')
+    }
+    if (vendorObj.location) {
+      if (typeof vendorObj.location === 'string' && vendorObj.location.trim()) return vendorObj.location
+      if (vendorObj.location.address) return vendorObj.location.address
+      const p = [vendorObj.location.street, vendorObj.location.city, vendorObj.location.postcode].filter(Boolean)
+      if (p.length > 0) return p.join(', ')
+    }
+    return null
+  })()
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -127,27 +144,56 @@ function OrderConfirmation() {
             </div>
           </div>
 
-          {/* Delivery Address */}
+          {/* Pickup PIN Banner for Store Pickup Orders */}
+          {order.fulfillmentType === 'store_pickup' && (
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl p-5 mb-6 text-center shadow-lg">
+              <p className="text-xs uppercase tracking-wider text-amber-100 font-bold mb-1">Your 4-Digit Pickup PIN</p>
+              <p className="text-4xl font-black tracking-widest">{order.security?.pickupPin || order.pickupPin || '----'}</p>
+              <p className="text-xs text-amber-100 mt-2 font-medium">Please present this PIN to store staff when collecting your items.</p>
+            </div>
+          )}
+
+          {/* Delivery / Pickup Details */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">
-              Delivery Details
-            </h2>
-            {order.deliveryAddress && (
-              <div className="space-y-1 text-gray-700">
-                <p className="font-semibold">
-                  {order.deliveryAddress.fullName || order.customer?.name}
-                </p>
-                <p>{order.deliveryAddress.street}</p>
-                <p>
-                  {order.deliveryAddress.city},{' '}
-                  {order.deliveryAddress.postcode}
-                </p>
-                {order.deliveryAddress.phone && (
-                  <p className="text-gray-500 text-sm mt-2">
-                    Phone: {order.deliveryAddress.phone}
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                {order.fulfillmentType === 'store_pickup' ? 'Pickup Details' : 'Delivery Details'}
+              </h2>
+              <span className={`text-xs font-bold px-3 py-1 rounded-full ${
+                order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+              }`}>
+                {order.fulfillmentType === 'store_pickup' ? '🏪 Store Pickup' : '🚚 Rider Delivery'}
+              </span>
+            </div>
+            {order.fulfillmentType === 'store_pickup' ? (
+              <div className="space-y-2 text-gray-700">
+                <p><span className="font-semibold">Customer:</span> {order.deliveryAddress?.fullName || order.customer?.name}</p>
+                <p><span className="font-semibold">Contact Phone:</span> {order.deliveryAddress?.phone || order.customer?.phone || 'N/A'}</p>
+                <p><span className="font-semibold">Pickup Location:</span> {vendorObj?.storeName || 'Store Location'}</p>
+                {vendorAddressString && (
+                  <p className="text-sm text-gray-600 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                    <span className="font-semibold text-gray-800">Store Address:</span> {vendorAddressString}
                   </p>
                 )}
               </div>
+            ) : (
+              order.deliveryAddress && (
+                <div className="space-y-1 text-gray-700">
+                  <p className="font-semibold">
+                    {order.deliveryAddress.fullName || order.customer?.name}
+                  </p>
+                  <p>{order.deliveryAddress.street}</p>
+                  <p>
+                    {order.deliveryAddress.city},{' '}
+                    {order.deliveryAddress.postcode}
+                  </p>
+                  {order.deliveryAddress.phone && (
+                    <p className="text-gray-500 text-sm mt-2">
+                      Phone: {order.deliveryAddress.phone}
+                    </p>
+                  )}
+                </div>
+              )
             )}
           </div>
 

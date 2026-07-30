@@ -173,7 +173,7 @@ function Orders() {
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-afri-gray-50">
               <tr>
-                {['Order', 'Customer', 'Items', 'Total', 'Status', 'Date', ''].map(h => (
+                {['Order', 'Customer', 'Type', 'Items', 'Total', 'Status', 'Date', ''].map(h => (
                   <th key={h} className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
                     {h}
                   </th>
@@ -189,6 +189,13 @@ function Orders() {
                   <td className="px-4 py-4 whitespace-nowrap">
                     <div className="text-sm text-afri-gray-900">{order.customer?.name || 'N/A'}</div>
                     <div className="text-xs text-afri-gray-500">{order.customer?.phone || ''}</div>
+                  </td>
+                  <td className="px-4 py-4 whitespace-nowrap">
+                    <span className={`px-2 py-0.5 inline-flex text-xs font-bold rounded-md ${
+                      order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {order.fulfillmentType === 'store_pickup' ? '🏪 Pickup' : '🚚 Rider'}
+                    </span>
                   </td>
                   <td className="px-4 py-4 whitespace-nowrap text-sm text-afri-gray-900">
                     {order.items?.length || 0} items

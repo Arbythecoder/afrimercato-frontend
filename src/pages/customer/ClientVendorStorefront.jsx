@@ -303,17 +303,17 @@ export default function ClientVendorStorefront() {
           <img
             src={vendor?.banner || vendor?.storeImage || vendor?.logo || vendor?.image || "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=1200"}
             alt={vendor?.storeName || "Store Background"}
-            className="w-full h-full object-cover object-center scale-105 filter blur-[1px] transition-transform duration-700 hover:scale-100"
+            className="w-full h-full object-cover object-center scale-105 filter blur-[0.5px] transition-transform duration-700 hover:scale-100"
           />
           {/* Dark Overlay Gradient for Maximum Text Readability */}
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-900/85 to-slate-950/60 backdrop-blur-[2px]" />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-black/30" />
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950/40 via-slate-900/75 to-slate-950/10 backdrop-blur-[2px]" />
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 /99 via-transparent to-black/30" />
         </div>
 
         {/* Content Container */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full">
           <div className="grid lg:grid-cols-12 gap-8 items-center">
-            
+
             {/* Left Column: Store Text & Actions */}
             <div className="lg:col-span-8">
               <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex items-center gap-3 mb-3">
@@ -375,16 +375,16 @@ export default function ClientVendorStorefront() {
 
             {/* Right Column: Glassmorphism Store Branding Badge */}
             <div className="lg:col-span-4 hidden lg:flex justify-center">
-              <motion.div 
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2 }}
                 className="bg-white/10 backdrop-blur-xl border border-white/20 rounded-3xl p-6 shadow-2xl text-center w-full max-w-xs relative overflow-hidden group"
               >
                 <div className="w-28 h-28 mx-auto rounded-2xl bg-white p-3 shadow-lg border border-gray-100 flex items-center justify-center overflow-hidden mb-4 transition-transform duration-300 group-hover:scale-105">
-                  <img 
-                    src={vendor?.logo || vendor?.storeLogo || vendor?.storeImage || vendor?.image || "/logo.svg"} 
-                    alt={vendor?.storeName || "Vendor Logo"} 
+                  <img
+                    src={vendor?.logo || vendor?.storeLogo || vendor?.storeImage || vendor?.image || "/logo.svg"}
+                    alt={vendor?.storeName || "Vendor Logo"}
                     className="w-full h-full object-contain"
                     onError={(e) => { e.target.src = "/logo.svg" }}
                   />

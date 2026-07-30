@@ -158,6 +158,23 @@ function OrderDetail() {
     )
   }
 
+  const vendorObj = order.vendor || (order.items && order.items[0] && typeof order.items[0].vendor === 'object' ? order.items[0].vendor : null)
+  const vendorAddressString = (() => {
+    if (!vendorObj) return null
+    if (typeof vendorObj.address === 'string' && vendorObj.address.trim()) return vendorObj.address
+    if (vendorObj.address && typeof vendorObj.address === 'object') {
+      const p = [vendorObj.address.street, vendorObj.address.city, vendorObj.address.county, vendorObj.address.postcode].filter(Boolean)
+      if (p.length > 0) return p.join(', ')
+    }
+    if (vendorObj.location) {
+      if (typeof vendorObj.location === 'string' && vendorObj.location.trim()) return vendorObj.location
+      if (vendorObj.location.address) return vendorObj.location.address
+      const p = [vendorObj.location.street, vendorObj.location.city, vendorObj.location.postcode].filter(Boolean)
+      if (p.length > 0) return p.join(', ')
+    }
+    return null
+  })()
+
   const currentStep = getCurrentStep()
 
   return (
@@ -374,44 +391,75 @@ function OrderDetail() {
               </div>
             </div>
 
-            {/* Delivery Address */}
+            {/* Store Pickup PIN Banner */}
+            {order.fulfillmentType === 'store_pickup' && (
+              <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl p-5 shadow-lg mb-6 text-center">
+                <p className="text-xs uppercase tracking-wider text-amber-100 font-bold mb-1">Your 4-Digit Pickup PIN</p>
+                <p className="text-4xl font-black tracking-widest">{order.security?.pickupPin || order.pickupPin || '----'}</p>
+                <p className="text-xs text-amber-100 mt-2 font-medium">Show this PIN to store staff when picking up your order.</p>
+              </div>
+            )}
+
+            {/* Delivery or Pickup Address */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-bold text-gray-900">Delivery Address</h2>
-                {['pending', 'confirmed', 'preparing', 'assigned_to_picker', 'picking'].includes(order.status) && (
-                  <button
-                    onClick={() => setShowEditAddressModal(true)}
-                    className="px-3 py-1.5 bg-green-50 text-afri-green hover:bg-green-100 font-bold text-xs rounded-lg transition-all border border-green-200 flex items-center gap-1 cursor-pointer"
-                  >
-                    <Edit3 className="w-3.5 h-3.5" /> Edit Address
-                  </button>
-                )}
+                <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  {order.fulfillmentType === 'store_pickup' ? <><Store className="w-5 h-5 text-afri-green" /> Pickup Information</> : 'Delivery Address'}
+                </h2>
+                <div className="flex items-center gap-2">
+                  {order.fulfillmentType !== 'store_pickup' && ['pending', 'confirmed', 'preparing', 'assigned_to_picker', 'picking'].includes(order.status) && (
+                    <button
+                      onClick={() => setShowEditAddressModal(true)}
+                      className="px-3 py-1.5 bg-green-50 text-afri-green hover:bg-green-100 font-bold text-xs rounded-lg transition-all border border-green-200 flex items-center gap-1 cursor-pointer"
+                    >
+                      <Edit3 className="w-3.5 h-3.5" /> Edit Address
+                    </button>
+                  )}
+                  <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                    order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {order.fulfillmentType === 'store_pickup' ? '🏪 Self Pickup' : '🚚 Rider Delivery'}
+                  </span>
+                </div>
               </div>
 
               <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Name:</span> {order.deliveryAddress?.fullName || order.customer?.name}
+                <span className="font-semibold">Customer:</span> {order.deliveryAddress?.fullName || order.customer?.name}
               </p>
               <p className="text-gray-700 text-sm">
                 <span className="font-semibold">Email:</span> {order.customer?.email}
               </p>
               <p className="text-gray-700 text-sm">
-                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || 'No number provided'}
+                <span className="font-semibold">Phone:</span> {order.deliveryAddress?.phone || order.customer?.phone || 'No number provided'}
               </p>
 
-              <p className="text-gray-700 text-sm mt-1">
-                <span className="font-semibold">Address:</span>{' '}
-                {[
-                  order.deliveryAddress?.street,
-                  order.deliveryAddress?.city,
-                  order.deliveryAddress?.county,
-                  order.deliveryAddress?.postcode,
-                  order.deliveryAddress?.country,
-                ].filter(Boolean).join(', ')}
-              </p>
+              {order.fulfillmentType === 'store_pickup' ? (
+                <div className="mt-3 pt-3 border-t">
+                  <p className="text-gray-700 text-sm">
+                    <span className="font-semibold">Pickup Location:</span> {vendorObj?.storeName || 'Vendor Store'}
+                  </p>
+                  {vendorAddressString && (
+                    <p className="text-gray-700 text-sm mt-1 bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                      <span className="font-semibold text-gray-900">Store Address:</span> {vendorAddressString}
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-700 text-sm mt-1">
+                  <span className="font-semibold">Address:</span>{' '}
+                  {[
+                    order.deliveryAddress?.street,
+                    order.deliveryAddress?.city,
+                    order.deliveryAddress?.county,
+                    order.deliveryAddress?.postcode,
+                    order.deliveryAddress?.country,
+                  ].filter(Boolean).join(', ')}
+                </p>
+              )}
 
               {order.deliveryAddress?.instructions && (
                 <p className="text-gray-700 text-sm mt-2 p-2 bg-amber-50 text-amber-800 rounded-lg border border-amber-100">
-                  <span className="font-semibold">Instructions:</span> {order.deliveryAddress.instructions}
+                  <span className="font-semibold">{order.fulfillmentType === 'store_pickup' ? 'Pickup Notes:' : 'Instructions:'}</span> {order.deliveryAddress.instructions}
                 </p>
               )}
             </div>

@@ -148,18 +148,34 @@ function OrderTracking() {
 
       <div className="container mx-auto px-6 py-8">
         <div className="max-w-4xl mx-auto">
+          {/* Pickup PIN Banner for Store Pickup */}
+          {order.fulfillmentType === 'store_pickup' && (
+            <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl p-5 mb-6 text-center shadow-lg">
+              <p className="text-xs uppercase tracking-wider text-amber-100 font-bold mb-1">Your 4-Digit Pickup PIN</p>
+              <p className="text-4xl font-black tracking-widest">{order.security?.pickupPin || order.pickupPin || '----'}</p>
+              <p className="text-xs text-amber-100 mt-2 font-medium">Present this PIN to store staff upon arrival to collect your order.</p>
+            </div>
+          )}
+
           {/* Order Header */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-6">
             <div className="flex justify-between items-start mb-4">
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-1">
-                  Track Your Order
-                </h1>
+                <div className="flex items-center gap-2 mb-1">
+                  <h1 className="text-2xl font-bold text-gray-900">
+                    Track Your Order
+                  </h1>
+                  <span className={`text-xs font-bold px-2.5 py-0.5 rounded-full ${
+                    order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
+                  }`}>
+                    {order.fulfillmentType === 'store_pickup' ? '🏪 Store Pickup' : '🚚 Rider Delivery'}
+                  </span>
+                </div>
                 <p className="text-gray-600">
                   Order #{order.orderNumber}
                 </p>
               </div>
-              <div className={`px-4 py-2 rounded-full text-sm font-semibold ${order.status === 'delivered'
+              <div className={`px-4 py-2 rounded-full text-sm font-semibold ${['delivered', 'completed'].includes(order.status)
                 ? 'bg-green-100 text-green-700'
                 : 'bg-yellow-100 text-yellow-700'
                 }`}>
@@ -167,19 +183,21 @@ function OrderTracking() {
               </div>
             </div>
 
-            {/* ETA */}
-            {order.status !== 'delivered' && (
-              <div className="bg-blue-50 rounded-lg p-4">
+            {/* ETA / Pickup Instructions */}
+            {!['delivered', 'completed'].includes(order.status) && (
+              <div className={`${order.fulfillmentType === 'store_pickup' ? 'bg-amber-50 border border-amber-200' : 'bg-blue-50'} rounded-lg p-4`}>
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <Truck className="w-5 h-5 text-blue-600" />
+                  <div className={`w-10 h-10 ${order.fulfillmentType === 'store_pickup' ? 'bg-amber-100' : 'bg-blue-100'} rounded-full flex items-center justify-center`}>
+                    <Truck className={`w-5 h-5 ${order.fulfillmentType === 'store_pickup' ? 'text-amber-700' : 'text-blue-600'}`} />
                   </div>
                   <div>
                     <p className="font-semibold text-gray-900">
-                      Estimated Delivery Time
+                      {order.fulfillmentType === 'store_pickup' ? 'Self Pickup Instructions' : 'Estimated Delivery Time'}
                     </p>
                     <p className="text-sm text-gray-600">
-                      20-40 minutes from now
+                      {order.fulfillmentType === 'store_pickup'
+                        ? 'Collect your order at the vendor store when status changes to "Ready for Pickup".'
+                        : '20-40 minutes from now'}
                     </p>
                   </div>
                 </div>

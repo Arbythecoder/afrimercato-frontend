@@ -178,6 +178,21 @@ function CheckoutForm() {
   const [postcodeError, setPostcodeError] = useState('')
   const [address, setAddress] = useState(getInitialAddress)
 
+  // Fulfillment option: 'delivery' (Rider Delivery) or 'store_pickup' (Self Pickup)
+  const [fulfillmentType, setFulfillmentType] = useState(() => {
+    try {
+      return sessionStorage.getItem('afrimercato_checkout_fulfillment') || 'delivery'
+    } catch (_e) {
+      return 'delivery'
+    }
+  })
+
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('afrimercato_checkout_fulfillment', fulfillmentType)
+    } catch (_e) { }
+  }, [fulfillmentType])
+
   // Auto-persist address draft whenever input changes
   useEffect(() => {
     try {
@@ -513,6 +528,7 @@ function CheckoutForm() {
   const [distanceFeeInfo, setDistanceFeeInfo] = useState(null)
 
   useEffect(() => {
+    if (fulfillmentType === 'store_pickup') return
     if (!address.postcode || address.postcode.trim().length < 3) return
 
     const timer = setTimeout(async () => {
@@ -521,7 +537,8 @@ function CheckoutForm() {
         const res = await calculateDeliveryFee({
           deliveryAddress: address,
           vendorId,
-          subtotal: cartTotal
+          subtotal: cartTotal,
+          fulfillmentType
         })
         if (res?.success && res?.data) {
           setDistanceFeeInfo(res.data)
@@ -532,9 +549,11 @@ function CheckoutForm() {
     }, 500)
 
     return () => clearTimeout(timer)
-  }, [address.postcode, address.street, cartTotal, vendorInfo, cart])
+  }, [address.postcode, address.street, cartTotal, vendorInfo, cart, fulfillmentType])
 
-  const deliveryFee = distanceFeeInfo ? distanceFeeInfo.deliveryFee : (cartTotal >= 50 ? 0 : 3.99)
+  const deliveryFee = fulfillmentType === 'store_pickup'
+    ? 0
+    : (distanceFeeInfo ? distanceFeeInfo.deliveryFee : (cartTotal >= 50 ? 0 : 3.99))
   // For multi-vendor carts, each vendor has their own minimum — don't block on a single vendor's value
   const isMultiVendorCart = groupCartByVendor(cart).length > 1
   const couponDiscount = coupon
@@ -547,8 +566,8 @@ function CheckoutForm() {
   const handleAddressSubmit = (e) => {
     e.preventDefault()
 
-    // Block if postcode is invalid
-    if (!validateUKPostcode(address.postcode)) {
+    // Block if rider delivery and postcode is invalid
+    if (fulfillmentType === 'delivery' && !validateUKPostcode(address.postcode)) {
       setPostcodeError('Please enter a valid UK postcode')
       return
     }
@@ -606,6 +625,7 @@ function CheckoutForm() {
       const repeatPurchaseFrequency = localStorage.getItem('repeatPurchaseFrequency')
 
       const orderData = {
+        fulfillmentType,
         items: cart.map(item => ({
           product: item._id,
           name: item.name,
@@ -614,7 +634,15 @@ function CheckoutForm() {
           unit: item.unit || 'piece',
           vendor: item.vendor?._id || item.vendor?.id || item.vendorId || null
         })),
-        deliveryAddress: address,
+        deliveryAddress: fulfillmentType === 'store_pickup' ? {
+          fullName: address.fullName || 'Customer',
+          phone: address.phone || '',
+          street: address.street || 'Store Pickup',
+          city: address.city || 'Local Store',
+          postcode: address.postcode || 'PICKUP',
+          country: 'United Kingdom',
+          instructions: address.instructions || ''
+        } : address,
         payment: {
           method: payment.method,
           status: 'pending'
@@ -1125,10 +1153,100 @@ function CheckoutForm() {
               </div>
             </div>
 
-            {/* Step 1: Delivery Address */}
+            {/* Step 1: Delivery Address & Fulfillment */}
             {step === 1 && (
               <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6">
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Delivery Address</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Fulfillment & Address</h2>
+                
+                {/* Fulfillment Method Toggle */}
+                <div className="mb-6">
+                  <label className="block text-sm font-bold text-gray-800 mb-3">
+                    Choose Pickup or Delivery Option
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Rider Delivery Option */}
+                    <div
+                      onClick={() => setFulfillmentType('delivery')}
+                      className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 ${
+                        fulfillmentType === 'delivery'
+                          ? 'border-green-600 bg-green-50/50 shadow-sm ring-1 ring-green-600'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <div className={`p-2.5 rounded-lg shrink-0 ${fulfillmentType === 'delivery' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                        <Bike className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold text-gray-900 text-base">Rider Delivery</span>
+                          <span className="text-xs font-semibold px-2.5 py-0.5 rounded bg-gray-100 text-gray-700 whitespace-nowrap">
+                            {distanceFeeInfo ? `£${distanceFeeInfo.deliveryFee.toFixed(2)}` : (cartTotal >= 50 ? 'FREE' : '£3.99')}
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">Delivered directly to your door by a local rider</p>
+                      </div>
+                    </div>
+
+                    {/* Self Pickup Option */}
+                    <div
+                      onClick={() => setFulfillmentType('store_pickup')}
+                      className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 ${
+                        fulfillmentType === 'store_pickup'
+                          ? 'border-green-600 bg-green-50/50 shadow-sm ring-1 ring-green-600'
+                          : 'border-gray-200 hover:border-gray-300 bg-white'
+                      }`}
+                    >
+                      <div className={`p-2.5 rounded-lg shrink-0 ${fulfillmentType === 'store_pickup' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
+                        <Store className="w-6 h-6" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold text-gray-900 text-base">Self Pickup</span>
+                          <span className="text-xs font-bold px-2.5 py-0.5 rounded bg-green-100 text-green-800 border border-green-200 whitespace-nowrap">
+                            FREE (£0.00)
+                          </span>
+                        </div>
+                        <p className="text-xs text-gray-600 mt-1">Pick up directly from store location</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Pickup Store Location Info Banner */}
+                {fulfillmentType === 'store_pickup' && (
+                  <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+                    <div className="flex items-start gap-3">
+                      <Store className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+                      <div>
+                        <h4 className="font-bold text-amber-900 text-sm">Store Pickup Location</h4>
+                        <p className="text-sm text-amber-800 mt-0.5 font-semibold">
+                          {vendor?.storeName || groupCartByVendor(cart)[0]?.vendorName || 'Vendor Store'}
+                        </p>
+                        <p className="text-xs text-amber-800 font-medium mt-0.5">
+                          {(() => {
+                            if (!vendor) return 'Address details will be attached to your order receipt.'
+                            if (typeof vendor.address === 'string' && vendor.address.trim()) return vendor.address
+                            if (vendor.address && typeof vendor.address === 'object') {
+                              const p = [vendor.address.street, vendor.address.city, vendor.address.county, vendor.address.postcode].filter(Boolean)
+                              if (p.length > 0) return p.join(', ')
+                            }
+                            if (vendor.location) {
+                              if (typeof vendor.location === 'string' && vendor.location.trim()) return vendor.location
+                              if (vendor.location.address) return vendor.location.address
+                              const p = [vendor.location.street, vendor.location.city, vendor.location.postcode].filter(Boolean)
+                              if (p.length > 0) return p.join(', ')
+                            }
+                            return 'Address details will be attached to your order receipt.'
+                          })()}
+                        </p>
+                        <p className="text-xs text-amber-800 mt-2 font-medium bg-amber-100/70 p-2 rounded-lg border border-amber-200">
+                          🔒 You will receive a 4-digit Pickup PIN after order placement. Show this PIN to store staff when collecting your order.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <form onSubmit={handleAddressSubmit}>
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
@@ -1164,26 +1282,26 @@ function CheckoutForm() {
 
                   <div className="mb-4">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Street Address *
+                      {fulfillmentType === 'store_pickup' ? 'Street Address (Optional)' : 'Street Address *'}
                     </label>
                     <input
                       type="text"
-                      required
+                      required={fulfillmentType === 'delivery'}
                       value={address.street}
                       onChange={(e) => setAddress({ ...address, street: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
-                      placeholder="123 High Street"
+                      placeholder={fulfillmentType === 'store_pickup' ? 'Home address (optional for pickup)' : '123 High Street'}
                     />
                   </div>
 
                   <div className="grid md:grid-cols-2 gap-4 mb-4">
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        City *
+                        {fulfillmentType === 'store_pickup' ? 'City (Optional)' : 'City *'}
                       </label>
                       <input
                         type="text"
-                        required
+                        required={fulfillmentType === 'delivery'}
                         autoComplete="address-level2"
                         value={address.city}
                         onChange={(e) => setAddress({ ...address, city: e.target.value })}
@@ -1191,15 +1309,15 @@ function CheckoutForm() {
                         placeholder="London"
                       />
                     </div>
-                    {/* Postcode field — with error */}
+                    {/* Postcode field */}
                     <div>
                       <label className="block text-sm font-semibold text-gray-700 mb-2">
-                        Postcode *
+                        {fulfillmentType === 'store_pickup' ? 'Postcode (Optional)' : 'Postcode *'}
                       </label>
                       <div className="flex gap-2">
                         <input
                           type="text"
-                          required
+                          required={fulfillmentType === 'delivery'}
                           autoComplete="postal-code"
                           value={address.postcode}
                           onChange={(e) => {
@@ -1207,8 +1325,7 @@ function CheckoutForm() {
                             setPostcodeError('') // clear error on edit
                           }}
                           onBlur={() => {
-                            // Validate on blur so user gets feedback without clicking Find
-                            if (address.postcode && !validateUKPostcode(address.postcode)) {
+                            if (fulfillmentType === 'delivery' && address.postcode && !validateUKPostcode(address.postcode)) {
                               setPostcodeError('Please enter a valid UK postcode (e.g. SW1A 1AA)')
                             }
                           }}
@@ -1247,14 +1364,14 @@ function CheckoutForm() {
 
                   <div className="mb-6">
                     <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Delivery Instructions (Optional)
+                      {fulfillmentType === 'store_pickup' ? 'Pickup Notes (Optional)' : 'Delivery Instructions (Optional)'}
                     </label>
                     <textarea
                       value={address.instructions}
                       onChange={(e) => setAddress({ ...address, instructions: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent min-h-[44px]"
                       rows="3"
-                      placeholder="e.g., Leave at door, Ring doorbell, etc."
+                      placeholder={fulfillmentType === 'store_pickup' ? 'e.g., Will pick up around 4 PM' : 'e.g., Leave at door, Ring doorbell, etc.'}
                     ></textarea>
                   </div>
 
@@ -1426,18 +1543,35 @@ function CheckoutForm() {
               <div className="bg-white rounded-xl shadow-md p-6">
                 <h2 className="text-2xl font-bold text-gray-900 mb-6">Review & Confirm</h2>
 
-                {/* Delivery Details */}
+                {/* Fulfillment & Address Details */}
                 <div className="mb-6 pb-6 border-b">
-                  <h3 className="font-semibold text-gray-900 mb-3">Delivery Address</h3>
-                  <p className="text-gray-700">
-                    {address.fullName}<br />
-                    {address.phone}<br />
-                    {address.street}<br />
-                    {address.city}, {address.postcode}
-                  </p>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900">
+                      {fulfillmentType === 'store_pickup' ? 'Fulfillment: Store Pickup' : 'Delivery Address'}
+                    </h3>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                      fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {fulfillmentType === 'store_pickup' ? '🏪 Self Pickup (FREE)' : '🚚 Rider Delivery'}
+                    </span>
+                  </div>
+                  {fulfillmentType === 'store_pickup' ? (
+                    <div className="text-gray-700 space-y-1">
+                      <p><span className="font-semibold">Customer:</span> {address.fullName} ({address.phone})</p>
+                      <p><span className="font-semibold">Pickup Store:</span> {vendor?.storeName || groupCartByVendor(cart)[0]?.vendorName || 'Vendor Store'}</p>
+                      <p className="text-xs text-gray-500">You will present your 4-digit Pickup PIN upon collection.</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-700">
+                      {address.fullName}<br />
+                      {address.phone}<br />
+                      {address.street}<br />
+                      {address.city}, {address.postcode}
+                    </p>
+                  )}
                   {address.instructions && (
-                    <p className="text-sm text-gray-600 mt-2">
-                      <strong>Instructions:</strong> {address.instructions}
+                    <p className="text-sm text-gray-600 mt-2 p-2 bg-gray-50 rounded-lg">
+                      <strong>{fulfillmentType === 'store_pickup' ? 'Pickup Notes:' : 'Instructions:'}</strong> {address.instructions}
                     </p>
                   )}
                   <button
@@ -1740,15 +1874,27 @@ function CheckoutForm() {
 
               {/* Pricing */}
               <div className="border-t pt-4 space-y-2">
-                <div className="flex justify-between text-gray-700">
+                <div className="flex justify-between text-gray-700 text-sm">
+                  <span>Fulfillment</span>
+                  <span className="font-semibold text-xs px-2 py-0.5 rounded bg-gray-100 text-gray-800">
+                    {fulfillmentType === 'store_pickup' ? '🏪 Self Pickup' : '🚚 Rider Delivery'}
+                  </span>
+                </div>
+                <div className="flex justify-between text-gray-700 text-sm">
                   <span>Subtotal</span>
                   <span>£{cartTotal.toFixed(2)}</span>
                 </div>
-                <div className="flex justify-between text-gray-700">
+                <div className="flex justify-between text-gray-700 text-sm">
                   <span>Delivery Fee</span>
-                  <span>{deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}</span>
+                  <span className={deliveryFee === 0 ? 'text-green-600 font-bold' : ''}>
+                    {deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}
+                  </span>
                 </div>
-                {cartTotal >= 50 ? (
+                {fulfillmentType === 'store_pickup' ? (
+                  <p className="text-xs text-green-700 font-medium text-center bg-green-50 p-1.5 rounded border border-green-200">
+                    🎉 £0.00 delivery fee applied for self pickup
+                  </p>
+                ) : cartTotal >= 50 ? (
                   <p className="text-xs text-green-600 flex items-center justify-center gap-1"><Sparkles className="w-3.5 h-3.5 text-green-600" /> Free delivery on orders over £50</p>
                 ) : (
                   <p className="text-xs text-gray-500 text-center">Standard UK Delivery Fee applied</p>

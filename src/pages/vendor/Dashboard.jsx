@@ -46,7 +46,7 @@ function Dashboard() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false)
 
   const [isPendingApproval, setIsPendingApproval] = useState(false)
-  
+
   const [currentTime, setCurrentTime] = useState(new Date())
   const [showConfetti, setShowConfetti] = useState(false)
 
@@ -108,7 +108,7 @@ function Dashboard() {
 
   const normalizeVendorChartData = (data, statsData) => {
     const isFlatArray = Array.isArray(data)
-    
+
     return {
       revenueData: isFlatArray ? data : (data?.revenueData ?? data?.revenue ?? []),
       ordersData: isFlatArray ? data : (data?.ordersData ?? data?.orders ?? []),
@@ -133,11 +133,11 @@ function Dashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      
+
       const timeout = (promise, ms = 5000) => {
         return Promise.race([
           promise,
-          new Promise((_, reject) => 
+          new Promise((_, reject) =>
             setTimeout(() => reject(new Error('Request timed out')), ms)
           )
         ])
@@ -198,7 +198,7 @@ function Dashboard() {
 
   const handleOnboardingComplete = () => {
     setNeedsOnboarding(false)
-    setIsPendingApproval(true) 
+    setIsPendingApproval(true)
   }
 
   // RENDER: PENDING APPROVAL BLOCKER UI
@@ -221,8 +221,8 @@ function Dashboard() {
               This process may take a little while. We will keep you updated and notify you via the email you registered with once your account has been verified.
             </p>
           </div>
-          <Link 
-            to="/" 
+          <Link
+            to="/"
             className="inline-flex items-center justify-center px-8 py-3 bg-gray-900 text-white font-medium rounded-xl hover:bg-gray-800 transition-colors shadow-lg hover:shadow-xl w-full"
           >
             Return to Home
@@ -280,9 +280,8 @@ function Dashboard() {
   // Stat Card Component with enhanced animations
   const StatCard = ({ title, value, icon, trend, color, delay, sparkData, pulse }) => (
     <div
-      className={`relative bg-white rounded-2xl shadow-lg p-6 transform transition-all duration-700 hover:scale-[1.02] hover:shadow-2xl overflow-hidden ${
-        animateCards ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
-      }`}
+      className={`relative bg-white rounded-2xl shadow-lg p-6 transform transition-all duration-700 hover:scale-[1.02] hover:shadow-2xl overflow-hidden ${animateCards ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
+        }`}
       style={{ transitionDelay: `${delay}ms` }}
     >
       {/* Background decoration */}
@@ -497,11 +496,10 @@ function Dashboard() {
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${
-                timeRange === range
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30'
-                  : 'text-gray-600 hover:bg-gray-50'
-              }`}
+              className={`px-5 py-2.5 rounded-lg font-medium text-sm transition-all duration-300 ${timeRange === range
+                ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg shadow-green-500/30'
+                : 'text-gray-600 hover:bg-gray-50'
+                }`}
             >
               {range === '7d' ? '7 Days' : range === '30d' ? '30 Days' : '90 Days'}
             </button>
@@ -588,7 +586,7 @@ function Dashboard() {
           </div>
           <ResponsiveContainer width="100%" height={280}>
             <AreaChart data={chartData?.revenueData || []}>
-              
+
               <defs>
                 <linearGradient id="revenueGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="5%" stopColor="#00B207" stopOpacity={0.4} />
@@ -689,14 +687,13 @@ function Dashboard() {
             <Link to="/vendor/products" className="text-sm text-green-600 hover:text-green-700 font-medium">View All</Link>
           </div>
           <div className="space-y-4">
-            {(stats?.topProducts || []).slice(0, 5).map((product, index) => (
+            {(stats?.topProducts || []).slice(0, 4).map((product, index) => (
               <div key={product._id} className="flex items-center gap-4 group">
-                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${
-                  index === 0 ? 'from-yellow-400 to-amber-500' :
+                <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${index === 0 ? 'from-yellow-400 to-amber-500' :
                   index === 1 ? 'from-gray-300 to-gray-400' :
-                  index === 2 ? 'from-amber-600 to-amber-700' :
-                  'from-gray-100 to-gray-200'
-                } flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform`}>
+                    index === 2 ? 'from-amber-600 to-amber-700' :
+                      'from-gray-100 to-gray-200'
+                  } flex items-center justify-center text-white font-bold shadow-lg group-hover:scale-110 transition-transform`}>
                   {index + 1}
                 </div>
                 <div className="flex-1 min-w-0">
@@ -719,10 +716,10 @@ function Dashboard() {
         <div className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-shadow duration-300">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-bold text-gray-900">Recent Orders</h3>
- 
+
           </div>
           <div className="space-y-4">
-            {(stats?.recentOrders || []).slice(0, 5).map((order) => (
+            {(stats?.recentOrders || []).slice(0, 4).map((order) => (
               <div key={order._id} className="flex items-center justify-between p-3 rounded-xl bg-gray-50 hover:bg-gray-100 transition-colors cursor-pointer">
                 <div>
                   <p className="font-medium text-gray-900">{order.orderNumber}</p>

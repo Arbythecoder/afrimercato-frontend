@@ -3,8 +3,8 @@ import { AuthProvider, useAuth } from './context/AuthContext'
 import { useVendorStore, useCustomerStore, useAdminStore } from './stores'
 import { lazy, Suspense, useState, useEffect } from 'react'
 import CookieConsent from './components/CookieConsent'
-import BetaBanner from './components/BetaBanner'
-import BetaFeedbackButton from './components/BetaFeedbackButton'
+// import BetaBanner from './components/BetaBanner'
+// import BetaFeedbackButton from './components/BetaFeedbackButton'
 import ComingSoon from './components/ComingSoon'
 import CrispChat from './components/CrispChat'
 import PushNotificationBanner from './components/PushNotificationBanner'
@@ -202,7 +202,7 @@ function AppContent() {
 
   return (
     <>
-      <BetaBanner />
+      {/* <BetaBanner /> */}
       <VendorBanner />
       <Suspense fallback={<LazyLoadingFallback />}>
         <Routes>
@@ -244,6 +244,7 @@ function AppContent() {
           <Route path="/recipes" element={<RecipeRecommendations />} />
           <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/order/:orderId" element={<OrderDetail />} />
+          <Route path="/orders/:orderId" element={<OrderDetail />} />
 
           {/* Customer Dashboard */}
           <Route
@@ -620,7 +621,7 @@ function App() {
         <AppContent />
         <ThemeToggle />
         <LiveChatButton />
-        <BetaFeedbackButton />
+        {/* <BetaFeedbackButton /> */}
         <CookieConsent />
         <CrispChat />
       </ComingSoon>
