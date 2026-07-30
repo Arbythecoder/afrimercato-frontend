@@ -38,7 +38,7 @@ function NotificationsCenter() {
     if (notification.actionUrl) return notification.actionUrl
     if (notification.orderId) {
       if (user?.role === 'vendor' || user?.roles?.includes('vendor')) {
-        return '/vendor/orders'
+        return '/vendor/order'
       }
       if (user?.role === 'rider' || user?.roles?.includes('rider')) {
         return '/rider/deliveries'

@@ -244,7 +244,6 @@ function AppContent() {
           <Route path="/recipes" element={<RecipeRecommendations />} />
           <Route path="/product/:productId" element={<ProductDetail />} />
           <Route path="/order/:orderId" element={<OrderDetail />} />
-          <Route path="/orders/:orderId" element={<OrderDetail />} />
 
           {/* Customer Dashboard */}
           <Route
