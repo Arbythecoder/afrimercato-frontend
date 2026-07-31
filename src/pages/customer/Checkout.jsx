@@ -6,7 +6,7 @@ import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js'
 import { useNoIndex } from '../../hooks/useNoIndex'
-import { ShoppingCart, ArrowLeft, AlertCircle, AlertTriangle, CreditCard, ShoppingBag, Info, Sparkles, Lock, Store, Bike, Package } from 'lucide-react'
+import { ShoppingCart, ArrowLeft, AlertCircle, AlertTriangle, CreditCard, ShoppingBag, Info, Sparkles, Lock, Store, Bike, Package, Eye, EyeOff } from 'lucide-react'
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '')
 
@@ -78,6 +78,7 @@ function CheckoutForm() {
   const [showAuthModal, setShowAuthModal] = useState(false)
   const [authEmail, setAuthEmail] = useState('')
   const [authPassword, setAuthPassword] = useState('')
+  const [showAuthPassword, setShowAuthPassword] = useState(false)
   const [authLoading, setAuthLoading] = useState(false)
   const [authError, setAuthError] = useState('')
 
@@ -1008,14 +1009,24 @@ function CheckoutForm() {
                 onChange={e => { setAuthEmail(e.target.value); setAuthError('') }}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
               />
-              <input
-                type="password"
-                required
-                placeholder="Password"
-                value={authPassword}
-                onChange={e => { setAuthPassword(e.target.value); setAuthError('') }}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-              />
+              <div className="relative">
+                <input
+                  type={showAuthPassword ? "text" : "password"}
+                  required
+                  placeholder="Password"
+                  value={authPassword}
+                  onChange={e => { setAuthPassword(e.target.value); setAuthError('') }}
+                  className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowAuthPassword(!showAuthPassword)}
+                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                  aria-label={showAuthPassword ? "Hide password" : "Show password"}
+                >
+                  {showAuthPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
+              </div>
               <button
                 type="submit"
                 disabled={authLoading}
