@@ -107,8 +107,8 @@ function VendorDiscovery() {
       {/* Hero Section with Search */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-12">
         <div className="max-w-7xl mx-auto px-4">
-          
-          <FaArrowLeft className='mb- cursor-pointer' onClick={()=> navigate(-1)} />
+
+          <FaArrowLeft className='mb- cursor-pointer' onClick={() => navigate("/my-dashboard")} />
           <h1 className="text-4xl font-bold text-center mb-2">Discover African Grocery Stores</h1>
           <p className="text-afri-green-light text-center mb-8">Fresh produce, authentic spices, and more near you</p>
 
@@ -162,11 +162,10 @@ function VendorDiscovery() {
             <button
               key={cat.id}
               onClick={() => setCategory(cat.id)}
-              className={`flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap transition-all ${
-                category === cat.id
+              className={`flex items-center gap-2 px-5 py-3 rounded-full whitespace-nowrap transition-all ${category === cat.id
                   ? 'bg-afri-green text-white shadow-lg'
                   : 'bg-white text-gray-700 hover:bg-gray-100 shadow'
-              }`}
+                }`}
             >
               <span className="text-xl">{cat.icon}</span>
               <span className="font-medium">{cat.name}</span>
@@ -238,9 +237,8 @@ function VendorDiscovery() {
             {vendors.map(vendor => (
               <div
                 key={vendor._id}
-                className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer group ${
-                  viewMode === 'list' ? 'flex' : ''
-                }`}
+                className={`bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer group ${viewMode === 'list' ? 'flex' : ''
+                  }`}
                 onClick={() => navigate(`/store/${vendor._id}`)}
               >
                 {/* Store Image */}
@@ -248,9 +246,8 @@ function VendorDiscovery() {
                   <img
                     src={vendor.coverImage || vendor.logo || 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=400'}
                     alt={vendor.storeName}
-                    className={`w-full object-cover group-hover:scale-105 transition-transform ${
-                      viewMode === 'list' ? 'h-full' : 'h-48'
-                    }`}
+                    className={`w-full object-cover group-hover:scale-105 transition-transform ${viewMode === 'list' ? 'h-full' : 'h-48'
+                      }`}
                   />
                   {vendor.isOpen !== false && (
                     <span className="absolute top-3 left-3 bg-green-500 text-white text-xs px-2 py-1 rounded-full">

@@ -214,7 +214,7 @@ function ProductBrowsing() {
       {/* Header */}
       <div className="bg-gradient-to-r from-afri-green to-afri-green-dark text-white py-8">
         <div className="max-w-7xl mx-auto ">
-          <FaArrowLeft className='mb-3 cursor-pointer' onClick={() => navigate(-1)} />
+          <FaArrowLeft className='mb-3 cursor-pointer' onClick={() => navigate("/my-dashboard")} />
           <h1 className="text-3xl font-bold mb-4 px-4">Browse Products</h1>
 
           {/* Search Bar */}

@@ -4,6 +4,7 @@ import { vendorAPI, userAPI } from '../../services/api'
 import GdprPrivacyTab from '../../components/GdprPrivacyTab'
 import Toast from '../../components/Notification/Toast'
 import { useToast } from '../../hooks/useToast'
+import { Eye, EyeOff } from 'lucide-react'
 
 const categories = [
   'fresh-produce',
@@ -138,6 +139,10 @@ function Settings() {
     newPassword: '',
     confirmPassword: '',
   })
+
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const [postcodeSuggestions, setPostcodeSuggestions] = useState([])
 
@@ -1311,25 +1316,49 @@ function Settings() {
               {/* Current Password */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">Current Password</label>
-                <input
-                  type="password"
-                  value={passwordData.currentPassword}
-                  onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
-                  disabled={!isEditing}
-                  className={inputCls(isEditing)}
-                />
+                <div className="relative">
+                  <input
+                    type={showCurrentPassword ? "text" : "password"}
+                    value={passwordData.currentPassword}
+                    onChange={(e) => handlePasswordChange('currentPassword', e.target.value)}
+                    disabled={!isEditing}
+                    className={`${inputCls(isEditing)} pr-12`}
+                  />
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      aria-label={showCurrentPassword ? "Hide password" : "Show password"}
+                    >
+                      {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* New Password */}
               <div>
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">New Password</label>
-                <input
-                  type="password"
-                  value={passwordData.newPassword}
-                  onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
-                  disabled={!isEditing}
-                  className={inputCls(isEditing)}
-                />
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? "text" : "password"}
+                    value={passwordData.newPassword}
+                    onChange={(e) => handlePasswordChange('newPassword', e.target.value)}
+                    disabled={!isEditing}
+                    className={`${inputCls(isEditing)} pr-12`}
+                  />
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      aria-label={showNewPassword ? "Hide password" : "Show password"}
+                    >
+                      {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  )}
+                </div>
                 <p className="mt-1 text-sm text-gray-500">Must be at least 6 characters</p>
               </div>
 
@@ -1338,13 +1367,25 @@ function Settings() {
                 <label className="block text-sm font-semibold text-afri-gray-900 mb-2">
                   Confirm New Password
                 </label>
-                <input
-                  type="password"
-                  value={passwordData.confirmPassword}
-                  onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
-                  disabled={!isEditing}
-                  className={inputCls(isEditing)}
-                />
+                <div className="relative">
+                  <input
+                    type={showConfirmPassword ? "text" : "password"}
+                    value={passwordData.confirmPassword}
+                    onChange={(e) => handlePasswordChange('confirmPassword', e.target.value)}
+                    disabled={!isEditing}
+                    className={`${inputCls(isEditing)} pr-12`}
+                  />
+                  {isEditing && (
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none transition-colors"
+                      aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>
