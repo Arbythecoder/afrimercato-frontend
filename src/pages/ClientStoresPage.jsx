@@ -45,7 +45,7 @@ export default function ClientStoresPage() {
   const [activeTab, setActiveTab] = useState('stores')
   const [activeFilter, setActiveFilter] = useState('nearby')
   const [showLocationDropdown, setShowLocationDropdown] = useState(false)
-  const [activeCategory, setActiveCategory] = useState('all')
+  const [activeCategory, setActiveCategory] = useState(searchParams.get('category') || 'all')
 
   const cityNames = SUGGESTED_CITIES.map(c => c.name)
   const locationSuggestions = searchLocation.trim()
@@ -79,9 +79,28 @@ export default function ClientStoresPage() {
 
     // Apply category filter first (if not 'all')
     if (activeCategory !== 'all') {
-      filtered = filtered.filter(s =>
-        (s.category || 'groceries').toLowerCase().includes(activeCategory.toLowerCase())
-      )
+      filtered = filtered.filter(s => {
+        const cat = (s.category || s.storeName || '').toLowerCase()
+        if (activeCategory === 'groceries') {
+          return cat.includes('grocer') || cat.includes('supermarket') || cat.includes('market') || cat.includes('produce')
+        }
+        if (activeCategory === 'fresh') {
+          return cat.includes('fresh') || cat.includes('produce') || cat.includes('farm') || cat.includes('fruit') || cat.includes('veg')
+        }
+        if (activeCategory === 'spices') {
+          return cat.includes('spice') || cat.includes('seasoning') || cat.includes('herb')
+        }
+        if (activeCategory === 'african') {
+          return cat.includes('african') || cat.includes('nigerian') || cat.includes('ghanaian') || cat.includes('afro') || cat.includes('kitchen') || cat.includes('caribbean') || cat.includes('tropical')
+        }
+        if (activeCategory === 'drinks') {
+          return cat.includes('drink') || cat.includes('beverage') || cat.includes('juice') || cat.includes('wine') || cat.includes('liquid')
+        }
+        if (activeCategory === 'snacks') {
+          return cat.includes('snack') || cat.includes('bakery') || cat.includes('biscuit') || cat.includes('sweet')
+        }
+        return cat.includes(activeCategory.toLowerCase())
+      })
     }
 
     switch (activeFilter) {

@@ -161,13 +161,41 @@ export default function ClientLandingPage() {
     fetchStores()
   }, [])
 
-  // Filter stores based on active filter tab
+  // Filter stores based on active category & sub filter tabs
   const filteredStores = (() => {
-    if (activeFilter === 'top') {
-      return [...stores].sort((a, b) => (b.rating || 0) - (a.rating || 0))
+    const baseList = stores.length > 0 ? stores : FALLBACK_STORES
+
+    let list = baseList.filter((store) => {
+      if (activeCategory === 'all') return true
+      const cat = (store.category || store.storeName || '').toLowerCase()
+      
+      if (activeCategory === 'groceries') {
+        return cat.includes('grocer') || cat.includes('supermarket') || cat.includes('market') || cat.includes('produce')
+      }
+      if (activeCategory === 'fresh') {
+        return cat.includes('fresh') || cat.includes('produce') || cat.includes('farm') || cat.includes('fruit') || cat.includes('veg')
+      }
+      if (activeCategory === 'spices') {
+        return cat.includes('spice') || cat.includes('seasoning') || cat.includes('herb')
+      }
+      if (activeCategory === 'african') {
+        return cat.includes('african') || cat.includes('nigerian') || cat.includes('ghanaian') || cat.includes('afro') || cat.includes('kitchen') || cat.includes('caribbean') || cat.includes('tropical')
+      }
+      if (activeCategory === 'drinks') {
+        return cat.includes('drink') || cat.includes('beverage') || cat.includes('juice') || cat.includes('wine') || cat.includes('liquid')
+      }
+      if (activeCategory === 'snacks') {
+        return cat.includes('snack') || cat.includes('bakery') || cat.includes('biscuit') || cat.includes('sweet')
+      }
+      return true
+    })
+
+    if (activeFilter === 'top' || activeFilter === 'featured') {
+      list = [...list].sort((a, b) => (b.rating || 0) - (a.rating || 0))
     }
-    return stores
-  })().slice(0, 4)
+
+    return list
+  })()
 
   // Handle search
   const handleFindStore = (e) => {
@@ -821,8 +849,17 @@ export default function ClientLandingPage() {
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <Store size={28} className="text-gray-400" />
                   </div>
-                  <p className="text-lg font-semibold text-gray-700 mb-1">No stores available yet</p>
-                  <p className="text-sm">Check back soon — we&apos;re onboarding new vendors!</p>
+                  <p className="text-lg font-semibold text-gray-700 mb-1">
+                    No {CATEGORIES.find(c => c.id === activeCategory)?.label || 'matching'} stores found
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4">Try selecting another category or browse all stores.</p>
+                  <button
+                    type="button"
+                    onClick={() => setActiveCategory('all')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#1B4D3E] text-white rounded-full font-semibold text-sm hover:bg-[#0D2B22] transition-all"
+                  >
+                    View All Stores
+                  </button>
                 </div>
               )}
             </>

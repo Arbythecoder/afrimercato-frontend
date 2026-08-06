@@ -84,15 +84,26 @@ function OrderDetail() {
     setTimeout(() => navigate('/cart'), 800)
   }
 
-  const handleCancelOrder = async () => {
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelReasonPreset, setCancelReasonPreset] = useState('Ordered by mistake / Duplicate order')
+  const [customCancelReason, setCustomCancelReason] = useState('')
+
+  const handleCancelOrder = () => {
+    setShowCancelModal(true)
+  }
+
+  const submitCancellation = async () => {
     if (!order) return
-    if (!confirm('Are you sure you want to cancel this order?')) return
+    const finalReason = cancelReasonPreset === 'Other'
+      ? customCancelReason.trim() || 'Cancelled by customer'
+      : cancelReasonPreset
 
     try {
       setCancelling(true)
-      const res = await cancelOrder(order._id || orderId, 'Cancelled by customer')
+      const res = await cancelOrder(order._id || orderId, finalReason)
       if (res.success || res.status === 'success') {
         alert('Order cancelled successfully')
+        setShowCancelModal(false)
         fetchOrder()
       } else {
         alert(res.message || 'Failed to cancel order')
@@ -574,6 +585,78 @@ function OrderDetail() {
               fetchOrder();
             }}
           />
+        )}
+
+        {showCancelModal && (
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-fadeIn">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 animate-slideUp border border-gray-100">
+              <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4 text-2xl text-red-600 font-bold">
+                🚫
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 text-center mb-1">Cancel Order</h3>
+              <p className="text-sm text-gray-500 text-center mb-5">
+                Please select a reason for cancelling Order #{order.orderNumber}
+              </p>
+
+              <div className="space-y-2.5 mb-5">
+                {[
+                  'Ordered by mistake / Duplicate order',
+                  'Delivery time is too long',
+                  'Changed my mind',
+                  'Found better price elsewhere',
+                  'Incorrect items or address selected',
+                  'Other'
+                ].map((reason) => (
+                  <label
+                    key={reason}
+                    className={`flex items-center gap-3 p-3 rounded-xl border-2 cursor-pointer transition-all ${
+                      cancelReasonPreset === reason
+                        ? 'border-red-500 bg-red-50/50 text-red-900 font-bold'
+                        : 'border-gray-200 hover:border-gray-300 text-gray-700 font-medium'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="cancelReason"
+                      value={reason}
+                      checked={cancelReasonPreset === reason}
+                      onChange={() => setCancelReasonPreset(reason)}
+                      className="w-4 h-4 text-red-600 focus:ring-red-500"
+                    />
+                    <span className="text-sm">{reason}</span>
+                  </label>
+                ))}
+
+                {cancelReasonPreset === 'Other' && (
+                  <textarea
+                    value={customCancelReason}
+                    onChange={(e) => setCustomCancelReason(e.target.value)}
+                    placeholder="Please type your reason here..."
+                    rows={3}
+                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-red-500 mt-2"
+                  />
+                )}
+              </div>
+
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setShowCancelModal(false)}
+                  className="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl text-sm transition"
+                >
+                  Keep Order
+                </button>
+                <button
+                  type="button"
+                  onClick={submitCancellation}
+                  disabled={cancelling || (cancelReasonPreset === 'Other' && !customCancelReason.trim())}
+                  className="flex-1 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-sm transition disabled:opacity-50"
+                >
+                  {cancelling ? 'Cancelling...' : 'Confirm Cancel'}
+                </button>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

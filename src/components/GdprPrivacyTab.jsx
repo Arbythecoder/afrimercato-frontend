@@ -10,6 +10,7 @@
 import { useState } from 'react'
 import { exportMyData, requestAccountDeletion, submitPrivacyComplaint } from '../services/api'
 import { FiDownload, FiAlertTriangle, FiSend, FiCheckCircle } from 'react-icons/fi'
+import * as XLSX from 'xlsx'
 
 export default function GdprPrivacyTab({ roleTitle = 'account' }) {
   const [exportLoading, setExportLoading] = useState(false)
@@ -24,15 +25,88 @@ export default function GdprPrivacyTab({ roleTitle = 'account' }) {
     setStatusMessage({ type: '', text: '' })
     try {
       const data = await exportMyData()
-      const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(JSON.stringify(data, null, 2))}`
-      const link = document.createElement('a')
-      link.href = jsonString
-      link.download = `afrimercato-${roleTitle.toLowerCase()}-data-export.json`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      setStatusMessage({ type: 'success', text: 'Data export downloaded successfully!' })
+      
+      const wb = XLSX.utils.book_new()
+
+      const flattenObject = (obj, prefix = '') => {
+        const result = {}
+        for (const [key, val] of Object.entries(obj || {})) {
+          if (val === null || val === undefined) continue
+          if (typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date)) {
+            Object.assign(result, flattenObject(val, `${prefix}${key}.`))
+          } else if (Array.isArray(val)) {
+            result[`${prefix}${key}`] = JSON.stringify(val)
+          } else {
+            result[`${prefix}${key}`] = val
+          }
+        }
+        return result
+      }
+
+      // 1. User Profile Sheet
+      if (data.user) {
+        const userFlat = flattenObject(data.user)
+        const userRows = Object.entries(userFlat).map(([Field, Value]) => ({ Field, Value: String(Value) }))
+        const userSheet = XLSX.utils.json_to_sheet(userRows)
+        XLSX.utils.book_append_sheet(wb, userSheet, 'User Profile')
+      }
+
+      // 2. Orders Sheet
+      if (Array.isArray(data.orders) && data.orders.length > 0) {
+        const orderRows = data.orders.map(order => ({
+          'Order ID': order._id || order.id || '',
+          'Date': order.createdAt ? new Date(order.createdAt).toLocaleString() : '',
+          'Status': order.status || '',
+          'Total (£)': order.pricing?.total ?? order.total ?? 0,
+          'Payment Method': order.paymentMethod || '',
+          'Items': Array.isArray(order.items)
+            ? order.items.map(i => `${i.name || i.productName || 'Item'} (x${i.quantity || 1})`).join('; ')
+            : '',
+          'Delivery Address': typeof order.deliveryAddress === 'object'
+            ? `${order.deliveryAddress?.street || ''}, ${order.deliveryAddress?.city || ''} ${order.deliveryAddress?.postcode || ''}`.trim()
+            : String(order.deliveryAddress || '')
+        }))
+        const ordersSheet = XLSX.utils.json_to_sheet(orderRows)
+        XLSX.utils.book_append_sheet(wb, ordersSheet, 'Orders')
+      } else {
+        const emptyOrdersSheet = XLSX.utils.json_to_sheet([{ Message: 'No order history available' }])
+        XLSX.utils.book_append_sheet(wb, emptyOrdersSheet, 'Orders')
+      }
+
+      // 3. Reviews Sheet
+      if (Array.isArray(data.reviews) && data.reviews.length > 0) {
+        const reviewRows = data.reviews.map(r => ({
+          'Review ID': r._id || r.id || '',
+          'Rating': r.rating || 0,
+          'Comment': r.comment || '',
+          'Date': r.createdAt ? new Date(r.createdAt).toLocaleString() : ''
+        }))
+        const reviewsSheet = XLSX.utils.json_to_sheet(reviewRows)
+        XLSX.utils.book_append_sheet(wb, reviewsSheet, 'Reviews')
+      }
+
+      // 4. Vendor Profile Sheet (if vendor)
+      if (data.vendorProfile) {
+        const vendorFlat = flattenObject(data.vendorProfile)
+        const vendorRows = Object.entries(vendorFlat).map(([Field, Value]) => ({ Field, Value: String(Value) }))
+        const vendorSheet = XLSX.utils.json_to_sheet(vendorRows)
+        XLSX.utils.book_append_sheet(wb, vendorSheet, 'Vendor Profile')
+      }
+
+      // 5. Rider Profile Sheet (if rider/picker)
+      if (data.riderProfile) {
+        const riderFlat = flattenObject(data.riderProfile)
+        const riderRows = Object.entries(riderFlat).map(([Field, Value]) => ({ Field, Value: String(Value) }))
+        const riderSheet = XLSX.utils.json_to_sheet(riderRows)
+        XLSX.utils.book_append_sheet(wb, riderSheet, 'Rider Profile')
+      }
+
+      const fileName = `afrimercato-${roleTitle.toLowerCase()}-privacy-data.xlsx`
+      XLSX.writeFile(wb, fileName)
+
+      setStatusMessage({ type: 'success', text: 'Privacy data downloaded successfully in Excel (.xlsx) format!' })
     } catch (error) {
+      console.error('Data export error:', error)
       setStatusMessage({ type: 'error', text: error.message || 'Failed to export data' })
     } finally {
       setExportLoading(false)
@@ -94,7 +168,7 @@ export default function GdprPrivacyTab({ roleTitle = 'account' }) {
       <div className="border border-gray-200 rounded-xl p-6 bg-white shadow-sm">
         <h3 className="text-lg font-bold text-gray-900 mb-1">Download My Data (Portability)</h3>
         <p className="text-sm text-gray-600 mb-5">
-          Under UK GDPR, you have the right to request a complete copy of your personal data, profile history, and activity records in a machine-readable JSON format.
+          Under UK GDPR, you have the right to request a complete copy of your personal data, profile history, and activity records in Excel (.xlsx) format.
         </p>
         <button
           type="button"
@@ -103,7 +177,7 @@ export default function GdprPrivacyTab({ roleTitle = 'account' }) {
           className="flex items-center gap-2 px-6 py-3 bg-afri-green text-white rounded-lg font-semibold hover:bg-afri-green-dark transition-all disabled:opacity-50"
         >
           <FiDownload />
-          {exportLoading ? 'Preparing Export File...' : 'Download My Data (JSON)'}
+          {exportLoading ? 'Preparing Excel File...' : 'Download My Data (Excel)'}
         </button>
       </div>
 
