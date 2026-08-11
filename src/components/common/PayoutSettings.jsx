@@ -72,9 +72,9 @@ export default function PayoutSettings() {
     const isPendingVerification = connectStatus?.connected && !isFullyConnected;
 
     return (
-        <div className="space-y-6 max-w-4xl">
+        <div className="space-y-6 max-w-9xl">
             {/* Header banner */}
-            <div className="bg-gradient-to-r from-[#1B4D3E] to-[#00897B] rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
+            <div className="bg-gradient-to-r from-green-600 via-green-500 to-emerald-500 rounded-2xl p-6 text-white shadow-lg relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-2xl pointer-events-none" />
                 <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
                     <div>
@@ -114,8 +114,8 @@ export default function PayoutSettings() {
             {/* Error / Feedback Message */}
             {message.text && (
                 <div className={`p-4 rounded-xl text-sm font-medium border ${message.type === 'error'
-                        ? 'bg-red-50 border-red-200 text-red-700'
-                        : 'bg-green-50 border-green-200 text-green-700'
+                    ? 'bg-red-50 border-red-200 text-red-700'
+                    : 'bg-green-50 border-green-200 text-green-700'
                     }`}>
                     <div className="flex items-start gap-2.5">
                         {message.type === 'error' ? <AlertCircle className="w-5 h-5 shrink-0 mt-0.5" /> : <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5" />}

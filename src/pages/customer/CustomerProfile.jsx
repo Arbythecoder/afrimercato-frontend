@@ -140,49 +140,6 @@ function CustomerProfile() {
     }
   }
 
-  const [exportLoading, setExportLoading] = useState(false)
-  const [complaintMessage, setComplaintMessage] = useState('')
-  const [complaintLoading, setComplaintLoading] = useState(false)
-
-  const handleExportData = async () => {
-    setExportLoading(true)
-    try {
-      const data = await userAPI.exportMyData()
-
-      // Hand straight to the browser as a download, don't keep it around after
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = `afrimercato-my-data-${Date.now()}.json`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      URL.revokeObjectURL(url)
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to export your data' })
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
-    } finally {
-      setExportLoading(false)
-    }
-  }
-
-  const handleSubmitComplaint = async (e) => {
-    e.preventDefault()
-    if (!complaintMessage.trim()) return
-    setComplaintLoading(true)
-    try {
-      await userAPI.submitPrivacyComplaint(complaintMessage.trim())
-      setMessage({ type: 'success', text: 'Complaint submitted. We will respond within one month.' })
-      setComplaintMessage('')
-    } catch (error) {
-      setMessage({ type: 'error', text: error.message || 'Failed to submit complaint' })
-    } finally {
-      setComplaintLoading(false)
-      setTimeout(() => setMessage({ type: '', text: '' }), 3000)
-    }
-  }
-
   const openAddAddress = () => {
     setEditingAddressId(null)
     setAddressForm({ label: 'Home', street: '', city: '', postcode: '' })

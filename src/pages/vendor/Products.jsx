@@ -102,13 +102,17 @@ function Products() {
     return <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800">In Stock</span>
   }
 
+  const totalProducts = pagination?.totalProducts ?? pagination?.total ?? products.length
+  const totalPages = pagination?.totalPages ?? pagination?.pages ?? Math.ceil(totalProducts / (filters.limit || 20))
+  const currentPage = pagination?.currentPage ?? pagination?.page ?? filters.page
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-afri-green to-afri-green-dark bg-clip-text text-transparent">
-            {products.length === 0 ? 'Your Products' : `Managing ${products.length} Product${products.length !== 1 ? 's' : ''}`}
+            {totalProducts === 0 ? 'Your Products' : `Managing ${totalProducts} Product${totalProducts !== 1 ? 's' : ''}`}
           </h1>
           <p className="text-afri-gray-600 mt-2">
             {products.length === 0
@@ -433,32 +437,32 @@ function Products() {
           </div>
 
           {/* Pagination */}
-          {pagination.pages > 1 && (
+          {totalPages > 1 && (
             <div className="px-6 py-4 bg-gradient-to-r from-afri-gray-50 to-white border-t border-gray-200">
               <div className="flex items-center justify-between">
                 <div className="text-sm text-afri-gray-700">
-                  Showing <span className="font-semibold">{(pagination.currentPage - 1) * filters.limit + 1}</span> to{' '}
+                  Showing <span className="font-semibold">{(currentPage - 1) * filters.limit + 1}</span> to{' '}
                   <span className="font-semibold">
-                    {Math.min(pagination.currentPage * filters.limit, pagination.total)}
+                    {Math.min(currentPage * filters.limit, totalProducts)}
                   </span>{' '}
-                  of <span className="font-semibold">{pagination.total}</span> products
+                  of <span className="font-semibold">{totalProducts}</span> products
                 </div>
                 <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
                   <button
                     onClick={() => setFilters({ ...filters, page: filters.page - 1 })}
-                    disabled={pagination.currentPage === 1}
+                    disabled={currentPage === 1}
                     className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                     </svg>
                   </button>
-                  {[...Array(pagination.pages)].map((_, i) => (
+                  {[...Array(totalPages)].map((_, i) => (
                     <button
                       key={i}
                       onClick={() => setFilters({ ...filters, page: i + 1 })}
                       className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium transition-all ${
-                        pagination.currentPage === i + 1
+                        currentPage === i + 1
                           ? 'z-10 bg-gradient-to-r from-afri-green to-afri-green-dark text-white border-afri-green'
                           : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
                       }`}
@@ -468,7 +472,7 @@ function Products() {
                   ))}
                   <button
                     onClick={() => setFilters({ ...filters, page: filters.page + 1 })}
-                    disabled={pagination.currentPage === pagination.pages}
+                    disabled={currentPage === totalPages}
                     className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

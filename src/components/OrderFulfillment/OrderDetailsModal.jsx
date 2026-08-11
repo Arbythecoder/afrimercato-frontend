@@ -162,6 +162,39 @@ function OrderDetailsModal({ order, onClose, onStatusUpdate, onRefresh }) {
           {activeTab === 'details' && (
             <div className="space-y-6">
 
+              {/* CANCELLATION REASON BANNER FOR VENDORS */}
+              {(order.status === 'cancelled' || order.cancellationReason || order.cancellation?.reason) && (
+                <div className="bg-red-50 border-2 border-red-200 rounded-xl p-5 shadow-sm mb-6 animate-fadeIn">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 text-red-600 text-2xl font-bold">
+                      🚫
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <h4 className="font-bold text-red-900 text-lg">Order Cancelled</h4>
+                        <span className="text-xs font-extrabold px-3 py-1 bg-red-200 text-red-900 rounded-full uppercase tracking-wider">
+                          Cancelled by {order.cancellation?.cancelledBy || (order.cancellationReason?.toLowerCase().includes('vendor') ? 'Vendor' : 'Customer')}
+                        </span>
+                      </div>
+                      <div className="mt-3 p-3.5 bg-white rounded-lg border border-red-200 shadow-xs">
+                        <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Reason for Cancellation</p>
+                        <p className="text-base font-bold text-red-950">
+                          "{order.cancellationReason || order.cancellation?.reason || 'No specific reason provided'}"
+                        </p>
+                      </div>
+                      {(order.cancellation?.cancelledAt || order.cancelledAt || order.updatedAt) && (
+                        <p className="text-xs text-red-700 mt-2 font-medium">
+                          Cancelled on: {new Date(order.cancellation?.cancelledAt || order.cancelledAt || order.updatedAt).toLocaleString('en-GB', {
+                            dateStyle: 'medium',
+                            timeStyle: 'short'
+                          })}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Regular Order Controls */}
               <OrderStatusControls
                 order={order}
