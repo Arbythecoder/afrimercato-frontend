@@ -653,13 +653,13 @@ function Settings() {
                   </p>
                   <div className="flex items-center gap-2 bg-white border border-green-300 rounded-lg px-4 py-2">
                     <span className="text-sm text-green-700 font-mono flex-1 truncate">
-                      {`${window.location.origin}/store/${vendorProfile.slug}`}
+                      {`${window.location.origin}/#/store/${vendorProfile.slug}`}
                     </span>
                     <button
                       type="button"
                       onClick={() => {
                         navigator.clipboard
-                          .writeText(`${window.location.origin}/store/${vendorProfile.slug}`)
+                          .writeText(`${window.location.origin}/#/store/${vendorProfile.slug}`)
                           .then(() => success('Store link copied to clipboard!'))
                           .catch(() => warning('Could not copy — please copy manually'))
                       }}
@@ -668,7 +668,7 @@ function Settings() {
                       Copy
                     </button>
                     <a
-                      href={`/store/${vendorProfile.slug}`}
+                      href={`/#/store/${vendorProfile.slug}`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="flex-shrink-0 px-3 py-1 text-xs font-semibold bg-white border border-green-600 text-green-700 rounded-md hover:bg-green-50 transition-colors"

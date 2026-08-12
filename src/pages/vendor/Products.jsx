@@ -3,6 +3,7 @@ import { vendorAPI } from '../../services/api'
 import ProductCreationForm from '../../components/Products/ProductCreationForm'
 import BulkActionsModal from '../../components/Products/BulkActionsModal'
 import BulkUploadModal from '../../components/BulkUploadModal'
+import { getProductImage } from '../../utils/defaultImages'
 
 const categories = [
   'fruits', 'vegetables', 'grains', 'dairy', 'meat', 'fish',
@@ -371,18 +372,15 @@ function Products() {
                     <td className="px-6 py-4">
                       <div className="flex items-center">
                         <div className="h-12 w-12 flex-shrink-0 rounded-lg overflow-hidden bg-afri-gray-100 shadow-sm">
-                          {product.images && product.images.length > 0 ? (
-                            <img
-                              src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url}
-                              alt={product.name}
-                              className="h-full w-full object-cover transform hover:scale-110 transition-transform duration-300"
-                              onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
-                            />
-                          ) : (
-                            <div className="h-full w-full flex items-center justify-center text-afri-gray-400">
-                              📦
-                            </div>
-                          )}
+                          <img
+                            src={getProductImage(product)}
+                            alt={product.name}
+                            className="h-full w-full object-cover transform hover:scale-110 transition-transform duration-300"
+                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling && (e.target.nextSibling.style.display = 'flex'); }}
+                          />
+                          <div className="h-full w-full items-center justify-center text-afri-gray-400 hidden">
+                            📦
+                          </div>
                         </div>
                         <div className="ml-4">
                           <div className="text-sm font-semibold text-afri-gray-900">{product.name}</div>
