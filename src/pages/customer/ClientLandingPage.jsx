@@ -168,7 +168,7 @@ export default function ClientLandingPage() {
     let list = baseList.filter((store) => {
       if (activeCategory === 'all') return true
       const cat = (store.category || store.storeName || '').toLowerCase()
-      
+
       if (activeCategory === 'groceries') {
         return cat.includes('grocer') || cat.includes('supermarket') || cat.includes('market') || cat.includes('produce')
       }
@@ -840,7 +840,7 @@ export default function ClientLandingPage() {
                 </div>
               ) : filteredStores.length > 0 ? (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {filteredStores.map((store, index) => (
+                  {filteredStores.slice(0, 4).map((store, index) => (
                     <StoreCard key={store._id || store.id} store={store} index={index} navigate={navigate} />
                   ))}
                 </div>

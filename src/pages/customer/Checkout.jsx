@@ -34,6 +34,12 @@ const getStripeErrorMessage = (error) => {
   }
 }
 
+const isValidMongoId = (id) => {
+  if (!id) return false
+  const stringId = String(id)
+  return /^[0-9a-fA-F]{24}$/.test(stringId)
+}
+
 // Helper to group cart items by vendor (mirrors ShoppingCart logic)
 const groupCartByVendor = (cartItems) => {
   const groups = {}
@@ -504,6 +510,31 @@ function CheckoutForm() {
   const [couponLoading, setCouponLoading] = useState(false)
   const [couponError, setCouponError] = useState('')
 
+  const removeItem = async (productId) => {
+    const previousCart = [...cart]
+    const updatedCart = cart.filter(item => item._id !== productId)
+    setCart(updatedCart)
+
+    if (isAuthenticated && isValidMongoId(productId)) {
+      try {
+        const response = await cartAPI.remove(productId)
+        if (!response.success) {
+          setCart(previousCart)
+        }
+      } catch (error) {
+        setCart(previousCart)
+      }
+    } else if (!isAuthenticated) {
+      localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+    }
+
+    window.dispatchEvent(new Event('cartUpdated'))
+
+    if (updatedCart.length === 0) {
+      navigate('/stores')
+    }
+  }
+
   const applyCoupon = async () => {
     if (!couponCode.trim()) return
     setCouponLoading(true)
@@ -698,7 +729,7 @@ function CheckoutForm() {
           if (import.meta.env.DEV) console.error('[Checkout] Stripe confirm error:', stripeError.code, stripeError.message)
           const errorMsg = getStripeErrorMessage(stripeError)
           setOrderError(`Payment Failed: ${errorMsg}. Order could not be placed.`)
-          
+
           if (orderId) {
             try {
               await apiCall('/payments/stripe/report-failure', {
@@ -707,7 +738,7 @@ function CheckoutForm() {
               })
             } catch (_err) { /* silent catch */ }
           }
-          
+
           setLoading(false)
           window.scrollTo({ top: 0, behavior: 'smooth' })
           return
@@ -716,7 +747,7 @@ function CheckoutForm() {
         if (paymentIntent?.status !== 'succeeded') {
           const failMsg = `Payment status: ${paymentIntent?.status || 'failed'}. Order could not be placed.`
           setOrderError(failMsg)
-          
+
           if (orderId) {
             try {
               await apiCall('/payments/stripe/report-failure', {
@@ -1168,7 +1199,7 @@ function CheckoutForm() {
             {step === 1 && (
               <div className="bg-white rounded-lg sm:rounded-xl shadow-md p-4 sm:p-6">
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900 mb-4 sm:mb-6">Fulfillment & Address</h2>
-                
+
                 {/* Fulfillment Method Toggle */}
                 <div className="mb-6">
                   <label className="block text-sm font-bold text-gray-800 mb-3">
@@ -1178,11 +1209,10 @@ function CheckoutForm() {
                     {/* Rider Delivery Option */}
                     <div
                       onClick={() => setFulfillmentType('delivery')}
-                      className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 ${
-                        fulfillmentType === 'delivery'
-                          ? 'border-green-600 bg-green-50/50 shadow-sm ring-1 ring-green-600'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
+                      className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 ${fulfillmentType === 'delivery'
+                        ? 'border-green-600 bg-green-50/50 shadow-sm ring-1 ring-green-600'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
                     >
                       <div className={`p-2.5 rounded-lg shrink-0 ${fulfillmentType === 'delivery' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
                         <Bike className="w-6 h-6" />
@@ -1201,11 +1231,10 @@ function CheckoutForm() {
                     {/* Self Pickup Option */}
                     <div
                       onClick={() => setFulfillmentType('store_pickup')}
-                      className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 ${
-                        fulfillmentType === 'store_pickup'
-                          ? 'border-green-600 bg-green-50/50 shadow-sm ring-1 ring-green-600'
-                          : 'border-gray-200 hover:border-gray-300 bg-white'
-                      }`}
+                      className={`cursor-pointer p-4 rounded-xl border-2 transition-all flex items-start gap-3.5 ${fulfillmentType === 'store_pickup'
+                        ? 'border-green-600 bg-green-50/50 shadow-sm ring-1 ring-green-600'
+                        : 'border-gray-200 hover:border-gray-300 bg-white'
+                        }`}
                     >
                       <div className={`p-2.5 rounded-lg shrink-0 ${fulfillmentType === 'store_pickup' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-600'}`}>
                         <Store className="w-6 h-6" />
@@ -1560,9 +1589,8 @@ function CheckoutForm() {
                     <h3 className="font-semibold text-gray-900">
                       {fulfillmentType === 'store_pickup' ? 'Fulfillment: Store Pickup' : 'Delivery Address'}
                     </h3>
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                      fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'
+                      }`}>
                       {fulfillmentType === 'store_pickup' ? '🏪 Self Pickup (FREE)' : '🚚 Rider Delivery'}
                     </span>
                   </div>
@@ -1626,6 +1654,7 @@ function CheckoutForm() {
                         </p>
                         {group.items.map((item) => (
                           <div key={item._id} className="flex justify-between py-1.5 pl-2">
+                            <img src={item.images} className='w-12 h-12 block' alt="" />
                             <span className="text-gray-700">{item.name} x {item.quantity}</span>
                             <span className="font-semibold">£{(item.price * item.quantity).toFixed(2)}</span>
                           </div>
@@ -1708,6 +1737,7 @@ function CheckoutForm() {
                         return (
                           <div key={item._id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition">
                             <div>
+                              <img src={item.images} className='w-12 h-12 block' alt="" />
                               <p className="text-sm font-medium text-gray-900">{item.name}</p>
                               <p className="text-xs text-gray-500">£{item.price?.toFixed(2)} / {item.unit || 'piece'}</p>
                             </div>
@@ -1835,10 +1865,20 @@ function CheckoutForm() {
                               e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
                             }}
                           />
-                          <div className="flex-1">
-                            <p className="font-semibold text-sm text-gray-900">{item.name}</p>
-                            <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                            <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
+                          <div className="flex-1 flex justify-between items-start">
+                            <div>
+                              <p className="font-semibold text-sm text-gray-900">{item.name}</p>
+                              <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                              <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeItem(item._id)}
+                              className="text-gray-400 hover:text-red-500 transition-colors px-1"
+                              title="Remove item"
+                            >
+                              ✕
+                            </button>
                           </div>
                         </div>
                       )

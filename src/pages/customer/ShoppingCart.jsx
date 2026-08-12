@@ -43,6 +43,20 @@ function ShoppingCart() {
   const [syncing, setSyncing] = useState(false)
   const [repeatPurchaseFrequency, setRepeatPurchaseFrequency] = useState(null)
   const [vendor, setVendor] = useState(null)
+  const [fulfillmentType, setFulfillmentType] = useState(() => {
+    try {
+      return sessionStorage.getItem('afrimercato_checkout_fulfillment') || 'delivery'
+    } catch (_e) {
+      return 'delivery'
+    }
+  })
+
+  const handleFulfillmentChange = (type) => {
+    setFulfillmentType(type)
+    try {
+      sessionStorage.setItem('afrimercato_checkout_fulfillment', type)
+    } catch (_e) {}
+  }
 
   useEffect(() => {
     loadCart()
@@ -339,7 +353,7 @@ function ShoppingCart() {
   }
 
   const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-  const deliveryFee = subtotal > 30 ? 0 : 3.99
+  const deliveryFee = fulfillmentType === 'store_pickup' ? 0 : (subtotal > 30 ? 0 : 3.99)
   const total = subtotal + deliveryFee
 
   // Role mismatch — vendor/rider/picker trying to shop
@@ -570,17 +584,46 @@ function ShoppingCart() {
                 <h2 className="text-xl font-bold text-gray-900 mb-6">Order Summary</h2>
 
                 <div className="space-y-3 pb-4 border-b">
+                  {/* Delivery Method Toggle */}
+                  <div className="mb-4">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-2">Delivery Method</h3>
+                    <div className="flex gap-4">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="fulfillmentType" 
+                          value="delivery"
+                          checked={fulfillmentType === 'delivery'}
+                          onChange={() => handleFulfillmentChange('delivery')}
+                          className="accent-afri-green"
+                        />
+                        <span className="text-sm text-gray-700">Delivery</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input 
+                          type="radio" 
+                          name="fulfillmentType" 
+                          value="store_pickup"
+                          checked={fulfillmentType === 'store_pickup'}
+                          onChange={() => handleFulfillmentChange('store_pickup')}
+                          className="accent-afri-green"
+                        />
+                        <span className="text-sm text-gray-700">Store Pickup (Free)</span>
+                      </label>
+                    </div>
+                  </div>
+
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal ({getCartCount(cart)} items)</span>
                     <span>£{subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between text-gray-600">
-                    <span>Delivery</span>
+                    <span>{fulfillmentType === 'store_pickup' ? 'Store Pickup' : 'Delivery'}</span>
                     <span className={deliveryFee === 0 ? 'text-green-600 font-semibold' : ''}>
-                      {deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`}
+                      {fulfillmentType === 'store_pickup' ? 'FREE' : (deliveryFee === 0 ? 'FREE' : `£${deliveryFee.toFixed(2)}`)}
                     </span>
                   </div>
-                  {subtotal < 30 && (
+                  {subtotal < 30 && fulfillmentType === 'delivery' && (
                     <p className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded-lg">
                       Add £{(30 - subtotal).toFixed(2)} more for FREE delivery!
                     </p>
