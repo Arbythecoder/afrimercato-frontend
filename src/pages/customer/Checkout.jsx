@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext'
 import { cartAPI, checkoutAPI, getVendorById, getVendorBySlug, userAPI, apiCall, getUserOrders, createPaymentIntent, calculateDeliveryFee } from '../../services/api'
 import { getCartVendorInfo, checkMinimumOrder } from '../../utils/cartVendorLock'
+import { getProductImage } from '../../utils/defaultImages'
 import { loadStripe } from '@stripe/stripe-js'
 import { Elements, useStripe, useElements, CardNumberElement, CardExpiryElement, CardCvcElement } from '@stripe/react-stripe-js'
 import { useNoIndex } from '../../hooks/useNoIndex'
@@ -41,14 +42,45 @@ const isValidMongoId = (id) => {
 }
 
 // Helper to group cart items by vendor (mirrors ShoppingCart logic)
-const groupCartByVendor = (cartItems) => {
+const groupCartByVendor = (cartItems, defaultVendor = null) => {
+  if (!Array.isArray(cartItems)) return []
   const groups = {}
+
+  // Collect known storeNames for vendor IDs
+  const vendorNameMap = {}
+  if (defaultVendor?.storeName) {
+    const dId = String(defaultVendor._id || defaultVendor.id || defaultVendor.storeId || '')
+    if (dId) vendorNameMap[dId] = defaultVendor.storeName
+  }
+
   for (const item of cartItems) {
-    const vendorId = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
-    const vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || 'Unknown Store'
-    if (!groups[vendorId]) groups[vendorId] = { vendorId, vendorName, items: [] }
+    const rawId = item.vendor?._id || item.vendor?.id || item.vendorId || (typeof item.vendor === 'string' && isValidMongoId(item.vendor) ? item.vendor : null)
+    const name = item.vendor?.storeName || item.vendor?.businessName || item.storeName || item.vendor?.name
+    if (rawId && name) {
+      vendorNameMap[String(rawId)] = name
+    }
+  }
+
+  for (const item of cartItems) {
+    const rawVendorId = item.vendor?._id || item.vendor?.id || item.vendorId || (typeof item.vendor === 'string' && isValidMongoId(item.vendor) ? item.vendor : null) || defaultVendor?._id || defaultVendor?.id || 'unknown'
+    const vendorId = String(rawVendorId)
+
+    let vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || item.vendor?.name || vendorNameMap[vendorId] || defaultVendor?.storeName || defaultVendor?.businessName
+
+    if (!vendorName || vendorName === 'Unknown Store' || vendorName === 'unknown') {
+      if (defaultVendor?.storeName) {
+        vendorName = defaultVendor.storeName
+      } else {
+        vendorName = 'Store'
+      }
+    }
+
+    if (!groups[vendorId]) {
+      groups[vendorId] = { vendorId, vendorName, items: [] }
+    }
     groups[vendorId].items.push(item)
   }
+
   return Object.values(groups)
 }
 
@@ -317,15 +349,34 @@ function CheckoutForm() {
           const itemMap = new Map()
           for (const order of response.data.slice(0, 3)) {
             for (const item of (order.items || [])) {
-              const key = item.product?._id || item.product
-              if (!itemMap.has(key) && itemMap.size < 5) {
-                itemMap.set(key, {
-                  _id: key,
+              const key = item.product?._id || item.product || item._id
+              if (key && !itemMap.has(String(key)) && itemMap.size < 5) {
+                const vendorObj = item.vendor?.storeName
+                  ? item.vendor
+                  : order.vendor?.storeName
+                    ? order.vendor
+                    : item.product?.vendor?.storeName
+                      ? item.product.vendor
+                      : (order.vendor || item.vendor || item.product?.vendor || null)
+
+                const storeName = vendorObj?.storeName || vendorObj?.businessName || ''
+                const vendorId = vendorObj?._id || vendorObj?.id || (typeof vendorObj === 'string' ? vendorObj : '')
+
+                itemMap.set(String(key), {
+                  _id: String(key),
+                  productId: String(key),
                   name: item.name || item.product?.name || 'Product',
-                  price: item.price,
+                  price: item.price ?? item.product?.price ?? 0,
                   quantity: 1,
-                  unit: item.unit || 'piece',
-                  images: item.product?.images
+                  unit: item.unit || item.product?.unit || 'piece',
+                  images: item.product?.images || item.images || [],
+                  vendor: vendorId ? {
+                    _id: String(vendorId),
+                    storeName: storeName || 'Store',
+                    businessName: storeName || 'Store'
+                  } : null,
+                  storeName: storeName,
+                  vendorId: String(vendorId || '')
                 })
               }
             }
@@ -512,20 +563,28 @@ function CheckoutForm() {
 
   const removeItem = async (productId) => {
     const previousCart = [...cart]
-    const updatedCart = cart.filter(item => item._id !== productId)
+    const updatedCart = cart.filter(item => (item._id || item.productId) !== productId)
     setCart(updatedCart)
+
+    try {
+      localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
+    } catch (_e) {}
 
     if (isAuthenticated && isValidMongoId(productId)) {
       try {
         const response = await cartAPI.remove(productId)
         if (!response.success) {
           setCart(previousCart)
+          try {
+            localStorage.setItem('afrimercato_cart', JSON.stringify(previousCart))
+          } catch (_e) {}
         }
       } catch (error) {
         setCart(previousCart)
+        try {
+          localStorage.setItem('afrimercato_cart', JSON.stringify(previousCart))
+        } catch (_e) {}
       }
-    } else if (!isAuthenticated) {
-      localStorage.setItem('afrimercato_cart', JSON.stringify(updatedCart))
     }
 
     window.dispatchEvent(new Event('cartUpdated'))
@@ -587,7 +646,7 @@ function CheckoutForm() {
     ? 0
     : (distanceFeeInfo ? distanceFeeInfo.deliveryFee : (cartTotal >= 50 ? 0 : 3.99))
   // For multi-vendor carts, each vendor has their own minimum — don't block on a single vendor's value
-  const isMultiVendorCart = groupCartByVendor(cart).length > 1
+  const isMultiVendorCart = groupCartByVendor(cart, vendor).length > 1
   const couponDiscount = coupon
     ? coupon.type === 'percent'
       ? parseFloat(((cartTotal * coupon.discount) / 100).toFixed(2))
@@ -659,12 +718,12 @@ function CheckoutForm() {
       const orderData = {
         fulfillmentType,
         items: cart.map(item => ({
-          product: item._id,
+          product: item._id || item.productId,
           name: item.name,
           price: item.price,
           quantity: item.quantity,
           unit: item.unit || 'piece',
-          vendor: item.vendor?._id || item.vendor?.id || item.vendorId || null
+          vendor: item.vendor?._id || item.vendor?.id || item.vendorId || (typeof item.vendor === 'string' && isValidMongoId(item.vendor) ? item.vendor : null) || vendor?._id || null
         })),
         deliveryAddress: fulfillmentType === 'store_pickup' ? {
           fullName: address.fullName || 'Customer',
@@ -883,14 +942,67 @@ function CheckoutForm() {
     }
   }
 
-  const handleAddRepurchaseItem = (item) => {
-    setCart(prev => {
-      const exists = prev.find(c => c._id === item._id)
-      if (exists) {
-        return prev.map(c => c._id === item._id ? { ...c, quantity: c.quantity + 1 } : c)
+  const handleAddRepurchaseItem = async (item) => {
+    try {
+      const targetVendor = item.vendor || (vendor ? { _id: vendor._id, storeName: vendor.storeName, businessName: vendor.businessName || vendor.storeName } : null)
+      const storeName = targetVendor?.storeName || targetVendor?.businessName || item.storeName || vendor?.storeName || ''
+      const vendorId = targetVendor?._id || targetVendor?.id || item.vendorId || vendor?._id || ''
+
+      const itemToAdd = {
+        _id: String(item._id || item.productId),
+        productId: String(item._id || item.productId),
+        name: item.name,
+        price: item.price,
+        quantity: 1,
+        unit: item.unit || 'piece',
+        images: item.images || [],
+        vendor: vendorId ? {
+          _id: String(vendorId),
+          storeName: storeName || 'Store',
+          businessName: storeName || 'Store'
+        } : null,
+        storeName: storeName,
+        vendorId: String(vendorId || '')
       }
-      return [...prev, { ...item, quantity: 1 }]
-    })
+
+      let updatedCart
+      setCart(prev => {
+        const exists = prev.find(c => String(c._id || c.productId) === String(item._id || item.productId))
+        if (exists) {
+          updatedCart = prev.map(c => String(c._id || c.productId) === String(item._id || item.productId) ? { ...c, quantity: c.quantity + 1 } : c)
+        } else {
+          updatedCart = [...prev, itemToAdd]
+        }
+        return updatedCart
+      })
+
+      // Update localStorage
+      try {
+        const currentLocal = JSON.parse(localStorage.getItem('afrimercato_cart') || '[]')
+        const locIndex = currentLocal.findIndex(c => String(c._id || c.productId) === String(item._id || item.productId))
+        if (locIndex >= 0) {
+          currentLocal[locIndex].quantity += 1
+        } else {
+          currentLocal.push(itemToAdd)
+        }
+        localStorage.setItem('afrimercato_cart', JSON.stringify(currentLocal))
+      } catch (_e) {}
+
+      // Persist to backend if authenticated
+      const rawProductId = item._id || item.productId
+      if (isAuthenticated && isValidMongoId(rawProductId)) {
+        try {
+          await cartAPI.add(rawProductId, 1)
+        } catch (apiErr) {
+          if (import.meta.env.DEV) console.warn('Backend cart add notice:', apiErr?.message)
+        }
+      }
+
+      // Notify other components
+      window.dispatchEvent(new Event('cartUpdated'))
+    } catch (err) {
+      if (import.meta.env.DEV) console.error('Failed to add repurchase item to cart:', err)
+    }
   }
 
   // Role mismatch — vendor/rider/picker trying to shop
@@ -1260,7 +1372,7 @@ function CheckoutForm() {
                       <div>
                         <h4 className="font-bold text-amber-900 text-sm">Store Pickup Location</h4>
                         <p className="text-sm text-amber-800 mt-0.5 font-semibold">
-                          {vendor?.storeName || groupCartByVendor(cart)[0]?.vendorName || 'Vendor Store'}
+                          {vendor?.storeName || groupCartByVendor(cart, vendor)[0]?.vendorName || 'Vendor Store'}
                         </p>
                         <p className="text-xs text-amber-800 font-medium mt-0.5">
                           {(() => {
@@ -1597,7 +1709,7 @@ function CheckoutForm() {
                   {fulfillmentType === 'store_pickup' ? (
                     <div className="text-gray-700 space-y-1">
                       <p><span className="font-semibold">Customer:</span> {address.fullName} ({address.phone})</p>
-                      <p><span className="font-semibold">Pickup Store:</span> {vendor?.storeName || groupCartByVendor(cart)[0]?.vendorName || 'Vendor Store'}</p>
+                      <p><span className="font-semibold">Pickup Store:</span> {vendor?.storeName || groupCartByVendor(cart, vendor)[0]?.vendorName || 'Vendor Store'}</p>
                       <p className="text-xs text-gray-500">You will present your 4-digit Pickup PIN upon collection.</p>
                     </div>
                   ) : (
@@ -1645,23 +1757,37 @@ function CheckoutForm() {
                 {/* Order Items — grouped by vendor */}
                 <div className="mb-6">
                   <h3 className="font-semibold text-gray-900 mb-3">Order Items</h3>
-                  {groupCartByVendor(cart).map((group) => {
+                  {groupCartByVendor(cart, vendor).map((group) => {
                     const groupSubtotal = group.items.reduce((s, i) => s + i.price * i.quantity, 0)
                     return (
-                      <div key={group.vendorId} className="mb-4">
-                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                      <div key={group.vendorId} className="mb-4 bg-gray-50/50 rounded-xl p-3 border border-gray-100">
+                        <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2 flex items-center gap-1.5">
                           <span>🏪</span> {group.vendorName}
                         </p>
-                        {group.items.map((item) => (
-                          <div key={item._id} className="flex justify-between py-1.5 pl-2">
-                            <img src={item.images} className='w-12 h-12 block' alt="" />
-                            <span className="text-gray-700">{item.name} x {item.quantity}</span>
-                            <span className="font-semibold">£{(item.price * item.quantity).toFixed(2)}</span>
-                          </div>
-                        ))}
-                        <div className="flex justify-between text-sm text-gray-500 pl-2 pt-1 border-t border-gray-100">
+                        <div className="space-y-2">
+                          {group.items.map((item) => (
+                            <div key={item._id || item.productId} className="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0">
+                              <div className="flex items-center gap-3">
+                                <img
+                                  src={getProductImage(item)}
+                                  className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                                  alt={item.name}
+                                  onError={(e) => {
+                                    e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                                  }}
+                                />
+                                <div>
+                                  <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                                  <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                </div>
+                              </div>
+                              <span className="font-semibold text-sm text-gray-900">£{(item.price * item.quantity).toFixed(2)}</span>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="flex justify-between text-xs font-medium text-gray-500 pt-2 mt-2 border-t border-gray-200">
                           <span>{group.vendorName} subtotal</span>
-                          <span>£{groupSubtotal.toFixed(2)}</span>
+                          <span className="font-semibold text-gray-800">£{groupSubtotal.toFixed(2)}</span>
                         </div>
                       </div>
                     )
@@ -1733,13 +1859,25 @@ function CheckoutForm() {
                         Items from your recent orders - click to add to this order:
                       </p>
                       {repurchaseItems.slice(0, 5).map((item) => {
-                        const alreadyInCart = cart.some(c => c._id === item._id)
+                        const alreadyInCart = cart.some(c => String(c._id || c.productId) === String(item._id || item.productId))
                         return (
-                          <div key={item._id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition">
-                            <div>
-                              <img src={item.images} className='w-12 h-12 block' alt="" />
-                              <p className="text-sm font-medium text-gray-900">{item.name}</p>
-                              <p className="text-xs text-gray-500">£{item.price?.toFixed(2)} / {item.unit || 'piece'}</p>
+                          <div key={item._id} className="flex items-center justify-between bg-gray-50 rounded-xl p-3 hover:bg-gray-100 transition border border-gray-100">
+                            <div className="flex items-center gap-3">
+                              <img
+                                src={getProductImage(item)}
+                                className="w-12 h-12 rounded-lg object-cover border border-gray-200 shrink-0"
+                                alt={item.name}
+                                onError={(e) => {
+                                  e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                                }}
+                              />
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">{item.name}</p>
+                                <p className="text-xs text-gray-500">
+                                  £{item.price?.toFixed(2)} / {item.unit || 'piece'}
+                                  {item.storeName ? <span className="ml-1.5 text-gray-400 font-normal">• {item.storeName}</span> : ''}
+                                </p>
+                              </div>
                             </div>
                             <button
                               type="button"
@@ -1747,7 +1885,7 @@ function CheckoutForm() {
                               disabled={alreadyInCart}
                               className={`text-xs font-semibold px-4 py-2 rounded-lg transition ${alreadyInCart
                                 ? 'bg-gray-200 text-gray-400 cursor-default'
-                                : 'bg-green-600 text-white hover:bg-green-700'
+                                : 'bg-green-600 text-white hover:bg-green-700 active:scale-95'
                                 }`}
                             >
                               {alreadyInCart ? '✓ In Cart' : '+ Add'}
@@ -1845,44 +1983,39 @@ function CheckoutForm() {
 
               {/* Items — grouped by vendor */}
               <div className="space-y-3 mb-4 max-h-60 overflow-y-auto">
-                {groupCartByVendor(cart).map((group) => (
-                  <div key={group.vendorId}>
-                    <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1">
-                      🏪 {group.vendorName}
+                {groupCartByVendor(cart, vendor).map((group) => (
+                  <div key={group.vendorId} className="mb-3">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1 flex items-center gap-1">
+                      <span>🏪</span> {group.vendorName}
                     </p>
-                    {group.items.map((item) => {
-                      const imageUrl = item.images?.[0]
-                        ? (typeof item.images[0] === 'string' ? item.images[0] : item.images[0]?.url)
-                        : 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
-                      return (
-                        <div key={item._id} className="flex gap-3 mb-2">
-                          <img
-                            src={imageUrl}
-                            alt={item.name}
-                            loading="lazy"
-                            className="w-16 h-16 object-cover rounded"
-                            onError={(e) => {
-                              e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
-                            }}
-                          />
-                          <div className="flex-1 flex justify-between items-start">
-                            <div>
-                              <p className="font-semibold text-sm text-gray-900">{item.name}</p>
-                              <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
-                              <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
-                            </div>
-                            <button
-                              type="button"
-                              onClick={() => removeItem(item._id)}
-                              className="text-gray-400 hover:text-red-500 transition-colors px-1"
-                              title="Remove item"
-                            >
-                              ✕
-                            </button>
+                    {group.items.map((item) => (
+                      <div key={item._id || item.productId} className="flex gap-3 mb-2 items-center">
+                        <img
+                          src={getProductImage(item)}
+                          alt={item.name}
+                          loading="lazy"
+                          className="w-14 h-14 object-cover rounded-lg border border-gray-100 shrink-0"
+                          onError={(e) => {
+                            e.target.src = 'https://images.unsplash.com/photo-1542838132-92c53300491e?w=200&q=80'
+                          }}
+                        />
+                        <div className="flex-1 flex justify-between items-start">
+                          <div>
+                            <p className="font-semibold text-sm text-gray-900">{item.name}</p>
+                            <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
+                            <p className="text-sm font-bold text-green-600">£{item.price.toFixed(2)}</p>
                           </div>
+                          <button
+                            type="button"
+                            onClick={() => removeItem(item._id || item.productId)}
+                            className="text-gray-400 hover:text-red-500 transition-colors px-1"
+                            title="Remove item"
+                          >
+                            ✕
+                          </button>
                         </div>
-                      )
-                    })}
+                      </div>
+                    ))}
                   </div>
                 ))}
               </div>

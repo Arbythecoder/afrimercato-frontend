@@ -321,12 +321,12 @@ function Products() {
           </div>
         </div>
       ) : (
-        <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
+        <div className="bg-white rounded-xl shadow-lg overflow-hidden border border-gray-100">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[700px] divide-y divide-gray-200">
               <thead className="bg-gradient-to-r from-afri-gray-50 to-afri-gray-100">
                 <tr>
-                  <th className="px-6 py-4">
+                  <th className="px-6 py-4 whitespace-nowrap">
                     <input
                       type="checkbox"
                       checked={selectedProducts.length === products.length}
@@ -334,22 +334,22 @@ function Products() {
                       className="w-4 h-4 text-afri-green border-gray-300 rounded focus:ring-afri-green cursor-pointer"
                     />
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
                     Product
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
                     Category
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
                     Price
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
                     Stock
                   </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
                     Status
                   </th>
-                  <th className="px-6 py-4 text-right text-xs font-semibold text-afri-gray-700 uppercase tracking-wider">
+                  <th className="px-6 py-4 text-right text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
                     Actions
                   </th>
                 </tr>
@@ -361,7 +361,7 @@ function Products() {
                     className="hover:bg-gradient-to-r hover:from-afri-gray-50 hover:to-white transition-all duration-200 animate-fadeIn"
                     style={{ animationDelay: `${index * 50}ms` }}
                   >
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <input
                         type="checkbox"
                         checked={selectedProducts.includes(product._id)}
@@ -369,7 +369,7 @@ function Products() {
                         className="w-4 h-4 text-afri-green border-gray-300 rounded focus:ring-afri-green cursor-pointer"
                       />
                     </td>
-                    <td className="px-6 py-4">
+                    <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <div className="h-12 w-12 flex-shrink-0 rounded-lg overflow-hidden bg-afri-gray-100 shadow-sm">
                           <img

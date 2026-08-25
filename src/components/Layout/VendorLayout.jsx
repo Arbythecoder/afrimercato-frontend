@@ -340,7 +340,7 @@ function VendorLayout({ children }) {
       </div>
 
       {/* Main content */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-64 min-w-0 max-w-full">
         {/* Top bar */}
         <div className="sticky top-0 z-30 bg-white shadow-sm">
           <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
@@ -368,7 +368,7 @@ function VendorLayout({ children }) {
         </div>
 
         {/* Page content */}
-        <main className="p-4 sm:p-6 lg:p-8">{children}</main>
+        <main className="p-4 sm:p-6 lg:p-8 min-w-0 max-w-full">{children}</main>
       </div>
     </div>
   )

@@ -283,18 +283,6 @@ function NotificationsCenter() {
               >
                 Close
               </button>
-              {(selectedNotification.actionUrl || selectedNotification.orderId) && (
-                <button
-                  onClick={() => {
-                    const targetUrl = resolveNotificationUrl(selectedNotification)
-                    setSelectedNotification(null)
-                    navigate(targetUrl)
-                  }}
-                  className="px-5 py-2 bg-afri-green text-white hover:bg-afri-green-dark rounded-lg text-sm font-bold shadow-md hover:shadow-lg transition flex items-center gap-1.5"
-                >
-                  <ExternalLink className="w-4 h-4" /> View Associated Order
-                </button>
-              )}
             </div>
           </div>
         </div>

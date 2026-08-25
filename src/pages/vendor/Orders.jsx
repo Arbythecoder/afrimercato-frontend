@@ -169,61 +169,63 @@ function Orders() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-afri-gray-50">
-              <tr>
-                {['Order', 'Customer', 'Type', 'Items', 'Total', 'Status', 'Date', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-xs font-medium text-afri-gray-700 uppercase tracking-wider">
-                    {h}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {orders.map(order => (
-                <tr key={order._id} className="hover:bg-afri-gray-50 transition">
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-afri-gray-900">{order.orderNumber}</div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <div className="text-sm text-afri-gray-900">{order.customer?.name || 'N/A'}</div>
-                    <div className="text-xs text-afri-gray-500">{order.customer?.phone || ''}</div>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`px-2 py-0.5 inline-flex text-xs font-bold rounded-md ${
-                      order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {order.fulfillmentType === 'store_pickup' ? '🏪 Pickup' : '🚚 Rider'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm text-afri-gray-900">
-                    {order.items?.length || 0} items
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-afri-gray-900">
-                    £{(order.vendorTotal ?? order.totalAmount ?? 0).toFixed(2)}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap">
-                    <span className={`px-2.5 py-1 inline-flex text-xs font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
-                      {statusNames[order.status] || order.status}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-xs text-afri-gray-500">
-                    {new Date(order.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
-                    <button
-                      type="button"
-                      onClick={() => viewOrderDetails(order._id)}
-                      className="text-afri-green hover:text-afri-green-dark font-medium"
-                    >
-                      Details
-                    </button>
-                  </td>
+        <div className="bg-white rounded-lg shadow overflow-hidden border border-gray-100">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[720px] divide-y divide-gray-200">
+              <thead className="bg-afri-gray-50">
+                <tr>
+                  {['Order', 'Customer', 'Type', 'Items', 'Total', 'Status', 'Date', ''].map(h => (
+                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-afri-gray-700 uppercase tracking-wider whitespace-nowrap">
+                      {h}
+                    </th>
+                  ))}
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {orders.map(order => (
+                  <tr key={order._id} className="hover:bg-afri-gray-50 transition">
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm font-medium text-afri-gray-900">{order.orderNumber}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <div className="text-sm text-afri-gray-900">{order.customer?.name || 'N/A'}</div>
+                      <div className="text-xs text-afri-gray-500">{order.customer?.phone || ''}</div>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-0.5 inline-flex text-xs font-bold rounded-md ${
+                        order.fulfillmentType === 'store_pickup' ? 'bg-green-100 text-green-800 border border-green-200' : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {order.fulfillmentType === 'store_pickup' ? '🏪 Pickup' : '🚚 Rider'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm text-afri-gray-900">
+                      {order.items?.length || 0} items
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-sm font-medium text-afri-gray-900">
+                      £{(order.vendorTotal ?? order.totalAmount ?? 0).toFixed(2)}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap">
+                      <span className={`px-2.5 py-1 inline-flex text-xs font-semibold rounded-full ${statusColors[order.status] || 'bg-gray-100 text-gray-800'}`}>
+                        {statusNames[order.status] || order.status}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-xs text-afri-gray-500">
+                      {new Date(order.createdAt).toLocaleDateString()}
+                    </td>
+                    <td className="px-4 py-4 whitespace-nowrap text-right text-sm">
+                      <button
+                        type="button"
+                        onClick={() => viewOrderDetails(order._id)}
+                        className="text-afri-green hover:text-afri-green-dark font-medium"
+                      >
+                        Details
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       )}
 

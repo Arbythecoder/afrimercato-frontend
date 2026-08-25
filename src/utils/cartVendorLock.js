@@ -22,15 +22,20 @@ export const getCartVendorInfo = (cart) => {
     return null
   }
 
-  const firstItem = cart[0]
-  const vendorId = firstItem.vendor?._id || firstItem.vendor?.id || firstItem.vendorId || firstItem.vendor
+  // Find first item with valid vendor information
+  const itemWithVendor = cart.find(item => {
+    const vId = item.vendor?._id || item.vendor?.id || item.vendorId || (typeof item.vendor === 'string' ? item.vendor : null)
+    return vId && vId !== 'undefined' && vId !== 'unknown'
+  }) || cart[0]
 
-  // HOTFIX: Return null if vendorId is missing or undefined to prevent /vendor/undefined API calls
-  if (!vendorId || vendorId === 'undefined') {
+  const vendorId = itemWithVendor.vendor?._id || itemWithVendor.vendor?.id || itemWithVendor.vendorId || (typeof itemWithVendor.vendor === 'string' ? itemWithVendor.vendor : null)
+
+  // Return null if vendorId is missing or undefined to prevent /vendor/undefined API calls
+  if (!vendorId || vendorId === 'undefined' || vendorId === 'unknown') {
     return null
   }
 
-  const vendorName = firstItem.vendor?.storeName || firstItem.vendor?.businessName || firstItem.storeName || 'Your Store'
+  const vendorName = itemWithVendor.vendor?.storeName || itemWithVendor.vendor?.businessName || itemWithVendor.storeName || 'Your Store'
 
   return {
     vendorId: String(vendorId),

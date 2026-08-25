@@ -17,12 +17,38 @@ const isValidMongoId = (id) => {
 }
 
 // Helper to group cart items by vendor (multi-vendor always enabled)
-const groupCartByVendor = (cart) => {
+const groupCartByVendor = (cart, defaultVendor = null) => {
+  if (!Array.isArray(cart)) return []
   const groups = {}
 
+  // Collect known storeNames for vendor IDs
+  const vendorNameMap = {}
+  if (defaultVendor?.storeName) {
+    const dId = String(defaultVendor._id || defaultVendor.id || defaultVendor.storeId || '')
+    if (dId) vendorNameMap[dId] = defaultVendor.storeName
+  }
+
   for (const item of cart) {
-    const vendorId = item.vendor?._id || item.vendor?.id || item.vendorId || 'unknown'
-    const vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || 'Unknown Store'
+    const rawId = item.vendor?._id || item.vendor?.id || item.vendorId || (typeof item.vendor === 'string' && isValidMongoId(item.vendor) ? item.vendor : null)
+    const name = item.vendor?.storeName || item.vendor?.businessName || item.storeName || item.vendor?.name
+    if (rawId && name) {
+      vendorNameMap[String(rawId)] = name
+    }
+  }
+
+  for (const item of cart) {
+    const rawVendorId = item.vendor?._id || item.vendor?.id || item.vendorId || (typeof item.vendor === 'string' && isValidMongoId(item.vendor) ? item.vendor : null) || defaultVendor?._id || defaultVendor?.id || 'unknown'
+    const vendorId = String(rawVendorId)
+
+    let vendorName = item.vendor?.storeName || item.vendor?.businessName || item.storeName || item.vendor?.name || vendorNameMap[vendorId] || defaultVendor?.storeName || defaultVendor?.businessName
+
+    if (!vendorName || vendorName === 'Unknown Store' || vendorName === 'unknown') {
+      if (defaultVendor?.storeName) {
+        vendorName = defaultVendor.storeName
+      } else {
+        vendorName = 'Store'
+      }
+    }
 
     if (!groups[vendorId]) {
       groups[vendorId] = { vendorId, vendorName, items: [] }
@@ -421,7 +447,7 @@ function ShoppingCart() {
           </p>
           {/* Store Indicator */}
           {cart.length > 0 && (() => {
-            const vendorGroups = groupCartByVendor(cart)
+            const vendorGroups = groupCartByVendor(cart, vendor)
             if (vendorGroups.length > 1) {
               return (
                 <div className="mt-3 inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-lg">
@@ -477,7 +503,7 @@ function ShoppingCart() {
               </div>
 
               {/* Group cart items by vendor */}
-              {groupCartByVendor(cart).map((vendorGroup) => {
+              {groupCartByVendor(cart, vendor).map((vendorGroup) => {
                 const vendorSubtotal = vendorGroup.items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
 
                 return (
@@ -630,13 +656,13 @@ function ShoppingCart() {
                   )}
                   
                   {/* Multi-Vendor Notice */}
-                  {groupCartByVendor(cart).length > 1 && (
+                  {groupCartByVendor(cart, vendor).length > 1 && (
                     <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                       <p className="text-xs text-blue-800 font-semibold mb-1">
                         📦 Multiple Vendor Order
                       </p>
                       <p className="text-xs text-blue-700">
-                        Your order will be split into {groupCartByVendor(cart).length} separate deliveries (one per store)
+                        Your order will be split into {groupCartByVendor(cart, vendor).length} separate deliveries (one per store)
                       </p>
                     </div>
                   )}

@@ -13,12 +13,12 @@ function NotificationDropdown() {
   const dropdownRef = useRef(null)
 
   const resolveNotificationUrl = (notification) => {
-    if (!notification) return '/notifications'
+    const role = user?.role || (Array.isArray(user?.roles) ? user?.roles[0] : 'customer')
+    if (!notification) return role === 'vendor' ? '/vendor/orders' : '/notifications'
     if (notification.actionUrl) return notification.actionUrl
     if (notification.orderId) {
-      const role = user?.role || (user?.roles?.[0])
       if (role === 'vendor') {
-        return '/notifications'
+        return '/vendor/orders'
       }
       if (role === 'rider') {
         return '/rider/deliveries'
@@ -31,7 +31,7 @@ function NotificationDropdown() {
       }
       return `/order/${notification.orderId}`
     }
-    return '/notifications'
+    return role === 'vendor' ? '/vendor/orders' : '/notifications'
   }
 
   useEffect(() => {
@@ -124,11 +124,17 @@ function NotificationDropdown() {
 
   const getNotificationIcon = (type) => {
     const icons = {
+      new_order: '🛍️',
       order_placed: '🛒',
       order_confirmed: '✅',
+      order_processing: '⚙️',
+      order_ready: '📦',
+      order_out_for_delivery: '🚚',
       order_shipped: '📦',
       order_delivered: '🎉',
       order_cancelled: '❌',
+      address_updated: '📍',
+      payment_failed: '⚠️',
       payment_received: '💰',
       low_stock: '⚠️',
       product_review: '⭐',
@@ -254,7 +260,8 @@ function NotificationDropdown() {
               <button
                 onClick={() => {
                   setIsOpen(false)
-                  navigate('/notifications')
+                  const role = user?.role || (Array.isArray(user?.roles) ? user?.roles[0] : 'customer')
+                  navigate(role === 'vendor' ? '/vendor/orders' : '/notifications')
                 }}
                 className="w-full text-center text-sm text-afri-green hover:text-afri-green-dark font-medium transition-colors"
               >
