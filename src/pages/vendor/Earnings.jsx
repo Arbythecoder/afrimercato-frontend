@@ -242,29 +242,29 @@ function Earnings() {
         {payouts.length === 0 ? (
           <p className="text-gray-500 text-sm">No payouts yet. Request your first payout above.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+          <div className="overflow-x-auto w-full">
+            <table className="w-full min-w-[560px] text-sm">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 text-gray-600 font-medium">Reference</th>
-                  <th className="text-left py-2 text-gray-600 font-medium">Amount</th>
-                  <th className="text-left py-2 text-gray-600 font-medium">Status</th>
-                  <th className="text-left py-2 text-gray-600 font-medium">Requested</th>
-                  <th className="text-left py-2 text-gray-600 font-medium">Completed</th>
+                  <th className="text-left py-2 text-gray-600 font-medium whitespace-nowrap">Reference</th>
+                  <th className="text-left py-2 text-gray-600 font-medium whitespace-nowrap">Amount</th>
+                  <th className="text-left py-2 text-gray-600 font-medium whitespace-nowrap">Status</th>
+                  <th className="text-left py-2 text-gray-600 font-medium whitespace-nowrap">Requested</th>
+                  <th className="text-left py-2 text-gray-600 font-medium whitespace-nowrap">Completed</th>
                 </tr>
               </thead>
               <tbody>
                 {payouts.map(p => (
                   <tr key={p.id} className="border-b border-gray-50 hover:bg-gray-50">
-                    <td className="py-3 font-mono text-xs text-gray-500">{p.reference}</td>
-                    <td className="py-3 font-bold text-gray-900">{p.amount}</td>
-                    <td className="py-3">
+                    <td className="py-3 font-mono text-xs text-gray-500 whitespace-nowrap">{p.reference}</td>
+                    <td className="py-3 font-bold text-gray-900 whitespace-nowrap">{p.amount}</td>
+                    <td className="py-3 whitespace-nowrap">
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[p.status] || 'bg-gray-100 text-gray-600'}`}>
                         {p.status}
                       </span>
                     </td>
-                    <td className="py-3 text-gray-600">{p.requestedDate}</td>
-                    <td className="py-3 text-gray-600">{p.completedDate || '—'}</td>
+                    <td className="py-3 text-gray-600 whitespace-nowrap">{p.requestedDate}</td>
+                    <td className="py-3 text-gray-600 whitespace-nowrap">{p.completedDate || '—'}</td>
                   </tr>
                 ))}
               </tbody>

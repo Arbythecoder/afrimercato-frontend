@@ -767,24 +767,26 @@ function Reports() {
                       <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 text-sm">
                         Order Status Breakdown
                       </div>
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                          <tr>
-                            <th className="px-5 py-3">Status</th>
-                            <th className="px-5 py-3">Orders Count</th>
-                            <th className="px-5 py-3 text-right">Revenue (£)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {salesMetrics.statusBreakdown.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-5 py-3 font-semibold capitalize">{item._id || 'Standard'}</td>
-                              <td className="px-5 py-3">{item.count}</td>
-                              <td className="px-5 py-3 text-right font-bold text-afri-green">£{(item.revenue || 0).toFixed(2)}</td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full min-w-[500px] text-left text-sm">
+                          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <tr>
+                              <th className="px-5 py-3 whitespace-nowrap">Status</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Orders Count</th>
+                              <th className="px-5 py-3 text-right whitespace-nowrap">Revenue (£)</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {salesMetrics.statusBreakdown.map((item, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-5 py-3 font-semibold capitalize whitespace-nowrap">{item._id || 'Standard'}</td>
+                                <td className="px-5 py-3 whitespace-nowrap">{item.count}</td>
+                                <td className="px-5 py-3 text-right font-bold text-afri-green whitespace-nowrap">£{(item.revenue || 0).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
 
@@ -794,26 +796,28 @@ function Reports() {
                       <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 text-sm">
                         Top Selling Products
                       </div>
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                          <tr>
-                            <th className="px-5 py-3">Rank</th>
-                            <th className="px-5 py-3">Product Name</th>
-                            <th className="px-5 py-3">Units Sold</th>
-                            <th className="px-5 py-3 text-right">Revenue (£)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {salesMetrics.topProducts.map((p, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-5 py-3 font-bold text-gray-400">#{idx + 1}</td>
-                              <td className="px-5 py-3 font-semibold text-gray-900">{p.name || 'Product'}</td>
-                              <td className="px-5 py-3 font-semibold">{p.soldQuantity || 0}</td>
-                              <td className="px-5 py-3 text-right font-bold text-afri-green">£{(p.revenue || 0).toFixed(2)}</td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full min-w-[550px] text-left text-sm">
+                          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <tr>
+                              <th className="px-5 py-3 whitespace-nowrap">Rank</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Product Name</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Units Sold</th>
+                              <th className="px-5 py-3 text-right whitespace-nowrap">Revenue (£)</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {salesMetrics.topProducts.map((p, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-5 py-3 font-bold text-gray-400 whitespace-nowrap">#{idx + 1}</td>
+                                <td className="px-5 py-3 font-semibold text-gray-900 whitespace-nowrap">{p.name || 'Product'}</td>
+                                <td className="px-5 py-3 font-semibold whitespace-nowrap">{p.soldQuantity || 0}</td>
+                                <td className="px-5 py-3 text-right font-bold text-afri-green whitespace-nowrap">£{(p.revenue || 0).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -852,26 +856,28 @@ function Reports() {
                       <div className="px-5 py-3 bg-amber-100 border-b border-amber-200 font-bold text-amber-900 text-sm flex items-center gap-2">
                         <FiAlertTriangle className="text-amber-600" /> Low Stock Alerts
                       </div>
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-amber-50 text-amber-800 uppercase text-xs">
-                          <tr>
-                            <th className="px-5 py-3">Product</th>
-                            <th className="px-5 py-3">Category</th>
-                            <th className="px-5 py-3">Current Stock</th>
-                            <th className="px-5 py-3 text-right">Price (£)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-amber-200/60">
-                          {inventoryMetrics.lowStockItems.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-amber-100/40">
-                              <td className="px-5 py-3 font-semibold text-gray-900">{item.name}</td>
-                              <td className="px-5 py-3 text-xs text-gray-500">{item.category || 'General'}</td>
-                              <td className="px-5 py-3 font-bold text-amber-700">{item.stock} left</td>
-                              <td className="px-5 py-3 text-right font-bold">£{(item.price || 0).toFixed(2)}</td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full min-w-[550px] text-left text-sm">
+                          <thead className="bg-amber-50 text-amber-800 uppercase text-xs">
+                            <tr>
+                              <th className="px-5 py-3 whitespace-nowrap">Product</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Category</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Current Stock</th>
+                              <th className="px-5 py-3 text-right whitespace-nowrap">Price (£)</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-amber-200/60">
+                            {inventoryMetrics.lowStockItems.map((item, idx) => (
+                              <tr key={idx} className="hover:bg-amber-100/40">
+                                <td className="px-5 py-3 font-semibold text-gray-900 whitespace-nowrap">{item.name}</td>
+                                <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{item.category || 'General'}</td>
+                                <td className="px-5 py-3 font-bold text-amber-700 whitespace-nowrap">{item.stock} left</td>
+                                <td className="px-5 py-3 text-right font-bold whitespace-nowrap">£{(item.price || 0).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
 
@@ -880,33 +886,35 @@ function Reports() {
                     <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 text-sm">
                       Product Inventory Catalog
                     </div>
-                    <table className="w-full text-left text-sm">
-                      <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                        <tr>
-                          <th className="px-5 py-3">Product Name</th>
-                          <th className="px-5 py-3">Category</th>
-                          <th className="px-5 py-3">Stock Quantity</th>
-                          <th className="px-5 py-3">Status</th>
-                          <th className="px-5 py-3 text-right">Price (£)</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-200">
-                        {inventoryMetrics.allProducts.map((p, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50">
-                            <td className="px-5 py-3 font-semibold text-gray-900">{p.name}</td>
-                            <td className="px-5 py-3 text-xs text-gray-500">{p.category || 'General'}</td>
-                            <td className="px-5 py-3 font-semibold">{p.stock}</td>
-                            <td className="px-5 py-3">
-                              <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${p.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
-                                }`}>
-                                {p.inStock ? 'In Stock' : 'Out of Stock'}
-                              </span>
-                            </td>
-                            <td className="px-5 py-3 text-right font-bold">£{(p.price || 0).toFixed(2)}</td>
+                    <div className="overflow-x-auto w-full">
+                      <table className="w-full min-w-[650px] text-left text-sm">
+                        <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                          <tr>
+                            <th className="px-5 py-3 whitespace-nowrap">Product Name</th>
+                            <th className="px-5 py-3 whitespace-nowrap">Category</th>
+                            <th className="px-5 py-3 whitespace-nowrap">Stock Quantity</th>
+                            <th className="px-5 py-3 whitespace-nowrap">Status</th>
+                            <th className="px-5 py-3 text-right whitespace-nowrap">Price (£)</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                        </thead>
+                        <tbody className="divide-y divide-gray-200">
+                          {inventoryMetrics.allProducts.map((p, idx) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="px-5 py-3 font-semibold text-gray-900 whitespace-nowrap">{p.name}</td>
+                              <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">{p.category || 'General'}</td>
+                              <td className="px-5 py-3 font-semibold whitespace-nowrap">{p.stock}</td>
+                              <td className="px-5 py-3 whitespace-nowrap">
+                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${p.inStock ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                                  }`}>
+                                  {p.inStock ? 'In Stock' : 'Out of Stock'}
+                                </span>
+                              </td>
+                              <td className="px-5 py-3 text-right font-bold whitespace-nowrap">£{(p.price || 0).toFixed(2)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
               )}
@@ -942,40 +950,42 @@ function Reports() {
                     {ordersMetrics.orders.length === 0 ? (
                       <div className="p-8 text-center text-gray-400 text-sm">No orders recorded in this date range</div>
                     ) : (
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                          <tr>
-                            <th className="px-5 py-3">Order #</th>
-                            <th className="px-5 py-3">Date</th>
-                            <th className="px-5 py-3">Customer</th>
-                            <th className="px-5 py-3">Status</th>
-                            <th className="px-5 py-3 text-right">Total (£)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {ordersMetrics.orders.map((o, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-5 py-3 font-bold text-gray-900">
-                                #{o.orderNumber || (o._id || '').slice(-6).toUpperCase()}
-                              </td>
-                              <td className="px-5 py-3 text-xs text-gray-500">
-                                {o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—'}
-                              </td>
-                              <td className="px-5 py-3 text-gray-700">
-                                {o.customer ? `${o.customer.firstName || ''} ${o.customer.lastName || ''}`.trim() || o.customer.email || 'Customer' : 'Customer'}
-                              </td>
-                              <td className="px-5 py-3">
-                                <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 capitalize">
-                                  {o.status || 'Pending'}
-                                </span>
-                              </td>
-                              <td className="px-5 py-3 text-right font-bold text-afri-green">
-                                £{(o.pricing?.total ?? o.total ?? 0).toFixed(2)}
-                              </td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full min-w-[600px] text-left text-sm">
+                          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <tr>
+                              <th className="px-5 py-3 whitespace-nowrap">Order #</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Date</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Customer</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Status</th>
+                              <th className="px-5 py-3 text-right whitespace-nowrap">Total (£)</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {ordersMetrics.orders.map((o, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-5 py-3 font-bold text-gray-900 whitespace-nowrap">
+                                  #{o.orderNumber || (o._id || '').slice(-6).toUpperCase()}
+                                </td>
+                                <td className="px-5 py-3 text-xs text-gray-500 whitespace-nowrap">
+                                  {o.createdAt ? new Date(o.createdAt).toLocaleDateString('en-GB') : '—'}
+                                </td>
+                                <td className="px-5 py-3 text-gray-700 whitespace-nowrap">
+                                  {o.customer ? `${o.customer.firstName || ''} ${o.customer.lastName || ''}`.trim() || o.customer.email || 'Customer' : 'Customer'}
+                                </td>
+                                <td className="px-5 py-3 whitespace-nowrap">
+                                  <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 capitalize">
+                                    {o.status || 'Pending'}
+                                  </span>
+                                </td>
+                                <td className="px-5 py-3 text-right font-bold text-afri-green whitespace-nowrap">
+                                  £{(o.pricing?.total ?? o.total ?? 0).toFixed(2)}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -1010,24 +1020,26 @@ function Reports() {
                       <div className="px-5 py-3 bg-gray-50 border-b border-gray-200 font-bold text-gray-800 text-sm">
                         Daily Revenue Breakdown
                       </div>
-                      <table className="w-full text-left text-sm">
-                        <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
-                          <tr>
-                            <th className="px-5 py-3">Date</th>
-                            <th className="px-5 py-3">Orders Count</th>
-                            <th className="px-5 py-3 text-right">Daily Revenue (£)</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-200">
-                          {revenueMetrics.dailyRevenue.map((day, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50">
-                              <td className="px-5 py-3 font-semibold text-gray-900">{day._id || day.date}</td>
-                              <td className="px-5 py-3">{day.orders}</td>
-                              <td className="px-5 py-3 text-right font-bold text-afri-green">£{(day.revenue || 0).toFixed(2)}</td>
+                      <div className="overflow-x-auto w-full">
+                        <table className="w-full min-w-[500px] text-left text-sm">
+                          <thead className="bg-gray-100 text-gray-600 uppercase text-xs">
+                            <tr>
+                              <th className="px-5 py-3 whitespace-nowrap">Date</th>
+                              <th className="px-5 py-3 whitespace-nowrap">Orders Count</th>
+                              <th className="px-5 py-3 text-right whitespace-nowrap">Daily Revenue (£)</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {revenueMetrics.dailyRevenue.map((day, idx) => (
+                              <tr key={idx} className="hover:bg-gray-50">
+                                <td className="px-5 py-3 font-semibold text-gray-900 whitespace-nowrap">{day._id || day.date}</td>
+                                <td className="px-5 py-3 whitespace-nowrap">{day.orders}</td>
+                                <td className="px-5 py-3 text-right font-bold text-afri-green whitespace-nowrap">£{(day.revenue || 0).toFixed(2)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
                   )}
                 </div>
