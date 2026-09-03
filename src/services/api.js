@@ -457,7 +457,7 @@ export const getOrderById = async (id) => {
 
 export const cancelOrder = async (id) => {
   return apiCall(`/customers/orders/${id}/cancel`, {
-    method: 'PATCH'
+    method: 'POST'
   });
 };
 
