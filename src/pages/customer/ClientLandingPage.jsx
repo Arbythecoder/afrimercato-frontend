@@ -56,7 +56,8 @@ export default function ClientLandingPage() {
   const [locationLoading, setLocationLoading] = useState(false)
   const debounceRef = useRef(null)
 
-  const recentSearches = ['Bristol', 'London', 'Manchester', 'Birmingham']
+  // ADDED: include Cardiff, Newport, Swansea in recent searches
+  const recentSearches = ['Bristol', 'London', 'Manchester', 'Birmingham', 'Cardiff', 'Newport', 'Swansea']
 
   // Detect scroll for nav styling
   useEffect(() => {
@@ -66,10 +67,12 @@ export default function ClientLandingPage() {
   }, [])
 
   // Static UK fallback locations for when LocationIQ is unavailable
+  // ADDED: Cardiff, Newport, Swansea to the static list
   const UK_CITIES = [
     'London', 'Manchester', 'Birmingham', 'Leeds', 'Sheffield',
     'Bristol', 'Liverpool', 'Leicester', 'Edinburgh', 'Glasgow',
-    'Coventry', 'Bradford', 'Nottingham', 'Southampton', 'Cardiff',
+    'Coventry', 'Bradford', 'Nottingham', 'Southampton', 'Cardiff',   // added Cardiff
+    'Newport', 'Swansea',                                            // added Newport, Swansea
     'Peckham, London', 'Brixton, London', 'Tottenham, London',
     'East Ham, London', 'Hackney, London', 'Lewisham, London',
     'Croydon, London', 'Southwark, London', 'Newham, London',
@@ -621,7 +624,8 @@ export default function ClientLandingPage() {
               className="mt-4 flex flex-wrap items-center gap-2 justify-center"
             >
               <span className="text-gray-700 text-sm font-medium">Popular:</span>
-              {['London', 'Birmingham', 'Manchester', 'Leeds', 'Bristol'].map((city) => (
+              {/* ADDED: replaced Leeds with Cardiff, and added Newport, Swansea as extra tags */}
+              {['London', 'Birmingham', 'Manchester', 'Cardiff', 'Bristol', 'Newport', 'Swansea'].map((city) => (
                 <button
                   key={city}
                   type="button"
@@ -673,63 +677,6 @@ export default function ClientLandingPage() {
 
           {/* Meet Our Partners */}
           <div className="text-center mb-8">
-            {/* <h3 className="text-xl font-semibold text-gray-900 mb-2">Meet Our Founding Partners</h3>
-            <div className="w-16 h-1 bg-[#FFB800] mx-auto my-2 rounded-full" />
-            <p className="text-gray-500 text-sm mb-8">The people behind Afrimercato</p> */}
-
-            {/* Founding partner profiles */}
-            {/* <div className="flex items-center justify-center gap-6 sm:gap-12 mb-8 flex-wrap">
-              {[
-                {
-                  id: 'stores',
-                  name: 'Efezino',
-                  role: 'Founder & CEO',
-                  img: 'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=300&q=80',
-                },
-                {
-                  id: 'pickers',
-                  name: 'Chukwudi Obi',
-                  role: 'Co-Founder, Operations',
-                  img: 'https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=300&q=80',
-                },
-                {
-                  id: 'riders',
-                  name: 'Emeka Adeyemi',
-                  role: 'Co-Founder, Technology',
-                  img: 'https://images.unsplash.com/photo-1547425260-76bcadfb4f2c?w=300&q=80',
-                },
-              ].map((partner) => (
-                <button
-                  key={partner.id}
-                  type="button"
-                  onClick={() => setActivePartnerTab(partner.id)}
-                  className="flex flex-col items-center gap-3 group"
-                >
-                  <div className={`w-20 h-20 sm:w-24 sm:h-24 rounded-full overflow-hidden border-4 shadow-lg transition-all duration-300 group-hover:shadow-2xl group-hover:scale-110 ${
-                    activePartnerTab === partner.id
-                      ? 'border-[#FFB800] scale-105 shadow-xl'
-                      : 'border-white'
-                  }`}>
-                    <img
-                      src={partner.img}
-                      alt={partner.name}
-                      className="w-full h-full object-cover object-top"
-                      onError={(e) => {
-                        e.target.src = 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300&q=80'
-                        e.target.onerror = null
-                      }}
-                    />
-                  </div>
-                  <div className="text-center">
-                    <p className={`font-bold text-sm ${activePartnerTab === partner.id ? 'text-[#1B4D3E]' : 'text-gray-800'}`}>
-                      {partner.name}
-                    </p>
-                    <p className="text-xs text-gray-500">{partner.role}</p>
-                  </div>
-                </button>
-              ))}
-            </div> */}
-
             {/* Section separator before community role tabs */}
             <div className="w-full my-10 border-t border-gray-100" />
             <h3 className="text-center text-2xl font-bold text-[#1A1A1A] mb-3">
@@ -1099,7 +1046,8 @@ export default function ClientLandingPage() {
             <div>
               <h4 className="font-bold mb-4">Cities</h4>
               <ul className="space-y-2 text-gray-400">
-                {['Bristol', 'London', 'Leicester', 'Liverpool', 'Birmingham', 'Manchester'].map((city) => (
+                {/* ADDED: Cardiff, Newport, Swansea to the footer city list */}
+                {['Bristol', 'London', 'Leicester', 'Liverpool', 'Birmingham', 'Manchester', 'Cardiff', 'Newport', 'Swansea'].map((city) => (
                   <li key={city}>
                     <button
                       type="button"
